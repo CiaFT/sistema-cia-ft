@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.6.0 ESCALAS ADM
+SISTEMA CIA FT — PORTAL GITHUB V1.6.1 ESCALAS ADM ACAO
 Arquivo: index.html
 ============================================================
 
@@ -15,7 +15,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Portal Força Tática • V1.6.0.1</title>
+  <title>Portal Força Tática • V1.6.1.1</title>
 
   <style>
     :root {
@@ -2993,7 +2993,7 @@ Banco de dados: Google Sheets.
       <div id="loginAlerta" class="alerta"></div>
 
       <div class="footer">
-        Portal Força Tática • V1.6.0
+        Portal Força Tática • V1.6.1
       </div>
     </main>
   </section>
@@ -3109,7 +3109,7 @@ Banco de dados: Google Sheets.
                 <h2>Funcionalidades</h2>
                 <p>Acesso rápido aos módulos do Sistema CIA FT, conforme seu perfil de permissão.</p>
               </div>
-              <div class="home-version">V1.6.0</div>
+              <div class="home-version">V1.6.1</div>
             </div>
 
             <div class="home-situation-grid">
@@ -4449,7 +4449,7 @@ Banco de dados: Google Sheets.
         return Promise.reject(new Error('Sessão inválida. Faça login novamente.'));
       }
 
-      return chamarApi('dadosEscalasAdm', {
+      return chamarApi('dados_escalas_adm', {
           login: APP.credenciais.login,
           senha: APP.credenciais.senha
         })
@@ -4629,7 +4629,7 @@ Banco de dados: Google Sheets.
 
       limparValidacaoAdm();
 
-      chamarApi('enviarEscalaAdm', Object.assign({
+      chamarApi('enviar_escala_adm', Object.assign({
           login: APP.credenciais.login,
           senha: APP.credenciais.senha
         }, dados.payload))
