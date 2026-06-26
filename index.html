@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.5.7 PERMISSOES RESENHA
+SISTEMA CIA FT — PORTAL GITHUB V1.5.8 AJUSTE VISUAL RESENHA
 Arquivo: index.html
 ============================================================
 
@@ -15,7 +15,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Portal Força Tática • V1.5.7.1</title>
+  <title>Portal Força Tática • V1.5.8.1</title>
 
   <style>
     :root {
@@ -2458,6 +2458,194 @@ Banco de dados: Google Sheets.
       }
     }
 
+    /* ============================================================
+     * AJUSTE VISUAL RESENHAS DE ESCALAS — V1.5.8
+     * Objetivo:
+     * - simetria entre campos no computador
+     * - alinhamento no celular
+     * - campos e botões com alturas proporcionais
+     * - evitar estouro lateral de selects longos
+     * ============================================================ */
+
+    .resenha-grid,
+    .resenha-form-grid,
+    .resenha-equipe-grid,
+    .resenha-actions,
+    .resenha-equipe-titulo-row {
+      min-width: 0;
+    }
+
+    .resenha-card,
+    .resenha-equipe-box,
+    .resenha-form-field,
+    .resenha-mini-field {
+      min-width: 0;
+    }
+
+    .resenha-form-field input,
+    .resenha-form-field select,
+    .resenha-mini-field input,
+    .resenha-mini-field select,
+    .resenha-equipe-titulo-row select {
+      min-height: 46px;
+      height: 46px;
+      line-height: 1.2;
+    }
+
+    .resenha-form-field textarea,
+    .resenha-mini-field textarea {
+      min-height: 96px;
+    }
+
+    .resenha-action-btn,
+    .resenha-submit,
+    .btn-page {
+      min-height: 46px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.2;
+    }
+
+    .resenha-card-header,
+    .resenha-card-body {
+      box-sizing: border-box;
+    }
+
+    .resenha-form-grid.escala-topo {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      align-items: end;
+    }
+
+    .resenha-equipe-titulo-row {
+      grid-template-columns: minmax(0, 1fr) minmax(210px, 280px);
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .resenha-equipe-titulo-row h3 {
+      align-self: center;
+      line-height: 1.2;
+      word-break: break-word;
+    }
+
+    .resenha-equipe-grid.ft-grid {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 9px;
+    }
+
+    .resenha-equipe-grid.ft-grid .col-metade {
+      grid-column: span 3;
+    }
+
+    .resenha-equipe-grid.ft-grid .col-terco {
+      grid-column: span 2;
+    }
+
+    .resenha-mini-field.full,
+    .resenha-form-field.full {
+      grid-column: 1 / -1;
+    }
+
+    .resenha-actions {
+      align-items: stretch;
+    }
+
+    .resenha-action-btn {
+      white-space: normal;
+      text-align: center;
+    }
+
+    .resenha-info-item strong,
+    .resenha-form-field input,
+    .resenha-form-field select,
+    .resenha-mini-field input,
+    .resenha-mini-field select,
+    .resenha-equipe-titulo-row select {
+      overflow-wrap: anywhere;
+    }
+
+    @media (max-width: 860px) {
+      .resenha-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .resenha-equipe-grid.ft-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .resenha-equipe-grid.ft-grid .col-metade,
+      .resenha-equipe-grid.ft-grid .col-terco {
+        grid-column: span 1;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .resenha-form-grid.escala-topo {
+        grid-template-columns: 1fr;
+      }
+
+      .resenha-equipe-titulo-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .page-wrap {
+        width: 100%;
+      }
+
+      .page-header,
+      .resenha-card,
+      .resenha-equipe-box {
+        width: 100%;
+      }
+
+      .resenha-card-header {
+        padding: 14px;
+      }
+
+      .resenha-card-body {
+        padding: 14px;
+      }
+
+      .resenha-equipe-box {
+        padding: 12px;
+      }
+
+      .resenha-form-grid,
+      .resenha-equipe-grid,
+      .resenha-equipe-grid.ft-grid,
+      .resenha-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .resenha-equipe-grid.ft-grid .col-metade,
+      .resenha-equipe-grid.ft-grid .col-terco {
+        grid-column: 1 / -1;
+      }
+
+      .resenha-clock {
+        width: 100%;
+        box-sizing: border-box;
+        justify-content: center;
+        text-align: center;
+        flex-wrap: wrap;
+        border-radius: 16px;
+      }
+
+      .resenha-actions {
+        gap: 8px;
+      }
+
+      .resenha-action-btn,
+      .resenha-submit {
+        width: 100%;
+      }
+    }
+
   </style>
 </head>
 
@@ -2488,7 +2676,7 @@ Banco de dados: Google Sheets.
       <div id="loginAlerta" class="alerta"></div>
 
       <div class="footer">
-        Portal Força Tática • V1.5.7
+        Portal Força Tática • V1.5.8
       </div>
     </main>
   </section>
@@ -2604,7 +2792,7 @@ Banco de dados: Google Sheets.
                 <h2>Funcionalidades</h2>
                 <p>Acesso rápido aos módulos do Sistema CIA FT, conforme seu perfil de permissão.</p>
               </div>
-              <div class="home-version">V1.5.7</div>
+              <div class="home-version">V1.5.8</div>
             </div>
 
             <div class="home-situation-grid">
@@ -3310,32 +3498,32 @@ Banco de dados: Google Sheets.
             </select>
           </div>
 
-          <div class="resenha-equipe-grid">
-            <div class="resenha-mini-field">
+          <div class="resenha-equipe-grid ft-grid">
+            <div class="resenha-mini-field col-metade">
               <label>Comandante</label>
               <select class="pm-select" name="ft${numero}_comandante">
                 ${optionsPms('FT')}
               </select>
             </div>
-            <div class="resenha-mini-field">
+            <div class="resenha-mini-field col-metade">
               <label>Motorista</label>
               <select class="pm-select" name="ft${numero}_motorista">
                 ${optionsPms('FT')}
               </select>
             </div>
-            <div class="resenha-mini-field">
+            <div class="resenha-mini-field col-terco">
               <label>Auxiliar 1</label>
               <select class="pm-select" name="ft${numero}_aux1">
                 ${optionsPms('FT')}
               </select>
             </div>
-            <div class="resenha-mini-field">
+            <div class="resenha-mini-field col-terco">
               <label>Auxiliar 2</label>
               <select class="pm-select" name="ft${numero}_aux2">
                 ${optionsPms('FT')}
               </select>
             </div>
-            <div class="resenha-mini-field">
+            <div class="resenha-mini-field col-terco">
               <label>Auxiliar 3</label>
               <select class="pm-select" name="ft${numero}_aux3">
                 ${optionsPms('FT')}
@@ -3538,8 +3726,15 @@ Banco de dados: Google Sheets.
       const exigeData = tipo.includes('ORGANICA') || tipo.includes('COMPENSATORIA') || tipo.includes('FLAGRANTE');
       const exigeBopm = tipo.includes('FLAGRANTE');
 
-      if (dataBox) dataBox.classList.toggle('campo-oculto', !exigeData);
-      if (bopmBox) bopmBox.classList.toggle('campo-oculto', !exigeBopm);
+      if (dataBox) {
+        dataBox.classList.toggle('campo-oculto', !exigeData);
+        dataBox.classList.toggle('full', exigeData && !exigeBopm);
+      }
+
+      if (bopmBox) {
+        bopmBox.classList.toggle('campo-oculto', !exigeBopm);
+        bopmBox.classList.toggle('full', exigeBopm && !exigeData);
+      }
 
       if (data) {
         data.required = exigeData;
