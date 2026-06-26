@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.5.4 RESENHAS ESCALAS
+SISTEMA CIA FT — PORTAL GITHUB V1.5.5 RESENHAS ESCALAS
 Arquivo: index.html
 ============================================================
 
@@ -15,7 +15,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Portal Força Tática • V1.5.4.1</title>
+  <title>Portal Força Tática • V1.5.5.1</title>
 
   <style>
     :root {
@@ -2062,13 +2062,14 @@ Banco de dados: Google Sheets.
     }
 
     /* ============================================================
-     * RESENHAS DE ESCALAS — V1.5.4
-     * Alinhado ao desenho original do Sistema FT.
+     * RESENHAS DE ESCALAS — V1.5.5
+     * Construção conforme estrutura definida:
+     * RESENHAS_ESCALAS, RESENHAS_ESCALAS_ITENS e RESENHAS_COMPLEMENTOS.
      * ============================================================ */
 
     .resenha-grid {
       display: grid;
-      grid-template-columns: 340px 1fr;
+      grid-template-columns: 360px 1fr;
       gap: 14px;
       align-items: start;
     }
@@ -2140,7 +2141,10 @@ Banco de dados: Google Sheets.
       margin-top: 10px;
     }
 
-    .resenha-info-list { display: grid; gap: 9px; }
+    .resenha-info-list {
+      display: grid;
+      gap: 9px;
+    }
 
     .resenha-info-item {
       background:
@@ -2173,8 +2177,14 @@ Banco de dados: Google Sheets.
       gap: 10px;
     }
 
-    .resenha-form-field { display: grid; gap: 6px; }
-    .resenha-form-field.full { grid-column: 1 / -1; }
+    .resenha-form-field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .resenha-form-field.full {
+      grid-column: 1 / -1;
+    }
 
     .resenha-form-field label,
     .resenha-mini-field label {
@@ -2188,7 +2198,8 @@ Banco de dados: Google Sheets.
     .resenha-form-field select,
     .resenha-form-field textarea,
     .resenha-mini-field input,
-    .resenha-mini-field select {
+    .resenha-mini-field select,
+    .resenha-mini-field textarea {
       width: 100%;
       border: 1px solid rgba(55,66,71,.16);
       background: #ffffff;
@@ -2200,20 +2211,26 @@ Banco de dados: Google Sheets.
       box-sizing: border-box;
     }
 
-    .resenha-form-field textarea { min-height: 92px; resize: vertical; line-height: 1.4; }
+    .resenha-form-field textarea,
+    .resenha-mini-field textarea {
+      min-height: 88px;
+      resize: vertical;
+      line-height: 1.4;
+    }
 
     .resenha-form-field input:focus,
     .resenha-form-field select:focus,
     .resenha-form-field textarea:focus,
     .resenha-mini-field input:focus,
-    .resenha-mini-field select:focus {
+    .resenha-mini-field select:focus,
+    .resenha-mini-field textarea:focus {
       border-color: rgba(55,66,71,.38);
       box-shadow: 0 0 0 3px rgba(55,66,71,.10);
     }
 
     .resenha-divider-title {
       grid-column: 1 / -1;
-      margin: 10px 0 2px;
+      margin-top: 8px;
       padding-top: 10px;
       border-top: 1px solid rgba(55,66,71,.12);
       color: #374247;
@@ -2223,42 +2240,53 @@ Banco de dados: Google Sheets.
       text-transform: uppercase;
     }
 
-    .resenha-equipes-wrap { display: grid; gap: 12px; }
+    .resenha-equipes-wrap {
+      display: grid;
+      gap: 12px;
+      margin-top: 10px;
+    }
 
     .resenha-equipe-box {
       border: 1px solid rgba(55,66,71,.12);
       background:
         radial-gradient(circle at top left, rgba(55,66,71,.09), transparent 54%),
         linear-gradient(180deg, #ffffff, #f8fafc);
-      border-radius: 16px;
-      padding: 12px;
+      border-radius: 18px;
+      padding: 13px;
     }
 
     .resenha-equipe-box h3 {
-      margin: 0 0 10px;
+      margin: 0 0 11px;
       color: #17202a;
-      font-size: 14px;
+      font-size: 15px;
       line-height: 1.2;
     }
 
     .resenha-equipe-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
+      gap: 9px;
     }
 
-    .resenha-mini-field { display: grid; gap: 5px; }
-    .resenha-mini-field.full { grid-column: 1 / -1; }
+    .resenha-mini-field {
+      display: grid;
+      gap: 5px;
+    }
+
+    .resenha-mini-field.full {
+      grid-column: 1 / -1;
+    }
 
     .resenha-actions {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
+      gap: 9px;
       margin-top: 12px;
     }
 
     .resenha-action-btn,
     .resenha-submit {
+      width: 100%;
       border: 1px solid rgba(55,66,71,.16);
       background:
         radial-gradient(circle at top left, rgba(55,66,71,.24), transparent 56%),
@@ -2270,13 +2298,18 @@ Banco de dados: Google Sheets.
       font-weight: 900;
       cursor: pointer;
       box-shadow: 0 10px 22px rgba(15,23,42,.08);
-      width: 100%;
+      text-align: center;
     }
 
     .resenha-action-btn:hover,
-    .resenha-submit:hover { border-color: rgba(55,66,71,.34); transform: translateY(-1px); }
+    .resenha-submit:hover {
+      border-color: rgba(55,66,71,.34);
+      transform: translateY(-1px);
+    }
 
-    .resenha-submit { margin-top: 14px; }
+    .resenha-submit {
+      margin-top: 13px;
+    }
 
     .resenha-alerta {
       margin-top: 12px;
@@ -2286,6 +2319,16 @@ Banco de dados: Google Sheets.
       padding: 13px;
       color: #64748b;
       font-size: 12.5px;
+      line-height: 1.4;
+    }
+
+    .resenha-loading {
+      border: 1px dashed rgba(55,66,71,.25);
+      background: #f8fafc;
+      border-radius: 16px;
+      padding: 14px;
+      color: #64748b;
+      font-size: 13px;
       line-height: 1.4;
     }
 
@@ -2310,19 +2353,40 @@ Banco de dados: Google Sheets.
       transition: opacity .18s ease, transform .18s ease;
     }
 
-    .toast-ft.visivel { opacity: 1; transform: translateX(-50%) translateY(0); }
-    .toast-ft strong { display:block; font-size:14px; margin-bottom:4px; }
-    .toast-ft span { display:block; color:#64748b; font-size:12.5px; line-height:1.35; }
+    .toast-ft.visivel {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast-ft strong {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .toast-ft span {
+      display: block;
+      color: #64748b;
+      font-size: 12.5px;
+      line-height: 1.35;
+    }
 
     @media (max-width: 980px) {
-      .resenha-grid { grid-template-columns: 1fr; }
+      .resenha-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     @media (max-width: 560px) {
-      .resenha-card { border-radius: 20px; }
+      .resenha-card {
+        border-radius: 20px;
+      }
+
       .resenha-form-grid,
       .resenha-equipe-grid,
-      .resenha-actions { grid-template-columns: 1fr; }
+      .resenha-actions {
+        grid-template-columns: 1fr;
+      }
     }
 
   </style>
@@ -2355,7 +2419,7 @@ Banco de dados: Google Sheets.
       <div id="loginAlerta" class="alerta"></div>
 
       <div class="footer">
-        Portal Força Tática • V1.5.4
+        Portal Força Tática • V1.5.5
       </div>
     </main>
   </section>
@@ -2469,7 +2533,7 @@ Banco de dados: Google Sheets.
                 <h2>Funcionalidades</h2>
                 <p>Acesso rápido aos módulos do Sistema CIA FT, conforme seu perfil de permissão.</p>
               </div>
-              <div class="home-version">V1.5.4</div>
+              <div class="home-version">V1.5.5</div>
             </div>
 
             <div class="home-situation-grid">
@@ -2516,7 +2580,6 @@ Banco de dados: Google Sheets.
             ${pmDetail('Pelotão', u.pelotao)}
             ${pmDetail('Modalidade', u.modalidade)}
             ${pmDetail('Função', u.funcao)}
-            ${pmDetail('Perfil', u.perfilAcesso)}
           </div>
         </div>
       `;
@@ -2786,13 +2849,13 @@ Banco de dados: Google Sheets.
 
     function montarMenusHome() {
       const menus = Array.isArray(APP.menus) ? APP.menus.slice() : [];
-      const existe = menus.some(m => ehModuloResenhaEscalas(m.id) || ehModuloResenhaEscalas(m.titulo));
+      const existeResenha = menus.some(m => ehModuloResenhaEscalas(m.id) || ehModuloResenhaEscalas(m.titulo));
 
-      if (!existe) {
+      if (!existeResenha) {
         menus.splice(1, 0, {
-          id: 'RESENHAS_ESCALAS',
-          titulo: 'RESENHAS DE ESCALAS',
-          descricao: 'Preenchimento e envio das resenhas operacionais.',
+          id: 'RESENHA_DE_ESCALAS',
+          titulo: 'RESENHA DE ESCALAS',
+          descricao: 'Envio da resenha operacional semanal.',
           icone: '📋'
         });
       }
@@ -2856,11 +2919,11 @@ Banco de dados: Google Sheets.
     function ehModuloResenhaEscalas(id) {
       const mod = normalizarTexto(id);
       return (
-        mod === 'RESENHAS_ESCALAS' ||
         mod === 'RESENHA_DE_ESCALAS' ||
+        mod === 'RESENHAS_ESCALAS' ||
+        mod === 'RESENHA_ESCALAS' ||
         mod === 'RESENHA DE ESCALAS' ||
         mod === 'RESENHAS DE ESCALAS' ||
-        mod === 'ENVIAR_RESENHAS_ESCALA' ||
         mod.includes('RESENHA')
       );
     }
@@ -2868,8 +2931,6 @@ Banco de dados: Google Sheets.
 
     function abrirResenhasEscalas() {
       window.scrollTo(0, 0);
-
-      const u = APP.usuario || {};
 
       document.getElementById('appConteudo').innerHTML = `
         <div class="page-wrap">
@@ -2880,7 +2941,7 @@ Banco de dados: Google Sheets.
                 <h1>Resenhas de Escalas</h1>
                 <p>Envio das resenhas operacionais toda segunda-feira, até às 11h, com as escalas previstas até a segunda-feira seguinte.</p>
                 <div id="resenhaClock" class="resenha-clock">
-                  <span>Preenchimento:</span>
+                  <span>Data/hora do preenchimento:</span>
                   <strong id="resenhaClockTexto">--/--/---- --:--:--</strong>
                 </div>
               </div>
@@ -2890,101 +2951,168 @@ Banco de dados: Google Sheets.
             </div>
           </div>
 
-          <div class="resenha-grid">
+          <div id="resenhaConteudo">
+            <div class="resenha-loading">Carregando efetivo, viaturas e listas da resenha...</div>
+          </div>
+        </div>
+      `;
+
+      iniciarRelogioResenha();
+
+      carregarDadosResenha()
+        .then(function() {
+          renderizarFormularioResenha();
+        })
+        .catch(function(err) {
+          document.getElementById('resenhaConteudo').innerHTML = `
             <div class="resenha-card">
               <div class="resenha-card-header">
-                <h2>Identificação</h2>
-                <p>Dados do responsável pelo envio.</p>
-                <span class="resenha-status">PREENCHIMENTO</span>
+                <h2>Não foi possível carregar as listas</h2>
+                <p>A página foi aberta, mas a API ainda não retornou efetivo e viaturas para as listas suspensas.</p>
               </div>
-
               <div class="resenha-card-body">
-                <div class="resenha-info-list">
-                  ${resenhaInfo('Escalante', [u.postoGrad, u.nomeGuerra].filter(Boolean).join(' '))}
-                  ${resenhaInfo('Horário limite', 'Segunda-feira até às 11h')}
-                </div>
-
-                <div class="resenha-form-field" style="margin-top:10px;">
-                  <label>Pelotão</label>
-                  <select id="resenhaPelotao" name="pelotao">
-                    <option value="">Selecione</option>
-                    <option value="1º PEL">1º PEL</option>
-                    <option value="2º PEL">2º PEL</option>
-                  </select>
-                </div>
-
-                <div class="resenha-alerta">
-                  O envio fora do horário limite será permitido, mas ficará visualmente identificado como atraso.
-                </div>
+                <div class="resenha-alerta">${escapar(err.message || err)}</div>
               </div>
             </div>
+          `;
+        });
+    }
 
-            <div class="resenha-card">
-              <div class="resenha-card-header">
-                <h2>Informações da Escala</h2>
-                <p>Preencha a data, horário, viaturas, efetivo e complementos da escala.</p>
+
+    function carregarDadosResenha() {
+      if (APP.dadosResenha) return Promise.resolve(APP.dadosResenha);
+
+      return chamarApi('dadosResenha', {})
+        .then(function(resp) {
+          if (!resp || !resp.ok) {
+            throw new Error(resp && resp.erro ? resp.erro : 'Falha ao carregar dados da resenha.');
+          }
+
+          APP.dadosResenha = resp.dados || {};
+          return APP.dadosResenha;
+        });
+    }
+
+
+    function renderizarFormularioResenha() {
+      const u = APP.usuario || {};
+      const dados = APP.dadosResenha || {};
+
+      document.getElementById('resenhaConteudo').innerHTML = `
+        <div class="resenha-grid">
+          <div class="resenha-card">
+            <div class="resenha-card-header">
+              <h2>Identificação</h2>
+              <p>Dados do responsável pelo envio.</p>
+              <span class="resenha-status">PREENCHIMENTO</span>
+            </div>
+
+            <div class="resenha-card-body">
+              <div class="resenha-info-list">
+                ${resenhaInfo('Escalante', [u.postoGrad, u.nomeGuerra].filter(Boolean).join(' '))}
+                ${resenhaInfo('Horário limite', 'Segunda-feira até às 11h')}
               </div>
 
-              <div class="resenha-card-body">
-                <form id="formResenhaEscala">
-                  <div class="resenha-form-grid">
-                    <div class="resenha-form-field">
-                      <label>Data da escala</label>
-                      <input id="resenhaDataEscala" name="dataEscala" type="date">
-                    </div>
+              <div class="resenha-alerta">
+                O envio fora do horário limite será permitido, mas ficará visualmente identificado como atraso.
+              </div>
+            </div>
+          </div>
 
-                    <div class="resenha-form-field">
-                      <label>Horário da escala</label>
-                      <input id="resenhaHorarioEscala" name="horarioEscala" type="text" placeholder="Das 00:00h às 00:00h">
-                    </div>
+          <div class="resenha-card">
+            <div class="resenha-card-header">
+              <h2>Informações da Escala</h2>
+              <p>Preencha a data da escala, o pelotão, as equipes FT, as duplas ROCAM, folgas/dispensas, afastamentos e observações.</p>
+            </div>
 
-                    <div class="resenha-divider-title">Equipes FT</div>
+            <div class="resenha-card-body">
+              <form id="formResenhaEscala">
+                <div class="resenha-form-grid">
+                  <div class="resenha-form-field">
+                    <label>Data da escala</label>
+                    <input id="resenhaDataEscala" name="dataEscala" type="date">
                   </div>
 
-                  <div id="equipesFtWrap" class="resenha-equipes-wrap">
-                    ${montarEquipesFt(3)}
-                  </div>
-                  <div class="resenha-actions">
-                    <button type="button" class="resenha-action-btn" onclick="adicionarEquipeFt()">ADICIONAR EQUIPE FT</button>
-                    <button type="button" class="resenha-action-btn" onclick="removerEquipeFt()">REMOVER EQUIPE FT</button>
+                  <div class="resenha-form-field">
+                    <label>Horário da escala</label>
+                    <input id="resenhaHorarioEscala" name="horarioEscala" type="text" placeholder="Das 00:00h às 00:00h">
                   </div>
 
-                  <div class="resenha-form-grid">
-                    <div class="resenha-divider-title">Duplas ROCAM</div>
+                  <div class="resenha-form-field full">
+                    <label>Pelotão</label>
+                    <select id="resenhaPelotao" name="pelotao">
+                      <option value="">Selecione</option>
+                      <option value="1º PEL">1º PEL</option>
+                      <option value="2º PEL">2º PEL</option>
+                    </select>
                   </div>
 
-                  <div id="duplasRocamWrap" class="resenha-equipes-wrap">
-                    ${montarDuplasRocam(3)}
-                  </div>
-                  <div class="resenha-actions">
-                    <button type="button" class="resenha-action-btn" onclick="adicionarDuplaRocam()">ADICIONAR DUPLA ROCAM</button>
-                    <button type="button" class="resenha-action-btn" onclick="removerDuplaRocam()">REMOVER DUPLA ROCAM</button>
-                  </div>
-
-                  <div class="resenha-form-grid" style="margin-top:12px;">
-                    <div class="resenha-divider-title">Complementos</div>
-                    <div class="resenha-form-field full">
-                      <label>Folgas e dispensas</label>
-                      <textarea id="resenhaFolgas" name="folgas" placeholder="Informe folgas, dispensas e demais registros relacionados"></textarea>
-                    </div>
-                    <div class="resenha-form-field full">
-                      <label>Afastamentos</label>
-                      <textarea id="resenhaAfastamentos" name="afastamentos" placeholder="Informe afastamentos, baixas, cursos, missões ou impedimentos"></textarea>
-                    </div>
-                    <div class="resenha-form-field full">
-                      <label>Observações</label>
-                      <textarea id="resenhaObservacoes" name="observacoes" placeholder="Observações gerais da resenha operacional"></textarea>
-                    </div>
-                  </div>
-
-                  <button class="resenha-submit" type="button" onclick="enviarResenhaEscalaVisual()">
-                    ENVIAR RESENHA DE ESCALA
-                  </button>
-                </form>
-
-                <div class="resenha-alerta">
-                  Nesta etapa, o envio exibe confirmação visual e limpa o formulário. A gravação na planilha será conectada na próxima atualização.
+                  <div class="resenha-divider-title">Equipes FT</div>
                 </div>
+
+                <div id="equipesFtWrap" class="resenha-equipes-wrap">
+                  ${montarEquipesFt(3)}
+                </div>
+
+                <div class="resenha-actions">
+                  <button type="button" class="resenha-action-btn" onclick="adicionarEquipeFt()">ADICIONAR EQUIPE FT</button>
+                  <button type="button" class="resenha-action-btn" onclick="removerEquipeFt()">REMOVER EQUIPE FT</button>
+                </div>
+
+                <div class="resenha-form-grid">
+                  <div class="resenha-divider-title">Duplas ROCAM</div>
+                </div>
+
+                <div id="duplasRocamWrap" class="resenha-equipes-wrap">
+                  ${montarDuplasRocam(3)}
+                </div>
+
+                <div class="resenha-actions">
+                  <button type="button" class="resenha-action-btn" onclick="adicionarDuplaRocam()">ADICIONAR DUPLA ROCAM</button>
+                  <button type="button" class="resenha-action-btn" onclick="removerDuplaRocam()">REMOVER DUPLA ROCAM</button>
+                </div>
+
+                <div class="resenha-form-grid" style="margin-top:12px;">
+                  <div class="resenha-divider-title">Folgas e Dispensas</div>
+                </div>
+
+                <div id="folgasDispensasWrap" class="resenha-equipes-wrap">
+                  ${registroFolgaDispensaBox(1)}
+                </div>
+
+                <div class="resenha-actions">
+                  <button type="button" class="resenha-action-btn" onclick="adicionarFolgaDispensa()">ADICIONAR FOLGA/DISPENSA</button>
+                  <button type="button" class="resenha-action-btn" onclick="removerFolgaDispensa()">REMOVER FOLGA/DISPENSA</button>
+                </div>
+
+                <div class="resenha-form-grid" style="margin-top:12px;">
+                  <div class="resenha-divider-title">Afastamentos</div>
+                </div>
+
+                <div id="afastamentosWrap" class="resenha-equipes-wrap">
+                  ${registroAfastamentoBox(1)}
+                </div>
+
+                <div class="resenha-actions">
+                  <button type="button" class="resenha-action-btn" onclick="adicionarAfastamento()">ADICIONAR AFASTAMENTO</button>
+                  <button type="button" class="resenha-action-btn" onclick="removerAfastamento()">REMOVER AFASTAMENTO</button>
+                </div>
+
+                <div class="resenha-form-grid" style="margin-top:12px;">
+                  <div class="resenha-divider-title">Observações</div>
+                  <div class="resenha-form-field full">
+                    <label>Observações gerais da resenha operacional</label>
+                    <textarea id="resenhaObservacoes" name="observacoes" placeholder="Observações gerais da resenha operacional"></textarea>
+                  </div>
+                </div>
+
+                <button class="resenha-submit" type="button" onclick="enviarResenhaEscalaVisual()">
+                  ENVIAR RESENHA DE ESCALA
+                </button>
+              </form>
+
+              <div class="resenha-alerta">
+                Nesta etapa, o envio exibe confirmação visual e limpa o formulário. A gravação na planilha será conectada na próxima atualização.
               </div>
             </div>
           </div>
@@ -2992,7 +3120,8 @@ Banco de dados: Google Sheets.
       `;
 
       preencherPadroesResenha(u);
-      iniciarRelogioResenha();
+      instalarEventosResenha();
+      atualizarDisponibilidadeResenha();
     }
 
 
@@ -3016,24 +3145,40 @@ Banco de dados: Google Sheets.
           <h3>VTR FT ${numero}</h3>
           <div class="resenha-equipe-grid">
             <div class="resenha-mini-field full">
-              <label>Prefixo da VTR</label>
-              <input type="text" name="ft${numero}_vtr" placeholder="Prefixo da viatura">
+              <label>Viatura FT</label>
+              <select class="vtr-select" name="ft${numero}_vtr">
+                ${optionsViaturas('TATICO')}
+              </select>
             </div>
             <div class="resenha-mini-field">
               <label>Comandante</label>
-              <input type="text" name="ft${numero}_cmt" placeholder="Graduação / Nome">
+              <select class="pm-select" name="ft${numero}_comandante">
+                ${optionsPms('FT')}
+              </select>
             </div>
             <div class="resenha-mini-field">
               <label>Motorista</label>
-              <input type="text" name="ft${numero}_mot" placeholder="Graduação / Nome">
+              <select class="pm-select" name="ft${numero}_motorista">
+                ${optionsPms('FT')}
+              </select>
             </div>
             <div class="resenha-mini-field">
-              <label>Patrulheiro 1</label>
-              <input type="text" name="ft${numero}_p1" placeholder="Graduação / Nome">
+              <label>Auxiliar 1</label>
+              <select class="pm-select" name="ft${numero}_aux1">
+                ${optionsPms('FT')}
+              </select>
             </div>
             <div class="resenha-mini-field">
-              <label>Patrulheiro 2</label>
-              <input type="text" name="ft${numero}_p2" placeholder="Graduação / Nome">
+              <label>Auxiliar 2</label>
+              <select class="pm-select" name="ft${numero}_aux2">
+                ${optionsPms('FT')}
+              </select>
+            </div>
+            <div class="resenha-mini-field">
+              <label>Auxiliar 3</label>
+              <select class="pm-select" name="ft${numero}_aux3">
+                ${optionsPms('FT')}
+              </select>
             </div>
           </div>
         </div>
@@ -3047,20 +3192,28 @@ Banco de dados: Google Sheets.
           <h3>ROCAM ${numero}</h3>
           <div class="resenha-equipe-grid">
             <div class="resenha-mini-field">
-              <label>Prefixo / Moto 1</label>
-              <input type="text" name="rocam${numero}_moto1" placeholder="Prefixo">
+              <label>Moto do encarregado</label>
+              <select class="vtr-select" name="rocam${numero}_moto_encarregado">
+                ${optionsViaturas('ROCAM')}
+              </select>
             </div>
             <div class="resenha-mini-field">
-              <label>Policial 1</label>
-              <input type="text" name="rocam${numero}_pm1" placeholder="Graduação / Nome">
+              <label>Encarregado</label>
+              <select class="pm-select" name="rocam${numero}_encarregado">
+                ${optionsPms('ROCAM')}
+              </select>
             </div>
             <div class="resenha-mini-field">
-              <label>Prefixo / Moto 2</label>
-              <input type="text" name="rocam${numero}_moto2" placeholder="Prefixo">
+              <label>Moto do auxiliar</label>
+              <select class="vtr-select" name="rocam${numero}_moto_auxiliar">
+                ${optionsViaturas('ROCAM')}
+              </select>
             </div>
             <div class="resenha-mini-field">
-              <label>Policial 2</label>
-              <input type="text" name="rocam${numero}_pm2" placeholder="Graduação / Nome">
+              <label>Auxiliar</label>
+              <select class="pm-select" name="rocam${numero}_auxiliar">
+                ${optionsPms('ROCAM')}
+              </select>
             </div>
           </div>
         </div>
@@ -3068,39 +3221,261 @@ Banco de dados: Google Sheets.
     }
 
 
+    function registroFolgaDispensaBox(numero) {
+      return `
+        <div class="resenha-equipe-box" data-tipo="FOLGA_DISPENSA" data-numero="${numero}">
+          <h3>Folga / Dispensa ${numero}</h3>
+          <div class="resenha-equipe-grid">
+            <div class="resenha-mini-field">
+              <label>Policial</label>
+              <select class="pm-select" name="folga${numero}_pm">
+                ${optionsPms('TODOS')}
+              </select>
+            </div>
+            <div class="resenha-mini-field">
+              <label>Tipo</label>
+              <select name="folga${numero}_tipo" onchange="atualizarRegrasFolgaDispensa(this)">
+                ${optionsTiposFolgaDispensa()}
+              </select>
+            </div>
+            <div class="resenha-mini-field">
+              <label>Data de referência</label>
+              <input type="date" name="folga${numero}_data">
+            </div>
+            <div class="resenha-mini-field">
+              <label>BOPM</label>
+              <input type="text" name="folga${numero}_bopm" placeholder="Obrigatório para Folga Flagrante">
+            </div>
+            <div class="resenha-mini-field full">
+              <label>Observação</label>
+              <textarea name="folga${numero}_obs" placeholder="Obrigatória para Folga Orgânica e Folga Compensatória"></textarea>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+
+    function registroAfastamentoBox(numero) {
+      return `
+        <div class="resenha-equipe-box" data-tipo="AFASTAMENTO" data-numero="${numero}">
+          <h3>Afastamento ${numero}</h3>
+          <div class="resenha-equipe-grid">
+            <div class="resenha-mini-field">
+              <label>Policial</label>
+              <select class="pm-select" name="afast${numero}_pm">
+                ${optionsPms('TODOS')}
+              </select>
+            </div>
+            <div class="resenha-mini-field">
+              <label>Tipo de afastamento</label>
+              <select name="afast${numero}_tipo">
+                ${optionsTiposAfastamento()}
+              </select>
+            </div>
+            <div class="resenha-mini-field">
+              <label>Data de referência</label>
+              <input type="date" name="afast${numero}_data">
+            </div>
+            <div class="resenha-mini-field full">
+              <label>Observação</label>
+              <textarea name="afast${numero}_obs" placeholder="Observação do afastamento, se necessário"></textarea>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+
+    function optionsPms(tipo) {
+      const dados = APP.dadosResenha || {};
+      let lista = [];
+
+      if (tipo === 'FT') lista = dados.efetivoFt || [];
+      else if (tipo === 'ROCAM') lista = dados.efetivoRocam || [];
+      else lista = dados.efetivoAtivo || [];
+
+      return '<option value="">Selecione</option>' + lista.map(function(pm) {
+        return `<option value="${escaparAttr(pm.re)}">${escapar(pm.rotulo)}</option>`;
+      }).join('');
+    }
+
+
+    function optionsViaturas(tipo) {
+      const dados = APP.dadosResenha || {};
+      const lista = tipo === 'ROCAM' ? (dados.viaturasRocam || []) : (dados.viaturasTatico || []);
+
+      return '<option value="">Selecione</option>' + lista.map(function(v) {
+        return `<option value="${escaparAttr(v.prefixo)}">${escapar(v.rotulo)}</option>`;
+      }).join('');
+    }
+
+
+    function optionsTiposFolgaDispensa() {
+      const dados = APP.dadosResenha || {};
+      const lista = dados.tiposFolgaDispensa || ['Dispensa Serviço', 'Folga Mensal', 'Folga Orgânica', 'Folga Flagrante', 'Folga Compensatória'];
+
+      return '<option value="">Selecione</option>' + lista.map(function(t) {
+        return `<option value="${escaparAttr(t)}">${escapar(t)}</option>`;
+      }).join('');
+    }
+
+
+    function optionsTiposAfastamento() {
+      const dados = APP.dadosResenha || {};
+      const lista = dados.tiposAfastamento || ['Férias', 'Afastamento Médico', 'Licença Prêmio', 'Curso', 'Outros'];
+
+      return '<option value="">Selecione</option>' + lista.map(function(t) {
+        return `<option value="${escaparAttr(t)}">${escapar(t)}</option>`;
+      }).join('');
+    }
+
+
+    function instalarEventosResenha() {
+      document.querySelectorAll('#formResenhaEscala select').forEach(function(sel) {
+        sel.addEventListener('change', atualizarDisponibilidadeResenha);
+      });
+    }
+
+
+    function atualizarDisponibilidadeResenha() {
+      bloquearDuplicadosPorClasse('.pm-select');
+      bloquearDuplicadosPorClasse('.vtr-select');
+    }
+
+
+    function bloquearDuplicadosPorClasse(selector) {
+      const selects = Array.from(document.querySelectorAll('#formResenhaEscala ' + selector));
+      const escolhidos = selects
+        .map(s => s.value)
+        .filter(v => v);
+
+      selects.forEach(function(sel) {
+        Array.from(sel.options).forEach(function(opt) {
+          if (!opt.value) {
+            opt.disabled = false;
+            return;
+          }
+
+          opt.disabled = opt.value !== sel.value && escolhidos.includes(opt.value);
+        });
+      });
+    }
+
+
+    function atualizarRegrasFolgaDispensa(sel) {
+      const box = sel.closest('.resenha-equipe-box');
+      if (!box) return;
+
+      const tipo = normalizarTexto(sel.value);
+      const bopm = box.querySelector('input[name$="_bopm"]');
+      const obs = box.querySelector('textarea[name$="_obs"]');
+
+      if (bopm) {
+        bopm.placeholder = tipo.includes('FLAGRANTE') ? 'BOPM obrigatório' : 'BOPM, se houver';
+      }
+
+      if (obs) {
+        obs.placeholder = (tipo.includes('COMPENSATORIA') || tipo.includes('ORGANICA'))
+          ? 'Observação obrigatória'
+          : 'Observação, se necessária';
+      }
+    }
+
+
     function adicionarEquipeFt() {
       const wrap = document.getElementById('equipesFtWrap');
       if (!wrap) return;
+
       const atual = wrap.querySelectorAll('[data-tipo="FT"]').length;
       if (atual >= 6) return mostrarToastFt('Limite atingido', 'A resenha permite até 6 equipes FT.');
+
       wrap.insertAdjacentHTML('beforeend', equipeFtBox(atual + 1));
+      instalarEventosResenha();
+      atualizarDisponibilidadeResenha();
     }
 
 
     function removerEquipeFt() {
       const wrap = document.getElementById('equipesFtWrap');
       if (!wrap) return;
+
       const itens = wrap.querySelectorAll('[data-tipo="FT"]');
       if (itens.length <= 3) return mostrarToastFt('Mínimo mantido', 'A resenha mantém inicialmente 3 equipes FT visíveis.');
+
       itens[itens.length - 1].remove();
+      atualizarDisponibilidadeResenha();
     }
 
 
     function adicionarDuplaRocam() {
       const wrap = document.getElementById('duplasRocamWrap');
       if (!wrap) return;
+
       const atual = wrap.querySelectorAll('[data-tipo="ROCAM"]').length;
       if (atual >= 6) return mostrarToastFt('Limite atingido', 'A resenha permite até 6 duplas ROCAM.');
+
       wrap.insertAdjacentHTML('beforeend', duplaRocamBox(atual + 1));
+      instalarEventosResenha();
+      atualizarDisponibilidadeResenha();
     }
 
 
     function removerDuplaRocam() {
       const wrap = document.getElementById('duplasRocamWrap');
       if (!wrap) return;
+
       const itens = wrap.querySelectorAll('[data-tipo="ROCAM"]');
       if (itens.length <= 3) return mostrarToastFt('Mínimo mantido', 'A resenha mantém inicialmente 3 duplas ROCAM visíveis.');
+
       itens[itens.length - 1].remove();
+      atualizarDisponibilidadeResenha();
+    }
+
+
+    function adicionarFolgaDispensa() {
+      const wrap = document.getElementById('folgasDispensasWrap');
+      if (!wrap) return;
+
+      const atual = wrap.querySelectorAll('[data-tipo="FOLGA_DISPENSA"]').length;
+      wrap.insertAdjacentHTML('beforeend', registroFolgaDispensaBox(atual + 1));
+      instalarEventosResenha();
+      atualizarDisponibilidadeResenha();
+    }
+
+
+    function removerFolgaDispensa() {
+      const wrap = document.getElementById('folgasDispensasWrap');
+      if (!wrap) return;
+
+      const itens = wrap.querySelectorAll('[data-tipo="FOLGA_DISPENSA"]');
+      if (itens.length <= 1) return mostrarToastFt('Mínimo mantido', 'Mantenha ao menos um campo de folga/dispensa disponível.');
+
+      itens[itens.length - 1].remove();
+      atualizarDisponibilidadeResenha();
+    }
+
+
+    function adicionarAfastamento() {
+      const wrap = document.getElementById('afastamentosWrap');
+      if (!wrap) return;
+
+      const atual = wrap.querySelectorAll('[data-tipo="AFASTAMENTO"]').length;
+      wrap.insertAdjacentHTML('beforeend', registroAfastamentoBox(atual + 1));
+      instalarEventosResenha();
+      atualizarDisponibilidadeResenha();
+    }
+
+
+    function removerAfastamento() {
+      const wrap = document.getElementById('afastamentosWrap');
+      if (!wrap) return;
+
+      const itens = wrap.querySelectorAll('[data-tipo="AFASTAMENTO"]');
+      if (itens.length <= 1) return mostrarToastFt('Mínimo mantido', 'Mantenha ao menos um campo de afastamento disponível.');
+
+      itens[itens.length - 1].remove();
+      atualizarDisponibilidadeResenha();
     }
 
 
@@ -3119,7 +3494,11 @@ Banco de dados: Google Sheets.
 
     function iniciarRelogioResenha() {
       atualizarRelogioResenha();
-      if (window.__timerResenhaEscala) clearInterval(window.__timerResenhaEscala);
+
+      if (window.__timerResenhaEscala) {
+        clearInterval(window.__timerResenhaEscala);
+      }
+
       window.__timerResenhaEscala = setInterval(atualizarRelogioResenha, 1000);
     }
 
@@ -3127,11 +3506,17 @@ Banco de dados: Google Sheets.
     function atualizarRelogioResenha() {
       const el = document.getElementById('resenhaClockTexto');
       const box = document.getElementById('resenhaClock');
+
       if (!el || !box) return;
+
       const agora = new Date();
       el.textContent = formatarDataHoraBR(agora);
-      if (resenhaEstaAtrasada(agora)) box.classList.add('atrasado');
-      else box.classList.remove('atrasado');
+
+      if (resenhaEstaAtrasada(agora)) {
+        box.classList.add('atrasado');
+      } else {
+        box.classList.remove('atrasado');
+      }
     }
 
 
@@ -3139,30 +3524,40 @@ Banco de dados: Google Sheets.
       const diaSemana = data.getDay();
       const hora = data.getHours();
       const minuto = data.getMinutes();
+
       return diaSemana === 1 && (hora > 11 || (hora === 11 && minuto > 0));
     }
 
 
     function enviarResenhaEscalaVisual() {
       const form = document.getElementById('formResenhaEscala');
+
       mostrarToastFt('Resenha enviada', 'A resenha de escala foi confirmada nesta tela. O formulário foi limpo para novo envio.');
+
       if (form) form.reset();
-      abrirResenhasEscalas();
+
+      renderizarFormularioResenha();
+      window.scrollTo(0, 0);
     }
 
 
     function mostrarToastFt(titulo, texto) {
       let toast = document.getElementById('toastFt');
+
       if (!toast) {
         toast = document.createElement('div');
         toast.id = 'toastFt';
         toast.className = 'toast-ft';
         document.body.appendChild(toast);
       }
+
       toast.innerHTML = `<strong>${escapar(titulo)}</strong><span>${escapar(texto)}</span>`;
       toast.classList.add('visivel');
+
       clearTimeout(window.__timerToastFt);
-      window.__timerToastFt = setTimeout(function() { toast.classList.remove('visivel'); }, 3600);
+      window.__timerToastFt = setTimeout(function() {
+        toast.classList.remove('visivel');
+      }, 3600);
     }
 
 
@@ -3183,6 +3578,7 @@ Banco de dados: Google Sheets.
       const hora = String(data.getHours()).padStart(2, '0');
       const min = String(data.getMinutes()).padStart(2, '0');
       const seg = String(data.getSeconds()).padStart(2, '0');
+
       return dia + '/' + mes + '/' + ano + ' ' + hora + ':' + min + ':' + seg;
     }
 
