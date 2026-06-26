@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.5.6 RESENHAS ESCALAS
+SISTEMA CIA FT — PORTAL GITHUB V1.5.7 PERMISSOES RESENHA
 Arquivo: index.html
 ============================================================
 
@@ -15,7 +15,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Portal Força Tática • V1.5.6.1</title>
+  <title>Portal Força Tática • V1.5.7.1</title>
 
   <style>
     :root {
@@ -2488,7 +2488,7 @@ Banco de dados: Google Sheets.
       <div id="loginAlerta" class="alerta"></div>
 
       <div class="footer">
-        Portal Força Tática • V1.5.6
+        Portal Força Tática • V1.5.7
       </div>
     </main>
   </section>
@@ -2528,7 +2528,8 @@ Banco de dados: Google Sheets.
     const APP = {
       usuario: null,
       menus: [],
-      permissoes: {}
+      permissoes: {},
+      credenciais: null
     };
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -2566,6 +2567,7 @@ Banco de dados: Google Sheets.
           APP.usuario = resp.dados.usuario;
           APP.menus = resp.dados.menus || [];
           APP.permissoes = resp.dados.permissoes || {};
+          APP.credenciais = { login: login, senha: senha };
 
           document.getElementById('loginScreen').classList.add('hidden');
           document.getElementById('appScreen').classList.remove('hidden');
@@ -2602,7 +2604,7 @@ Banco de dados: Google Sheets.
                 <h2>Funcionalidades</h2>
                 <p>Acesso rápido aos módulos do Sistema CIA FT, conforme seu perfil de permissão.</p>
               </div>
-              <div class="home-version">V1.5.6</div>
+              <div class="home-version">V1.5.7</div>
             </div>
 
             <div class="home-situation-grid">
@@ -2917,19 +2919,13 @@ Banco de dados: Google Sheets.
 
 
     function montarMenusHome() {
-      const menus = Array.isArray(APP.menus) ? APP.menus.slice() : [];
-      const existeResenha = menus.some(m => ehModuloResenhaEscalas(m.id) || ehModuloResenhaEscalas(m.titulo));
-
-      if (!existeResenha) {
-        menus.splice(1, 0, {
-          id: 'RESENHA_DE_ESCALAS',
-          titulo: 'RESENHA DE ESCALAS',
-          descricao: 'Envio da resenha operacional semanal.',
-          icone: '📋'
-        });
-      }
-
-      return menus;
+      /*
+       * V1.5.7 — Regra crítica:
+       * A Home não cria botão de módulo por conta própria.
+       * Os módulos exibidos vêm exclusivamente da API,
+       * que monta a lista a partir da aba PERMISSOES_FT.
+       */
+      return Array.isArray(APP.menus) ? APP.menus.slice() : [];
     }
 
 
@@ -2955,7 +2951,17 @@ Banco de dados: Google Sheets.
       }
 
       if (ehModuloResenhaEscalas(id)) {
+        if (!usuarioTemPermissaoCliente('RESENHA_DE_ESCALAS', 'visualizar')) {
+          abrirAcessoNegado('Resenhas de Escalas');
+          return;
+        }
+
         abrirResenhasEscalas();
+        return;
+      }
+
+      if (!usuarioTemPermissaoCliente(id, 'visualizar')) {
+        abrirAcessoNegado(id);
         return;
       }
 
@@ -2985,16 +2991,93 @@ Banco de dados: Google Sheets.
     }
 
 
+    function abrirAcessoNegado(modulo) {
+      document.getElementById('appConteudo').innerHTML = `
+        <div class="page-wrap">
+          <div class="page-header">
+            <div class="page-header-row">
+              <div>
+                <div class="page-kicker">Acesso restrito</div>
+                <h1>Acesso não autorizado</h1>
+                <p>Seu perfil não possui permissão liberada para acessar este módulo.</p>
+              </div>
+              <div class="page-actions">
+                <button class="btn-page" onclick="abrirHome()">VOLTAR</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-card">
+            <h2>${escapar(modulo || 'Módulo')}</h2>
+            <p>As permissões são definidas pela aba <strong>PERMISSOES_FT</strong> e pelo perfil cadastrado no RE do policial.</p>
+          </div>
+        </div>
+      `;
+    }
+
+
+    function usuarioTemPermissaoCliente(modulo, acao) {
+      const chave = normalizarModuloCliente(modulo);
+      const permissao = obterPermissaoCliente(chave);
+
+      if (!permissao) return false;
+      if (permissao.acessoTotal) return true;
+
+      const campo = acao || 'visualizar';
+      return !!permissao[campo];
+    }
+
+
+    function obterPermissaoCliente(modulo) {
+      const permissoes = APP.permissoes || {};
+      const alvo = normalizarModuloCliente(modulo);
+
+      const diretas = [
+        alvo,
+        'RESENHA_DE_ESCALAS',
+        'RESENHAS_ESCALAS',
+        'ENVIAR_RESENHAS_ESCALA'
+      ];
+
+      for (let i = 0; i < diretas.length; i++) {
+        if (permissoes[diretas[i]]) return permissoes[diretas[i]];
+      }
+
+      const chaves = Object.keys(permissoes);
+      for (let i = 0; i < chaves.length; i++) {
+        if (normalizarModuloCliente(chaves[i]) === alvo) {
+          return permissoes[chaves[i]];
+        }
+      }
+
+      return null;
+    }
+
+
+    function normalizarModuloCliente(valor) {
+      const m = normalizarTexto(valor)
+        .replace(/\//g, ' ')
+        .replace(/-/g, ' ')
+        .replace(/\s+/g, '_');
+
+      const aliases = {
+        'RESENHAS_ESCALAS': 'RESENHA_DE_ESCALAS',
+        'RESENHA_ESCALAS': 'RESENHA_DE_ESCALAS',
+        'RESENHA_DE_ESCALAS': 'RESENHA_DE_ESCALAS',
+        'RESENHA_DE_ESCALA': 'RESENHA_DE_ESCALAS',
+        'RESENHA_ESCALA': 'RESENHA_DE_ESCALAS',
+        'RESENHA_DE_ESCALAS': 'RESENHA_DE_ESCALAS',
+        'ENVIAR_RESENHAS_ESCALA': 'RESENHA_DE_ESCALAS',
+        'ENVIAR_RESENHA_ESCALA': 'RESENHA_DE_ESCALAS'
+      };
+
+      return aliases[m] || m;
+    }
+
+
     function ehModuloResenhaEscalas(id) {
-      const mod = normalizarTexto(id);
-      return (
-        mod === 'RESENHA_DE_ESCALAS' ||
-        mod === 'RESENHAS_ESCALAS' ||
-        mod === 'RESENHA_ESCALAS' ||
-        mod === 'RESENHA DE ESCALAS' ||
-        mod === 'RESENHAS DE ESCALAS' ||
-        mod.includes('RESENHA')
-      );
+      const mod = normalizarModuloCliente(id);
+      return mod === 'RESENHA_DE_ESCALAS';
     }
 
 
@@ -3051,7 +3134,14 @@ Banco de dados: Google Sheets.
     function carregarDadosResenha() {
       if (APP.dadosResenha) return Promise.resolve(APP.dadosResenha);
 
-      return chamarApi('dadosResenha', {})
+      if (!APP.credenciais || !APP.credenciais.login || !APP.credenciais.senha) {
+        return Promise.reject(new Error('Sessão inválida. Faça login novamente.'));
+      }
+
+      return chamarApi('dadosResenha', {
+          login: APP.credenciais.login,
+          senha: APP.credenciais.senha
+        })
         .then(function(resp) {
           if (!resp || !resp.ok) {
             throw new Error(resp && resp.erro ? resp.erro : 'Falha ao carregar dados da resenha.');
@@ -3613,6 +3703,14 @@ Banco de dados: Google Sheets.
     function enviarResenhaEscalaVisual() {
       const form = document.getElementById('formResenhaEscala');
 
+      if (
+        !usuarioTemPermissaoCliente('RESENHA_DE_ESCALAS', 'inserir') &&
+        !usuarioTemPermissaoCliente('RESENHA_DE_ESCALAS', 'editar')
+      ) {
+        mostrarToastFt('Resenha não enviada', 'Seu perfil não possui permissão para inserir ou editar resenhas.');
+        return;
+      }
+
       const validacao = validarResenhaEscala();
       if (!validacao.ok) {
         mostrarValidacaoResenha(validacao.erros);
@@ -3754,6 +3852,7 @@ Banco de dados: Google Sheets.
       APP.usuario = null;
       APP.menus = [];
       APP.permissoes = {};
+      APP.credenciais = null;
 
       document.getElementById('appScreen').classList.add('hidden');
       document.getElementById('loginScreen').classList.remove('hidden');
