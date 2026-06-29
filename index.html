@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.6.3 HOME LIMPA REAL
+SISTEMA CIA FT — PORTAL GITHUB V1.7.0 CONSULTA EFETIVO
 Arquivo: index.html
 ============================================================
 
@@ -15,7 +15,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Portal Força Tática • V1.6.3.1</title>
+  <title>Portal Força Tática • V1.7.0.1</title>
 
   <style>
     :root {
@@ -2963,6 +2963,35 @@ Banco de dados: Google Sheets.
       }
     }
 
+    /* ============================================================
+     * CONSULTA EFETIVO — V1.7.0
+     * ============================================================ */
+    .consulta-card{background:#fff;border:1px solid rgba(23,32,42,.12);border-radius:22px;box-shadow:0 16px 34px rgba(15,23,42,.10);overflow:hidden;min-width:0}
+    .consulta-card-header{background:radial-gradient(circle at top left,rgba(55,66,71,.24),transparent 56%),linear-gradient(180deg,#fff,#f8fafc);border-bottom:1px solid rgba(55,66,71,.12);padding:15px 16px}
+    .consulta-card-header h2{margin:0;color:#17202a;font-size:17px;line-height:1.2}
+    .consulta-card-header p{margin:5px 0 0;color:#64748b;font-size:12px;line-height:1.35}
+    .consulta-card-body{padding:15px 16px 16px}
+    .consulta-filtros{display:grid;grid-template-columns:minmax(220px,1.3fr) minmax(150px,.7fr) minmax(150px,.7fr) auto;gap:10px;align-items:end}
+    .consulta-field{display:grid;gap:6px;min-width:0}
+    .consulta-field label{color:#64748b;font-size:11.5px;font-weight:900;letter-spacing:.12px}
+    .consulta-field input,.consulta-field select{width:100%;border:1px solid rgba(55,66,71,.16);background:#fff;color:#17202a;border-radius:13px;padding:11px 12px;font-size:14px;outline:none;box-sizing:border-box;min-height:46px}
+    .consulta-btn{width:100%;border:1px solid rgba(55,66,71,.16);background:radial-gradient(circle at top left,rgba(55,66,71,.24),transparent 56%),linear-gradient(180deg,#fff,#f8fafc);color:#17202a;border-radius:14px;padding:13px 14px;font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 10px 22px rgba(15,23,42,.08);text-align:center;min-height:46px;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap}
+    .consulta-resumo,.consulta-empty{margin-top:12px;border:1px dashed rgba(55,66,71,.25);background:#f8fafc;border-radius:16px;padding:13px;color:#64748b;font-size:12.5px;line-height:1.4}
+    .consulta-lista{display:grid;gap:10px;margin-top:14px}
+    .consulta-pm-card{border:1px solid rgba(55,66,71,.12);background:radial-gradient(circle at top left,rgba(55,66,71,.09),transparent 54%),linear-gradient(180deg,#fff,#f8fafc);border-radius:18px;padding:13px;display:grid;grid-template-columns:56px 1fr;gap:12px;align-items:center;min-width:0}
+    .consulta-foto{width:56px;height:56px;border-radius:16px;object-fit:cover;background:#e9edf1;border:2px solid #374247}
+    .consulta-foto.sem-foto{display:inline-flex;align-items:center;justify-content:center;color:#374247;font-weight:1000;font-size:18px}
+    .consulta-pm-main{min-width:0}
+    .consulta-pm-title{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
+    .consulta-pm-title h3{margin:0;color:#17202a;font-size:15px;line-height:1.25;word-break:break-word}
+    .consulta-status{display:inline-flex;padding:5px 8px;border-radius:999px;background:#e9edf1;color:#374247;border:1px solid rgba(55,66,71,.12);font-weight:900;font-size:11px;white-space:nowrap}
+    .consulta-detalhes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:10px}
+    .consulta-detail{background:rgba(255,255,255,.72);border:1px solid rgba(55,66,71,.10);border-radius:12px;padding:8px 9px;min-width:0}
+    .consulta-detail small{display:block;color:#64748b;font-size:10.5px;font-weight:900;margin-bottom:4px}
+    .consulta-detail strong{display:block;color:#17202a;font-size:12.5px;line-height:1.25;overflow-wrap:anywhere}
+    @media(max-width:900px){.consulta-filtros{grid-template-columns:1fr 1fr}.consulta-filtros .consulta-field:first-child{grid-column:1/-1}.consulta-detalhes{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:560px){.consulta-card-header,.consulta-card-body{padding:14px}.consulta-filtros{grid-template-columns:1fr}.consulta-pm-card{grid-template-columns:48px 1fr;gap:10px;padding:12px}.consulta-foto{width:48px;height:48px;border-radius:14px}.consulta-pm-title{align-items:flex-start;flex-direction:column;gap:6px}.consulta-detalhes{grid-template-columns:1fr}}
+
   </style>
 </head>
 
@@ -2993,7 +3022,7 @@ Banco de dados: Google Sheets.
       <div id="loginAlerta" class="alerta"></div>
 
       <div class="footer">
-        Portal Força Tática • V1.6.3
+        Portal Força Tática • V1.7.0
       </div>
     </main>
   </section>
@@ -3441,6 +3470,16 @@ Banco de dados: Google Sheets.
         return;
       }
 
+      if (ehModuloConsultaEfetivo(id)) {
+        if (!usuarioTemPermissaoCliente('CONSULTA_EFETIVO', 'visualizar')) {
+          abrirAcessoNegado('Consulta do Efetivo');
+          return;
+        }
+
+        abrirConsultaEfetivo();
+        return;
+      }
+
       if (ehModuloEscalasAdm(id)) {
         if (!usuarioTemPermissaoCliente('ESCALAS_ADM', 'visualizar')) {
           abrirAcessoNegado('Escalas ADM');
@@ -3592,10 +3631,17 @@ Banco de dados: Google Sheets.
         'ESCALA_ADM': 'ESCALAS_ADM',
         'MINHA_ESCALA_ADM': 'ESCALAS_ADM',
         'ENVIAR_ESCALA_ADM': 'ESCALAS_ADM',
-        'ESCALAS_ADMINISTRATIVAS': 'ESCALAS_ADM'
+        'ESCALAS_ADMINISTRATIVAS': 'ESCALAS_ADM',
+        'CONSULTA EFETIVO': 'CONSULTA_EFETIVO',
+        'CONSULTAR_EFETIVO': 'CONSULTA_EFETIVO'
       };
 
       return aliases[m] || m;
+    }
+
+
+    function ehModuloConsultaEfetivo(id) {
+      return normalizarModuloCliente(id) === 'CONSULTA_EFETIVO';
     }
 
 
@@ -4627,6 +4673,7 @@ Banco de dados: Google Sheets.
           mostrarToastFt('Escala ADM enviada', 'Sua escala administrativa foi registrada com decisão PENDENTE.');
 
           APP.dadosEscalasAdm = null;
+      APP.dadosConsultaEfetivo = null;
           return carregarDadosEscalasAdm();
         })
         .then(renderizarEscalasAdm)
@@ -4801,6 +4848,186 @@ Banco de dados: Google Sheets.
 
 
 
+    /* ============================================================
+     * CONSULTA EFETIVO — V1.7.0
+     * ============================================================ */
+
+    function abrirConsultaEfetivo() {
+      window.scrollTo(0, 0);
+
+      document.getElementById('appConteudo').innerHTML = `
+        <div class="page-wrap">
+          <div class="page-header">
+            <div class="page-header-row">
+              <div>
+                <div class="page-kicker">Consulta operacional</div>
+                <h1>Consulta do Efetivo</h1>
+                <p>Consulte policiais conforme o escopo liberado para o seu perfil em PERMISSOES_FT.</p>
+              </div>
+              <div class="page-actions">
+                <button class="btn-page" onclick="abrirHome()">VOLTAR</button>
+              </div>
+            </div>
+          </div>
+          <div id="consultaEfetivoConteudo">
+            <div class="resenha-loading">Carregando efetivo autorizado...</div>
+          </div>
+        </div>
+      `;
+
+      carregarConsultaEfetivo()
+        .then(renderizarConsultaEfetivo)
+        .catch(function(err) {
+          document.getElementById('consultaEfetivoConteudo').innerHTML = `
+            <div class="consulta-card">
+              <div class="consulta-card-header">
+                <h2>Não foi possível carregar a consulta</h2>
+                <p>Verifique a API e as permissões em PERMISSOES_FT.</p>
+              </div>
+              <div class="consulta-card-body">
+                <div class="consulta-empty">${escapar(err.message || err)}</div>
+              </div>
+            </div>
+          `;
+        });
+    }
+
+    function carregarConsultaEfetivo() {
+      if (!APP.credenciais || !APP.credenciais.login || !APP.credenciais.senha) {
+        return Promise.reject(new Error('Sessão inválida. Faça login novamente.'));
+      }
+
+      return chamarApi('dados_consulta_efetivo', {
+          login: APP.credenciais.login,
+          senha: APP.credenciais.senha
+        })
+        .then(function(resp) {
+          if (!resp || !resp.ok) {
+            throw new Error(resp && resp.erro ? resp.erro : 'Falha ao carregar Consulta do Efetivo.');
+          }
+          APP.dadosConsultaEfetivo = resp.dados || {};
+          return APP.dadosConsultaEfetivo;
+        });
+    }
+
+    function renderizarConsultaEfetivo() {
+      const dados = APP.dadosConsultaEfetivo || {};
+      const permissao = obterPermissaoCliente('CONSULTA_EFETIVO') || {};
+      const lista = dados.efetivo || [];
+
+      document.getElementById('consultaEfetivoConteudo').innerHTML = `
+        <div class="consulta-card">
+          <div class="consulta-card-header">
+            <h2>Filtros</h2>
+            <p>Busca por RE, nome de guerra, nome completo, pelotão, modalidade, função ou status.</p>
+          </div>
+          <div class="consulta-card-body">
+            <div class="consulta-filtros">
+              <div class="consulta-field">
+                <label>Buscar</label>
+                <input id="consultaBusca" type="text" placeholder="Digite RE, nome, função, modalidade..." oninput="filtrarConsultaEfetivo()">
+              </div>
+              <div class="consulta-field">
+                <label>Pelotão</label>
+                <select id="consultaPelotao" onchange="filtrarConsultaEfetivo()">
+                  ${optionsConsultaFiltro(dados.filtros && dados.filtros.pelotoes, 'Todos')}
+                </select>
+              </div>
+              <div class="consulta-field">
+                <label>Modalidade</label>
+                <select id="consultaModalidade" onchange="filtrarConsultaEfetivo()">
+                  ${optionsConsultaFiltro(dados.filtros && dados.filtros.modalidades, 'Todas')}
+                </select>
+              </div>
+              <button class="consulta-btn" type="button" onclick="limparFiltrosConsultaEfetivo()">LIMPAR</button>
+            </div>
+            <div class="consulta-resumo">
+              Escopo liberado: <strong>${escapar(permissao.escopo || '-')}</strong>. 
+              Resultado autorizado pela PERMISSOES_FT: <strong>${lista.length}</strong> policial(is).
+            </div>
+            <div id="consultaLista" class="consulta-lista"></div>
+          </div>
+        </div>
+      `;
+      filtrarConsultaEfetivo();
+    }
+
+    function optionsConsultaFiltro(lista, rotuloInicial) {
+      const valores = Array.isArray(lista) ? lista : [];
+      return `<option value="">${escapar(rotuloInicial)}</option>` + valores.map(function(v) {
+        return `<option value="${escaparAttr(v)}">${escapar(v)}</option>`;
+      }).join('');
+    }
+
+    function limparFiltrosConsultaEfetivo() {
+      const busca = document.getElementById('consultaBusca');
+      const pel = document.getElementById('consultaPelotao');
+      const mod = document.getElementById('consultaModalidade');
+      if (busca) busca.value = '';
+      if (pel) pel.value = '';
+      if (mod) mod.value = '';
+      filtrarConsultaEfetivo();
+    }
+
+    function filtrarConsultaEfetivo() {
+      const dados = APP.dadosConsultaEfetivo || {};
+      const lista = dados.efetivo || [];
+      const termo = normalizarTexto(document.getElementById('consultaBusca')?.value || '');
+      const pel = normalizarTexto(document.getElementById('consultaPelotao')?.value || '');
+      const modalidade = normalizarTexto(document.getElementById('consultaModalidade')?.value || '');
+
+      const filtrados = lista.filter(function(pm) {
+        const texto = normalizarTexto([pm.re, pm.postoGrad, pm.nomeGuerra, pm.nomeCompleto, pm.pelotao, pm.modalidade, pm.funcao, pm.status].join(' '));
+        if (termo && !texto.includes(termo)) return false;
+        if (pel && normalizarTexto(pm.pelotao) !== pel) return false;
+        if (modalidade && normalizarTexto(pm.modalidade) !== modalidade) return false;
+        return true;
+      });
+
+      const alvo = document.getElementById('consultaLista');
+      if (!alvo) return;
+      if (!filtrados.length) {
+        alvo.innerHTML = '<div class="consulta-empty">Nenhum policial encontrado para os filtros informados.</div>';
+        return;
+      }
+      alvo.innerHTML = filtrados.map(montarCardConsultaPm).join('');
+    }
+
+    function montarCardConsultaPm(pm) {
+      const nome = [pm.postoGrad, pm.nomeGuerra].filter(Boolean).join(' ');
+      const foto = pm.foto
+        ? `<img class="consulta-foto" src="${escaparAttr(pm.foto)}" alt="Foto de ${escaparAttr(nome)}" onerror="this.outerHTML='<div class=&quot;consulta-foto sem-foto&quot;>FT</div>'">`
+        : `<div class="consulta-foto sem-foto">FT</div>`;
+
+      return `
+        <div class="consulta-pm-card">
+          ${foto}
+          <div class="consulta-pm-main">
+            <div class="consulta-pm-title">
+              <h3>${escapar(nome || pm.nomeCompleto || '-')}</h3>
+              <span class="consulta-status">${escapar(pm.status || '-')}</span>
+            </div>
+            <div class="consulta-detalhes">
+              ${consultaDetail('RE', pm.re)}
+              ${consultaDetail('Pelotão', pm.pelotao)}
+              ${consultaDetail('Modalidade', pm.modalidade)}
+              ${consultaDetail('Função', pm.funcao)}
+              ${consultaDetail('Telefone', pm.telefone)}
+              ${consultaDetail('E-mail', pm.email)}
+              ${consultaDetail('Entrada Cia FT', pm.entradaCia)}
+              ${consultaDetail('Perfil APP', pm.perfilAcesso)}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function consultaDetail(rotulo, valor) {
+      return `<div class="consulta-detail"><small>${escapar(rotulo)}</small><strong>${escapar(valor || '-')}</strong></div>`;
+    }
+
+
+
     function sair() {
       APP.usuario = null;
       APP.menus = [];
@@ -4808,6 +5035,7 @@ Banco de dados: Google Sheets.
       APP.credenciais = null;
       APP.dadosResenha = null;
       APP.dadosEscalasAdm = null;
+      APP.dadosConsultaEfetivo = null;
 
       document.getElementById('appScreen').classList.add('hidden');
       document.getElementById('loginScreen').classList.remove('hidden');
