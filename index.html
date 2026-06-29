@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.7.3 CONSULTA EFETIVO HIERARQUIA REAL
+SISTEMA CIA FT — PORTAL GITHUB V1.7.4 CORRIGE SUBTEN
 Arquivo: index.html
 ============================================================
 
@@ -15,7 +15,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Portal Força Tática • V1.7.3.1</title>
+  <title>Portal Força Tática • V1.7.4.1</title>
 
   <style>
     :root {
@@ -3168,6 +3168,66 @@ Banco de dados: Google Sheets.
       }
     }
 
+    /* ============================================================
+     * CORREÇÃO DEFINITIVA SUBTEN — V1.7.4
+     * ============================================================ */
+
+    :root {
+      --dourado-oficial-ft: #b8860b;
+      --vermelho-subten-sgt-ft: #960018;
+      --azul-cb-sd-ft: #0033a0;
+    }
+
+    /* Home e Meus Dados */
+    #appScreen .pm-profile-card.oficial .foto-pm.home,
+    #appScreen .dados-card.oficial .foto-pm.home {
+      border-color: var(--dourado-oficial-ft) !important;
+      box-shadow:
+        0 12px 28px rgba(15,23,42,.14),
+        0 0 0 2px rgba(184,134,11,.16) !important;
+    }
+
+    #appScreen .pm-profile-card.sgt .foto-pm.home,
+    #appScreen .dados-card.sgt .foto-pm.home {
+      border-color: var(--vermelho-subten-sgt-ft) !important;
+      box-shadow:
+        0 12px 28px rgba(15,23,42,.14),
+        0 0 0 2px rgba(150,0,24,.16) !important;
+    }
+
+    #appScreen .pm-profile-card.praca .foto-pm.home,
+    #appScreen .dados-card.praca .foto-pm.home {
+      border-color: var(--azul-cb-sd-ft) !important;
+      box-shadow:
+        0 12px 28px rgba(15,23,42,.14),
+        0 0 0 2px rgba(0,51,160,.16) !important;
+    }
+
+    /* Consulta do Efetivo */
+    .consulta-foto.hierarquia-oficial {
+      border-color: var(--dourado-oficial-ft) !important;
+    }
+
+    .consulta-foto.hierarquia-subten-sgt {
+      border-color: var(--vermelho-subten-sgt-ft) !important;
+    }
+
+    .consulta-foto.hierarquia-cb-sd {
+      border-color: var(--azul-cb-sd-ft) !important;
+    }
+
+    .consulta-pm-card.hierarquia-oficial {
+      border-color: rgba(184,134,11,.46) !important;
+    }
+
+    .consulta-pm-card.hierarquia-subten-sgt {
+      border-color: rgba(150,0,24,.50) !important;
+    }
+
+    .consulta-pm-card.hierarquia-cb-sd {
+      border-color: rgba(0,51,160,.42) !important;
+    }
+
   </style>
 </head>
 
@@ -3198,7 +3258,7 @@ Banco de dados: Google Sheets.
       <div id="loginAlerta" class="alerta"></div>
 
       <div class="footer">
-        Portal Força Tática • V1.7.3
+        Portal Força Tática • V1.7.4
       </div>
     </main>
   </section>
@@ -3364,22 +3424,28 @@ Banco de dados: Google Sheets.
 
 
     function classeVisualHierarquia(postoGrad) {
-      const p = normalizarTexto(postoGrad);
+      const p = normalizarTexto(postoGrad || '').replace(/[º°ª]/g, '');
 
-      if (
-        p.includes('CAP') ||
-        p.includes('TEN') ||
-        p.includes('ASP')
-      ) {
-        return 'oficial';
-      }
-
+      /*
+       * IMPORTANTE:
+       * SUBTEN precisa ser testado ANTES de TEN,
+       * porque a palavra SUBTEN contém TEN.
+       */
       if (
         p.includes('SUBTEN') ||
         p.includes('SUB TEN') ||
         p.includes('SGT')
       ) {
         return 'sgt';
+      }
+
+      if (
+        p.includes('MAJ') ||
+        p.includes('CAP') ||
+        p.includes('ASP') ||
+        (p.includes('TEN') && !p.includes('SUBTEN') && !p.includes('SUB TEN'))
+      ) {
+        return 'oficial';
       }
 
       if (
@@ -5309,6 +5375,7 @@ Banco de dados: Google Sheets.
 
       if (
         p.includes('SUBTEN') ||
+        p.includes('SUB TEN') ||
         p.includes('SGT')
       ) {
         return 'hierarquia-subten-sgt';
@@ -5317,7 +5384,8 @@ Banco de dados: Google Sheets.
       if (
         p.includes('MAJ') ||
         p.includes('CAP') ||
-        (p.includes('TEN') && !p.includes('SUBTEN'))
+        p.includes('ASP') ||
+        (p.includes('TEN') && !p.includes('SUBTEN') && !p.includes('SUB TEN'))
       ) {
         return 'hierarquia-oficial';
       }
