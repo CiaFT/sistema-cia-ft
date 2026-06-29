@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.7.1 CONSULTA EFETIVO AJUSTES
+SISTEMA CIA FT — PORTAL GITHUB V1.7.3 CONSULTA EFETIVO HIERARQUIA REAL
 Arquivo: index.html
 ============================================================
 
@@ -15,7 +15,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Portal Força Tática • V1.7.1.1</title>
+  <title>Portal Força Tática • V1.7.3.1</title>
 
   <style>
     :root {
@@ -3128,6 +3128,46 @@ Banco de dados: Google Sheets.
       }
     }
 
+    /* ============================================================
+     * CONSULTA EFETIVO — CORREÇÃO V1.7.3
+     * ============================================================ */
+
+    .consulta-foto-btn {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      padding: 0;
+      margin: 0;
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .consulta-foto-btn:hover .consulta-foto {
+      filter: brightness(.96);
+      transform: translateY(-1px);
+    }
+
+    .consulta-pm-card.hierarquia-oficial .consulta-status {
+      border-color: rgba(184,134,11,.26);
+    }
+
+    .consulta-pm-card.hierarquia-subten-sgt .consulta-status {
+      border-color: rgba(150,0,24,.22);
+    }
+
+    @media (max-width: 560px) {
+      .consulta-foto-btn {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+      }
+    }
+
   </style>
 </head>
 
@@ -3158,7 +3198,7 @@ Banco de dados: Google Sheets.
       <div id="loginAlerta" class="alerta"></div>
 
       <div class="footer">
-        Portal Força Tática • V1.7.1
+        Portal Força Tática • V1.7.3
       </div>
     </main>
   </section>
@@ -5126,21 +5166,119 @@ Banco de dados: Google Sheets.
         alvo.innerHTML = '<div class="consulta-empty">Nenhum policial encontrado para os filtros informados.</div>';
         return;
       }
+      filtrados.sort(ordenarConsultaEfetivoHierarquiaReal);
       alvo.innerHTML = filtrados.map(montarCardConsultaPm).join('');
     }
+
+    function ordenarConsultaEfetivoHierarquiaReal(a, b) {
+      const phA = pesoHierarquiaConsultaCliente(a);
+      const phB = pesoHierarquiaConsultaCliente(b);
+
+      if (phA !== phB) return phB - phA;
+
+      const usaAlmA = postoUsaAlmanaqueConsultaCliente(a.postoGrad);
+      const usaAlmB = postoUsaAlmanaqueConsultaCliente(b.postoGrad);
+
+      if (usaAlmA && usaAlmB) {
+        const alA = numeroConsultaCliente(a.almanaque);
+        const alB = numeroConsultaCliente(b.almanaque);
+
+        if (alA && alB && alA !== alB) return alA - alB;
+        if (alA && !alB) return -1;
+        if (!alA && alB) return 1;
+      }
+
+      const reA = pesoAntiguidadeREConsultaCliente(a.re);
+      const reB = pesoAntiguidadeREConsultaCliente(b.re);
+
+      if (reA !== reB) return reA - reB;
+
+      return String(a.nomeGuerra || '').localeCompare(String(b.nomeGuerra || ''), 'pt-BR', { sensitivity: 'base' });
+    }
+
+
+    function pesoHierarquiaConsultaCliente(pm) {
+      const p = normalizarTexto(pm.postoGrad || '').replace(/[º°ª]/g, '');
+      const planilha = numeroConsultaCliente(pm.pesoHierarquico);
+
+      if (p.includes('MAJ')) return 9000;
+      if (p.includes('CAP')) return 8000;
+      if (p.includes('1') && p.includes('TEN') && !p.includes('SUBTEN')) return 7000;
+      if (p.includes('2') && p.includes('TEN') && !p.includes('SUBTEN')) return 6500;
+      if (p.includes('TEN') && !p.includes('SUBTEN')) return 6400;
+      if (p.includes('SUBTEN')) return 6000;
+      if (p.includes('1') && p.includes('SGT')) return 5500;
+      if (p.includes('2') && p.includes('SGT')) return 5200;
+      if (p.includes('3') && p.includes('SGT')) return 5000;
+      if (p.includes('SGT')) return 4900;
+      if (p.includes('CB')) return 4000;
+      if (p.includes('SD')) return 3000;
+
+      return planilha || 0;
+    }
+
+
+    function postoUsaAlmanaqueConsultaCliente(postoGrad) {
+      const p = normalizarTexto(postoGrad || '').replace(/[º°ª]/g, '');
+      if (p.includes('CB') || p.includes('SD')) return false;
+
+      return (
+        p.includes('MAJ') ||
+        p.includes('CAP') ||
+        (p.includes('TEN') && !p.includes('SUBTEN')) ||
+        p.includes('SUBTEN') ||
+        p.includes('SGT')
+      );
+    }
+
+
+    function pesoAntiguidadeREConsultaCliente(re) {
+      const login = normalizarLoginConsultaCliente(re);
+      if (!login) return 999999999;
+
+      const primeiro = login.substring(0, 1);
+      const mapa = { '9': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '0': 9 };
+      const grupo = Object.prototype.hasOwnProperty.call(mapa, primeiro) ? mapa[primeiro] : 99;
+      const numero = Number(login) || 0;
+
+      return (grupo * 10000000) + numero;
+    }
+
+
+    function normalizarLoginConsultaCliente(valor) {
+      return String(valor || '').replace(/\D/g, '').substring(0, 6);
+    }
+
+
+    function numeroConsultaCliente(valor) {
+      if (typeof valor === 'number') return isNaN(valor) ? 0 : valor;
+
+      const texto = String(valor || '')
+        .trim()
+        .replace(/\./g, '')
+        .replace(',', '.');
+
+      const numero = Number(texto);
+      return isNaN(numero) ? 0 : numero;
+    }
+
+
 
     function montarCardConsultaPm(pm) {
       const nome = [pm.postoGrad, pm.nomeGuerra].filter(Boolean).join(' ');
       const classeHierarquia = classeHierarquiaConsulta(pm.postoGrad);
-      const reKey = escaparAttr(pm.re || '');
+      const reKey = escaparAttr(normalizarLoginConsultaCliente(pm.re || ''));
 
-      const foto = pm.foto
+      const fotoInterna = pm.foto
         ? `<img class="consulta-foto ${classeHierarquia}" src="${escaparAttr(pm.foto)}" alt="Foto de ${escaparAttr(nome)}" onerror="this.outerHTML='<div class=&quot;consulta-foto sem-foto ${classeHierarquia}&quot;>FT</div>'">`
         : `<div class="consulta-foto sem-foto ${classeHierarquia}">FT</div>`;
 
       return `
-        <div class="consulta-pm-card ${classeHierarquia}">
-          ${foto}
+        <div class="consulta-pm-card ${classeHierarquia}" data-re-login="${reKey}">
+          <button class="consulta-foto-btn" type="button" onclick="abrirCardConsultaEfetivo('${reKey}')" title="Abrir card do policial">
+            ${fotoInterna}
+          </button>
+
           <div class="consulta-pm-main">
             <div class="consulta-pm-title">
               <h3>
@@ -5167,15 +5305,7 @@ Banco de dados: Google Sheets.
 
 
     function classeHierarquiaConsulta(postoGrad) {
-      const p = normalizarTexto(postoGrad || '');
-
-      if (
-        p.includes('MAJ') ||
-        p.includes('CAP') ||
-        p.includes('TEN')
-      ) {
-        return 'hierarquia-oficial';
-      }
+      const p = normalizarTexto(postoGrad || '').replace(/[º°ª]/g, '');
 
       if (
         p.includes('SUBTEN') ||
@@ -5184,15 +5314,25 @@ Banco de dados: Google Sheets.
         return 'hierarquia-subten-sgt';
       }
 
+      if (
+        p.includes('MAJ') ||
+        p.includes('CAP') ||
+        (p.includes('TEN') && !p.includes('SUBTEN'))
+      ) {
+        return 'hierarquia-oficial';
+      }
+
       return 'hierarquia-cb-sd';
     }
 
 
-    function abrirCardConsultaEfetivo(re) {
+    function abrirCardConsultaEfetivo(reLogin) {
       const dados = APP.dadosConsultaEfetivo || {};
       const lista = dados.efetivo || [];
+      const alvoLogin = normalizarLoginConsultaCliente(reLogin);
+
       const alvo = lista.find(function(pm) {
-        return String(pm.re || '') === String(re || '');
+        return normalizarLoginConsultaCliente(pm.re || '') === alvoLogin;
       });
 
       if (!alvo) {
