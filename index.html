@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.7.5 API TIMEOUT CONSULTA
+SISTEMA CIA FT — PORTAL GITHUB V1.7.6 RESTAURA FOTOS CONSULTA
 Arquivo: index.html
 ============================================================
 
@@ -15,7 +15,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Portal Força Tática • V1.7.5.1</title>
+  <title>Portal Força Tática • V1.7.6.1</title>
 
   <style>
     :root {
@@ -3228,6 +3228,30 @@ Banco de dados: Google Sheets.
       border-color: rgba(0,51,160,.42) !important;
     }
 
+    /* ============================================================
+     * CONSULTA EFETIVO — FOTOS RESTAURADAS V1.7.6
+     * ============================================================ */
+
+    .consulta-foto,
+    .consulta-modal-header .consulta-foto {
+      background: #e9edf1;
+      object-fit: cover;
+      object-position: center;
+    }
+
+    .consulta-foto-btn {
+      cursor: pointer;
+    }
+
+    .consulta-foto-btn .consulta-foto {
+      transition: transform .12s ease, filter .12s ease;
+    }
+
+    .consulta-foto-btn:hover .consulta-foto {
+      transform: translateY(-1px);
+      filter: brightness(.96);
+    }
+
   </style>
 </head>
 
@@ -3258,7 +3282,7 @@ Banco de dados: Google Sheets.
       <div id="loginAlerta" class="alerta"></div>
 
       <div class="footer">
-        Portal Força Tática • V1.7.5
+        Portal Força Tática • V1.7.6
       </div>
     </main>
   </section>
@@ -5330,12 +5354,52 @@ Banco de dados: Google Sheets.
 
 
 
+    function resolverFotoConsulta(valor) {
+      const raw = String(valor || '').trim();
+      if (!raw) return '';
+
+      // ID puro do Google Drive
+      if (/^[a-zA-Z0-9_-]{20,}$/.test(raw) && !raw.includes('/') && !raw.includes('?')) {
+        return 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(raw) + '&sz=w240';
+      }
+
+      // URL já em formato thumbnail
+      if (raw.includes('drive.google.com/thumbnail')) {
+        return raw;
+      }
+
+      // URL /file/d/ID/view
+      let m = raw.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      if (m && m[1]) {
+        return 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(m[1]) + '&sz=w240';
+      }
+
+      // URL open?id=ID ou uc?id=ID
+      m = raw.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      if (m && m[1]) {
+        return 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(m[1]) + '&sz=w240';
+      }
+
+      return raw;
+    }
+
+
+    function fallbackFotoConsulta(el, classeHierarquia) {
+      if (!el) return;
+      el.outerHTML = '<div class="consulta-foto sem-foto ' + (classeHierarquia || '') + '">FT</div>';
+    }
+
+
+
     function montarCardConsultaPm(pm) {
       const nome = [pm.postoGrad, pm.nomeGuerra].filter(Boolean).join(' ');
       const classeHierarquia = classeHierarquiaConsulta(pm.postoGrad);
       const reKey = escaparAttr(normalizarLoginConsultaCliente(pm.re || ''));
 
-      const fotoInterna = `<div class="consulta-foto sem-foto ${classeHierarquia}">FT</div>`;
+      const fotoUrl = resolverFotoConsulta(pm.foto);
+      const fotoInterna = fotoUrl
+        ? `<img class="consulta-foto ${classeHierarquia}" src="${escaparAttr(fotoUrl)}" alt="Foto de ${escaparAttr(nome)}" loading="lazy" onerror="fallbackFotoConsulta(this, '${classeHierarquia}')">`
+        : `<div class="consulta-foto sem-foto ${classeHierarquia}">FT</div>`;
 
       return `
         <div class="consulta-pm-card ${classeHierarquia}" data-re-login="${reKey}">
@@ -5408,8 +5472,9 @@ Banco de dados: Google Sheets.
 
       const nome = [alvo.postoGrad, alvo.nomeGuerra].filter(Boolean).join(' ');
       const classeHierarquia = classeHierarquiaConsulta(alvo.postoGrad);
-      const foto = alvo.foto
-        ? `<img class="consulta-foto ${classeHierarquia}" src="${escaparAttr(alvo.foto)}" alt="Foto de ${escaparAttr(nome)}" onerror="this.outerHTML='<div class=&quot;consulta-foto sem-foto ${classeHierarquia}&quot;>FT</div>'">`
+      const fotoUrl = resolverFotoConsulta(alvo.foto);
+      const foto = fotoUrl
+        ? `<img class="consulta-foto ${classeHierarquia}" src="${escaparAttr(fotoUrl)}" alt="Foto de ${escaparAttr(nome)}" loading="lazy" onerror="fallbackFotoConsulta(this, '${classeHierarquia}')">`
         : `<div class="consulta-foto sem-foto ${classeHierarquia}">FT</div>`;
 
       let modal = document.getElementById('consultaModalBackdrop');
