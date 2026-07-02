@@ -3256,7 +3256,8 @@ Banco de dados: Google Sheets.
 
     /* ============================================================
      * CONSULTA DE VIATURAS — V1.2.2
-     * Listagem resumida por modalidade e ficha completa ao clicar.
+     * Listagem resumida por modalidade, banner com texto sobreposto
+     * e ficha completa com atualização de KM/observações.
      * ============================================================ */
 
     .viaturas-grid {
@@ -3275,15 +3276,16 @@ Banco de dados: Google Sheets.
       min-width: 0;
     }
 
-    .viatura-img-topo {
+    .viatura-banner {
+      position: relative;
       width: 100%;
       height: 176px;
-      background: #e9edf1;
+      background: #020202;
       border-bottom: 1px solid rgba(55,66,71,.12);
       overflow: hidden;
     }
 
-    .viatura-img-topo img {
+    .viatura-banner img {
       width: 100%;
       height: 100%;
       object-fit: cover;
@@ -3291,26 +3293,35 @@ Banco de dados: Google Sheets.
       display: block;
     }
 
-    .viatura-bloco-header {
-      background:
-        radial-gradient(circle at top left, rgba(55,66,71,.24), transparent 56%),
-        linear-gradient(180deg, #ffffff, #f8fafc);
-      border-bottom: 1px solid rgba(55,66,71,.12);
-      padding: 15px 16px;
+    .viatura-banner-texto {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 18px 24px;
+      pointer-events: none;
+      max-width: 72%;
+      text-shadow: 0 3px 10px rgba(0,0,0,.72);
     }
 
-    .viatura-bloco-header h2 {
+    .viatura-banner-texto h2 {
       margin: 0;
-      color: #17202a;
-      font-size: 17px;
-      line-height: 1.2;
+      color: #ffffff;
+      font-size: 26px;
+      line-height: 1.05;
+      letter-spacing: .8px;
+      font-weight: 1000;
+      text-transform: uppercase;
     }
 
-    .viatura-bloco-header p {
-      margin: 5px 0 0;
-      color: #64748b;
-      font-size: 12px;
-      line-height: 1.35;
+    .viatura-banner-texto p {
+      margin: 7px 0 0;
+      color: rgba(255,255,255,.92);
+      font-size: 13px;
+      line-height: 1.3;
+      font-weight: 800;
     }
 
     .viatura-lista {
@@ -3373,7 +3384,7 @@ Banco de dados: Google Sheets.
     }
 
     .viatura-modal {
-      width: min(760px, 100%);
+      width: min(800px, 100%);
       max-height: calc(100vh - 36px);
       overflow: auto;
       background: #ffffff;
@@ -3419,7 +3430,7 @@ Banco de dados: Google Sheets.
     .viatura-modal-header h2 {
       margin: 0;
       color: #17202a;
-      font-size: 18px;
+      font-size: 20px;
       line-height: 1.2;
     }
 
@@ -3449,6 +3460,10 @@ Banco de dados: Google Sheets.
       min-width: 0;
     }
 
+    .viatura-detail.full {
+      grid-column: 1 / -1;
+    }
+
     .viatura-detail small {
       display: block;
       color: #64748b;
@@ -3463,6 +3478,97 @@ Banco de dados: Google Sheets.
       font-size: 14px;
       line-height: 1.25;
       overflow-wrap: anywhere;
+      white-space: pre-line;
+    }
+
+    .viatura-atualizacao-box {
+      margin-top: 14px;
+      border: 1px solid rgba(55,66,71,.12);
+      background:
+        radial-gradient(circle at top left, rgba(55,66,71,.09), transparent 54%),
+        linear-gradient(180deg, #ffffff, #f8fafc);
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    .viatura-atualizacao-box h3 {
+      margin: 0;
+      color: #17202a;
+      font-size: 16px;
+      line-height: 1.2;
+    }
+
+    .viatura-atualizacao-box p {
+      margin: 6px 0 12px;
+      color: #64748b;
+      font-size: 12.5px;
+      line-height: 1.35;
+    }
+
+    .viatura-form-grid {
+      display: grid;
+      grid-template-columns: minmax(160px, .55fr) minmax(0, 1.45fr);
+      gap: 10px;
+      align-items: end;
+    }
+
+    .viatura-form-field {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .viatura-form-field label {
+      color: #64748b;
+      font-size: 11.5px;
+      font-weight: 900;
+      letter-spacing: .12px;
+    }
+
+    .viatura-form-field input,
+    .viatura-form-field textarea {
+      width: 100%;
+      border: 1px solid rgba(55,66,71,.16);
+      background: #ffffff;
+      color: #17202a;
+      border-radius: 13px;
+      padding: 11px 12px;
+      font-size: 14px;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .viatura-form-field textarea {
+      min-height: 76px;
+      resize: vertical;
+      line-height: 1.4;
+    }
+
+    .viatura-atualizar-btn {
+      width: 100%;
+      border: 1px solid rgba(55,66,71,.16);
+      background:
+        radial-gradient(circle at top left, rgba(55,66,71,.24), transparent 56%),
+        linear-gradient(180deg, #ffffff, #f8fafc);
+      color: #17202a;
+      border-radius: 14px;
+      padding: 13px 14px;
+      font-size: 13px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 10px 22px rgba(15,23,42,.08);
+      text-align: center;
+      min-height: 46px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 12px;
+    }
+
+    .viatura-atualizar-btn:disabled {
+      opacity: .62;
+      cursor: not-allowed;
+      transform: none;
     }
 
     .viatura-modal-close {
@@ -3483,8 +3589,21 @@ Banco de dados: Google Sheets.
     }
 
     @media (max-width: 560px) {
-      .viatura-img-topo {
+      .viatura-banner {
         height: 142px;
+      }
+
+      .viatura-banner-texto {
+        max-width: 76%;
+        padding: 15px 17px;
+      }
+
+      .viatura-banner-texto h2 {
+        font-size: 21px;
+      }
+
+      .viatura-banner-texto p {
+        font-size: 11.5px;
       }
 
       .viatura-modal-backdrop {
@@ -3501,7 +3620,8 @@ Banco de dados: Google Sheets.
         align-items: flex-start;
       }
 
-      .viatura-modal-grid {
+      .viatura-modal-grid,
+      .viatura-form-grid {
         grid-template-columns: 1fr;
       }
     }
@@ -5807,10 +5927,10 @@ Banco de dados: Google Sheets.
      * ============================================================ */
 
     const VIATURAS_IMAGENS = {
-      topoTatico: 'https://drive.google.com/thumbnail?id=1jxmz1I1GTqgZRngeuiM1WKiRnL__nSgO&sz=w1000',
-      topoRocam: 'https://drive.google.com/thumbnail?id=1lnHdI0d3xBpbrthvDqQ0ymg5hKwDP_Ck&sz=w1000',
-      iconeTatico: 'https://drive.google.com/thumbnail?id=1Z7wUzdHCx4OORhnN43-l23k-6ff_h_45&sz=w600',
-      iconeRocam: 'https://drive.google.com/thumbnail?id=1XQOzyuDrXV9Xq3LHgA2yKJwvsCuexN8-&sz=w600'
+      topoTatico: 'https://drive.google.com/thumbnail?id=1RHsYJG3o_sa1hAKlUD7aESv5m92QeDae&sz=w1000',
+      topoRocam: 'https://drive.google.com/thumbnail?id=1vflCLTU56AgUYLh6WWCrt17z0reDMObP&sz=w1000',
+      iconeTatico: 'https://drive.google.com/thumbnail?id=1jxmz1I1GTqgZRngeuiM1WKiRnL__nSgO&sz=w600',
+      iconeRocam: 'https://drive.google.com/thumbnail?id=1lnHdI0d3xBpbrthvDqQ0ymg5hKwDP_Ck&sz=w600'
     };
 
     function abrirViaturas() {
@@ -5842,10 +5962,6 @@ Banco de dados: Google Sheets.
         .catch(function(err) {
           document.getElementById('viaturasConteudo').innerHTML = `
             <div class="viatura-bloco">
-              <div class="viatura-bloco-header">
-                <h2>Não foi possível carregar as viaturas</h2>
-                <p>Verifique a API, a aba VIATURAS e as permissões em PERMISSOES_FT.</p>
-              </div>
               <div class="viatura-lista">
                 <div class="viatura-empty">${escapar(err.message || err)}</div>
               </div>
@@ -5854,9 +5970,13 @@ Banco de dados: Google Sheets.
         });
     }
 
-    function carregarDadosViaturas() {
+    function carregarDadosViaturas(forcar) {
       if (!APP.credenciais || !APP.credenciais.login || !APP.credenciais.senha) {
         return Promise.reject(new Error('Sessão inválida. Faça login novamente.'));
+      }
+
+      if (APP.dadosViaturas && !forcar) {
+        return Promise.resolve(APP.dadosViaturas);
       }
 
       return chamarApi('dados_viaturas', {
@@ -5890,20 +6010,21 @@ Banco de dados: Google Sheets.
 
       return `
         <div class="viatura-bloco">
-          <div class="viatura-img-topo">
-            <img src="${escaparAttr(imagem)}" alt="${escaparAttr(titulo)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=&quot;viatura-empty&quot;>${escaparAttr(titulo)}</div>'">
+          <div class="viatura-banner">
+            <img src="${escaparAttr(imagem)}" alt="${escaparAttr(titulo)}" loading="lazy" onerror="this.style.display='none'">
+            <div class="viatura-banner-texto">
+              <h2>${escapar(titulo)}</h2>
+              <p>${escapar(subtitulo)} • ${itens.length} viatura(s)</p>
+            </div>
           </div>
-          <div class="viatura-bloco-header">
-            <h2>${escapar(titulo)}</h2>
-            <p>${escapar(subtitulo)} • ${itens.length} viatura(s)</p>
-          </div>
+
           <div class="viatura-lista">
             ${itens.length ? itens.map(function(v) {
               const key = escaparAttr(v.prefixo || '');
               return `
                 <button class="viatura-prefixo-btn" type="button" onclick="abrirFichaViatura('${key}')">
                   <span>${escapar(v.prefixo || '-')}</span>
-                  <small>${escapar(v.statusApp || v.situacao || 'Ficha completa')}</small>
+                  <small>Ficha completa</small>
                 </button>
               `;
             }).join('') : '<div class="viatura-empty">Nenhuma viatura cadastrada neste bloco.</div>'}
@@ -5938,16 +6059,16 @@ Banco de dados: Google Sheets.
         document.body.appendChild(modal);
       }
 
-      const campos = Array.isArray(alvo.campos) && alvo.campos.length
-        ? alvo.campos
-        : [
-            { rotulo: 'Prefixo', valor: alvo.prefixo },
-            { rotulo: 'Situação', valor: alvo.situacao },
-            { rotulo: 'Status APP', valor: alvo.statusApp },
-            { rotulo: 'Placa', valor: alvo.placa },
-            { rotulo: 'Modelo/Ano', valor: alvo.modeloAno },
-            { rotulo: 'Modalidade', valor: alvo.modalidade }
-          ];
+      const podeAtualizar = usuarioPodeAtualizarViatura();
+      const campos = [
+        { rotulo: 'Situação', valor: alvo.situacao },
+        { rotulo: 'Placa', valor: alvo.placa },
+        { rotulo: 'Modelo/Ano', valor: alvo.modeloAno },
+        { rotulo: 'Último KM', valor: alvo.ultimoKm },
+        { rotulo: 'Última atualização', valor: alvo.ultimaAtualizacao },
+        { rotulo: 'Atualizado por', valor: alvo.atualizadoPor },
+        { rotulo: 'Observações', valor: alvo.observacoes, full: true }
+      ];
 
       modal.innerHTML = `
         <div class="viatura-modal" role="dialog" aria-modal="true">
@@ -5965,9 +6086,15 @@ Banco de dados: Google Sheets.
           <div class="viatura-modal-body">
             <div class="viatura-modal-grid">
               ${campos.map(function(campo) {
-                return viaturaDetail(campo.rotulo, campo.valor);
+                return viaturaDetail(campo.rotulo, campo.valor, campo.full);
               }).join('')}
             </div>
+
+            ${podeAtualizar ? montarFormularioAtualizacaoViatura(alvo) : `
+              <div class="viatura-empty" style="margin-top:14px;">
+                Seu perfil não possui permissão para atualizar KM/observações desta viatura.
+              </div>
+            `}
           </div>
         </div>
       `;
@@ -5977,13 +6104,93 @@ Banco de dados: Google Sheets.
       };
     }
 
+    function usuarioPodeAtualizarViatura() {
+      return usuarioTemPermissaoCliente('VIATURAS', 'editar') ||
+             usuarioTemPermissaoCliente('VIATURAS', 'inserir');
+    }
+
+    function montarFormularioAtualizacaoViatura(v) {
+      return `
+        <div class="viatura-atualizacao-box">
+          <h3>Atualização da viatura</h3>
+          <p>Informe o novo KM e registre observações constatadas na viatura.</p>
+
+          <div class="viatura-form-grid">
+            <div class="viatura-form-field">
+              <label>NOVO KM</label>
+              <input id="viaturaNovoKm" type="number" inputmode="numeric" min="0" step="1" placeholder="Ex.: 125430">
+            </div>
+            <div class="viatura-form-field">
+              <label>OBSERVAÇÕES</label>
+              <textarea id="viaturaObservacoes" placeholder="Alterações, avarias ou observações constatadas"></textarea>
+            </div>
+          </div>
+
+          <button id="btnAtualizarViatura" class="viatura-atualizar-btn" type="button" onclick="atualizarKmViatura('${escaparAttr(v.prefixo || '')}')">
+            CONFIRMAR ATUALIZAÇÃO DE KM E OBS.
+          </button>
+        </div>
+      `;
+    }
+
+    function atualizarKmViatura(prefixo) {
+      const kmEl = document.getElementById('viaturaNovoKm');
+      const obsEl = document.getElementById('viaturaObservacoes');
+      const btn = document.getElementById('btnAtualizarViatura');
+      const novoKm = kmEl ? String(kmEl.value || '').trim() : '';
+      const observacoes = obsEl ? String(obsEl.value || '').trim() : '';
+
+      if (!novoKm) {
+        mostrarToastFt('Atualização não enviada', 'Informe o novo KM da viatura.');
+        return;
+      }
+
+      if (!APP.credenciais || !APP.credenciais.login || !APP.credenciais.senha) {
+        mostrarToastFt('Sessão inválida', 'Faça login novamente.');
+        return;
+      }
+
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'ATUALIZANDO...';
+      }
+
+      chamarApi('atualizar_km_viatura', {
+          login: APP.credenciais.login,
+          senha: APP.credenciais.senha,
+          prefixo: prefixo,
+          novoKm: novoKm,
+          observacoes: observacoes
+        })
+        .then(function(resp) {
+          if (!resp || !resp.ok) {
+            throw new Error(resp && resp.erro ? resp.erro : 'Falha ao atualizar a viatura.');
+          }
+
+          mostrarToastFt('Viatura atualizada', resp.dados && resp.dados.mensagem ? resp.dados.mensagem : 'KM e observações atualizados com sucesso.');
+          fecharFichaViatura();
+          return carregarDadosViaturas(true).then(function() {
+            renderizarViaturas();
+          });
+        })
+        .catch(function(err) {
+          mostrarToastFt('Atualização não enviada', err.message || String(err));
+        })
+        .finally(function() {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'CONFIRMAR ATUALIZAÇÃO DE KM E OBS.';
+          }
+        });
+    }
+
     function fecharFichaViatura() {
       const modal = document.getElementById('viaturaModalBackdrop');
       if (modal) modal.remove();
     }
 
-    function viaturaDetail(rotulo, valor) {
-      return `<div class="viatura-detail"><small>${escapar(rotulo || '-')}</small><strong>${escapar(valor || '-')}</strong></div>`;
+    function viaturaDetail(rotulo, valor, full) {
+      return `<div class="viatura-detail ${full ? 'full' : ''}"><small>${escapar(rotulo || '-')}</small><strong>${escapar(valor || '-')}</strong></div>`;
     }
 
 
