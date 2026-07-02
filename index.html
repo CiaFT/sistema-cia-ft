@@ -1,170 +1,5579 @@
 <!DOCTYPE html>
+<!--
+============================================================
+SISTEMA CIA FT — PORTAL GITHUB V1.7.4 CORRIGE SUBTEN
+Arquivo: index.html
+============================================================
+
+Front-end externo hospedado no Netlify.
+Backend/API: Apps Script API_FT.gs V1.2.
+Banco de dados: Google Sheets.
+
+============================================================
+-->
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Portal Força Tática • V1.7.4.1</title>
-  <!--
-  ============================================================
-  SISTEMA CIA FT — INDEX DE RECUPERAÇÃO SEGURA
-  Arquivo: index.html
-  Base visual oficial: commit 1c83574a606bf07a28cc6e3b4abcec17d7d8d29e
-  Motivo: restaura o front visual oficial V1.7.4.1 sem usar fetch.
-  ============================================================
-  -->
+
   <style>
-    * { box-sizing: border-box; }
-    html, body {
+    :root {
+      --bg: #000;
+      --card: #0b0b0b;
+      --card2: #151515;
+      --amarelo: #ffe600;
+      --amarelo2: #ffc400;
+      --texto: #ffffff;
+      --muted: #9ca3af;
+      --borda: rgba(255,255,255,.18);
+      --erro: #ff5c5c;
+      --ok: #40c979;
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
       margin: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
+      min-height: 100vh;
       background: #000;
-      color: #fff;
+      color: var(--texto);
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
-    #appFrame {
-      position: fixed;
-      inset: 0;
-      width: 100vw;
-      height: 100vh;
-      border: 0;
+
+    button, input {
+      font-family: inherit;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .login-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 10px 20px 20px;
       background: #000;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 430px;
+      border: 1px solid var(--borda);
+      border-radius: 24px;
+      padding: 8px 24px 24px;
+      background: #000;
+      box-shadow: 0 20px 50px rgba(0,0,0,.55);
+      text-align: center;
+      margin-top: 0;
+    }
+
+    .logo {
+      width: 96%;
+      max-width: 380px;
+      height: 270px;
+      margin: -8px auto 36px;
+      display: grid;
+      place-items: center;
+      overflow: visible;
+    }
+
+    .logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
       display: block;
     }
-    #loading {
-      position: fixed;
-      inset: 0;
+
+    @media (max-height: 740px) {
+      .login-screen {
+        padding-top: 4px;
+      }
+
+      .login-card {
+        padding-top: 4px;
+      }
+
+      .logo {
+        height: 245px;
+        margin-top: -10px;
+        margin-bottom: 28px;
+      }
+    }
+
+    label {
+      display: block;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      margin: 0 0 7px;
+    }
+
+    .field {
+      margin-bottom: 15px;
+    }
+
+    input {
+      width: 100%;
+      border: 1px solid var(--borda);
+      border-radius: 12px;
+      padding: 13px 14px;
+      background: rgba(255,255,255,.06);
+      color: #fff;
+      text-align: center;
+      font-size: 15px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: rgba(255,230,0,.85);
+      box-shadow: 0 0 0 3px rgba(255,230,0,.12);
+    }
+
+    .btn {
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      padding: 13px 16px;
+      font-size: 15px;
+      font-weight: 900;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--amarelo), var(--amarelo2));
+      color: #000;
+    }
+
+    .btn:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,.08);
+      border: 1px solid var(--borda);
+      color: #fff;
+    }
+
+    .alerta {
+      margin-top: 14px;
+      padding: 12px 13px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,230,0,.35);
+      background: rgba(255,230,0,.10);
+      color: #fff;
+      font-size: 14px;
+      display: none;
+      white-space: pre-line;
+    }
+
+    .alerta.erro {
+      border-color: rgba(255,92,92,.40);
+      background: rgba(255,92,92,.14);
+    }
+
+    .alerta.ok {
+      border-color: rgba(64,201,121,.40);
+      background: rgba(64,201,121,.14);
+    }
+
+    .footer {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .app {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      margin: -16px -16px 16px;
+      padding: 12px 16px;
+      background: rgba(0,0,0,.88);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--borda);
+    }
+
+    .topbar-inner {
+      max-width: 1120px;
+      margin: 0 auto;
       display: flex;
       align-items: center;
-      justify-content: center;
-      background: radial-gradient(circle at top, rgba(255,230,0,.10), transparent 34%), #000;
-      z-index: 10;
-      padding: 24px;
-      text-align: center;
-      transition: opacity .25s ease, visibility .25s ease;
+      justify-content: space-between;
+      gap: 12px;
     }
-    #loading.oculto {
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
+
+    .top-title strong {
+      display: block;
+      font-size: 15px;
     }
-    .box {
-      width: min(440px, 92vw);
-      border: 1px solid rgba(255,255,255,.16);
-      border-radius: 18px;
-      padding: 22px;
-      background: rgba(10,10,10,.94);
-      box-shadow: 0 20px 50px rgba(0,0,0,.55);
+
+    .top-title span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
     }
-    .titulo {
-      font-size: 20px;
+
+    .top-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .top-actions .btn {
+      width: auto;
+      padding: 10px 12px;
+      font-size: 13px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(20,20,20,.96), rgba(8,8,8,.98));
+      border: 1px solid var(--borda);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 16px;
+      box-shadow: 0 18px 45px rgba(0,0,0,.35);
+    }
+
+    .pm-header {
+      padding: 18px;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      border-bottom: 1px solid var(--borda);
+      background: linear-gradient(135deg, rgba(255,230,0,.13), rgba(255,255,255,.03));
+    }
+
+    .foto-pm {
+      width: 82px;
+      height: 82px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,230,0,.40);
+      background: rgba(255,255,255,.06);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      color: var(--muted);
+      font-size: 32px;
+      flex: 0 0 auto;
+    }
+
+    .foto-pm img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .pm-info h1 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.15;
+    }
+
+    .pm-info p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .status {
+      display: inline-flex;
+      margin-top: 10px;
+      border: 1px solid rgba(64,201,121,.35);
+      background: rgba(64,201,121,.13);
+      color: #c8ffe0;
+      border-radius: 999px;
+      padding: 6px 11px;
+      font-size: 12px;
       font-weight: 900;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--borda);
+    }
+
+    .info-cell {
+      background: #090909;
+      padding: 14px;
+      min-height: 72px;
+    }
+
+    .info-cell small {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 5px;
+    }
+
+    .info-cell strong {
+      display: block;
+      font-size: 15px;
+      word-break: break-word;
+    }
+
+    .section-title {
+      margin: 0 0 14px;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      font-size: 19px;
+    }
+
+    .section-title p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    .menu-card {
+      min-height: 145px;
+      background: #101010;
+      border: 1px solid var(--borda);
+      border-radius: var(--radius);
+      padding: 16px;
+      cursor: pointer;
+    }
+
+    .menu-card:hover {
+      border-color: rgba(255,230,0,.55);
+    }
+
+    .menu-icon {
+      font-size: 28px;
+      margin-bottom: 12px;
+    }
+
+    .menu-card h3 {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .menu-card p {
+      margin: 9px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .modal-card {
+      background: #101010;
+      border: 1px solid var(--borda);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-top: 16px;
+    }
+
+    @media (max-width: 900px) {
+      .menu-grid,
+      .info-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 560px) {
+      .app {
+        padding: 12px;
+      }
+
+      .topbar {
+        margin: -12px -12px 14px;
+      }
+
+      .info-grid,
+      .menu-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .pm-header {
+        align-items: flex-start;
+      }
+
+      .foto-pm {
+        width: 70px;
+        height: 70px;
+      }
+
+      .pm-info h1 {
+        font-size: 19px;
+      }
+    }
+  
+    /* ============================================================
+     * HOME INTERNA — V1.3
+     * ============================================================ */
+
+    .app {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 14px;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(255,230,0,.10), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(80,80,80,.16), transparent 35%),
+        #000;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      margin: -14px -14px 16px;
+      padding: 12px 14px;
+      background: rgba(0,0,0,.90);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,.12);
+    }
+
+    .topbar-inner {
+      max-width: 1160px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .top-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .top-mark {
+      width: 38px;
+      height: 38px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      border: 1px solid rgba(255,230,0,.45);
+      background: rgba(255,230,0,.10);
       color: #ffe600;
-      margin-bottom: 8px;
+      font-size: 20px;
+    }
+
+    .top-title strong {
+      display: block;
+      font-size: 15px;
+      letter-spacing: .4px;
+    }
+
+    .top-title span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .top-actions .btn {
+      width: auto;
+      padding: 10px 12px;
+      font-size: 12px;
+      border-radius: 10px;
+    }
+
+    .home-hero {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 16px;
+      align-items: stretch;
+      margin-bottom: 18px;
+    }
+
+    .pm-profile-card {
+      background: linear-gradient(180deg, rgba(20,20,20,.98), rgba(5,5,5,.98));
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 18px 45px rgba(0,0,0,.35);
+      min-height: 100%;
+    }
+
+    .pm-photo-area {
+      padding: 18px 18px 12px;
+      display: grid;
+      place-items: center;
+      background:
+        linear-gradient(135deg, rgba(255,230,0,.13), rgba(255,255,255,.02)),
+        #080808;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+    }
+
+    .foto-pm.home {
+      width: 126px;
+      height: 126px;
+      border-radius: 24px;
+      border: 1px solid rgba(255,230,0,.45);
+      background: rgba(255,255,255,.06);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      color: var(--muted);
+      font-size: 42px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.35);
+    }
+
+    .foto-pm.home img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .pm-main-info {
+      padding: 16px 18px 18px;
+      text-align: center;
+    }
+
+    .pm-main-info h1 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.16;
+      letter-spacing: .2px;
+    }
+
+    .pm-main-info .re-line {
+      margin: 8px 0 0;
+      color: #ffe600;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .status {
+      display: inline-flex;
+      margin-top: 12px;
+      border: 1px solid rgba(64,201,121,.38);
+      background: rgba(64,201,121,.15);
+      color: #c8ffe0;
+      border-radius: 999px;
+      padding: 7px 13px;
+      font-size: 12px;
+      font-weight: 900;
       letter-spacing: .3px;
     }
-    .texto {
-      color: #d1d5db;
-      font-size: 14px;
-      line-height: 1.45;
-      margin: 0;
+
+    .pm-detail-list {
+      display: grid;
+      gap: 8px;
+      padding: 0 18px 18px;
     }
-    .erro {
-      display: none;
-      margin-top: 14px;
-      border: 1px solid rgba(255,92,92,.45);
-      background: rgba(255,92,92,.14);
+
+    .pm-detail-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.035);
       border-radius: 12px;
-      padding: 12px;
+      padding: 10px 11px;
+    }
+
+    .pm-detail-item small {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .pm-detail-item strong {
       color: #fff;
+      font-size: 13px;
+      text-align: right;
+      word-break: break-word;
+    }
+
+    .home-panel {
+      background: linear-gradient(180deg, rgba(16,16,16,.92), rgba(6,6,6,.96));
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 22px;
+      padding: 18px;
+      box-shadow: 0 18px 45px rgba(0,0,0,.25);
+    }
+
+    .home-panel-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 16px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+    }
+
+    .home-panel-header h2 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.15;
+    }
+
+    .home-panel-header p {
+      margin: 7px 0 0;
+      color: var(--muted);
       font-size: 13px;
       line-height: 1.4;
     }
-    .erro a {
-      color: #ffe600;
-      font-weight: 800;
-      text-decoration: none;
+
+    .home-version {
+      flex: 0 0 auto;
+      color: #000;
+      background: linear-gradient(135deg, #ffe600, #ffc400);
+      border-radius: 999px;
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: 900;
     }
+
+    .quick-status-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .quick-status {
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 14px;
+      background: rgba(255,255,255,.035);
+      padding: 12px;
+      min-height: 76px;
+    }
+
+    .quick-status small {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .quick-status strong {
+      display: block;
+      color: #fff;
+      font-size: 15px;
+      word-break: break-word;
+    }
+
+    .section-title.home-menu-title {
+      margin: 2px 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .section-title.home-menu-title h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .section-title.home-menu-title p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .menu-card {
+      min-height: 132px;
+      background: linear-gradient(180deg, rgba(18,18,18,.98), rgba(7,7,7,.98));
+      border: 1px solid rgba(255,255,255,.13);
+      border-radius: 18px;
+      padding: 15px;
+      cursor: pointer;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .menu-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top left, rgba(255,230,0,.12), transparent 42%);
+      opacity: .8;
+      pointer-events: none;
+    }
+
+    .menu-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,230,0,.55);
+      background: #121212;
+    }
+
+    .menu-icon {
+      position: relative;
+      font-size: 27px;
+      margin-bottom: 12px;
+    }
+
+    .menu-card h3 {
+      position: relative;
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.2;
+      letter-spacing: .2px;
+    }
+
+    .menu-card p {
+      position: relative;
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.32;
+    }
+
+    .modal-card {
+      background: linear-gradient(180deg, rgba(18,18,18,.98), rgba(7,7,7,.98));
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 22px;
+      padding: 18px;
+      margin-top: 16px;
+      box-shadow: 0 18px 45px rgba(0,0,0,.30);
+    }
+
+    @media (max-width: 980px) {
+      .home-hero {
+        grid-template-columns: 1fr;
+      }
+
+      .menu-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .quick-status-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 560px) {
+      .app {
+        padding: 12px;
+      }
+
+      .topbar {
+        margin: -12px -12px 14px;
+        padding: 10px 12px;
+      }
+
+      .top-actions .btn {
+        padding: 9px 10px;
+      }
+
+      .home-hero {
+        gap: 12px;
+      }
+
+      .home-panel,
+      .pm-profile-card {
+        border-radius: 20px;
+      }
+
+      .foto-pm.home {
+        width: 110px;
+        height: 110px;
+        border-radius: 22px;
+      }
+
+      .pm-main-info h1 {
+        font-size: 20px;
+      }
+
+      .home-panel-header {
+        display: block;
+      }
+
+      .home-version {
+        display: inline-flex;
+        margin-top: 12px;
+      }
+
+      .quick-status-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .menu-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+
+      .menu-card {
+        min-height: 126px;
+        padding: 13px;
+      }
+
+      .menu-card h3 {
+        font-size: 13px;
+      }
+
+      .menu-card p {
+        font-size: 11.5px;
+      }
+    }
+
+    /* ============================================================
+     * TEMA CLARO INTERNO — V1.3.1
+     * Mantém o login preto e aplica o tema claro após o login.
+     * ============================================================ */
+
+    #appScreen.app {
+      color: #17202a;
+      background:
+        radial-gradient(circle at top left, rgba(255,230,0,.22), transparent 26%),
+        radial-gradient(circle at bottom right, rgba(38,70,112,.10), transparent 34%),
+        #eef2f6;
+    }
+
+    #appScreen .topbar {
+      background: rgba(255,255,255,.92);
+      border-bottom: 1px solid rgba(23,32,42,.12);
+      box-shadow: 0 8px 22px rgba(15,23,42,.08);
+    }
+
+    #appScreen .top-mark {
+      border-color: rgba(214,166,0,.55);
+      background: #fff8c7;
+      color: #7a5b00;
+    }
+
+    #appScreen .top-title strong {
+      color: #17202a;
+      font-size: 15px;
+      letter-spacing: .2px;
+    }
+
+    #appScreen .btn-secondary {
+      background: #ffffff;
+      border: 1px solid rgba(23,32,42,.16);
+      color: #17202a;
+      box-shadow: 0 4px 12px rgba(15,23,42,.06);
+    }
+
+    #appScreen .home-hero {
+      align-items: start;
+    }
+
+    #appScreen .pm-profile-card,
+    #appScreen .home-panel,
+    #appScreen .modal-card {
+      background: #ffffff;
+      border: 1px solid rgba(23,32,42,.12);
+      box-shadow: 0 16px 34px rgba(15,23,42,.10);
+    }
+
+    #appScreen .pm-photo-area {
+      background:
+        linear-gradient(135deg, rgba(255,230,0,.26), rgba(255,255,255,.55)),
+        #f8fafc;
+      border-bottom: 1px solid rgba(23,32,42,.10);
+    }
+
+    #appScreen .foto-pm.home {
+      background: #ffffff;
+      border: 1px solid rgba(214,166,0,.55);
+      color: #64748b;
+      box-shadow: 0 12px 28px rgba(15,23,42,.14);
+    }
+
+    #appScreen .pm-main-info h1,
+    #appScreen .home-panel-header h2,
+    #appScreen .section-title.home-menu-title h2,
+    #appScreen .menu-card h3 {
+      color: #17202a;
+    }
+
+    #appScreen .pm-main-info .re-line {
+      color: #9a7200;
+    }
+
+    #appScreen .status {
+      border-color: rgba(22,163,74,.30);
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    #appScreen .pm-detail-item,
+    #appScreen .quick-status,
+    #appScreen .menu-card {
+      background: #f8fafc;
+      border: 1px solid rgba(23,32,42,.10);
+    }
+
+    #appScreen .pm-detail-item small,
+    #appScreen .quick-status small,
+    #appScreen .home-panel-header p,
+    #appScreen .section-title.home-menu-title p,
+    #appScreen .menu-card p {
+      color: #64748b;
+    }
+
+    #appScreen .pm-detail-item strong,
+    #appScreen .quick-status strong {
+      color: #17202a;
+    }
+
+    #appScreen .home-panel-header {
+      border-bottom: 1px solid rgba(23,32,42,.10);
+    }
+
+    #appScreen .home-version {
+      color: #17202a;
+      background: linear-gradient(135deg, #ffe600, #ffd24a);
+      box-shadow: 0 6px 14px rgba(214,166,0,.18);
+    }
+
+    #appScreen .menu-card {
+      background: linear-gradient(180deg, #ffffff, #f8fafc);
+      box-shadow: 0 8px 18px rgba(15,23,42,.07);
+    }
+
+    #appScreen .menu-card::before {
+      background: radial-gradient(circle at top left, rgba(255,230,0,.22), transparent 42%);
+    }
+
+    #appScreen .menu-card:hover {
+      background: #ffffff;
+      border-color: rgba(214,166,0,.55);
+      transform: translateY(-2px);
+    }
+
+    #appScreen .menu-icon {
+      color: #17202a;
+    }
+
+    @media (max-width: 560px) {
+      #appScreen .top-title strong {
+        font-size: 13.5px;
+        line-height: 1.2;
+      }
+
+      #appScreen .top-mark {
+        width: 34px;
+        height: 34px;
+        font-size: 18px;
+      }
+    }
+
+    /* ============================================================
+     * AJUSTES VISUAIS HOME — V1.3.3
+     * ============================================================ */
+
+    #appScreen .top-mark-img {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      border: 0;
+      background: transparent;
+      overflow: visible;
+      box-shadow: none;
+    }
+
+    #appScreen .top-mark-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    #appScreen .pm-profile-card.oficial .pm-photo-area {
+      background:
+        linear-gradient(135deg, rgba(56,189,248,.36), rgba(255,255,255,.65)),
+        #e0f2fe;
+      border-bottom: 1px solid rgba(2,132,199,.18);
+    }
+
+    #appScreen .pm-profile-card.sgt .pm-photo-area {
+      background:
+        linear-gradient(135deg, rgba(153,27,27,.34), rgba(255,255,255,.68)),
+        #fee2e2;
+      border-bottom: 1px solid rgba(153,27,27,.20);
+    }
+
+    #appScreen .pm-profile-card.praca .pm-photo-area {
+      background:
+        linear-gradient(135deg, rgba(55,65,81,.34), rgba(255,255,255,.68)),
+        #e5e7eb;
+      border-bottom: 1px solid rgba(55,65,81,.20);
+    }
+
+    #appScreen .home-situation-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    #appScreen .home-situation-card {
+      border: 1px solid rgba(23,32,42,.10);
+      border-radius: 16px;
+      background: linear-gradient(180deg, #ffffff, #f8fafc);
+      padding: 13px;
+      min-height: 104px;
+      box-shadow: 0 8px 18px rgba(15,23,42,.06);
+    }
+
+    #appScreen .home-situation-card .sit-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 9px;
+      background: #fff8c7;
+      color: #7a5b00;
+      border: 1px solid rgba(214,166,0,.24);
+      font-size: 18px;
+    }
+
+    #appScreen .home-situation-card h3 {
+      margin: 0;
+      color: #17202a;
+      font-size: 14px;
+      line-height: 1.2;
+    }
+
+    #appScreen .home-situation-card p {
+      margin: 7px 0 0;
+      color: #64748b;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    #appScreen .menu-card[data-modulo="MEUS_DADOS"] .menu-icon {
+      font-size: 25px;
+    }
+
+    @media (max-width: 980px) {
+      #appScreen .home-situation-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      #appScreen .top-mark-img {
+        width: 42px;
+        height: 42px;
+      }
+
+      #appScreen .home-situation-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ============================================================
+     * REFINAMENTO VISUAL — V1.3.4
+     * ============================================================ */
+
+    :root {
+      --cinza-bandeirante: #374247;
+      --cinza-bandeirante-2: #46535a;
+      --cinza-claro-ui: #e5e7eb;
+      --cinza-degrade-card: #d9dee3;
+      --azul-royal: #0033a0;
+      --vermelho-carmim: #960018;
+      --preto-moldura: #050505;
+    }
+
+    #appScreen.app {
+      background:
+        radial-gradient(circle at top left, rgba(55,66,71,.24), transparent 27%),
+        radial-gradient(circle at bottom right, rgba(116,126,136,.16), transparent 34%),
+        #eef2f6 !important;
+    }
+
+    #appScreen .top-mark,
+    #appScreen .top-mark-img {
+      width: 50px !important;
+      height: 50px !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      overflow: visible !important;
+      padding: 0 !important;
+    }
+
+    #appScreen .top-mark-img img {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: contain !important;
+      display: block !important;
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+    }
+
+    #appScreen .pm-photo-area,
+    #appScreen .pm-profile-card.oficial .pm-photo-area,
+    #appScreen .pm-profile-card.sgt .pm-photo-area,
+    #appScreen .pm-profile-card.praca .pm-photo-area {
+      background:
+        linear-gradient(135deg, rgba(217,222,227,.92), rgba(255,255,255,.68)),
+        #edf0f3 !important;
+      border-bottom: 1px solid rgba(55,66,71,.14) !important;
+    }
+
+    #appScreen .foto-pm.home {
+      border-width: 4px !important;
+      border-style: solid !important;
+      background: #ffffff !important;
+    }
+
+    #appScreen .pm-profile-card.oficial .foto-pm.home {
+      border-color: var(--azul-royal) !important;
+      box-shadow:
+        0 12px 28px rgba(15,23,42,.14),
+        0 0 0 2px rgba(0,51,160,.10) !important;
+    }
+
+    #appScreen .pm-profile-card.sgt .foto-pm.home {
+      border-color: var(--vermelho-carmim) !important;
+      box-shadow:
+        0 12px 28px rgba(15,23,42,.14),
+        0 0 0 2px rgba(150,0,24,.10) !important;
+    }
+
+    #appScreen .pm-profile-card.praca .foto-pm.home {
+      border-color: var(--preto-moldura) !important;
+      box-shadow:
+        0 12px 28px rgba(15,23,42,.14),
+        0 0 0 2px rgba(5,5,5,.10) !important;
+    }
+
+    #appScreen .home-version {
+      color: var(--cinza-claro-ui) !important;
+      background: linear-gradient(135deg, var(--cinza-bandeirante), var(--cinza-bandeirante-2)) !important;
+      box-shadow: 0 6px 14px rgba(55,66,71,.18) !important;
+    }
+
+    @media (max-width: 560px) {
+      #appScreen .top-mark,
+      #appScreen .top-mark-img {
+        width: 46px !important;
+        height: 46px !important;
+      }
+    }
+
+    /* ============================================================
+     * AJUSTES SEGUROS — V1.3.7
+     * Base com login/API preservados da V1.3.4 funcional.
+     * ============================================================ */
+
+    .login-screen {
+      min-height: 100vh !important;
+      display: grid !important;
+      place-items: center !important;
+      padding: 20px !important;
+      background: #000 !important;
+    }
+
+    .login-card {
+      margin-top: 0 !important;
+    }
+
+    #appScreen.app {
+      padding-top: 14px !important;
+    }
+
+    #appScreen .topbar {
+      top: 0 !important;
+      padding-top: calc(10px + env(safe-area-inset-top)) !important;
+      padding-bottom: 10px !important;
+    }
+
+    #appScreen .top-title {
+      align-items: center !important;
+      gap: 9px !important;
+    }
+
+    #appScreen .top-text-group {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 1px;
+      transform: translateY(-1px);
+      min-width: 0;
+    }
+
+    #appScreen #topSistema {
+      display: block;
+      color: #17202a;
+      font-size: 15px;
+      line-height: 1.05;
+      letter-spacing: .25px;
+      font-weight: 900;
+    }
+
+    #appScreen #topUsuarioLogado {
+      display: block;
+      color: #7a858d;
+      font-size: 11.5px;
+      line-height: 1.15;
+      font-weight: 700;
+      letter-spacing: .15px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 220px;
+    }
+
+    #appScreen .home-version {
+      color: #6b747b !important;
+      background: linear-gradient(135deg, #edf0f3, #d9dee3) !important;
+      border: 1px solid rgba(55,66,71,.16) !important;
+      box-shadow: none !important;
+      font-weight: 800 !important;
+    }
+
+    #appScreen .home-situation-card .sit-icon {
+      background: #e9edf1 !important;
+      color: #46535a !important;
+      border: 1px solid rgba(55,66,71,.12) !important;
+    }
+
+    #appScreen .menu-card::before {
+      background: radial-gradient(circle at top left, rgba(70,83,90,.13), transparent 42%) !important;
+    }
+
+    #appScreen .menu-card[data-modulo="MEUS_DADOS"] {
+      background: linear-gradient(135deg, var(--cinza-bandeirante), var(--cinza-bandeirante-2)) !important;
+      border-color: rgba(55,66,71,.34) !important;
+      box-shadow: 0 12px 24px rgba(55,66,71,.18) !important;
+    }
+
+    #appScreen .menu-card[data-modulo="MEUS_DADOS"]::before {
+      background: radial-gradient(circle at top left, rgba(255,255,255,.16), transparent 44%) !important;
+    }
+
+    #appScreen .menu-card[data-modulo="MEUS_DADOS"] .menu-icon,
+    #appScreen .menu-card[data-modulo="MEUS_DADOS"] h3,
+    #appScreen .menu-card[data-modulo="MEUS_DADOS"] p {
+      color: #f1f5f9 !important;
+    }
+
+    @media (max-width: 560px) {
+      .login-screen {
+        padding: 16px !important;
+      }
+
+      #appScreen.app {
+        padding-top: 10px !important;
+      }
+
+      #appScreen .topbar {
+        margin-top: -10px !important;
+        padding-top: calc(10px + env(safe-area-inset-top)) !important;
+      }
+
+      #appScreen .top-title {
+        gap: 7px !important;
+      }
+
+      #appScreen #topSistema {
+        font-size: 14px;
+      }
+
+      #appScreen #topUsuarioLogado {
+        font-size: 11px;
+        max-width: 160px;
+      }
+
+      #appScreen .top-actions .btn {
+        padding: 8px 9px;
+        font-size: 11.5px;
+      }
+
+      #appScreen .home-version {
+        font-size: 11.5px;
+        padding: 6px 10px;
+      }
+    }
+
+    /* ============================================================
+     * CORREÇÃO CRÍTICA — V1.3.8
+     * Garante que a tela de login realmente desapareça após o login.
+     * ============================================================ */
+
+    .hidden,
+    #loginScreen.hidden,
+    #appScreen.hidden {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+
+    #loginScreen:not(.hidden) {
+      display: grid !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      pointer-events: auto !important;
+    }
+
+    #appScreen:not(.hidden) {
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      pointer-events: auto !important;
+    }
+
+    /* ============================================================
+     * CORREÇÃO FINAL VISUAL — V1.3.9
+     * Mantém login/API da versão funcional.
+     * ============================================================ */
+
+    :root {
+      --cinza-bandeirante: #374247;
+      --cinza-bandeirante-2: #46535a;
+      --cinza-bandeirante-3: #59666d;
+      --cinza-claro-icone: #e9edf1;
+      --cinza-claro-texto: #eef2f6;
+      --cinza-suave: #7a858d;
+      --azul-royal: #0033a0;
+      --vermelho-carmim: #960018;
+      --preto-moldura: #050505;
+    }
+
+    /* Login centralizado sem impedir o .hidden */
+    #loginScreen:not(.hidden) {
+      min-height: 100vh !important;
+      display: grid !important;
+      place-items: center !important;
+      padding: 20px !important;
+      background: #000 !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      pointer-events: auto !important;
+    }
+
+    #loginScreen .login-card {
+      margin-top: 0 !important;
+    }
+
+    /* Prioridade absoluta para esconder/mostrar telas */
+    .hidden,
+    #loginScreen.hidden,
+    #appScreen.hidden {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+
+    #appScreen:not(.hidden) {
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      pointer-events: auto !important;
+    }
+
+    /* Fundo geral claro com cinza bandeirante discreto, sem amarelo */
+    #appScreen.app {
+      padding-top: 14px !important;
+      background:
+        radial-gradient(circle at top left, rgba(55,66,71,.24), transparent 27%),
+        radial-gradient(circle at bottom right, rgba(116,126,136,.16), transparent 34%),
+        #eef2f6 !important;
+    }
+
+    /* Barra superior */
+    #appScreen .topbar {
+      top: 0 !important;
+      padding-top: calc(10px + env(safe-area-inset-top)) !important;
+      padding-bottom: 10px !important;
+      background: rgba(255,255,255,.94) !important;
+      border-bottom: 1px solid rgba(23,32,42,.12) !important;
+      box-shadow: 0 8px 22px rgba(15,23,42,.08) !important;
+    }
+
+    #appScreen .top-title {
+      align-items: center !important;
+      gap: 9px !important;
+    }
+
+    #appScreen .top-text-group {
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      gap: 1px !important;
+      transform: translateY(-2px) !important;
+      min-width: 0 !important;
+    }
+
+    #appScreen #topSistema,
+    #appScreen .top-title strong {
+      display: block !important;
+      color: #17202a !important;
+      font-size: 15px !important;
+      line-height: 1.05 !important;
+      letter-spacing: .25px !important;
+      font-weight: 900 !important;
+    }
+
+    #appScreen #topUsuarioLogado {
+      display: block !important;
+      color: var(--cinza-suave) !important;
+      font-size: 11.5px !important;
+      line-height: 1.15 !important;
+      font-weight: 700 !important;
+      letter-spacing: .15px !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      max-width: 220px !important;
+    }
+
+    #appScreen .top-mark,
+    #appScreen .top-mark-img {
+      width: 50px !important;
+      height: 50px !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      overflow: visible !important;
+      padding: 0 !important;
+    }
+
+    #appScreen .top-mark-img img {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: contain !important;
+      display: block !important;
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+    }
+
+    /* Card do policial: degradê cinza claro na área da foto */
+    #appScreen .pm-photo-area,
+    #appScreen .pm-profile-card.oficial .pm-photo-area,
+    #appScreen .pm-profile-card.sgt .pm-photo-area,
+    #appScreen .pm-profile-card.praca .pm-photo-area {
+      background:
+        linear-gradient(135deg, rgba(217,222,227,.92), rgba(255,255,255,.68)),
+        #edf0f3 !important;
+      border-bottom: 1px solid rgba(55,66,71,.14) !important;
+    }
+
+    #appScreen .foto-pm.home {
+      border-width: 4px !important;
+      border-style: solid !important;
+      background: #ffffff !important;
+    }
+
+    #appScreen .pm-profile-card.oficial .foto-pm.home {
+      border-color: var(--azul-royal) !important;
+    }
+
+    #appScreen .pm-profile-card.sgt .foto-pm.home {
+      border-color: var(--vermelho-carmim) !important;
+    }
+
+    #appScreen .pm-profile-card.praca .foto-pm.home {
+      border-color: var(--preto-moldura) !important;
+    }
+
+    /* Ícone da versão: claro e discreto */
+    #appScreen .home-version {
+      color: #6b747b !important;
+      background: linear-gradient(135deg, #edf0f3, #d9dee3) !important;
+      border: 1px solid rgba(55,66,71,.16) !important;
+      box-shadow: none !important;
+      font-weight: 800 !important;
+    }
+
+    /* Ícones internos sem amarelo */
+    #appScreen .home-situation-card .sit-icon {
+      background: var(--cinza-claro-icone) !important;
+      color: var(--cinza-bandeirante-2) !important;
+      border: 1px solid rgba(55,66,71,.12) !important;
+    }
+
+    /* BOTÕES DE ACESSO — padrão cinza bandeirante degradê */
+    #appScreen .menu-card {
+      background:
+        linear-gradient(135deg, var(--cinza-bandeirante), var(--cinza-bandeirante-2) 55%, var(--cinza-bandeirante-3)) !important;
+      border: 1px solid rgba(55,66,71,.35) !important;
+      box-shadow: 0 12px 24px rgba(55,66,71,.16) !important;
+    }
+
+    #appScreen .menu-card::before {
+      background: radial-gradient(circle at top left, rgba(255,255,255,.14), transparent 44%) !important;
+    }
+
+    #appScreen .menu-card:hover {
+      background:
+        linear-gradient(135deg, #3f4b51, #515f66 55%, #647178) !important;
+      border-color: rgba(55,66,71,.55) !important;
+      transform: translateY(-2px) !important;
+    }
+
+    #appScreen .menu-card .menu-icon,
+    #appScreen .menu-card h3,
+    #appScreen .menu-card p {
+      color: var(--cinza-claro-texto) !important;
+    }
+
+    #appScreen .menu-card p {
+      opacity: .86 !important;
+    }
+
+    @media (max-width: 560px) {
+      #loginScreen:not(.hidden) {
+        padding: 16px !important;
+      }
+
+      #appScreen.app {
+        padding-top: 10px !important;
+      }
+
+      #appScreen .topbar {
+        margin-top: -10px !important;
+        padding-top: calc(10px + env(safe-area-inset-top)) !important;
+      }
+
+      #appScreen .top-title {
+        gap: 7px !important;
+      }
+
+      #appScreen #topSistema,
+      #appScreen .top-title strong {
+        font-size: 14px !important;
+      }
+
+      #appScreen #topUsuarioLogado {
+        font-size: 11px !important;
+        max-width: 160px !important;
+      }
+
+      #appScreen .top-mark,
+      #appScreen .top-mark-img {
+        width: 46px !important;
+        height: 46px !important;
+      }
+
+      #appScreen .top-actions .btn {
+        padding: 8px 9px !important;
+        font-size: 11.5px !important;
+      }
+
+      #appScreen .home-version {
+        font-size: 11.5px !important;
+        padding: 6px 10px !important;
+      }
+    }
+
+    /* ============================================================
+     * CORREÇÃO BOTÕES DE ACESSO — V1.3.10
+     * Padrão correto: fundo claro + degradê cinza bandeirante suave,
+     * igual ao degradê usado no topo da página abaixo da barra superior.
+     * ============================================================ */
+
+    #appScreen .menu-card {
+      background:
+        radial-gradient(circle at top left, rgba(55,66,71,.24), transparent 56%),
+        linear-gradient(180deg, #ffffff, #f8fafc) !important;
+      border: 1px solid rgba(55,66,71,.16) !important;
+      box-shadow: 0 10px 22px rgba(15,23,42,.08) !important;
+    }
+
+    #appScreen .menu-card::before {
+      background: none !important;
+      display: none !important;
+    }
+
+    #appScreen .menu-card:hover {
+      background:
+        radial-gradient(circle at top left, rgba(55,66,71,.30), transparent 58%),
+        linear-gradient(180deg, #ffffff, #f3f6f8) !important;
+      border-color: rgba(55,66,71,.30) !important;
+      box-shadow: 0 12px 24px rgba(15,23,42,.10) !important;
+      transform: translateY(-2px) !important;
+    }
+
+    #appScreen .menu-card .menu-icon {
+      color: #374247 !important;
+    }
+
+    #appScreen .menu-card h3 {
+      color: #17202a !important;
+    }
+
+    #appScreen .menu-card p {
+      color: #64748b !important;
+      opacity: 1 !important;
+    }
+
+    #appScreen .menu-card[data-modulo="MEUS_DADOS"] {
+      background:
+        radial-gradient(circle at top left, rgba(55,66,71,.24), transparent 56%),
+        linear-gradient(180deg, #ffffff, #f8fafc) !important;
+      border: 1px solid rgba(55,66,71,.16) !important;
+      box-shadow: 0 10px 22px rgba(15,23,42,.08) !important;
+    }
+
+    #appScreen .menu-card[data-modulo="MEUS_DADOS"] .menu-icon {
+      color: #374247 !important;
+    }
+
+    #appScreen .menu-card[data-modulo="MEUS_DADOS"] h3 {
+      color: #17202a !important;
+    }
+
+    #appScreen .menu-card[data-modulo="MEUS_DADOS"] p {
+      color: #64748b !important;
+      opacity: 1 !important;
+    }
+
+    /* ============================================================
+     * PÁGINA MEUS DADOS — V1.4.0
+     * Padrão visual oficial do Sistema CIA FT.
+     * ============================================================ */
+
+    .page-wrap {
+      max-width: 1160px;
+      margin: 0 auto;
+    }
+
+    .page-header {
+      background:
+        radial-gradient(circle at top left, rgba(55,66,71,.24), transparent 56%),
+        linear-gradient(180deg, #ffffff, #f8fafc);
+      border: 1px solid rgba(55,66,71,.16);
+      border-radius: 22px;
+      box-shadow: 0 10px 22px rgba(15,23,42,.08);
+      padding: 18px;
+      margin-bottom: 14px;
+    }
+
+    .page-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .page-kicker {
+      color: #64748b;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .35px;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+
+    .page-header h1 {
+      margin: 0;
+      color: #17202a;
+      font-size: 24px;
+      line-height: 1.15;
+      letter-spacing: .1px;
+    }
+
+    .page-header p {
+      margin: 7px 0 0;
+      color: #64748b;
+      font-size: 13px;
+      line-height: 1.42;
+    }
+
+    .page-actions {
+      display: flex;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+
+    .btn-page {
+      width: auto;
+      border: 1px solid rgba(55,66,71,.16);
+      background:
+        radial-gradient(circle at top left, rgba(55,66,71,.18), transparent 58%),
+        linear-gradient(180deg, #ffffff, #f8fafc);
+      color: #17202a;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(15,23,42,.07);
+    }
+
+    .btn-page:hover {
+      border-color: rgba(55,66,71,.30);
+      box-shadow: 0 10px 20px rgba(15,23,42,.10);
+      transform: translateY(-1px);
+    }
+
+    .meus-dados-grid {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .dados-card {
+      background: #ffffff;
+      border: 1px solid rgba(23,32,42,.12);
+      border-radius: 22px;
+      box-shadow: 0 16px 34px rgba(15,23,42,.10);
+      overflow: hidden;
+    }
+
+    .dados-card-header {
+      background:
+        radial-gradient(circle at top left, rgba(55,66,71,.24), transparent 56%),
+        linear-gradient(180deg, #ffffff, #f8fafc);
+      border-bottom: 1px solid rgba(55,66,71,.12);
+      padding: 15px 16px;
+    }
+
+    .dados-card-header h2 {
+      margin: 0;
+      color: #17202a;
+      font-size: 17px;
+      line-height: 1.2;
+    }
+
+    .dados-card-header p {
+      margin: 5px 0 0;
+      color: #64748b;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .dados-card-body {
+      padding: 15px 16px 16px;
+    }
+
+    .perfil-resumo {
+      text-align: center;
+      padding: 18px 16px 16px;
+    }
+
+    .perfil-resumo .foto-pm.home {
+      margin: 0 auto 13px;
+    }
+
+    .perfil-resumo h2 {
+      margin: 0;
+      color: #17202a;
+      font-size: 21px;
+      line-height: 1.15;
+    }
+
+    .perfil-resumo .sub {
+      margin-top: 7px;
+      color: #9a7200;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .perfil-resumo .status {
+      margin-top: 12px;
+    }
+
+    .dados-lista {
+      display: grid;
+      gap: 9px;
+    }
+
+    .dados-item {
+      background:
+        radial-gradient(circle at top left, rgba(55,66,71,.09), transparent 54%),
+        linear-gradient(180deg, #ffffff, #f8fafc);
+      border: 1px solid rgba(55,66,71,.12);
+      border-radius: 14px;
+      padding: 11px 12px;
+    }
+
+    .dados-item small {
+      display: block;
+      color: #64748b;
+      font-size: 11.5px;
+      font-weight: 800;
+      margin-bottom: 5px;
+      letter-spacing: .1px;
+    }
+
+    .dados-item strong {
+      display: block;
+      color: #17202a;
+      font-size: 14px;
+      line-height: 1.25;
+      word-break: break-word;
+    }
+
+    .dados-section-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .dados-section-grid .dados-card.full {
+      grid-column: 1 / -1;
+    }
+
+    .solicitacao-box {
+      background:
+        radial-gradient(circle at top left, rgba(55,66,71,.24), transparent 56%),
+        linear-gradient(180deg, #ffffff, #f8fafc);
+      border: 1px solid rgba(55,66,71,.16);
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    .solicitacao-box h3 {
+      margin: 0;
+      color: #17202a;
+      font-size: 16px;
+    }
+
+    .solicitacao-box p {
+      margin: 7px 0 13px;
+      color: #64748b;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .btn-primary-soft {
+      width: 100%;
+      border: 1px solid rgba(55,66,71,.20);
+      background:
+        radial-gradient(circle at top left, rgba(55,66,71,.24), transparent 56%),
+        linear-gradient(180deg, #ffffff, #f8fafc);
+      color: #17202a;
+      border-radius: 14px;
+      padding: 13px 14px;
+      font-size: 13px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 10px 22px rgba(15,23,42,.08);
+    }
+
+    .btn-primary-soft:hover {
+      border-color: rgba(55,66,71,.34);
+      transform: translateY(-1px);
+    }
+
+    .aviso-discreto {
+      margin-top: 12px;
+      color: #64748b;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    @media (max-width: 980px) {
+      .meus-dados-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .dados-section-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .page-header {
+        border-radius: 20px;
+        padding: 15px;
+      }
+
+      .page-header-row {
+        display: block;
+      }
+
+      .page-actions {
+        margin-top: 12px;
+      }
+
+      .page-header h1 {
+        font-size: 21px;
+      }
+
+      .btn-page {
+        width: 100%;
+      }
+
+      .dados-card {
+        border-radius: 20px;
+      }
+    }
+
+    /* ============================================================
+     * AJUSTES MEUS DADOS — V1.4.1
+     * ============================================================ */
+
+    .dados-section-grid.basicas {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dados-section-grid.basicas .dados-card.informacoes-basicas,
+    .dados-section-grid.basicas .dados-card.contato-card,
+    .dados-section-grid.basicas .dados-card.full {
+      grid-column: 1 / -1;
+    }
+
+    .info-basica-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 9px;
+    }
+
+    .contato-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 9px;
+    }
+
+    .contato-grid .dados-item.endereco {
+      grid-column: 1 / -1;
+    }
+
+    .campos-liberados {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 12px;
+    }
+
+    .campo-chip {
+      background: #e9edf1;
+      border: 1px solid rgba(55,66,71,.12);
+      color: #46535a;
+      border-radius: 999px;
+      padding: 7px 9px;
+      font-size: 11.5px;
+      font-weight: 800;
+    }
+
+    .campos-bloqueados {
+      margin-top: 12px;
+      padding: 11px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(150,0,24,.12);
+      background: #fff5f6;
+      color: #7f1d1d;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 980px) {
+      .info-basica-grid,
+      .contato-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 560px) {
+      .info-basica-grid,
+      .contato-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .contato-grid .dados-item.endereco {
+        grid-column: auto;
+      }
+    }
+
+    /* ============================================================
+     * AJUSTES MEUS DADOS — V1.4.2
+     * ============================================================ */
+
+    #appScreen .dados-card.oficial .foto-pm.home {
+      border-color: var(--azul-royal) !important;
+    }
+
+    #appScreen .dados-card.sgt .foto-pm.home {
+      border-color: var(--vermelho-carmim) !important;
+    }
+
+    #appScreen .dados-card.praca .foto-pm.home {
+      border-color: var(--preto-moldura) !important;
+    }
+
+    /* ============================================================
+     * AJUSTES VISUAIS — V1.4.3
+     * Moldura das fotos e RE padronizado.
+     * ============================================================ */
+
+    :root {
+      --amarelo-re-original: #9a7200;
+    }
+
+    /* RE em cinza escuro para todos */
+    #appScreen .pm-main-info .re-line,
+    #appScreen .perfil-resumo .sub {
+      color: #374247 !important;
+    }
+
+    /* Moldura da foto por hierarquia — novo padrão */
+    #appScreen .pm-profile-card.oficial .foto-pm.home,
+    #appScreen .dados-card.oficial .foto-pm.home {
+      border-color: var(--amarelo-re-original) !important;
+      box-shadow:
+        0 12px 28px rgba(15,23,42,.14),
+        0 0 0 2px rgba(154,114,0,.10) !important;
+    }
+
+    #appScreen .pm-profile-card.sgt .foto-pm.home,
+    #appScreen .dados-card.sgt .foto-pm.home {
+      border-color: var(--vermelho-carmim) !important;
+      box-shadow:
+        0 12px 28px rgba(15,23,42,.14),
+        0 0 0 2px rgba(150,0,24,.10) !important;
+    }
+
+    #appScreen .pm-profile-card.praca .foto-pm.home,
+    #appScreen .dados-card.praca .foto-pm.home {
+      border-color: var(--azul-royal) !important;
+      box-shadow:
+        0 12px 28px rgba(15,23,42,.14),
+        0 0 0 2px rgba(0,51,160,.10) !important;
+    }
+
+    /* ============================================================
+     * RESENHAS DE ESCALAS — V1.5.5
+     * Construção conforme estrutura definida:
+     * RESENHAS_ESCALAS, RESENHAS_ESCALAS_ITENS e RESENHAS_COMPLEMENTOS.
+     * ============================================================ */
+
+    .resenha-grid {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .resenha-card {
+      background: #ffffff;
+      border: 1px solid rgba(23,32,42,.12);
+      border-radius: 22px;
+      box-shadow: 0 16px 34px rgba(15,23,42,.10);
+      overflow: hidden;
+    }
+
+    .resenha-card-header {
+      background:
+        radial-gradient(circle at top left, rgba(55,66,71,.24), transparent 56%),
+        linear-gradient(180deg, #ffffff, #f8fafc);
+      border-bottom: 1px solid rgba(55,66,71,.12);
+      padding: 15px 16px;
+    }
+
+    .resenha-card-header h2 {
+      margin: 0;
+      color: #17202a;
+      font-size: 17px;
+      line-height: 1.2;
+    }
+
+    .resenha-card-header p {
+      margin: 5px 0 0;
+      color: #64748b;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .resenha-card-body {
+      padding: 15px 16px 16px;
+    }
+
+    .resenha-clock {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 8px 11px;
+      background: #e9edf1;
+      color: #374247;
+      border: 1px solid rgba(55,66,71,.16);
+      font-size: 12px;
+      font-weight: 900;
+      margin-top: 10px;
+    }
+
+    .resenha-clock.atrasado {
+      color: #b91c1c;
+      border-color: rgba(185,28,28,.20);
+      background: #fff1f2;
+      font-weight: 1000;
+    }
+
+    .resenha-status {
+      display: inline-flex;
+      border-radius: 999px;
+      padding: 7px 11px;
+      font-size: 11.5px;
+      font-weight: 900;
+      border: 1px solid rgba(55,66,71,.16);
+      background: #e9edf1;
+      color: #46535a;
+      margin-top: 10px;
+    }
+
+    .resenha-info-list {
+      display: grid;
+      gap: 9px;
+    }
+
+    .resenha-info-item {
+      background:
+        radial-gradient(circle at top left, rgba(55,66,71,.09), transparent 54%),
+        linear-gradient(180deg, #ffffff, #f8fafc);
+      border: 1px solid rgba(55,66,71,.12);
+      border-radius: 14px;
+      padding: 11px 12px;
+    }
+
+    .resenha-info-item small {
+      display: block;
+      color: #64748b;
+      font-size: 11.5px;
+      font-weight: 800;
+      margin-bottom: 5px;
+    }
+
+    .resenha-info-item strong {
+      display: block;
+      color: #17202a;
+      font-size: 14px;
+      line-height: 1.25;
+      word-break: break-word;
+    }
+
+    .resenha-form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .resenha-form-field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .resenha-form-field.full {
+      grid-column: 1 / -1;
+    }
+
+    .resenha-form-field label,
+    .resenha-mini-field label {
+      color: #64748b;
+      font-size: 11.5px;
+      font-weight: 900;
+      letter-spacing: .12px;
+    }
+
+    .resenha-form-field input,
+    .resenha-form-field select,
+    .resenha-form-field textarea,
+    .resenha-mini-field input,
+    .resenha-mini-field select,
+    .resenha-mini-field textarea {
+      width: 100%;
+      border: 1px solid rgba(55,66,71,.16);
+      background: #ffffff;
+      color: #17202a;
+      border-radius: 13px;
+      padding: 11px 12px;
+      font-size: 14px;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .resenha-form-field textarea,
+    .resenha-mini-field textarea {
+      min-height: 88px;
+      resize: vertical;
+      line-height: 1.4;
+    }
+
+    .resenha-form-field input:focus,
+    .resenha-form-field select:focus,
+    .resenha-form-field textarea:focus,
+    .resenha-mini-field input:focus,
+    .resenha-mini-field select:focus,
+    .resenha-mini-field textarea:focus {
+      border-color: rgba(55,66,71,.38);
+      box-shadow: 0 0 0 3px rgba(55,66,71,.10);
+    }
+
+    .resenha-divider-title {
+      grid-column: 1 / -1;
+      margin-top: 8px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(55,66,71,.12);
+      color: #374247;
+      font-size: 12px;
+      font-weight: 1000;
+      letter-spacing: .25px;
+      text-transform: uppercase;
+    }
+
+    .resenha-equipes-wrap {
+      display: grid;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .resenha-equipe-box {
+      border: 1px solid rgba(55,66,71,.12);
+      background:
+        radial-gradient(circle at top left, rgba(55,66,71,.09), transparent 54%),
+        linear-gradient(180deg, #ffffff, #f8fafc);
+      border-radius: 18px;
+      padding: 13px;
+    }
+
+    .resenha-equipe-box h3 {
+      margin: 0 0 11px;
+      color: #17202a;
+      font-size: 15px;
+      line-height: 1.2;
+    }
+
+    .resenha-equipe-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 9px;
+    }
+
+    .resenha-mini-field {
+      display: grid;
+      gap: 5px;
+    }
+
+    .resenha-mini-field.full {
+      grid-column: 1 / -1;
+    }
+
+    .resenha-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 9px;
+      margin-top: 12px;
+    }
+
+    .resenha-action-btn,
+    .resenha-submit {
+      width: 100%;
+      border: 1px solid rgba(55,66,71,.16);
+      background:
+        radial-gradient(circle at top left, rgba(55,66,71,.24), transparent 56%),
+        linear-gradient(180deg, #ffffff, #f8fafc);
+      color: #17202a;
+      border-radius: 14px;
+      padding: 13px 14px;
+      font-size: 13px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 10px 22px rgba(15,23,42,.08);
+      text-align: center;
+    }
+
+    .resenha-action-btn:hover,
+    .resenha-submit:hover {
+      border-color: rgba(55,66,71,.34);
+      transform: translateY(-1px);
+    }
+
+    .resenha-submit {
+      margin-top: 13px;
+    }
+
+    .resenha-alerta {
+      margin-top: 12px;
+      border: 1px dashed rgba(55,66,71,.25);
+      background: #f8fafc;
+      border-radius: 16px;
+      padding: 13px;
+      color: #64748b;
+      font-size: 12.5px;
+      line-height: 1.4;
+    }
+
+    .resenha-loading {
+      border: 1px dashed rgba(55,66,71,.25);
+      background: #f8fafc;
+      border-radius: 16px;
+      padding: 14px;
+      color: #64748b;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .toast-ft {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%) translateY(20px);
+      z-index: 9999;
+      min-width: min(420px, calc(100vw - 32px));
+      max-width: calc(100vw - 32px);
+      border: 1px solid rgba(55,66,71,.18);
+      background:
+        radial-gradient(circle at top left, rgba(55,66,71,.24), transparent 56%),
+        linear-gradient(180deg, #ffffff, #f8fafc);
+      color: #17202a;
+      border-radius: 18px;
+      box-shadow: 0 18px 44px rgba(15,23,42,.22);
+      padding: 14px 15px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+    }
+
+    .toast-ft.visivel {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast-ft strong {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .toast-ft span {
+      display: block;
+      color: #64748b;
+      font-size: 12.5px;
+      line-height: 1.35;
+    }
+
+    @media (max-width: 980px) {
+      .resenha-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .resenha-card {
+        border-radius: 20px;
+      }
+
+      .resenha-form-grid,
+      .resenha-equipe-grid,
+      .resenha-actions {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ============================================================
+     * AJUSTES RESENHAS DE ESCALAS — V1.5.6
+     * ============================================================ */
+
+    .resenha-form-grid.escala-topo {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .resenha-equipe-titulo-row {
+      display: grid;
+      grid-template-columns: 1fr minmax(180px, 260px);
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 11px;
+    }
+
+    .resenha-equipe-titulo-row h3 {
+      margin: 0;
+    }
+
+    .resenha-equipe-titulo-row select {
+      width: 100%;
+      border: 1px solid rgba(55,66,71,.16);
+      background: #ffffff;
+      color: #17202a;
+      border-radius: 13px;
+      padding: 10px 11px;
+      font-size: 13px;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .campo-oculto {
+      display: none !important;
+    }
+
+    .resenha-validacao {
+      border: 1px solid rgba(185,28,28,.18);
+      background: #fff1f2;
+      color: #991b1b;
+      border-radius: 16px;
+      padding: 13px;
+      margin-top: 12px;
+      font-size: 12.5px;
+      line-height: 1.45;
+      display: none;
+    }
+
+    .resenha-validacao.visivel {
+      display: block;
+    }
+
+    .resenha-validacao strong {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    @media (max-width: 980px) {
+      .resenha-form-grid.escala-topo {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .resenha-equipe-titulo-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ============================================================
+     * AJUSTE VISUAL RESENHAS DE ESCALAS — V1.5.8
+     * Objetivo:
+     * - simetria entre campos no computador
+     * - alinhamento no celular
+     * - campos e botões com alturas proporcionais
+     * - evitar estouro lateral de selects longos
+     * ============================================================ */
+
+    .resenha-grid,
+    .resenha-form-grid,
+    .resenha-equipe-grid,
+    .resenha-actions,
+    .resenha-equipe-titulo-row {
+      min-width: 0;
+    }
+
+    .resenha-card,
+    .resenha-equipe-box,
+    .resenha-form-field,
+    .resenha-mini-field {
+      min-width: 0;
+    }
+
+    .resenha-form-field input,
+    .resenha-form-field select,
+    .resenha-mini-field input,
+    .resenha-mini-field select,
+    .resenha-equipe-titulo-row select {
+      min-height: 46px;
+      height: 46px;
+      line-height: 1.2;
+    }
+
+    .resenha-form-field textarea,
+    .resenha-mini-field textarea {
+      min-height: 96px;
+    }
+
+    .resenha-action-btn,
+    .resenha-submit,
+    .btn-page {
+      min-height: 46px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.2;
+    }
+
+    .resenha-card-header,
+    .resenha-card-body {
+      box-sizing: border-box;
+    }
+
+    .resenha-form-grid.escala-topo {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      align-items: end;
+    }
+
+    .resenha-equipe-titulo-row {
+      grid-template-columns: minmax(0, 1fr) minmax(210px, 280px);
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .resenha-equipe-titulo-row h3 {
+      align-self: center;
+      line-height: 1.2;
+      word-break: break-word;
+    }
+
+    .resenha-equipe-grid.ft-grid {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 9px;
+    }
+
+    .resenha-equipe-grid.ft-grid .col-metade {
+      grid-column: span 3;
+    }
+
+    .resenha-equipe-grid.ft-grid .col-terco {
+      grid-column: span 2;
+    }
+
+    .resenha-mini-field.full,
+    .resenha-form-field.full {
+      grid-column: 1 / -1;
+    }
+
+    .resenha-actions {
+      align-items: stretch;
+    }
+
+    .resenha-action-btn {
+      white-space: normal;
+      text-align: center;
+    }
+
+    .resenha-info-item strong,
+    .resenha-form-field input,
+    .resenha-form-field select,
+    .resenha-mini-field input,
+    .resenha-mini-field select,
+    .resenha-equipe-titulo-row select {
+      overflow-wrap: anywhere;
+    }
+
+    @media (max-width: 860px) {
+      .resenha-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .resenha-equipe-grid.ft-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .resenha-equipe-grid.ft-grid .col-metade,
+      .resenha-equipe-grid.ft-grid .col-terco {
+        grid-column: span 1;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .resenha-form-grid.escala-topo {
+        grid-template-columns: 1fr;
+      }
+
+      .resenha-equipe-titulo-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .page-wrap {
+        width: 100%;
+      }
+
+      .page-header,
+      .resenha-card,
+      .resenha-equipe-box {
+        width: 100%;
+      }
+
+      .resenha-card-header {
+        padding: 14px;
+      }
+
+      .resenha-card-body {
+        padding: 14px;
+      }
+
+      .resenha-equipe-box {
+        padding: 12px;
+      }
+
+      .resenha-form-grid,
+      .resenha-equipe-grid,
+      .resenha-equipe-grid.ft-grid,
+      .resenha-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .resenha-equipe-grid.ft-grid .col-metade,
+      .resenha-equipe-grid.ft-grid .col-terco {
+        grid-column: 1 / -1;
+      }
+
+      .resenha-clock {
+        width: 100%;
+        box-sizing: border-box;
+        justify-content: center;
+        text-align: center;
+        flex-wrap: wrap;
+        border-radius: 16px;
+      }
+
+      .resenha-actions {
+        gap: 8px;
+      }
+
+      .resenha-action-btn,
+      .resenha-submit {
+        width: 100%;
+      }
+    }
+
+    /* ============================================================
+     * ESCALAS ADM — V1.6.0
+     * ============================================================ */
+
+    .adm-grid {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 14px;
+      align-items: start;
+      min-width: 0;
+    }
+
+    .adm-card {
+      background: #ffffff;
+      border: 1px solid rgba(23,32,42,.12);
+      border-radius: 22px;
+      box-shadow: 0 16px 34px rgba(15,23,42,.10);
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    .adm-card-header {
+      background:
+        radial-gradient(circle at top left, rgba(55,66,71,.24), transparent 56%),
+        linear-gradient(180deg, #ffffff, #f8fafc);
+      border-bottom: 1px solid rgba(55,66,71,.12);
+      padding: 15px 16px;
+    }
+
+    .adm-card-header h2 {
+      margin: 0;
+      color: #17202a;
+      font-size: 17px;
+      line-height: 1.2;
+    }
+
+    .adm-card-header p {
+      margin: 5px 0 0;
+      color: #64748b;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .adm-card-body {
+      padding: 15px 16px 16px;
+    }
+
+    .adm-info-list {
+      display: grid;
+      gap: 9px;
+    }
+
+    .adm-info-item {
+      background:
+        radial-gradient(circle at top left, rgba(55,66,71,.09), transparent 54%),
+        linear-gradient(180deg, #ffffff, #f8fafc);
+      border: 1px solid rgba(55,66,71,.12);
+      border-radius: 14px;
+      padding: 11px 12px;
+    }
+
+    .adm-info-item small {
+      display: block;
+      color: #64748b;
+      font-size: 11.5px;
+      font-weight: 800;
+      margin-bottom: 5px;
+    }
+
+    .adm-info-item strong {
+      display: block;
+      color: #17202a;
+      font-size: 14px;
+      line-height: 1.25;
+      word-break: break-word;
+    }
+
+    .adm-week-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .adm-day-card {
+      border: 1px solid rgba(55,66,71,.12);
+      background:
+        radial-gradient(circle at top left, rgba(55,66,71,.09), transparent 54%),
+        linear-gradient(180deg, #ffffff, #f8fafc);
+      border-radius: 16px;
+      padding: 10px;
+      min-width: 0;
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .adm-day-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      border-bottom: 1px solid rgba(55,66,71,.10);
+      padding-bottom: 7px;
+      min-height: 38px;
+    }
+
+    .adm-day-head span {
+      color: #374247;
+      font-size: 12px;
+      font-weight: 1000;
+      letter-spacing: .3px;
+    }
+
+    .adm-day-head strong {
+      min-width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #e9edf1;
+      color: #17202a;
+      border: 1px solid rgba(55,66,71,.14);
+      font-size: 13px;
+      font-weight: 1000;
+    }
+
+    .adm-day-card select,
+    .adm-day-card input,
+    .adm-form-field textarea {
+      width: 100%;
+      border: 1px solid rgba(55,66,71,.16);
+      background: #ffffff;
+      color: #17202a;
+      border-radius: 13px;
+      padding: 10px 11px;
+      font-size: 13px;
+      outline: none;
+      box-sizing: border-box;
+      min-height: 43px;
+    }
+
+    .adm-day-card input.campo-oculto {
+      display: none;
+    }
+
+    .adm-form-field {
+      display: grid;
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .adm-form-field label {
+      color: #64748b;
+      font-size: 11.5px;
+      font-weight: 900;
+      letter-spacing: .12px;
+    }
+
+    .adm-form-field textarea {
+      min-height: 90px;
+      resize: vertical;
+      line-height: 1.4;
+    }
+
+    .adm-submit {
+      width: 100%;
+      border: 1px solid rgba(55,66,71,.16);
+      background:
+        radial-gradient(circle at top left, rgba(55,66,71,.24), transparent 56%),
+        linear-gradient(180deg, #ffffff, #f8fafc);
+      color: #17202a;
+      border-radius: 14px;
+      padding: 13px 14px;
+      font-size: 13px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 10px 22px rgba(15,23,42,.08);
+      text-align: center;
+      min-height: 46px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 13px;
+    }
+
+    .adm-submit:hover {
+      border-color: rgba(55,66,71,.34);
+      transform: translateY(-1px);
+    }
+
+    .adm-alerta {
+      margin-top: 12px;
+      border: 1px dashed rgba(55,66,71,.25);
+      background: #f8fafc;
+      border-radius: 16px;
+      padding: 13px;
+      color: #64748b;
+      font-size: 12.5px;
+      line-height: 1.4;
+    }
+
+    .adm-validacao {
+      border: 1px solid rgba(185,28,28,.18);
+      background: #fff1f2;
+      color: #991b1b;
+      border-radius: 16px;
+      padding: 13px;
+      margin-top: 12px;
+      font-size: 12.5px;
+      line-height: 1.45;
+      display: none;
+    }
+
+    .adm-validacao.visivel {
+      display: block;
+    }
+
+    .adm-list-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border: 1px solid rgba(55,66,71,.12);
+      border-radius: 16px;
+      background: #ffffff;
+    }
+
+    .adm-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 860px;
+      font-size: 12.5px;
+    }
+
+    .adm-table th,
+    .adm-table td {
+      padding: 10px 9px;
+      text-align: left;
+      border-bottom: 1px solid rgba(55,66,71,.10);
+      vertical-align: top;
+    }
+
+    .adm-table th {
+      color: #374247;
+      background: #f8fafc;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .25px;
+      font-weight: 1000;
+      white-space: nowrap;
+    }
+
+    .adm-table td {
+      color: #17202a;
+      line-height: 1.35;
+    }
+
+    .adm-table tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .adm-table .pm {
+      min-width: 150px;
+      font-weight: 900;
+    }
+
+    .adm-decisao {
+      display: inline-flex;
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: #e9edf1;
+      color: #374247;
+      border: 1px solid rgba(55,66,71,.12);
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 1180px) {
+      .adm-week-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 900px) {
+      .adm-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .adm-week-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 560px) {
+      .adm-card-header,
+      .adm-card-body {
+        padding: 14px;
+      }
+
+      .adm-week-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .adm-day-card {
+        padding: 11px;
+      }
+
+      .adm-day-head {
+        min-height: 34px;
+      }
+
+      .adm-day-head strong {
+        min-width: 34px;
+        height: 34px;
+      }
+    }
+
+    /* ============================================================
+     * CONSULTA EFETIVO — V1.7.0
+     * ============================================================ */
+    .consulta-card{background:#fff;border:1px solid rgba(23,32,42,.12);border-radius:22px;box-shadow:0 16px 34px rgba(15,23,42,.10);overflow:hidden;min-width:0}
+    .consulta-card-header{background:radial-gradient(circle at top left,rgba(55,66,71,.24),transparent 56%),linear-gradient(180deg,#fff,#f8fafc);border-bottom:1px solid rgba(55,66,71,.12);padding:15px 16px}
+    .consulta-card-header h2{margin:0;color:#17202a;font-size:17px;line-height:1.2}
+    .consulta-card-header p{margin:5px 0 0;color:#64748b;font-size:12px;line-height:1.35}
+    .consulta-card-body{padding:15px 16px 16px}
+    .consulta-filtros{display:grid;grid-template-columns:minmax(220px,1.3fr) minmax(150px,.7fr) minmax(150px,.7fr) auto;gap:10px;align-items:end}
+    .consulta-field{display:grid;gap:6px;min-width:0}
+    .consulta-field label{color:#64748b;font-size:11.5px;font-weight:900;letter-spacing:.12px}
+    .consulta-field input,.consulta-field select{width:100%;border:1px solid rgba(55,66,71,.16);background:#fff;color:#17202a;border-radius:13px;padding:11px 12px;font-size:14px;outline:none;box-sizing:border-box;min-height:46px}
+    .consulta-btn{width:100%;border:1px solid rgba(55,66,71,.16);background:radial-gradient(circle at top left,rgba(55,66,71,.24),transparent 56%),linear-gradient(180deg,#fff,#f8fafc);color:#17202a;border-radius:14px;padding:13px 14px;font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 10px 22px rgba(15,23,42,.08);text-align:center;min-height:46px;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap}
+    .consulta-resumo,.consulta-empty{margin-top:12px;border:1px dashed rgba(55,66,71,.25);background:#f8fafc;border-radius:16px;padding:13px;color:#64748b;font-size:12.5px;line-height:1.4}
+    .consulta-lista{display:grid;gap:10px;margin-top:14px}
+    .consulta-pm-card{border:1px solid rgba(55,66,71,.12);background:radial-gradient(circle at top left,rgba(55,66,71,.09),transparent 54%),linear-gradient(180deg,#fff,#f8fafc);border-radius:18px;padding:13px;display:grid;grid-template-columns:56px 1fr;gap:12px;align-items:center;min-width:0}
+    .consulta-foto{width:56px;height:56px;border-radius:16px;object-fit:cover;background:#e9edf1;border:2px solid #374247}
+    .consulta-foto.sem-foto{display:inline-flex;align-items:center;justify-content:center;color:#374247;font-weight:1000;font-size:18px}
+    .consulta-pm-main{min-width:0}
+    .consulta-pm-title{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
+    .consulta-pm-title h3{margin:0;color:#17202a;font-size:15px;line-height:1.25;word-break:break-word}
+    .consulta-status{display:inline-flex;padding:5px 8px;border-radius:999px;background:#e9edf1;color:#374247;border:1px solid rgba(55,66,71,.12);font-weight:900;font-size:11px;white-space:nowrap}
+    .consulta-detalhes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:10px}
+    .consulta-detail{background:rgba(255,255,255,.72);border:1px solid rgba(55,66,71,.10);border-radius:12px;padding:8px 9px;min-width:0}
+    .consulta-detail small{display:block;color:#64748b;font-size:10.5px;font-weight:900;margin-bottom:4px}
+    .consulta-detail strong{display:block;color:#17202a;font-size:12.5px;line-height:1.25;overflow-wrap:anywhere}
+    @media(max-width:900px){.consulta-filtros{grid-template-columns:1fr 1fr}.consulta-filtros .consulta-field:first-child{grid-column:1/-1}.consulta-detalhes{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:560px){.consulta-card-header,.consulta-card-body{padding:14px}.consulta-filtros{grid-template-columns:1fr}.consulta-pm-card{grid-template-columns:48px 1fr;gap:10px;padding:12px}.consulta-foto{width:48px;height:48px;border-radius:14px}.consulta-pm-title{align-items:flex-start;flex-direction:column;gap:6px}.consulta-detalhes{grid-template-columns:1fr}}
+
+    /* ============================================================
+     * CONSULTA EFETIVO — AJUSTES V1.7.1
+     * ============================================================ */
+
+    .consulta-pm-card.hierarquia-oficial {
+      border-color: rgba(184, 134, 11, .46);
+      box-shadow: 0 12px 26px rgba(184,134,11,.12);
+    }
+
+    .consulta-pm-card.hierarquia-subten-sgt {
+      border-color: rgba(150, 0, 24, .46);
+      box-shadow: 0 12px 26px rgba(150,0,24,.10);
+    }
+
+    .consulta-pm-card.hierarquia-cb-sd {
+      border-color: rgba(0, 51, 160, .38);
+      box-shadow: 0 12px 26px rgba(0,51,160,.08);
+    }
+
+    .consulta-foto.hierarquia-oficial {
+      border-color: #b8860b;
+    }
+
+    .consulta-foto.hierarquia-subten-sgt {
+      border-color: #960018;
+    }
+
+    .consulta-foto.hierarquia-cb-sd {
+      border-color: #0033a0;
+    }
+
+    .consulta-nome-link {
+      appearance: none;
+      border: 0;
+      padding: 0;
+      margin: 0;
+      background: transparent;
+      color: #17202a;
+      font: inherit;
+      font-weight: 1000;
+      text-align: left;
+      cursor: pointer;
+      line-height: 1.25;
+    }
+
+    .consulta-nome-link:hover {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .consulta-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,.58);
+      z-index: 9998;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+
+    .consulta-modal {
+      width: min(720px, 100%);
+      max-height: calc(100vh - 36px);
+      overflow: auto;
+      background: #ffffff;
+      border: 1px solid rgba(55,66,71,.18);
+      border-radius: 24px;
+      box-shadow: 0 24px 70px rgba(0,0,0,.28);
+    }
+
+    .consulta-modal-header {
+      background:
+        radial-gradient(circle at top left, rgba(55,66,71,.24), transparent 56%),
+        linear-gradient(180deg, #ffffff, #f8fafc);
+      border-bottom: 1px solid rgba(55,66,71,.12);
+      padding: 16px;
+      display: flex;
+      gap: 13px;
+      align-items: center;
+    }
+
+    .consulta-modal-header h2 {
+      margin: 0;
+      color: #17202a;
+      font-size: 18px;
+      line-height: 1.2;
+    }
+
+    .consulta-modal-header p {
+      margin: 4px 0 0;
+      color: #64748b;
+      font-size: 12.5px;
+    }
+
+    .consulta-modal-body {
+      padding: 16px;
+    }
+
+    .consulta-modal-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 9px;
+    }
+
+    .consulta-modal-close {
+      margin-left: auto;
+      border: 1px solid rgba(55,66,71,.16);
+      background: #ffffff;
+      color: #17202a;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-weight: 1000;
+      cursor: pointer;
+    }
+
+    @media (max-width: 560px) {
+      .consulta-modal-backdrop {
+        align-items: flex-start;
+        padding: 10px;
+      }
+
+      .consulta-modal {
+        border-radius: 20px;
+        max-height: calc(100vh - 20px);
+      }
+
+      .consulta-modal-header {
+        align-items: flex-start;
+      }
+
+      .consulta-modal-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ============================================================
+     * CONSULTA EFETIVO — CORREÇÃO V1.7.3
+     * ============================================================ */
+
+    .consulta-foto-btn {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      padding: 0;
+      margin: 0;
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .consulta-foto-btn:hover .consulta-foto {
+      filter: brightness(.96);
+      transform: translateY(-1px);
+    }
+
+    .consulta-pm-card.hierarquia-oficial .consulta-status {
+      border-color: rgba(184,134,11,.26);
+    }
+
+    .consulta-pm-card.hierarquia-subten-sgt .consulta-status {
+      border-color: rgba(150,0,24,.22);
+    }
+
+    @media (max-width: 560px) {
+      .consulta-foto-btn {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+      }
+    }
+
+    /* ============================================================
+     * CORREÇÃO DEFINITIVA SUBTEN — V1.7.4
+     * ============================================================ */
+
+    :root {
+      --dourado-oficial-ft: #b8860b;
+      --vermelho-subten-sgt-ft: #960018;
+      --azul-cb-sd-ft: #0033a0;
+    }
+
+    /* Home e Meus Dados */
+    #appScreen .pm-profile-card.oficial .foto-pm.home,
+    #appScreen .dados-card.oficial .foto-pm.home {
+      border-color: var(--dourado-oficial-ft) !important;
+      box-shadow:
+        0 12px 28px rgba(15,23,42,.14),
+        0 0 0 2px rgba(184,134,11,.16) !important;
+    }
+
+    #appScreen .pm-profile-card.sgt .foto-pm.home,
+    #appScreen .dados-card.sgt .foto-pm.home {
+      border-color: var(--vermelho-subten-sgt-ft) !important;
+      box-shadow:
+        0 12px 28px rgba(15,23,42,.14),
+        0 0 0 2px rgba(150,0,24,.16) !important;
+    }
+
+    #appScreen .pm-profile-card.praca .foto-pm.home,
+    #appScreen .dados-card.praca .foto-pm.home {
+      border-color: var(--azul-cb-sd-ft) !important;
+      box-shadow:
+        0 12px 28px rgba(15,23,42,.14),
+        0 0 0 2px rgba(0,51,160,.16) !important;
+    }
+
+    /* Consulta do Efetivo */
+    .consulta-foto.hierarquia-oficial {
+      border-color: var(--dourado-oficial-ft) !important;
+    }
+
+    .consulta-foto.hierarquia-subten-sgt {
+      border-color: var(--vermelho-subten-sgt-ft) !important;
+    }
+
+    .consulta-foto.hierarquia-cb-sd {
+      border-color: var(--azul-cb-sd-ft) !important;
+    }
+
+    .consulta-pm-card.hierarquia-oficial {
+      border-color: rgba(184,134,11,.46) !important;
+    }
+
+    .consulta-pm-card.hierarquia-subten-sgt {
+      border-color: rgba(150,0,24,.50) !important;
+    }
+
+    .consulta-pm-card.hierarquia-cb-sd {
+      border-color: rgba(0,51,160,.42) !important;
+    }
+
   </style>
 </head>
+
 <body>
-  <div id="loading">
-    <div class="box">
-      <div class="titulo">SISTEMA CIA FT</div>
-      <p class="texto">Carregando o front visual oficial V1.7.4.1...</p>
-      <div id="erro" class="erro">
-        Não foi possível carregar automaticamente o front oficial pelo CDN.<br>
-        <a id="linkAlternativo" href="#" target="_top" rel="noopener">Abrir versão oficial diretamente</a>
+
+  <section id="loginScreen" class="login-screen">
+    <main class="login-card">
+      <div class="logo">
+        <img
+          src="https://drive.google.com/thumbnail?id=1P64M5G2qLW5yhazJUMvhTAIl3rEDD9Br&sz=w1000"
+          alt="Portal Força Tática"
+          onerror="this.outerHTML='<div style=&quot;color:#ffe600;font-size:64px&quot;>⚔️</div>'"
+        >
+      </div>
+
+      <div class="field">
+        <label for="loginRE">RE sem dígito</label>
+        <input id="loginRE" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Ex.: 120566" oninput="this.value=this.value.replace(/\\D/g,'')">
+      </div>
+
+      <div class="field">
+        <label for="loginSenha">Senha</label>
+        <input id="loginSenha" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="current-password" placeholder="Digite sua senha" oninput="this.value=this.value.replace(/\\D/g,'')">
+      </div>
+
+      <button id="btnLogin" class="btn" onclick="fazerLogin()">ENTRAR</button>
+
+      <div id="loginAlerta" class="alerta"></div>
+
+      <div class="footer">
+        Portal Força Tática • V1.7.4
+      </div>
+    </main>
+  </section>
+
+
+  <section id="appScreen" class="app hidden">
+    <div class="topbar">
+      <div class="topbar-inner">
+        <div class="top-title">
+          <div class="top-mark top-mark-img">
+            <img
+              src="https://drive.google.com/thumbnail?id=1HsuKSfmhLwhnU6g1i4tqYd4gkOshqd89&sz=w600&v=137"
+              alt="Símbolo FT"
+              onerror="this.parentElement.innerHTML='⚔️'"
+            >
+          </div>
+          <div class="top-text-group">
+            <strong id="topSistema">SISTEMA CIA FT</strong>
+            <span id="topUsuarioLogado">Usuário logado</span>
+          </div>
+        </div>
+
+        <div class="top-actions">
+          <button class="btn btn-secondary" onclick="abrirHome()">INÍCIO</button>
+          <button class="btn btn-secondary" onclick="sair()">SAIR</button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <iframe
-    id="appFrame"
-    title="Sistema CIA FT"
-    referrerpolicy="no-referrer-when-downgrade"
-    allow="clipboard-read; clipboard-write; fullscreen"
-  ></iframe>
+    <div id="appConteudo"></div>
+  </section>
+
 
   <script>
-    (function () {
-      'use strict';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbx93RwTCtmiZ45_Tke0CqH6ArL4kTbQFW54_pnXRq69IYfE8_5JSjvECzBLoGaiMroGZQ/exec';
 
-      var fontes = [
-        'https://cdn.jsdelivr.net/gh/CiaFT/sistema-cia-ft@1c83574a606bf07a28cc6e3b4abcec17d7d8d29e/index.html',
-        'https://cdn.statically.io/gh/CiaFT/sistema-cia-ft/1c83574a606bf07a28cc6e3b4abcec17d7d8d29e/index.html',
-        'https://raw.githack.com/CiaFT/sistema-cia-ft/1c83574a606bf07a28cc6e3b4abcec17d7d8d29e/index.html'
+    const APP = {
+      usuario: null,
+      menus: [],
+      permissoes: {},
+      credenciais: null
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('loginRE').addEventListener('keydown', function(ev) {
+        if (ev.key === 'Enter') fazerLogin();
+      });
+
+      document.getElementById('loginSenha').addEventListener('keydown', function(ev) {
+        if (ev.key === 'Enter') fazerLogin();
+      });
+    });
+
+
+    function fazerLogin() {
+      const login = document.getElementById('loginRE').value.trim();
+      const senha = document.getElementById('loginSenha').value.trim();
+
+      if (!login || !senha) {
+        mostrarAlerta('Informe o RE e a senha.', 'erro');
+        return;
+      }
+
+      setBotaoLogin(true);
+      mostrarAlerta('Validando acesso...', 'info');
+
+      chamarApi('login', { login, senha })
+        .then(function(resp) {
+          setBotaoLogin(false);
+
+          if (!resp || !resp.ok) {
+            mostrarAlerta(resp && resp.erro ? resp.erro : 'Falha no login.', 'erro');
+            return;
+          }
+
+          APP.usuario = resp.dados.usuario;
+          APP.menus = resp.dados.menus || [];
+          APP.permissoes = resp.dados.permissoes || {};
+          APP.credenciais = { login: login, senha: senha };
+
+          document.getElementById('loginScreen').classList.add('hidden');
+          document.getElementById('appScreen').classList.remove('hidden');
+          window.scrollTo(0, 0);
+
+          abrirHome();
+        })
+        .catch(function(err) {
+          setBotaoLogin(false);
+          mostrarAlerta('Erro ao conectar com a API.\n' + err.message, 'erro');
+        });
+    }
+
+
+    function abrirHome() {
+      window.scrollTo(0, 0);
+      const u = APP.usuario;
+
+      if (!u) return;
+
+      const topoUsuarioLogado = document.getElementById('topUsuarioLogado');
+      if (topoUsuarioLogado) {
+        topoUsuarioLogado.textContent = [u.postoGrad, u.nomeGuerra].filter(Boolean).join(' ');
+      }
+      window.scrollTo(0, 0);
+
+      document.getElementById('appConteudo').innerHTML = `
+        <div class="home-hero">
+          ${montarCardPolicial(u)}
+
+          <div class="home-panel">
+            <div class="section-title home-menu-title">
+              <div>
+                <h2>Menu Principal</h2>
+                <p>Selecione uma área para acessar.</p>
+              </div>
+            </div>
+
+            <div class="menu-grid">
+              ${montarMenusHome().map(montarMenuCard).join('') || '<div class="modal-card">Nenhum menu liberado para seu perfil.</div>'}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function montarCardPolicial(u) {
+      const foto = u.foto
+        ? '<img src="' + escapar(u.foto) + '" onerror="this.parentElement.innerHTML=\'👤\'">'
+        : '👤';
+
+      const classeHierarquia = classeVisualHierarquia(u.postoGrad);
+
+      return `
+        <div class="pm-profile-card ${classeHierarquia}">
+          <div class="pm-photo-area">
+            <div class="foto-pm home">${foto}</div>
+          </div>
+
+          <div class="pm-main-info">
+            <h1>${escapar(u.postoGrad || '')} ${escapar(u.nomeGuerra || '')}</h1>
+            <div class="re-line">RE ${escapar(u.re || '')}</div>
+            <span class="status">${escapar(u.status || '')}</span>
+          </div>
+
+          <div class="pm-detail-list">
+            ${pmDetail('Pelotão', u.pelotao)}
+            ${pmDetail('Modalidade', u.modalidade)}
+            ${pmDetail('Função', u.funcao)}
+          </div>
+        </div>
+      `;
+    }
+
+    function homeSituation(icone, titulo, texto) {
+      return `
+        <div class="home-situation-card">
+          <div class="sit-icon">${icone}</div>
+          <h3>${escapar(titulo)}</h3>
+          <p>${escapar(texto)}</p>
+        </div>
+      `;
+    }
+
+
+    function classeVisualHierarquia(postoGrad) {
+      const p = normalizarTexto(postoGrad || '').replace(/[º°ª]/g, '');
+
+      /*
+       * IMPORTANTE:
+       * SUBTEN precisa ser testado ANTES de TEN,
+       * porque a palavra SUBTEN contém TEN.
+       */
+      if (
+        p.includes('SUBTEN') ||
+        p.includes('SUB TEN') ||
+        p.includes('SGT')
+      ) {
+        return 'sgt';
+      }
+
+      if (
+        p.includes('MAJ') ||
+        p.includes('CAP') ||
+        p.includes('ASP') ||
+        (p.includes('TEN') && !p.includes('SUBTEN') && !p.includes('SUB TEN'))
+      ) {
+        return 'oficial';
+      }
+
+      if (
+        p.includes('CB') ||
+        p.includes('SD')
+      ) {
+        return 'praca';
+      }
+
+      return 'praca';
+    }
+
+
+    function quickStatus(rotulo, valor) {
+      return `
+        <div class="quick-status">
+          <small>${escapar(rotulo)}</small>
+          <strong>${escapar(valor || '-')}</strong>
+        </div>
+      `;
+    }
+
+
+    function pmDetail(rotulo, valor) {
+      return `
+        <div class="pm-detail-item">
+          <small>${escapar(rotulo)}</small>
+          <strong>${escapar(valor || '-')}</strong>
+        </div>
+      `;
+    }
+
+
+    function infoCell(rotulo, valor) {
+      return `
+        <div class="info-cell">
+          <small>${escapar(rotulo)}</small>
+          <strong>${escapar(valor || '-')}</strong>
+        </div>
+      `;
+    }
+
+
+
+    function abrirMeusDados() {
+      window.scrollTo(0, 0);
+
+      const u = APP.usuario;
+      if (!u) return abrirHome();
+
+      const foto = u.foto
+        ? '<img src="' + escapar(u.foto) + '" onerror="this.parentElement.innerHTML=\'👤\'">'
+        : '👤';
+
+      const classeHierarquia = classeVisualHierarquia(u.postoGrad);
+      const ferias = montarTextoFerias(u);
+      const eap = valorCampo(u, ['eap', 'EAP', 'eapPeriodo', 'periodoEap']);
+
+      document.getElementById('appConteudo').innerHTML = `
+        <div class="page-wrap">
+          <div class="page-header">
+            <div class="page-header-row">
+              <div>
+                <div class="page-kicker">Área pessoal</div>
+                <h1>Meus Dados</h1>
+                <p>Consulta dos dados cadastrados no Sistema CIA FT. Alterações devem ser solicitadas para análise administrativa.</p>
+              </div>
+              <div class="page-actions">
+                <button class="btn-page" onclick="abrirHome()">VOLTAR</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="meus-dados-grid">
+            <div class="dados-card ${classeHierarquia}">
+              <div class="perfil-resumo">
+                <div class="foto-pm home">${foto}</div>
+                <h2>${escapar(u.postoGrad || '')} ${escapar(u.nomeGuerra || '')}</h2>
+                <div class="sub">RE ${escapar(u.re || '')}</div>
+              </div>
+
+              <div class="dados-card-body">
+                <div class="dados-lista">
+                  ${dadosItem('Perfil de acesso', u.perfilAcesso)}
+                </div>
+              </div>
+            </div>
+
+            <div class="dados-section-grid basicas">
+              <div class="dados-card informacoes-basicas">
+                <div class="dados-card-header">
+                  <h2>Informações Básicas</h2>
+                  <p>Dados pessoais, funcionais e administrativos do policial.</p>
+                </div>
+                <div class="dados-card-body">
+                  <div class="info-basica-grid">
+                    ${dadosItem('Nome Completo', valorCampo(u, ['nomeCompleto', 'nome', 'nomePm']))}
+                    ${dadosItem('Nome de Guerra', u.nomeGuerra)}
+                    ${dadosItem('Graduação', u.postoGrad)}
+                    ${dadosItem('RE', u.re)}
+                    ${dadosItem('CPF', valorCampo(u, ['cpf', 'CPF']))}
+                    ${dadosItem('RG', valorCampo(u, ['rg', 'RG']))}
+                    ${dadosItem('Data de nascimento', valorCampo(u, ['dataNascimento', 'nascimento', 'dtNascimento']))}
+                    ${dadosItem('Data de entrada na Cia FT', valorCampo(u, ['dataEntrada', 'entradaCiaFt', 'entrada', 'dataEntradaCia']))}
+                    ${dadosItem('Férias', ferias)}
+                    ${dadosItem('EAP', eap)}
+                  </div>
+                </div>
+              </div>
+
+              <div class="dados-card contato-card">
+                <div class="dados-card-header">
+                  <h2>Contato</h2>
+                  <p>Dados usados para comunicação e localização.</p>
+                </div>
+                <div class="dados-card-body">
+                  <div class="contato-grid">
+                    ${dadosItem('Telefone', u.telefone)}
+                    ${dadosItem('E-mail', u.email)}
+                    ${dadosItem('Endereço', u.endereco, 'endereco')}
+                  </div>
+                </div>
+              </div>
+
+              <div class="dados-card full">
+                <div class="dados-card-header">
+                  <h2>Solicitação de alteração</h2>
+                  <p>O policial pode solicitar correção cadastral. A alteração somente será aplicada após aprovação administrativa.</p>
+                </div>
+                <div class="dados-card-body">
+                  <div class="solicitacao-box">
+                    <h3>Solicitar correção cadastral</h3>
+                    <p>Selecione o campo cadastral que precisa de correção e envie para análise administrativa.</p>
+
+                    <button class="btn-primary-soft" onclick="abrirSolicitacaoDados()">SOLICITAR ALTERAÇÃO DE DADOS</button>
+
+                    <div class="campos-liberados">
+                      ${chipCampo('Nome Completo')}
+                      ${chipCampo('Nome de Guerra')}
+                      ${chipCampo('CPF')}
+                      ${chipCampo('RG')}
+                      ${chipCampo('Nascimento')}
+                      ${chipCampo('Férias')}
+                      ${chipCampo('EAP')}
+                      ${chipCampo('Telefone')}
+                      ${chipCampo('E-mail')}
+                      ${chipCampo('Endereço')}
+                    </div>
+
+                    <div class="aviso-discreto">Nesta etapa, a página está preparada visualmente. A gravação da solicitação será conectada à API na próxima atualização.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+
+    function dadosItem(rotulo, valor, classeExtra) {
+      return `
+        <div class="dados-item ${escaparAttr(classeExtra || '')}">
+          <small>${escapar(rotulo)}</small>
+          <strong>${escapar(valor || '-')}</strong>
+        </div>
+      `;
+    }
+
+
+    function chipCampo(texto) {
+      return `<span class="campo-chip">${escapar(texto)}</span>`;
+    }
+
+
+    function valorCampo(obj, nomes) {
+      for (const nome of nomes) {
+        if (obj && obj[nome] !== undefined && obj[nome] !== null && String(obj[nome]).trim() !== '') {
+          return obj[nome];
+        }
+      }
+      return '';
+    }
+
+
+    function montarTextoFerias(u) {
+      const ferias30 = valorCampo(u, ['ferias30', 'ferias', 'feriasAj', 'feriasAJ']);
+      const ferias15a = valorCampo(u, ['ferias15a', 'ferias1', 'feriasAk', 'feriasAK']);
+      const ferias15b = valorCampo(u, ['ferias15b', 'ferias2', 'feriasAl', 'feriasAL']);
+
+      if (ferias30) return ferias30;
+      if (ferias15a || ferias15b) {
+        return [ferias15a, ferias15b].filter(Boolean).join(' • ');
+      }
+      return '';
+    }
+
+
+    function abrirSolicitacaoDados() {
+      window.scrollTo(0, 0);
+
+      document.getElementById('appConteudo').innerHTML = `
+        <div class="page-wrap">
+          <div class="page-header">
+            <div class="page-header-row">
+              <div>
+                <div class="page-kicker">Meus Dados</div>
+                <h1>Solicitar Alteração de Dados</h1>
+                <p>Área destinada à solicitação de correção cadastral. A gravação será conectada à aba SOLICITACOES_DADOS na próxima etapa.</p>
+              </div>
+              <div class="page-actions">
+                <button class="btn-page" onclick="abrirMeusDados()">VOLTAR</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="dados-card">
+            <div class="dados-card-header">
+              <h2>Em implantação</h2>
+              <p>Campos permitidos: dados cadastrais editáveis e motivo da solicitação.</p>
+            </div>
+            <div class="dados-card-body">
+              <div class="solicitacao-box">
+                <h3>Fluxo administrativo preservado</h3>
+                <p>A solicitação será registrada como PENDENTE, analisada pelo administrativo e somente após aprovação alterará a CADASTRO GERAL.</p>
+                <button class="btn-primary-soft" onclick="abrirMeusDados()">RETORNAR AOS MEUS DADOS</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+
+    function montarMenusHome() {
+      /*
+       * V1.5.7 — Regra crítica:
+       * A Home não cria botão de módulo por conta própria.
+       * Os módulos exibidos vêm exclusivamente da API,
+       * que monta a lista a partir da aba PERMISSOES_FT.
+       */
+      return Array.isArray(APP.menus) ? APP.menus.slice() : [];
+    }
+
+
+    function montarMenuCard(menu) {
+      const iconeMenu = menu.id === 'MEUS_DADOS' ? '🪪' : (menu.icone || '•');
+
+      return `
+        <div class="menu-card" data-modulo="${escaparAttr(menu.id)}" onclick="abrirModulo('${escaparAttr(menu.id)}')">
+          <div class="menu-icon">${iconeMenu}</div>
+          <h3>${escapar(menu.titulo || menu.id)}</h3>
+          <p>${escapar(menu.descricao || '')}</p>
+        </div>
+      `;
+    }
+
+
+    function abrirModulo(id) {
+      window.scrollTo(0, 0);
+
+      if (id === 'MEUS_DADOS') {
+        abrirMeusDados();
+        return;
+      }
+
+      if (ehModuloConsultaEfetivo(id)) {
+        if (!usuarioTemPermissaoCliente('CONSULTA_EFETIVO', 'visualizar')) {
+          abrirAcessoNegado('Consulta do Efetivo');
+          return;
+        }
+
+        abrirConsultaEfetivo();
+        return;
+      }
+
+      if (ehModuloEscalasAdm(id)) {
+        if (!usuarioTemPermissaoCliente('ESCALAS_ADM', 'visualizar')) {
+          abrirAcessoNegado('Escalas ADM');
+          return;
+        }
+
+        abrirEscalasAdm();
+        return;
+      }
+
+      if (ehModuloResenhaEscalas(id)) {
+        if (!usuarioTemPermissaoCliente('RESENHA_DE_ESCALAS', 'visualizar')) {
+          abrirAcessoNegado('Resenhas de Escalas');
+          return;
+        }
+
+        abrirResenhasEscalas();
+        return;
+      }
+
+      if (!usuarioTemPermissaoCliente(id, 'visualizar')) {
+        abrirAcessoNegado(id);
+        return;
+      }
+
+      const menu = (APP.menus || []).find(m => m.id === id);
+
+      document.getElementById('appConteudo').innerHTML = `
+        <div class="page-wrap">
+          <div class="page-header">
+            <div class="page-header-row">
+              <div>
+                <div class="page-kicker">Módulo do Sistema CIA FT</div>
+                <h1>${escapar(menu ? menu.titulo : id)}</h1>
+                <p>Esta área será implantada na próxima etapa, mantendo o padrão visual oficial do app.</p>
+              </div>
+              <div class="page-actions">
+                <button class="btn-page" onclick="abrirHome()">VOLTAR</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-card">
+            <h2>Em implantação</h2>
+            <p>O módulo <strong>${escapar(menu ? menu.titulo : id)}</strong> ainda será conectado às funções específicas da planilha.</p>
+          </div>
+        </div>
+      `;
+    }
+
+
+    function abrirAcessoNegado(modulo) {
+      document.getElementById('appConteudo').innerHTML = `
+        <div class="page-wrap">
+          <div class="page-header">
+            <div class="page-header-row">
+              <div>
+                <div class="page-kicker">Acesso restrito</div>
+                <h1>Acesso não autorizado</h1>
+                <p>Seu perfil não possui permissão liberada para acessar este módulo.</p>
+              </div>
+              <div class="page-actions">
+                <button class="btn-page" onclick="abrirHome()">VOLTAR</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-card">
+            <h2>${escapar(modulo || 'Módulo')}</h2>
+            <p>As permissões são definidas pela aba <strong>PERMISSOES_FT</strong> e pelo perfil cadastrado no RE do policial.</p>
+          </div>
+        </div>
+      `;
+    }
+
+
+    function usuarioTemPermissaoCliente(modulo, acao) {
+      const chave = normalizarModuloCliente(modulo);
+      const permissao = obterPermissaoCliente(chave);
+
+      if (!permissao) return false;
+      if (permissao.acessoTotal) return true;
+
+      const campo = acao || 'visualizar';
+      return !!permissao[campo];
+    }
+
+
+    function obterPermissaoCliente(modulo) {
+      const permissoes = APP.permissoes || {};
+      const alvo = normalizarModuloCliente(modulo);
+      const aliases = aliasesModuloCliente(alvo);
+
+      for (let i = 0; i < aliases.length; i++) {
+        if (permissoes[aliases[i]]) return permissoes[aliases[i]];
+      }
+
+      const chaves = Object.keys(permissoes);
+      for (let i = 0; i < chaves.length; i++) {
+        if (aliases.indexOf(normalizarModuloCliente(chaves[i])) !== -1) {
+          return permissoes[chaves[i]];
+        }
+      }
+
+      return null;
+    }
+
+
+    function aliasesModuloCliente(modulo) {
+      const alvo = normalizarModuloCliente(modulo);
+
+      if (alvo === 'RESENHA_DE_ESCALAS') {
+        return [
+          'RESENHA_DE_ESCALAS',
+          'RESENHAS_ESCALAS',
+          'RESENHA_ESCALAS',
+          'ENVIAR_RESENHAS_ESCALA',
+          'ENVIAR_RESENHA_ESCALA'
+        ];
+      }
+
+      if (alvo === 'ESCALAS_ADM') {
+        return [
+          'ESCALAS_ADM',
+          'ESCALA_ADM',
+          'MINHA_ESCALA_ADM',
+          'ENVIAR_ESCALA_ADM'
+        ];
+      }
+
+      return [alvo];
+    }
+
+
+    function normalizarModuloCliente(valor) {
+      const m = normalizarTexto(valor)
+        .replace(/\//g, ' ')
+        .replace(/-/g, ' ')
+        .replace(/\s+/g, '_');
+
+      const aliases = {
+        'RESENHAS_ESCALAS': 'RESENHA_DE_ESCALAS',
+        'RESENHA_ESCALAS': 'RESENHA_DE_ESCALAS',
+        'RESENHA_DE_ESCALAS': 'RESENHA_DE_ESCALAS',
+        'RESENHA_DE_ESCALA': 'RESENHA_DE_ESCALAS',
+        'RESENHA_ESCALA': 'RESENHA_DE_ESCALAS',
+        'ENVIAR_RESENHAS_ESCALA': 'RESENHA_DE_ESCALAS',
+        'ENVIAR_RESENHA_ESCALA': 'RESENHA_DE_ESCALAS',
+        'ESCALA_ADM': 'ESCALAS_ADM',
+        'MINHA_ESCALA_ADM': 'ESCALAS_ADM',
+        'ENVIAR_ESCALA_ADM': 'ESCALAS_ADM',
+        'ESCALAS_ADMINISTRATIVAS': 'ESCALAS_ADM',
+        'CONSULTA EFETIVO': 'CONSULTA_EFETIVO',
+        'CONSULTAR_EFETIVO': 'CONSULTA_EFETIVO'
+      };
+
+      return aliases[m] || m;
+    }
+
+
+    function ehModuloConsultaEfetivo(id) {
+      return normalizarModuloCliente(id) === 'CONSULTA_EFETIVO';
+    }
+
+
+    function ehModuloEscalasAdm(id) {
+      return normalizarModuloCliente(id) === 'ESCALAS_ADM';
+    }
+
+
+    function ehModuloResenhaEscalas(id) {
+      const mod = normalizarModuloCliente(id);
+      return mod === 'RESENHA_DE_ESCALAS';
+    }
+
+
+    function abrirResenhasEscalas() {
+      window.scrollTo(0, 0);
+
+      document.getElementById('appConteudo').innerHTML = `
+        <div class="page-wrap">
+          <div class="page-header">
+            <div class="page-header-row">
+              <div>
+                <div class="page-kicker">Serviço operacional</div>
+                <h1>Resenhas de Escalas</h1>
+                <p>Envio das resenhas operacionais toda segunda-feira, até às 11h, com as escalas previstas até a segunda-feira seguinte.</p>
+                <div id="resenhaClock" class="resenha-clock">
+                  <span>Data/hora do preenchimento:</span>
+                  <strong id="resenhaClockTexto">--/--/---- --:--:--</strong>
+                </div>
+              </div>
+              <div class="page-actions">
+                <button class="btn-page" onclick="abrirHome()">VOLTAR</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="resenhaConteudo">
+            <div class="resenha-loading">Carregando efetivo, viaturas e listas da resenha...</div>
+          </div>
+        </div>
+      `;
+
+      iniciarRelogioResenha();
+
+      carregarDadosResenha()
+        .then(function() {
+          renderizarFormularioResenha();
+        })
+        .catch(function(err) {
+          document.getElementById('resenhaConteudo').innerHTML = `
+            <div class="resenha-card">
+              <div class="resenha-card-header">
+                <h2>Não foi possível carregar as listas</h2>
+                <p>A página foi aberta, mas a API ainda não retornou efetivo e viaturas para as listas suspensas.</p>
+              </div>
+              <div class="resenha-card-body">
+                <div class="resenha-alerta">${escapar(err.message || err)}</div>
+              </div>
+            </div>
+          `;
+        });
+    }
+
+
+    function carregarDadosResenha() {
+      if (APP.dadosResenha) return Promise.resolve(APP.dadosResenha);
+
+      if (!APP.credenciais || !APP.credenciais.login || !APP.credenciais.senha) {
+        return Promise.reject(new Error('Sessão inválida. Faça login novamente.'));
+      }
+
+      return chamarApi('dadosResenha', {
+          login: APP.credenciais.login,
+          senha: APP.credenciais.senha
+        })
+        .then(function(resp) {
+          if (!resp || !resp.ok) {
+            throw new Error(resp && resp.erro ? resp.erro : 'Falha ao carregar dados da resenha.');
+          }
+
+          APP.dadosResenha = resp.dados || {};
+          return APP.dadosResenha;
+        });
+    }
+
+
+    function renderizarFormularioResenha() {
+      const u = APP.usuario || {};
+      const dados = APP.dadosResenha || {};
+
+      document.getElementById('resenhaConteudo').innerHTML = `
+        <div class="resenha-grid">
+          <div class="resenha-card">
+            <div class="resenha-card-header">
+              <h2>Identificação</h2>
+              <p>Dados do responsável pelo envio.</p>
+              <span class="resenha-status">PREENCHIMENTO</span>
+            </div>
+
+            <div class="resenha-card-body">
+              <div class="resenha-info-list">
+                ${resenhaInfo('Escalante', [u.postoGrad, u.nomeGuerra].filter(Boolean).join(' '))}
+                ${resenhaInfo('Horário limite', 'Segunda-feira até às 11h')}
+              </div>
+
+              <div class="resenha-alerta">
+                O envio fora do horário limite será permitido, mas ficará visualmente identificado como atraso.
+              </div>
+            </div>
+          </div>
+
+          <div class="resenha-card">
+            <div class="resenha-card-header">
+              <h2>Informações da Escala</h2>
+              <p>Preencha a data da escala, o pelotão, as equipes FT, as duplas ROCAM, folgas/dispensas, afastamentos e observações.</p>
+            </div>
+
+            <div class="resenha-card-body">
+              <form id="formResenhaEscala">
+                <div class="resenha-form-grid escala-topo">
+                  <div class="resenha-form-field">
+                    <label>Pelotão</label>
+                    <select id="resenhaPelotao" name="pelotao">
+                      <option value="">Selecione</option>
+                      <option value="1º PEL">1º PEL</option>
+                      <option value="2º PEL">2º PEL</option>
+                    </select>
+                  </div>
+
+                  <div class="resenha-form-field">
+                    <label>Data da escala</label>
+                    <input id="resenhaDataEscala" name="dataEscala" type="date">
+                  </div>
+
+                  <div class="resenha-form-field">
+                    <label>Horário da escala</label>
+                    <input id="resenhaHorarioEscala" name="horarioEscala" type="text" placeholder="Das 00:00h às 00:00h">
+                  </div>
+
+                  <div class="resenha-divider-title">Equipes Força Tática</div>
+                </div>
+
+                <div id="equipesFtWrap" class="resenha-equipes-wrap">
+                  ${montarEquipesFt(3)}
+                </div>
+
+                <div class="resenha-actions">
+                  <button type="button" class="resenha-action-btn" onclick="adicionarEquipeFt()">ADICIONAR EQUIPE FT</button>
+                  <button type="button" class="resenha-action-btn" onclick="removerEquipeFt()">REMOVER EQUIPE FT</button>
+                </div>
+
+                <div class="resenha-form-grid">
+                  <div class="resenha-divider-title">Equipes ROCAM</div>
+                </div>
+
+                <div id="duplasRocamWrap" class="resenha-equipes-wrap">
+                  ${montarDuplasRocam(3)}
+                </div>
+
+                <div class="resenha-actions">
+                  <button type="button" class="resenha-action-btn" onclick="adicionarDuplaRocam()">ADICIONAR DUPLA ROCAM</button>
+                  <button type="button" class="resenha-action-btn" onclick="removerDuplaRocam()">REMOVER DUPLA ROCAM</button>
+                </div>
+
+                <div class="resenha-form-grid" style="margin-top:12px;">
+                  <div class="resenha-divider-title">Folgas e Dispensas</div>
+                </div>
+
+                <div id="folgasDispensasWrap" class="resenha-equipes-wrap">
+                  ${registroFolgaDispensaBox(1)}
+                </div>
+
+                <div class="resenha-actions">
+                  <button type="button" class="resenha-action-btn" onclick="adicionarFolgaDispensa()">ADICIONAR FOLGA/DISPENSA</button>
+                  <button type="button" class="resenha-action-btn" onclick="removerFolgaDispensa()">REMOVER FOLGA/DISPENSA</button>
+                </div>
+
+                <div class="resenha-form-grid" style="margin-top:12px;">
+                  <div class="resenha-divider-title">Afastamentos</div>
+                </div>
+
+                <div id="afastamentosWrap" class="resenha-equipes-wrap">
+                  ${registroAfastamentoBox(1)}
+                </div>
+
+                <div class="resenha-actions">
+                  <button type="button" class="resenha-action-btn" onclick="adicionarAfastamento()">ADICIONAR AFASTAMENTO</button>
+                  <button type="button" class="resenha-action-btn" onclick="removerAfastamento()">REMOVER AFASTAMENTO</button>
+                </div>
+
+                <div class="resenha-form-grid" style="margin-top:12px;">
+                  <div class="resenha-divider-title">Observações</div>
+                  <div class="resenha-form-field full">
+                    <label>Observações complementares da Escala</label>
+                    <textarea id="resenhaObservacoes" name="observacoes" placeholder="Observações complementares da Escala"></textarea>
+                  </div>
+                </div>
+
+                <div id="resenhaValidacao" class="resenha-validacao"></div>
+
+                <button class="resenha-submit" type="button" onclick="enviarResenhaEscalaVisual()">
+                  ENVIAR RESENHA DE ESCALA
+                </button>
+              </form>
+
+              <div class="resenha-alerta">
+                Nesta etapa, o envio exibe confirmação visual e limpa o formulário. A gravação na planilha será conectada na próxima atualização.
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      preencherPadroesResenha(u);
+      instalarEventosResenha();
+      atualizarDisponibilidadeResenha();
+    }
+
+
+    function montarEquipesFt(qtd) {
+      let html = '';
+      for (let i = 1; i <= qtd; i++) html += equipeFtBox(i);
+      return html;
+    }
+
+
+    function montarDuplasRocam(qtd) {
+      let html = '';
+      for (let i = 1; i <= qtd; i++) html += duplaRocamBox(i);
+      return html;
+    }
+
+
+    function equipeFtBox(numero) {
+      return `
+        <div class="resenha-equipe-box" data-tipo="FT" data-numero="${numero}">
+          <div class="resenha-equipe-titulo-row">
+            <h3>Equipe ${numero}</h3>
+            <select class="vtr-select" name="ft${numero}_vtr">
+              ${optionsViaturas('TATICO', 'Selecione VTR')}
+            </select>
+          </div>
+
+          <div class="resenha-equipe-grid ft-grid">
+            <div class="resenha-mini-field col-metade">
+              <label>Comandante</label>
+              <select class="pm-select" name="ft${numero}_comandante">
+                ${optionsPms('FT')}
+              </select>
+            </div>
+            <div class="resenha-mini-field col-metade">
+              <label>Motorista</label>
+              <select class="pm-select" name="ft${numero}_motorista">
+                ${optionsPms('FT')}
+              </select>
+            </div>
+            <div class="resenha-mini-field col-terco">
+              <label>Auxiliar 1</label>
+              <select class="pm-select" name="ft${numero}_aux1">
+                ${optionsPms('FT')}
+              </select>
+            </div>
+            <div class="resenha-mini-field col-terco">
+              <label>Auxiliar 2</label>
+              <select class="pm-select" name="ft${numero}_aux2">
+                ${optionsPms('FT')}
+              </select>
+            </div>
+            <div class="resenha-mini-field col-terco">
+              <label>Auxiliar 3</label>
+              <select class="pm-select" name="ft${numero}_aux3">
+                ${optionsPms('FT')}
+              </select>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+
+    function duplaRocamBox(numero) {
+      return `
+        <div class="resenha-equipe-box" data-tipo="ROCAM" data-numero="${numero}">
+          <h3>ROCAM ${numero}</h3>
+          <div class="resenha-equipe-grid">
+            <div class="resenha-mini-field">
+              <label>Moto do encarregado</label>
+              <select class="vtr-select" name="rocam${numero}_moto_encarregado">
+                ${optionsViaturas('ROCAM')}
+              </select>
+            </div>
+            <div class="resenha-mini-field">
+              <label>Encarregado</label>
+              <select class="pm-select" name="rocam${numero}_encarregado">
+                ${optionsPms('ROCAM')}
+              </select>
+            </div>
+            <div class="resenha-mini-field">
+              <label>Moto do auxiliar</label>
+              <select class="vtr-select" name="rocam${numero}_moto_auxiliar">
+                ${optionsViaturas('ROCAM')}
+              </select>
+            </div>
+            <div class="resenha-mini-field">
+              <label>Auxiliar</label>
+              <select class="pm-select" name="rocam${numero}_auxiliar">
+                ${optionsPms('ROCAM')}
+              </select>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+
+    function registroFolgaDispensaBox(numero) {
+      return `
+        <div class="resenha-equipe-box" data-tipo="FOLGA_DISPENSA" data-numero="${numero}">
+          <h3>Folga / Dispensa ${numero}</h3>
+          <div class="resenha-equipe-grid">
+            <div class="resenha-mini-field">
+              <label>Policial</label>
+              <select class="pm-select" name="folga${numero}_pm">
+                ${optionsPms('TODOS')}
+              </select>
+            </div>
+            <div class="resenha-mini-field">
+              <label>Tipo</label>
+              <select name="folga${numero}_tipo" onchange="atualizarRegrasFolgaDispensa(this)">
+                ${optionsTiposFolgaDispensa()}
+              </select>
+            </div>
+            <div class="resenha-mini-field campo-data-referencia">
+              <label>Data de referência</label>
+              <input type="date" name="folga${numero}_data">
+            </div>
+            <div class="resenha-mini-field campo-bopm">
+              <label>BOPM</label>
+              <input type="text" name="folga${numero}_bopm" placeholder="BOPM">
+            </div>
+            <div class="resenha-mini-field full">
+              <label>Observação</label>
+              <textarea name="folga${numero}_obs" placeholder="Observação, se necessária"></textarea>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+
+    function registroAfastamentoBox(numero) {
+      return `
+        <div class="resenha-equipe-box" data-tipo="AFASTAMENTO" data-numero="${numero}">
+          <h3>Afastamento ${numero}</h3>
+          <div class="resenha-equipe-grid">
+            <div class="resenha-mini-field">
+              <label>Policial</label>
+              <select class="pm-select" name="afast${numero}_pm">
+                ${optionsPms('TODOS')}
+              </select>
+            </div>
+            <div class="resenha-mini-field">
+              <label>Tipo de afastamento</label>
+              <select name="afast${numero}_tipo">
+                ${optionsTiposAfastamento()}
+              </select>
+            </div>
+            <div class="resenha-mini-field full">
+              <label>Observação</label>
+              <textarea name="afast${numero}_obs" placeholder="Observação do afastamento, se necessário"></textarea>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+
+    function optionsPms(tipo) {
+      const dados = APP.dadosResenha || {};
+      let lista = [];
+
+      if (tipo === 'FT') lista = dados.efetivoFt || [];
+      else if (tipo === 'ROCAM') lista = dados.efetivoRocam || [];
+      else lista = dados.efetivoCadastro || dados.efetivoAtivo || [];
+
+      return '<option value="">Selecione</option>' + lista.map(function(pm) {
+        return `<option value="${escaparAttr(pm.re)}">${escapar(pm.rotulo)}</option>`;
+      }).join('');
+    }
+
+
+    function optionsViaturas(tipo, placeholder) {
+      const dados = APP.dadosResenha || {};
+      const lista = tipo === 'ROCAM' ? (dados.viaturasRocam || []) : (dados.viaturasTatico || []);
+      const rotuloInicial = placeholder || 'Selecione';
+
+      return '<option value="">' + escapar(rotuloInicial) + '</option>' + lista.map(function(v) {
+        return `<option value="${escaparAttr(v.prefixo)}">${escapar(v.rotulo)}</option>`;
+      }).join('');
+    }
+
+
+    function optionsTiposFolgaDispensa() {
+      const dados = APP.dadosResenha || {};
+      const lista = dados.tiposFolgaDispensa || ['Dispensa Serviço', 'Folga Mensal', 'Folga Orgânica', 'Folga Flagrante', 'Folga Compensatória'];
+
+      return '<option value="">Selecione</option>' + lista.map(function(t) {
+        return `<option value="${escaparAttr(t)}">${escapar(t)}</option>`;
+      }).join('');
+    }
+
+
+    function optionsTiposAfastamento() {
+      const dados = APP.dadosResenha || {};
+      const lista = dados.tiposAfastamento || ['Férias', 'Afastamento Médico', 'Licença Prêmio', 'Curso', 'Outros'];
+
+      return '<option value="">Selecione</option>' + lista.map(function(t) {
+        return `<option value="${escaparAttr(t)}">${escapar(t)}</option>`;
+      }).join('');
+    }
+
+
+    function instalarEventosResenha() {
+      document.querySelectorAll('#formResenhaEscala select').forEach(function(sel) {
+        sel.addEventListener('change', atualizarDisponibilidadeResenha);
+      });
+
+      document.querySelectorAll('#formResenhaEscala [data-tipo="FOLGA_DISPENSA"] select[name$="_tipo"]').forEach(function(sel) {
+        atualizarRegrasFolgaDispensa(sel);
+      });
+    }
+
+
+    function atualizarDisponibilidadeResenha() {
+      bloquearDuplicadosPorClasse('.pm-select');
+      bloquearDuplicadosPorClasse('.vtr-select');
+    }
+
+
+    function bloquearDuplicadosPorClasse(selector) {
+      const selects = Array.from(document.querySelectorAll('#formResenhaEscala ' + selector));
+      const escolhidos = selects
+        .map(s => s.value)
+        .filter(v => v);
+
+      selects.forEach(function(sel) {
+        Array.from(sel.options).forEach(function(opt) {
+          if (!opt.value) {
+            opt.disabled = false;
+            return;
+          }
+
+          opt.disabled = opt.value !== sel.value && escolhidos.includes(opt.value);
+        });
+      });
+    }
+
+
+    function atualizarRegrasFolgaDispensa(sel) {
+      const box = sel.closest('.resenha-equipe-box');
+      if (!box) return;
+
+      const tipo = normalizarTexto(sel.value);
+      const dataBox = box.querySelector('.campo-data-referencia');
+      const bopmBox = box.querySelector('.campo-bopm');
+      const data = box.querySelector('input[name$="_data"]');
+      const bopm = box.querySelector('input[name$="_bopm"]');
+
+      const exigeData = tipo.includes('ORGANICA') || tipo.includes('COMPENSATORIA') || tipo.includes('FLAGRANTE');
+      const exigeBopm = tipo.includes('FLAGRANTE');
+
+      if (dataBox) {
+        dataBox.classList.toggle('campo-oculto', !exigeData);
+        dataBox.classList.toggle('full', exigeData && !exigeBopm);
+      }
+
+      if (bopmBox) {
+        bopmBox.classList.toggle('campo-oculto', !exigeBopm);
+        bopmBox.classList.toggle('full', exigeBopm && !exigeData);
+      }
+
+      if (data) {
+        data.required = exigeData;
+        if (!exigeData) data.value = '';
+      }
+
+      if (bopm) {
+        bopm.required = exigeBopm;
+        bopm.placeholder = exigeBopm ? 'BOPM obrigatório' : 'BOPM';
+        if (!exigeBopm) bopm.value = '';
+      }
+    }
+
+
+    function adicionarEquipeFt() {
+      const wrap = document.getElementById('equipesFtWrap');
+      if (!wrap) return;
+
+      const atual = wrap.querySelectorAll('[data-tipo="FT"]').length;
+      if (atual >= 6) return mostrarToastFt('Limite atingido', 'A resenha permite até 6 equipes FT.');
+
+      wrap.insertAdjacentHTML('beforeend', equipeFtBox(atual + 1));
+      instalarEventosResenha();
+      atualizarDisponibilidadeResenha();
+    }
+
+
+    function removerEquipeFt() {
+      const wrap = document.getElementById('equipesFtWrap');
+      if (!wrap) return;
+
+      const itens = wrap.querySelectorAll('[data-tipo="FT"]');
+      if (itens.length <= 3) return mostrarToastFt('Mínimo mantido', 'A resenha mantém inicialmente 3 equipes FT visíveis.');
+
+      itens[itens.length - 1].remove();
+      atualizarDisponibilidadeResenha();
+    }
+
+
+    function adicionarDuplaRocam() {
+      const wrap = document.getElementById('duplasRocamWrap');
+      if (!wrap) return;
+
+      const atual = wrap.querySelectorAll('[data-tipo="ROCAM"]').length;
+      if (atual >= 6) return mostrarToastFt('Limite atingido', 'A resenha permite até 6 duplas ROCAM.');
+
+      wrap.insertAdjacentHTML('beforeend', duplaRocamBox(atual + 1));
+      instalarEventosResenha();
+      atualizarDisponibilidadeResenha();
+    }
+
+
+    function removerDuplaRocam() {
+      const wrap = document.getElementById('duplasRocamWrap');
+      if (!wrap) return;
+
+      const itens = wrap.querySelectorAll('[data-tipo="ROCAM"]');
+      if (itens.length <= 3) return mostrarToastFt('Mínimo mantido', 'A resenha mantém inicialmente 3 duplas ROCAM visíveis.');
+
+      itens[itens.length - 1].remove();
+      atualizarDisponibilidadeResenha();
+    }
+
+
+    function adicionarFolgaDispensa() {
+      const wrap = document.getElementById('folgasDispensasWrap');
+      if (!wrap) return;
+
+      const atual = wrap.querySelectorAll('[data-tipo="FOLGA_DISPENSA"]').length;
+      wrap.insertAdjacentHTML('beforeend', registroFolgaDispensaBox(atual + 1));
+      instalarEventosResenha();
+      atualizarDisponibilidadeResenha();
+    }
+
+
+    function removerFolgaDispensa() {
+      const wrap = document.getElementById('folgasDispensasWrap');
+      if (!wrap) return;
+
+      const itens = wrap.querySelectorAll('[data-tipo="FOLGA_DISPENSA"]');
+      if (itens.length <= 1) return mostrarToastFt('Mínimo mantido', 'Mantenha ao menos um campo de folga/dispensa disponível.');
+
+      itens[itens.length - 1].remove();
+      atualizarDisponibilidadeResenha();
+    }
+
+
+    function adicionarAfastamento() {
+      const wrap = document.getElementById('afastamentosWrap');
+      if (!wrap) return;
+
+      const atual = wrap.querySelectorAll('[data-tipo="AFASTAMENTO"]').length;
+      wrap.insertAdjacentHTML('beforeend', registroAfastamentoBox(atual + 1));
+      instalarEventosResenha();
+      atualizarDisponibilidadeResenha();
+    }
+
+
+    function removerAfastamento() {
+      const wrap = document.getElementById('afastamentosWrap');
+      if (!wrap) return;
+
+      const itens = wrap.querySelectorAll('[data-tipo="AFASTAMENTO"]');
+      if (itens.length <= 1) return mostrarToastFt('Mínimo mantido', 'Mantenha ao menos um campo de afastamento disponível.');
+
+      itens[itens.length - 1].remove();
+      atualizarDisponibilidadeResenha();
+    }
+
+
+    function preencherPadroesResenha(u) {
+      const data = document.getElementById('resenhaDataEscala');
+      if (data) data.value = dataISOHoje();
+
+      const pel = document.getElementById('resenhaPelotao');
+      if (pel) {
+        const p = normalizarTexto(u.pelotao || '');
+        if (p.includes('1')) pel.value = '1º PEL';
+        if (p.includes('2')) pel.value = '2º PEL';
+      }
+    }
+
+
+    function iniciarRelogioResenha() {
+      atualizarRelogioResenha();
+
+      if (window.__timerResenhaEscala) {
+        clearInterval(window.__timerResenhaEscala);
+      }
+
+      window.__timerResenhaEscala = setInterval(atualizarRelogioResenha, 1000);
+    }
+
+
+    function atualizarRelogioResenha() {
+      const el = document.getElementById('resenhaClockTexto');
+      const box = document.getElementById('resenhaClock');
+
+      if (!el || !box) return;
+
+      const agora = new Date();
+      el.textContent = formatarDataHoraBR(agora);
+
+      if (resenhaEstaAtrasada(agora)) {
+        box.classList.add('atrasado');
+      } else {
+        box.classList.remove('atrasado');
+      }
+    }
+
+
+    function resenhaEstaAtrasada(data) {
+      const diaSemana = data.getDay();
+      const hora = data.getHours();
+      const minuto = data.getMinutes();
+
+      return diaSemana === 1 && (hora > 11 || (hora === 11 && minuto > 0));
+    }
+
+
+    function enviarResenhaEscalaVisual() {
+      const form = document.getElementById('formResenhaEscala');
+
+      if (
+        !usuarioTemPermissaoCliente('RESENHA_DE_ESCALAS', 'inserir') &&
+        !usuarioTemPermissaoCliente('RESENHA_DE_ESCALAS', 'editar')
+      ) {
+        mostrarToastFt('Resenha não enviada', 'Seu perfil não possui permissão para inserir ou editar resenhas.');
+        return;
+      }
+
+      const validacao = validarResenhaEscala();
+      if (!validacao.ok) {
+        mostrarValidacaoResenha(validacao.erros);
+        mostrarToastFt('Resenha não enviada', 'Corrija os campos obrigatórios antes de enviar.');
+        return;
+      }
+
+      limparValidacaoResenha();
+      mostrarToastFt('Resenha enviada', 'A resenha de escala foi confirmada nesta tela. O formulário foi limpo para novo envio.');
+
+      if (form) form.reset();
+
+      renderizarFormularioResenha();
+      window.scrollTo(0, 0);
+    }
+
+
+    function validarResenhaEscala() {
+      const erros = [];
+
+      document.querySelectorAll('#folgasDispensasWrap [data-tipo="FOLGA_DISPENSA"]').forEach(function(box, idx) {
+        const numero = idx + 1;
+        const tipoSel = box.querySelector('select[name$="_tipo"]');
+        const pmSel = box.querySelector('select[name$="_pm"]');
+        const data = box.querySelector('input[name$="_data"]');
+        const bopm = box.querySelector('input[name$="_bopm"]');
+
+        const tipo = normalizarTexto(tipoSel ? tipoSel.value : '');
+        const temPm = pmSel && pmSel.value;
+        const temTipo = tipoSel && tipoSel.value;
+
+        if (!temPm && !temTipo) return;
+
+        if (temPm && !temTipo) {
+          erros.push('Folga/Dispensa ' + numero + ': selecione o tipo.');
+          return;
+        }
+
+        if (!temPm && temTipo) {
+          erros.push('Folga/Dispensa ' + numero + ': selecione o policial.');
+          return;
+        }
+
+        if ((tipo.includes('ORGANICA') || tipo.includes('COMPENSATORIA')) && (!data || !data.value)) {
+          erros.push('Folga/Dispensa ' + numero + ': Folga Orgânica ou Compensatória exige Data de referência.');
+        }
+
+        if (tipo.includes('FLAGRANTE')) {
+          if (!data || !data.value) {
+            erros.push('Folga/Dispensa ' + numero + ': Folga Flagrante exige Data de referência.');
+          }
+          if (!bopm || !String(bopm.value || '').trim()) {
+            erros.push('Folga/Dispensa ' + numero + ': Folga Flagrante exige BOPM.');
+          }
+        }
+      });
+
+      return {
+        ok: erros.length === 0,
+        erros: erros
+      };
+    }
+
+
+    function mostrarValidacaoResenha(erros) {
+      const box = document.getElementById('resenhaValidacao');
+      if (!box) return;
+
+      box.innerHTML = '<strong>Resenha não enviada</strong>' + erros.map(function(e) {
+        return '<div>• ' + escapar(e) + '</div>';
+      }).join('');
+
+      box.classList.add('visivel');
+      box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+
+    function limparValidacaoResenha() {
+      const box = document.getElementById('resenhaValidacao');
+      if (!box) return;
+
+      box.innerHTML = '';
+      box.classList.remove('visivel');
+    }
+
+
+    function mostrarToastFt(titulo, texto) {
+      let toast = document.getElementById('toastFt');
+
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toastFt';
+        toast.className = 'toast-ft';
+        document.body.appendChild(toast);
+      }
+
+      toast.innerHTML = `<strong>${escapar(titulo)}</strong><span>${escapar(texto)}</span>`;
+      toast.classList.add('visivel');
+
+      clearTimeout(window.__timerToastFt);
+      window.__timerToastFt = setTimeout(function() {
+        toast.classList.remove('visivel');
+      }, 3600);
+    }
+
+
+    function resenhaInfo(rotulo, valor) {
+      return `
+        <div class="resenha-info-item">
+          <small>${escapar(rotulo)}</small>
+          <strong>${escapar(valor || '-')}</strong>
+        </div>
+      `;
+    }
+
+
+    function formatarDataHoraBR(data) {
+      const dia = String(data.getDate()).padStart(2, '0');
+      const mes = String(data.getMonth() + 1).padStart(2, '0');
+      const ano = data.getFullYear();
+      const hora = String(data.getHours()).padStart(2, '0');
+      const min = String(data.getMinutes()).padStart(2, '0');
+      const seg = String(data.getSeconds()).padStart(2, '0');
+
+      return dia + '/' + mes + '/' + ano + ' ' + hora + ':' + min + ':' + seg;
+    }
+
+
+    function dataISOHoje() {
+      const d = new Date();
+      const ano = d.getFullYear();
+      const mes = String(d.getMonth() + 1).padStart(2, '0');
+      const dia = String(d.getDate()).padStart(2, '0');
+      return ano + '-' + mes + '-' + dia;
+    }
+
+
+    /* ============================================================
+     * ESCALAS ADM — V1.6.0
+     * ============================================================ */
+
+    function abrirEscalasAdm() {
+      window.scrollTo(0, 0);
+
+      document.getElementById('appConteudo').innerHTML = `
+        <div class="page-wrap">
+          <div class="page-header">
+            <div class="page-header-row">
+              <div>
+                <div class="page-kicker">Escala administrativa semanal</div>
+                <h1>Escalas ADM</h1>
+                <p>Envio da escala individual administrativa da semana seguinte, com visualização das escalas já enviadas pela ADM.</p>
+              </div>
+              <div class="page-actions">
+                <button class="btn-page" onclick="abrirHome()">VOLTAR</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="escalasAdmConteudo">
+            <div class="resenha-loading">Carregando semana de referência, tipos de escala e escalas já enviadas...</div>
+          </div>
+        </div>
+      `;
+
+      carregarDadosEscalasAdm()
+        .then(renderizarEscalasAdm)
+        .catch(function(err) {
+          document.getElementById('escalasAdmConteudo').innerHTML = `
+            <div class="adm-card">
+              <div class="adm-card-header">
+                <h2>Não foi possível carregar Escalas ADM</h2>
+                <p>Verifique a API, a aba ESCALAS_ADM e as permissões em PERMISSOES_FT.</p>
+              </div>
+              <div class="adm-card-body">
+                <div class="adm-alerta">${escapar(err.message || err)}</div>
+              </div>
+            </div>
+          `;
+        });
+    }
+
+
+    function carregarDadosEscalasAdm() {
+      if (!APP.credenciais || !APP.credenciais.login || !APP.credenciais.senha) {
+        return Promise.reject(new Error('Sessão inválida. Faça login novamente.'));
+      }
+
+      return chamarApi('dados_escalas_adm', {
+          login: APP.credenciais.login,
+          senha: APP.credenciais.senha
+        })
+        .then(function(resp) {
+          if (!resp || !resp.ok) {
+            throw new Error(resp && resp.erro ? resp.erro : 'Falha ao carregar Escalas ADM.');
+          }
+
+          APP.dadosEscalasAdm = resp.dados || {};
+          return APP.dadosEscalasAdm;
+        });
+    }
+
+
+    function renderizarEscalasAdm() {
+      const u = APP.usuario || {};
+      const dados = APP.dadosEscalasAdm || {};
+      const semana = dados.semanaAdm || {};
+      const dias = semana.dias || montarSemanaAdmCliente().dias;
+      const permissao = obterPermissaoCliente('ESCALAS_ADM') || {};
+
+      const podeEnviar = usuarioTemPermissaoCliente('ESCALAS_ADM', 'inserir');
+      const podeAprovar = usuarioTemPermissaoCliente('ESCALAS_ADM', 'aprovar');
+
+      document.getElementById('escalasAdmConteudo').innerHTML = `
+        <div class="adm-grid">
+          <div class="adm-card">
+            <div class="adm-card-header">
+              <h2>Identificação</h2>
+              <p>Dados do policial logado e regra da semana.</p>
+            </div>
+
+            <div class="adm-card-body">
+              <div class="adm-info-list">
+                ${admInfo('Policial', [u.postoGrad, u.nomeGuerra].filter(Boolean).join(' '))}
+                ${admInfo('Perfil APP', u.perfilAcesso || '-')}
+                ${admInfo('Semana de referência', semana.referencia || '-')}
+                ${admInfo('Prazo de envio', 'Sexta-feira até às 13h')}
+                ${admInfo('Escopo de visualização', permissao.escopo || '-')}
+              </div>
+
+              <div class="adm-alerta">
+                Os campos de horário aparecem somente para EXPEDIENTE. Para JM, FOLGA, DISPENSA e AFASTAMENTO, o horário não é exigido.
+              </div>
+            </div>
+          </div>
+
+          <div class="adm-card">
+            <div class="adm-card-header">
+              <h2>Minha escala administrativa</h2>
+              <p>Preencha a semana seguinte. O sistema grava uma linha na aba ESCALAS_ADM com decisão inicial PENDENTE.</p>
+            </div>
+
+            <div class="adm-card-body">
+              ${podeEnviar ? montarFormularioEscalasAdm(dias) : montarBloqueioEnvioEscalasAdm()}
+            </div>
+          </div>
+        </div>
+
+        <div class="adm-card" style="margin-top:14px;">
+          <div class="adm-card-header">
+            <h2>Escalas ADM já enviadas</h2>
+            <p>Consulta da semana de referência para evitar concentração de folgas no mesmo dia.</p>
+          </div>
+
+          <div class="adm-card-body">
+            ${montarTabelaEscalasAdm(dados.escalas || [], dias)}
+            ${podeAprovar ? '<div class="adm-alerta">Seu perfil possui permissão de aprovação. A tela de análise/aprovação será implantada na próxima etapa.</div>' : ''}
+          </div>
+        </div>
+      `;
+
+      instalarEventosEscalasAdm();
+    }
+
+
+    function montarFormularioEscalasAdm(dias) {
+      return `
+        <form id="formEscalasAdm">
+          <div class="adm-week-grid">
+            ${dias.map(montarDiaEscalaAdm).join('')}
+          </div>
+
+          <div class="adm-form-field">
+            <label>Observações complementares</label>
+            <textarea id="escalaAdmObservacoes" placeholder="Observações da escala administrativa, se necessário"></textarea>
+          </div>
+
+          <div id="admValidacao" class="adm-validacao"></div>
+
+          <button type="button" class="adm-submit" onclick="enviarEscalaAdm()">
+            ENVIAR ESCALA ADM
+          </button>
+        </form>
+      `;
+    }
+
+
+    function montarBloqueioEnvioEscalasAdm() {
+      return `
+        <div class="adm-alerta">
+          Seu perfil pode visualizar este módulo, mas não possui permissão de inserção para enviar escala ADM.
+        </div>
+      `;
+    }
+
+
+    function montarDiaEscalaAdm(dia) {
+      return `
+        <div class="adm-day-card" data-dia="${escaparAttr(dia.chave)}">
+          <div class="adm-day-head">
+            <span>${escapar(dia.rotulo)}</span>
+            <strong>${escapar(dia.diaMes)}</strong>
+          </div>
+
+          <select id="adm_${escaparAttr(dia.chave)}_tipo" onchange="atualizarDiaEscalaAdm('${escaparAttr(dia.chave)}')">
+            ${optionsTiposEscalaAdm()}
+          </select>
+
+          <input id="adm_${escaparAttr(dia.chave)}_horario" class="campo-oculto" type="text" placeholder="das 07h00 às 18h00">
+
+          <input id="adm_${escaparAttr(dia.chave)}_detalhe" class="campo-oculto" type="text" placeholder="Descreva o dia">
+        </div>
+      `;
+    }
+
+
+    function optionsTiposEscalaAdm() {
+      const dados = APP.dadosEscalasAdm || {};
+      const tipos = dados.tiposEscalaAdm || ['EXPEDIENTE', 'JM', 'FOLGA', 'DISPENSA', 'AFASTAMENTO', 'OUTROS'];
+
+      return '<option value="">Selecione</option>' + tipos.map(function(tipo) {
+        return `<option value="${escaparAttr(tipo)}">${escapar(tipo)}</option>`;
+      }).join('');
+    }
+
+
+    function instalarEventosEscalasAdm() {
+      document.querySelectorAll('[data-dia]').forEach(function(card) {
+        atualizarDiaEscalaAdm(card.getAttribute('data-dia'));
+      });
+    }
+
+
+    function atualizarDiaEscalaAdm(chave) {
+      const tipoEl = document.getElementById('adm_' + chave + '_tipo');
+      const horarioEl = document.getElementById('adm_' + chave + '_horario');
+      const detalheEl = document.getElementById('adm_' + chave + '_detalhe');
+
+      if (!tipoEl || !horarioEl || !detalheEl) return;
+
+      const tipo = normalizarTexto(tipoEl.value);
+      const exigeHorario = tipo === 'EXPEDIENTE';
+      const exigeDetalhe = tipo === 'OUTROS';
+
+      horarioEl.classList.toggle('campo-oculto', !exigeHorario);
+      detalheEl.classList.toggle('campo-oculto', !exigeDetalhe);
+
+      if (!exigeHorario) horarioEl.value = '';
+      if (!exigeDetalhe) detalheEl.value = '';
+    }
+
+
+    function enviarEscalaAdm() {
+      if (!usuarioTemPermissaoCliente('ESCALAS_ADM', 'inserir')) {
+        mostrarToastFt('Escala não enviada', 'Seu perfil não possui permissão para enviar Escalas ADM.');
+        return;
+      }
+
+      const dados = coletarEscalaAdmFormulario();
+
+      if (!dados.ok) {
+        mostrarValidacaoAdm(dados.erros);
+        mostrarToastFt('Escala não enviada', 'Corrija os campos obrigatórios antes de enviar.');
+        return;
+      }
+
+      limparValidacaoAdm();
+
+      chamarApi('enviar_escala_adm', Object.assign({
+          login: APP.credenciais.login,
+          senha: APP.credenciais.senha
+        }, dados.payload))
+        .then(function(resp) {
+          if (!resp || !resp.ok) {
+            throw new Error(resp && resp.erro ? resp.erro : 'Falha ao enviar Escala ADM.');
+          }
+
+          mostrarToastFt('Escala ADM enviada', 'Sua escala administrativa foi registrada com decisão PENDENTE.');
+
+          APP.dadosEscalasAdm = null;
+      APP.dadosConsultaEfetivo = null;
+          return carregarDadosEscalasAdm();
+        })
+        .then(renderizarEscalasAdm)
+        .catch(function(err) {
+          mostrarToastFt('Erro ao enviar', err.message || String(err));
+        });
+    }
+
+
+    function coletarEscalaAdmFormulario() {
+      const dados = APP.dadosEscalasAdm || {};
+      const semana = dados.semanaAdm || montarSemanaAdmCliente();
+      const dias = semana.dias || [];
+      const erros = [];
+      const payload = {};
+
+      dias.forEach(function(dia) {
+        const tipoEl = document.getElementById('adm_' + dia.chave + '_tipo');
+        const horarioEl = document.getElementById('adm_' + dia.chave + '_horario');
+        const detalheEl = document.getElementById('adm_' + dia.chave + '_detalhe');
+
+        const tipo = tipoEl ? String(tipoEl.value || '').trim() : '';
+        const tipoNorm = normalizarTexto(tipo);
+        const horario = horarioEl ? String(horarioEl.value || '').trim() : '';
+        const detalhe = detalheEl ? String(detalheEl.value || '').trim() : '';
+
+        if (!tipo) {
+          erros.push(dia.rotulo + ': selecione o tipo.');
+          return;
+        }
+
+        if (tipoNorm === 'EXPEDIENTE') {
+          if (!horario) {
+            erros.push(dia.rotulo + ': informe o horário do expediente.');
+            return;
+          }
+
+          payload[dia.chave] = horario;
+          return;
+        }
+
+        if (tipoNorm === 'OUTROS') {
+          if (!detalhe) {
+            erros.push(dia.rotulo + ': descreva o campo OUTROS.');
+            return;
+          }
+
+          payload[dia.chave] = 'OUTROS - ' + detalhe;
+          return;
+        }
+
+        payload[dia.chave] = tipo;
+      });
+
+      const obsEl = document.getElementById('escalaAdmObservacoes');
+      payload.observacoes = String(obsEl ? obsEl.value : '').trim();
+
+      return {
+        ok: erros.length === 0,
+        erros: erros,
+        payload: payload
+      };
+    }
+
+
+    function mostrarValidacaoAdm(erros) {
+      const box = document.getElementById('admValidacao');
+      if (!box) return;
+
+      box.innerHTML = '<strong>Escala não enviada</strong>' + erros.map(function(e) {
+        return '<div>• ' + escapar(e) + '</div>';
+      }).join('');
+
+      box.classList.add('visivel');
+      box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+
+    function limparValidacaoAdm() {
+      const box = document.getElementById('admValidacao');
+      if (!box) return;
+
+      box.innerHTML = '';
+      box.classList.remove('visivel');
+    }
+
+
+    function montarTabelaEscalasAdm(lista, dias) {
+      if (!lista || !lista.length) {
+        return `<div class="adm-alerta">Nenhuma escala ADM enviada para esta semana até o momento.</div>`;
+      }
+
+      return `
+        <div class="adm-list-wrap">
+          <table class="adm-table">
+            <thead>
+              <tr>
+                <th>Policial</th>
+                ${dias.map(d => `<th>${escapar(d.rotulo)}<br>${escapar(d.diaMes)}</th>`).join('')}
+                <th>Decisão</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${lista.map(function(item) {
+                return `
+                  <tr>
+                    <td class="pm">${escapar([item.postoGrad, item.nomeGuerra].filter(Boolean).join(' '))}</td>
+                    <td>${escapar(item.seg || '-')}</td>
+                    <td>${escapar(item.ter || '-')}</td>
+                    <td>${escapar(item.qua || '-')}</td>
+                    <td>${escapar(item.qui || '-')}</td>
+                    <td>${escapar(item.sex || '-')}</td>
+                    <td>${escapar(item.sab || '-')}</td>
+                    <td>${escapar(item.dom || '-')}</td>
+                    <td><span class="adm-decisao">${escapar(item.decisao || '-')}</span></td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+
+    function montarSemanaAdmCliente() {
+      const hoje = new Date();
+      const base = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+      const diaSemana = base.getDay();
+      let diasAteSegunda = (8 - diaSemana) % 7;
+
+      if (diasAteSegunda === 0) diasAteSegunda = 7;
+
+      const segunda = new Date(base);
+      segunda.setDate(base.getDate() + diasAteSegunda);
+
+      const rotulos = [
+        ['seg', 'SEG'],
+        ['ter', 'TER'],
+        ['qua', 'QUA'],
+        ['qui', 'QUI'],
+        ['sex', 'SEX'],
+        ['sab', 'SAB'],
+        ['dom', 'DOM']
       ];
 
-      var atual = 0;
-      var frame = document.getElementById('appFrame');
-      var loading = document.getElementById('loading');
-      var erro = document.getElementById('erro');
-      var link = document.getElementById('linkAlternativo');
-      var carregou = false;
-      var timer = null;
+      const dias = rotulos.map(function(item, idx) {
+        const d = new Date(segunda);
+        d.setDate(segunda.getDate() + idx);
+        return {
+          chave: item[0],
+          rotulo: item[1],
+          diaMes: String(d.getDate()).padStart(2, '0'),
+          dataBR: String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0')
+        };
+      });
 
-      function ocultarLoading() {
-        carregou = true;
-        if (timer) clearTimeout(timer);
-        setTimeout(function () {
-          loading.classList.add('oculto');
-        }, 650);
+      return {
+        dias: dias
+      };
+    }
+
+
+    function admInfo(rotulo, valor) {
+      return `
+        <div class="adm-info-item">
+          <small>${escapar(rotulo)}</small>
+          <strong>${escapar(valor || '-')}</strong>
+        </div>
+      `;
+    }
+
+
+
+    /* ============================================================
+     * CONSULTA EFETIVO — V1.7.0
+     * ============================================================ */
+
+    function abrirConsultaEfetivo() {
+      window.scrollTo(0, 0);
+
+      document.getElementById('appConteudo').innerHTML = `
+        <div class="page-wrap">
+          <div class="page-header">
+            <div class="page-header-row">
+              <div>
+                <div class="page-kicker">Consulta operacional</div>
+                <h1>Consulta do Efetivo</h1>
+                <p>Consulte policiais conforme o escopo liberado para o seu perfil em PERMISSOES_FT.</p>
+              </div>
+              <div class="page-actions">
+                <button class="btn-page" onclick="abrirHome()">VOLTAR</button>
+              </div>
+            </div>
+          </div>
+          <div id="consultaEfetivoConteudo">
+            <div class="resenha-loading">Carregando efetivo autorizado...</div>
+          </div>
+        </div>
+      `;
+
+      carregarConsultaEfetivo()
+        .then(renderizarConsultaEfetivo)
+        .catch(function(err) {
+          document.getElementById('consultaEfetivoConteudo').innerHTML = `
+            <div class="consulta-card">
+              <div class="consulta-card-header">
+                <h2>Não foi possível carregar a consulta</h2>
+                <p>Verifique a API e as permissões em PERMISSOES_FT.</p>
+              </div>
+              <div class="consulta-card-body">
+                <div class="consulta-empty">${escapar(err.message || err)}</div>
+              </div>
+            </div>
+          `;
+        });
+    }
+
+    function carregarConsultaEfetivo() {
+      if (!APP.credenciais || !APP.credenciais.login || !APP.credenciais.senha) {
+        return Promise.reject(new Error('Sessão inválida. Faça login novamente.'));
       }
 
-      function mostrarErro() {
-        if (timer) clearTimeout(timer);
-        erro.style.display = 'block';
-        link.href = fontes[0];
-      }
-
-      function carregarFonte(i) {
-        atual = i;
-        carregou = false;
-        frame.src = fontes[atual];
-        if (timer) clearTimeout(timer);
-        timer = setTimeout(function () {
-          if (carregou) return;
-          if (atual + 1 < fontes.length) {
-            carregarFonte(atual + 1);
-          } else {
-            mostrarErro();
+      return chamarApi('dados_consulta_efetivo', {
+          login: APP.credenciais.login,
+          senha: APP.credenciais.senha
+        })
+        .then(function(resp) {
+          if (!resp || !resp.ok) {
+            throw new Error(resp && resp.erro ? resp.erro : 'Falha ao carregar Consulta do Efetivo.');
           }
-        }, 9000);
+          APP.dadosConsultaEfetivo = resp.dados || {};
+          return APP.dadosConsultaEfetivo;
+        });
+    }
+
+    function renderizarConsultaEfetivo() {
+      const dados = APP.dadosConsultaEfetivo || {};
+      const permissao = obterPermissaoCliente('CONSULTA_EFETIVO') || {};
+      const lista = dados.efetivo || [];
+
+      document.getElementById('consultaEfetivoConteudo').innerHTML = `
+        <div class="consulta-card">
+          <div class="consulta-card-header">
+            <h2>Filtros</h2>
+            <p>Busca por RE, nome de guerra, nome completo, pelotão, modalidade, função ou status.</p>
+          </div>
+          <div class="consulta-card-body">
+            <div class="consulta-filtros">
+              <div class="consulta-field">
+                <label>Buscar</label>
+                <input id="consultaBusca" type="text" placeholder="Digite RE, nome, função, modalidade..." oninput="filtrarConsultaEfetivo()">
+              </div>
+              <div class="consulta-field">
+                <label>Pelotão</label>
+                <select id="consultaPelotao" onchange="filtrarConsultaEfetivo()">
+                  ${optionsConsultaFiltro(dados.filtros && dados.filtros.pelotoes, 'Todos')}
+                </select>
+              </div>
+              <div class="consulta-field">
+                <label>Modalidade</label>
+                <select id="consultaModalidade" onchange="filtrarConsultaEfetivo()">
+                  ${optionsConsultaFiltro(dados.filtros && dados.filtros.modalidades, 'Todas')}
+                </select>
+              </div>
+              <button class="consulta-btn" type="button" onclick="limparFiltrosConsultaEfetivo()">LIMPAR</button>
+            </div>
+            <div class="consulta-resumo">
+              Escopo liberado: <strong>${escapar(permissao.escopo || '-')}</strong>. 
+              Resultado autorizado pela PERMISSOES_FT: <strong>${lista.length}</strong> policial(is).
+            </div>
+            <div id="consultaLista" class="consulta-lista"></div>
+          </div>
+        </div>
+      `;
+      filtrarConsultaEfetivo();
+    }
+
+    function optionsConsultaFiltro(lista, rotuloInicial) {
+      const valores = Array.isArray(lista) ? lista : [];
+      return `<option value="">${escapar(rotuloInicial)}</option>` + valores.map(function(v) {
+        return `<option value="${escaparAttr(v)}">${escapar(v)}</option>`;
+      }).join('');
+    }
+
+    function limparFiltrosConsultaEfetivo() {
+      const busca = document.getElementById('consultaBusca');
+      const pel = document.getElementById('consultaPelotao');
+      const mod = document.getElementById('consultaModalidade');
+      if (busca) busca.value = '';
+      if (pel) pel.value = '';
+      if (mod) mod.value = '';
+      filtrarConsultaEfetivo();
+    }
+
+    function filtrarConsultaEfetivo() {
+      const dados = APP.dadosConsultaEfetivo || {};
+      const lista = dados.efetivo || [];
+      const termo = normalizarTexto(document.getElementById('consultaBusca')?.value || '');
+      const pel = normalizarTexto(document.getElementById('consultaPelotao')?.value || '');
+      const modalidade = normalizarTexto(document.getElementById('consultaModalidade')?.value || '');
+
+      const filtrados = lista.filter(function(pm) {
+        const texto = normalizarTexto([pm.re, pm.postoGrad, pm.nomeGuerra, pm.nomeCompleto, pm.pelotao, pm.modalidade, pm.funcao, pm.status].join(' '));
+        if (termo && !texto.includes(termo)) return false;
+        if (pel && normalizarTexto(pm.pelotao) !== pel) return false;
+        if (modalidade && normalizarTexto(pm.modalidade) !== modalidade) return false;
+        return true;
+      });
+
+      const alvo = document.getElementById('consultaLista');
+      if (!alvo) return;
+      if (!filtrados.length) {
+        alvo.innerHTML = '<div class="consulta-empty">Nenhum policial encontrado para os filtros informados.</div>';
+        return;
+      }
+      filtrados.sort(ordenarConsultaEfetivoHierarquiaReal);
+      alvo.innerHTML = filtrados.map(montarCardConsultaPm).join('');
+    }
+
+    function ordenarConsultaEfetivoHierarquiaReal(a, b) {
+      const phA = pesoHierarquiaConsultaCliente(a);
+      const phB = pesoHierarquiaConsultaCliente(b);
+
+      if (phA !== phB) return phB - phA;
+
+      const usaAlmA = postoUsaAlmanaqueConsultaCliente(a.postoGrad);
+      const usaAlmB = postoUsaAlmanaqueConsultaCliente(b.postoGrad);
+
+      if (usaAlmA && usaAlmB) {
+        const alA = numeroConsultaCliente(a.almanaque);
+        const alB = numeroConsultaCliente(b.almanaque);
+
+        if (alA && alB && alA !== alB) return alA - alB;
+        if (alA && !alB) return -1;
+        if (!alA && alB) return 1;
       }
 
-      frame.addEventListener('load', function () {
-        ocultarLoading();
+      const reA = pesoAntiguidadeREConsultaCliente(a.re);
+      const reB = pesoAntiguidadeREConsultaCliente(b.re);
+
+      if (reA !== reB) return reA - reB;
+
+      return String(a.nomeGuerra || '').localeCompare(String(b.nomeGuerra || ''), 'pt-BR', { sensitivity: 'base' });
+    }
+
+
+    function pesoHierarquiaConsultaCliente(pm) {
+      const p = normalizarTexto(pm.postoGrad || '').replace(/[º°ª]/g, '');
+      const planilha = numeroConsultaCliente(pm.pesoHierarquico);
+
+      if (p.includes('MAJ')) return 9000;
+      if (p.includes('CAP')) return 8000;
+      if (p.includes('1') && p.includes('TEN') && !p.includes('SUBTEN')) return 7000;
+      if (p.includes('2') && p.includes('TEN') && !p.includes('SUBTEN')) return 6500;
+      if (p.includes('TEN') && !p.includes('SUBTEN')) return 6400;
+      if (p.includes('SUBTEN')) return 6000;
+      if (p.includes('1') && p.includes('SGT')) return 5500;
+      if (p.includes('2') && p.includes('SGT')) return 5200;
+      if (p.includes('3') && p.includes('SGT')) return 5000;
+      if (p.includes('SGT')) return 4900;
+      if (p.includes('CB')) return 4000;
+      if (p.includes('SD')) return 3000;
+
+      return planilha || 0;
+    }
+
+
+    function postoUsaAlmanaqueConsultaCliente(postoGrad) {
+      const p = normalizarTexto(postoGrad || '').replace(/[º°ª]/g, '');
+      if (p.includes('CB') || p.includes('SD')) return false;
+
+      return (
+        p.includes('MAJ') ||
+        p.includes('CAP') ||
+        (p.includes('TEN') && !p.includes('SUBTEN')) ||
+        p.includes('SUBTEN') ||
+        p.includes('SGT')
+      );
+    }
+
+
+    function pesoAntiguidadeREConsultaCliente(re) {
+      const login = normalizarLoginConsultaCliente(re);
+      if (!login) return 999999999;
+
+      const primeiro = login.substring(0, 1);
+      const mapa = { '9': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '0': 9 };
+      const grupo = Object.prototype.hasOwnProperty.call(mapa, primeiro) ? mapa[primeiro] : 99;
+      const numero = Number(login) || 0;
+
+      return (grupo * 10000000) + numero;
+    }
+
+
+    function normalizarLoginConsultaCliente(valor) {
+      return String(valor || '').replace(/\D/g, '').substring(0, 6);
+    }
+
+
+    function numeroConsultaCliente(valor) {
+      if (typeof valor === 'number') return isNaN(valor) ? 0 : valor;
+
+      const texto = String(valor || '')
+        .trim()
+        .replace(/\./g, '')
+        .replace(',', '.');
+
+      const numero = Number(texto);
+      return isNaN(numero) ? 0 : numero;
+    }
+
+
+
+    function montarCardConsultaPm(pm) {
+      const nome = [pm.postoGrad, pm.nomeGuerra].filter(Boolean).join(' ');
+      const classeHierarquia = classeHierarquiaConsulta(pm.postoGrad);
+      const reKey = escaparAttr(normalizarLoginConsultaCliente(pm.re || ''));
+
+      const fotoInterna = pm.foto
+        ? `<img class="consulta-foto ${classeHierarquia}" src="${escaparAttr(pm.foto)}" alt="Foto de ${escaparAttr(nome)}" onerror="this.outerHTML='<div class=&quot;consulta-foto sem-foto ${classeHierarquia}&quot;>FT</div>'">`
+        : `<div class="consulta-foto sem-foto ${classeHierarquia}">FT</div>`;
+
+      return `
+        <div class="consulta-pm-card ${classeHierarquia}" data-re-login="${reKey}">
+          <button class="consulta-foto-btn" type="button" onclick="abrirCardConsultaEfetivo('${reKey}')" title="Abrir card do policial">
+            ${fotoInterna}
+          </button>
+
+          <div class="consulta-pm-main">
+            <div class="consulta-pm-title">
+              <h3>
+                <button class="consulta-nome-link" type="button" onclick="abrirCardConsultaEfetivo('${reKey}')">
+                  ${escapar(nome || pm.nomeCompleto || '-')}
+                </button>
+              </h3>
+              <span class="consulta-status">${escapar(pm.status || '-')}</span>
+            </div>
+            <div class="consulta-detalhes">
+              ${consultaDetail('RE', pm.re)}
+              ${consultaDetail('Pelotão', pm.pelotao)}
+              ${consultaDetail('Modalidade', pm.modalidade)}
+              ${consultaDetail('Função', pm.funcao)}
+              ${consultaDetail('Telefone', pm.telefone)}
+              ${consultaDetail('E-mail', pm.email)}
+              ${consultaDetail('Entrada Cia FT', pm.entradaCia)}
+              ${consultaDetail('Perfil APP', pm.perfilAcesso)}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+
+    function classeHierarquiaConsulta(postoGrad) {
+      const p = normalizarTexto(postoGrad || '').replace(/[º°ª]/g, '');
+
+      if (
+        p.includes('SUBTEN') ||
+        p.includes('SUB TEN') ||
+        p.includes('SGT')
+      ) {
+        return 'hierarquia-subten-sgt';
+      }
+
+      if (
+        p.includes('MAJ') ||
+        p.includes('CAP') ||
+        p.includes('ASP') ||
+        (p.includes('TEN') && !p.includes('SUBTEN') && !p.includes('SUB TEN'))
+      ) {
+        return 'hierarquia-oficial';
+      }
+
+      return 'hierarquia-cb-sd';
+    }
+
+
+    function abrirCardConsultaEfetivo(reLogin) {
+      const dados = APP.dadosConsultaEfetivo || {};
+      const lista = dados.efetivo || [];
+      const alvoLogin = normalizarLoginConsultaCliente(reLogin);
+
+      const alvo = lista.find(function(pm) {
+        return normalizarLoginConsultaCliente(pm.re || '') === alvoLogin;
       });
 
-      frame.addEventListener('error', function () {
-        if (atual + 1 < fontes.length) carregarFonte(atual + 1);
-        else mostrarErro();
-      });
+      if (!alvo) {
+        mostrarToastFt('Policial não localizado', 'Não foi possível abrir o card deste policial.');
+        return;
+      }
 
-      carregarFonte(0);
-    })();
+      const nome = [alvo.postoGrad, alvo.nomeGuerra].filter(Boolean).join(' ');
+      const classeHierarquia = classeHierarquiaConsulta(alvo.postoGrad);
+      const foto = alvo.foto
+        ? `<img class="consulta-foto ${classeHierarquia}" src="${escaparAttr(alvo.foto)}" alt="Foto de ${escaparAttr(nome)}" onerror="this.outerHTML='<div class=&quot;consulta-foto sem-foto ${classeHierarquia}&quot;>FT</div>'">`
+        : `<div class="consulta-foto sem-foto ${classeHierarquia}">FT</div>`;
+
+      let modal = document.getElementById('consultaModalBackdrop');
+
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'consultaModalBackdrop';
+        modal.className = 'consulta-modal-backdrop';
+        document.body.appendChild(modal);
+      }
+
+      modal.innerHTML = `
+        <div class="consulta-modal" role="dialog" aria-modal="true">
+          <div class="consulta-modal-header">
+            ${foto}
+            <div>
+              <h2>${escapar(nome || alvo.nomeCompleto || '-')}</h2>
+              <p>Card do policial — Consulta do Efetivo</p>
+            </div>
+            <button class="consulta-modal-close" type="button" onclick="fecharCardConsultaEfetivo()">FECHAR</button>
+          </div>
+
+          <div class="consulta-modal-body">
+            <div class="consulta-modal-grid">
+              ${consultaDetail('RE', alvo.re)}
+              ${consultaDetail('Status', alvo.status)}
+              ${consultaDetail('Nome completo', alvo.nomeCompleto)}
+              ${consultaDetail('Pelotão', alvo.pelotao)}
+              ${consultaDetail('Modalidade', alvo.modalidade)}
+              ${consultaDetail('Função', alvo.funcao)}
+              ${consultaDetail('Telefone', alvo.telefone)}
+              ${consultaDetail('E-mail', alvo.email)}
+              ${consultaDetail('Entrada Cia FT', alvo.entradaCia)}
+              ${consultaDetail('Perfil APP', alvo.perfilAcesso)}
+            </div>
+          </div>
+        </div>
+      `;
+
+      modal.onclick = function(evt) {
+        if (evt.target === modal) fecharCardConsultaEfetivo();
+      };
+    }
+
+
+    function fecharCardConsultaEfetivo() {
+      const modal = document.getElementById('consultaModalBackdrop');
+      if (modal) modal.remove();
+    }
+
+
+    function consultaDetail(rotulo, valor) {
+      return `<div class="consulta-detail"><small>${escapar(rotulo)}</small><strong>${escapar(valor || '-')}</strong></div>`;
+    }
+
+
+
+    function sair() {
+      APP.usuario = null;
+      APP.menus = [];
+      APP.permissoes = {};
+      APP.credenciais = null;
+      APP.dadosResenha = null;
+      APP.dadosEscalasAdm = null;
+      APP.dadosConsultaEfetivo = null;
+
+      document.getElementById('appScreen').classList.add('hidden');
+      document.getElementById('loginScreen').classList.remove('hidden');
+      document.getElementById('loginSenha').value = '';
+      document.getElementById('loginAlerta').style.display = 'none';
+    }
+
+
+    function chamarApi(action, params) {
+      params = params || {};
+
+      return new Promise(function(resolve, reject) {
+        const callbackName = 'ft_cb_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+
+        const query = new URLSearchParams();
+        query.set('action', action);
+        query.set('callback', callbackName);
+
+        Object.keys(params).forEach(function(chave) {
+          query.set(chave, params[chave]);
+        });
+
+        const script = document.createElement('script');
+
+        const timeout = setTimeout(function() {
+          cleanup();
+          reject(new Error('Tempo esgotado ao chamar a API.'));
+        }, 20000);
+
+        window[callbackName] = function(resp) {
+          clearTimeout(timeout);
+          cleanup();
+          resolve(resp);
+        };
+
+        script.onerror = function() {
+          clearTimeout(timeout);
+          cleanup();
+          reject(new Error('Falha ao carregar resposta da API.'));
+        };
+
+        script.src = API_URL + '?' + query.toString();
+        document.body.appendChild(script);
+
+        function cleanup() {
+          try {
+            delete window[callbackName];
+          } catch (e) {
+            window[callbackName] = undefined;
+          }
+
+          if (script && script.parentNode) {
+            script.parentNode.removeChild(script);
+          }
+        }
+      });
+    }
+
+
+    function mostrarAlerta(texto, tipo) {
+      const el = document.getElementById('loginAlerta');
+      el.textContent = texto || '';
+      el.className = 'alerta ' + (tipo || 'info');
+      el.style.display = 'block';
+    }
+
+
+    function setBotaoLogin(carregando) {
+      const btn = document.getElementById('btnLogin');
+      btn.disabled = carregando;
+      btn.textContent = carregando ? 'ENTRANDO...' : 'ENTRAR';
+    }
+
+
+    function normalizarTexto(valor) {
+      return String(valor == null ? '' : valor)
+        .trim()
+        .toUpperCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ');
+    }
+
+
+    function escapar(valor) {
+      return String(valor == null ? '' : valor)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+
+    function escaparAttr(valor) {
+      return escapar(valor).replace(/`/g, '&#096;');
+    }
   </script>
 </body>
 </html>
