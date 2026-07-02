@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Portal Força Tática • V1.7.4 Restaurada</title>
+  <style>
+    :root{--bg:#000;--yellow:#ffe600;--muted:#a3a3a3;--card:#090909;--line:rgba(255,230,0,.22)}
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:#000;color:#fff;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    body{display:grid;place-items:center;background:radial-gradient(circle at top,rgba(255,230,0,.12),transparent 32%),#000}
+    .boot{width:min(430px,calc(100% - 32px));padding:28px 22px;border:1px solid var(--line);border-radius:24px;background:linear-gradient(180deg,#101010,#050505);box-shadow:0 24px 90px rgba(0,0,0,.75);text-align:center}
+    .logo{width:118px;height:118px;margin:0 auto 18px;object-fit:contain;filter:drop-shadow(0 10px 24px rgba(255,230,0,.18))}
+    h1{font-size:22px;letter-spacing:.6px;margin:0 0 8px;color:var(--yellow)}
+    p{margin:0;color:var(--muted);line-height:1.45;font-size:14px}
+    .bar{height:8px;background:rgba(255,255,255,.08);border-radius:999px;margin:20px 0 0;overflow:hidden}
+    .bar span{display:block;height:100%;width:46%;background:linear-gradient(90deg,var(--yellow),#fff3a0);border-radius:999px;animation:load 1s infinite alternate ease-in-out}
+    .erro{display:none;margin-top:18px;color:#ff8c8c;font-size:13px;white-space:pre-line;text-align:left;background:rgba(255,0,0,.08);border:1px solid rgba(255,0,0,.18);border-radius:14px;padding:12px}
+    @keyframes load{from{transform:translateX(-20%)}to{transform:translateX(135%)}}
+  </style>
+</head>
+<body>
+  <main class="boot">
+    <img class="logo" alt="Portal Força Tática" src="https://drive.google.com/thumbnail?id=1P64M5G2qLW5yhazJUMvhTAIl3rEDD9Br&sz=w1000" onerror="this.style.display='none'" />
+    <h1>SISTEMA CIA FT</h1>
+    <p>Restaurando o front visual oficial V1.7.4.1...</p>
+    <div class="bar"><span></span></div>
+    <div id="erro" class="erro"></div>
+  </main>
+
+  <script>
+  /*
+   * SISTEMA CIA FT — INDEX RESTAURADOR V1.7.4.1
+   * Objetivo: restaurar exatamente o front visual completo aprovado no commit bom,
+   * sem recriar layout, sem alterar API_URL, login ou chamarApi.
+   * Commit restaurado: 1c83574a606bf07a28cc6e3b4abcec17d7d8d29e
+   */
+  (async function restaurarFrontOficial(){
+    const URL_FRONT_OFICIAL = 'https://raw.githubusercontent.com/CiaFT/sistema-cia-ft/1c83574a606bf07a28cc6e3b4abcec17d7d8d29e/index.html';
+    try {
+      const resp = await fetch(URL_FRONT_OFICIAL, { method: 'GET', cache: 'no-store', mode: 'cors' });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status + ' ao recuperar o index oficial.');
+      const html = await resp.text();
+      if (!html || html.indexOf('Portal Força Tática') < 0 || html.indexOf('API_URL') < 0) {
+        throw new Error('O conteúdo recuperado não parece ser o index oficial completo.');
+      }
+      document.open();
+      document.write(html);
+      document.close();
+    } catch (err) {
+      const box = document.getElementById('erro');
+      if (box) {
+        box.style.display = 'block';
+        box.textContent = 'Falha ao restaurar o front visual oficial.\n' + (err && err.message ? err.message : err) + '\n\nVerifique a conexão e o acesso ao raw.githubusercontent.com.';
+      }
+      console.error(err);
+    }
+  })();
+  </script>
+</body>
+</html>
