@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.7.4 CORRIGE SUBTEN
+SISTEMA CIA FT — PORTAL GITHUB V1.7.5 API TIMEOUT CONSULTA
 Arquivo: index.html
 ============================================================
 
@@ -15,7 +15,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Portal Força Tática • V1.7.4.1</title>
+  <title>Portal Força Tática • V1.7.5.1</title>
 
   <style>
     :root {
@@ -3258,7 +3258,7 @@ Banco de dados: Google Sheets.
       <div id="loginAlerta" class="alerta"></div>
 
       <div class="footer">
-        Portal Força Tática • V1.7.4
+        Portal Força Tática • V1.7.5
       </div>
     </main>
   </section>
@@ -5335,9 +5335,7 @@ Banco de dados: Google Sheets.
       const classeHierarquia = classeHierarquiaConsulta(pm.postoGrad);
       const reKey = escaparAttr(normalizarLoginConsultaCliente(pm.re || ''));
 
-      const fotoInterna = pm.foto
-        ? `<img class="consulta-foto ${classeHierarquia}" src="${escaparAttr(pm.foto)}" alt="Foto de ${escaparAttr(nome)}" onerror="this.outerHTML='<div class=&quot;consulta-foto sem-foto ${classeHierarquia}&quot;>FT</div>'">`
-        : `<div class="consulta-foto sem-foto ${classeHierarquia}">FT</div>`;
+      const fotoInterna = `<div class="consulta-foto sem-foto ${classeHierarquia}">FT</div>`;
 
       return `
         <div class="consulta-pm-card ${classeHierarquia}" data-re-login="${reKey}">
@@ -5503,8 +5501,8 @@ Banco de dados: Google Sheets.
 
         const timeout = setTimeout(function() {
           cleanup();
-          reject(new Error('Tempo esgotado ao chamar a API.'));
-        }, 20000);
+          reject(new Error('Tempo esgotado ao chamar a API. Aguarde alguns segundos e tente novamente. A consulta foi otimizada nesta versão.'));
+        }, 45000);
 
         window[callbackName] = function(resp) {
           clearTimeout(timeout);
