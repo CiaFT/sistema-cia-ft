@@ -3404,6 +3404,16 @@ Banco de dados: Google Sheets.
       border: 1px solid rgba(55,66,71,.16);
       font-size: 28px;
       flex: 0 0 auto;
+      overflow: hidden;
+      padding: 4px;
+    }
+
+    .viatura-modal-icone img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: center;
+      display: block;
     }
 
     .viatura-modal-header h2 {
@@ -5797,8 +5807,10 @@ Banco de dados: Google Sheets.
      * ============================================================ */
 
     const VIATURAS_IMAGENS = {
-      tatico: 'https://drive.google.com/thumbnail?id=1Z7wUzdHCx4OORhnN43-l23k-6ff_h_45&sz=w1000',
-      rocam: 'https://drive.google.com/thumbnail?id=1XQOzyuDrXV9Xq3LHgA2yKJwvsCuexN8-&sz=w1000'
+      topoTatico: 'https://drive.google.com/thumbnail?id=1jxmz1I1GTqgZRngeuiM1WKiRnL__nSgO&sz=w1000',
+      topoRocam: 'https://drive.google.com/thumbnail?id=1lnHdI0d3xBpbrthvDqQ0ymg5hKwDP_Ck&sz=w1000',
+      iconeTatico: 'https://drive.google.com/thumbnail?id=1Z7wUzdHCx4OORhnN43-l23k-6ff_h_45&sz=w600',
+      iconeRocam: 'https://drive.google.com/thumbnail?id=1XQOzyuDrXV9Xq3LHgA2yKJwvsCuexN8-&sz=w600'
     };
 
     function abrirViaturas() {
@@ -5867,13 +5879,13 @@ Banco de dados: Google Sheets.
 
       document.getElementById('viaturasConteudo').innerHTML = `
         <div class="viaturas-grid">
-          ${montarBlocoViaturas('Tático', 'Relação de viaturas Tático', VIATURAS_IMAGENS.tatico, tatico, '🚔')}
-          ${montarBlocoViaturas('ROCAM', 'Relação de viaturas ROCAM', VIATURAS_IMAGENS.rocam, rocam, '🏍️')}
+          ${montarBlocoViaturas('TÁTICO', 'Relação de viaturas TÁTICO', VIATURAS_IMAGENS.topoTatico, tatico)}
+          ${montarBlocoViaturas('ROCAM', 'Relação de viaturas ROCAM', VIATURAS_IMAGENS.topoRocam, rocam)}
         </div>
       `;
     }
 
-    function montarBlocoViaturas(titulo, subtitulo, imagem, lista, icone) {
+    function montarBlocoViaturas(titulo, subtitulo, imagem, lista) {
       const itens = Array.isArray(lista) ? lista : [];
 
       return `
@@ -5898,6 +5910,11 @@ Banco de dados: Google Sheets.
           </div>
         </div>
       `;
+    }
+
+    function imagemIconeViatura(modalidade) {
+      const mod = normalizarTexto(modalidade || '');
+      return mod.includes('ROCAM') ? VIATURAS_IMAGENS.iconeRocam : VIATURAS_IMAGENS.iconeTatico;
     }
 
     function abrirFichaViatura(prefixo) {
@@ -5935,7 +5952,9 @@ Banco de dados: Google Sheets.
       modal.innerHTML = `
         <div class="viatura-modal" role="dialog" aria-modal="true">
           <div class="viatura-modal-header">
-            <div class="viatura-modal-icone">${normalizarTexto(alvo.modalidade).includes('ROCAM') ? '🏍️' : '🚔'}</div>
+            <div class="viatura-modal-icone">
+              <img src="${escaparAttr(imagemIconeViatura(alvo.modalidade))}" alt="${escaparAttr(alvo.modalidade || 'Viatura')}" loading="lazy" onerror="this.parentElement.textContent='🚔'">
+            </div>
             <div>
               <h2>${escapar(alvo.prefixo || 'Viatura')}</h2>
               <p>Ficha completa da viatura — ${escapar(alvo.modalidade || '-')}</p>
