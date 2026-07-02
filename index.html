@@ -276,7 +276,7 @@ Banco de dados: Google Sheets.
 
     .pm-info h1 {
       margin: 0;
-      font-size: 22px;
+      font-size: 20px;
       line-height: 1.15;
     }
 
@@ -554,7 +554,7 @@ Banco de dados: Google Sheets.
 
     .pm-main-info h1 {
       margin: 0;
-      font-size: 22px;
+      font-size: 20px;
       line-height: 1.16;
       letter-spacing: .2px;
     }
@@ -628,7 +628,7 @@ Banco de dados: Google Sheets.
 
     .home-panel-header h2 {
       margin: 0;
-      font-size: 22px;
+      font-size: 20px;
       line-height: 1.15;
     }
 
@@ -979,7 +979,7 @@ Banco de dados: Google Sheets.
       #appScreen .top-mark {
         width: 34px;
         height: 34px;
-        font-size: 18px;
+        font-size: 17px;
       }
     }
 
@@ -3288,8 +3288,8 @@ Banco de dados: Google Sheets.
     .viatura-banner img {
       width: 100%;
       height: 100%;
-      object-fit: contain;
-      object-position: center;
+      object-fit: cover;
+      object-position: center right;
       display: block;
       background: #020202;
     }
@@ -3303,14 +3303,14 @@ Banco de dados: Google Sheets.
       align-items: flex-start;
       padding: 18px 24px;
       pointer-events: none;
-      max-width: 62%;
+      max-width: 58%;
       text-shadow: 0 3px 10px rgba(0,0,0,.72);
     }
 
     .viatura-banner-texto h2 {
       margin: 0;
       color: #ffffff;
-      font-size: 22px;
+      font-size: 20px;
       line-height: 1.05;
       letter-spacing: .8px;
       font-weight: 1000;
@@ -3595,12 +3595,12 @@ Banco de dados: Google Sheets.
       }
 
       .viatura-banner-texto {
-        max-width: 64%;
+        max-width: 58%;
         padding: 15px 17px;
       }
 
       .viatura-banner-texto h2 {
-        font-size: 18px;
+        font-size: 17px;
       }
 
       .viatura-banner-texto p {
@@ -6000,8 +6000,8 @@ Banco de dados: Google Sheets.
 
       document.getElementById('viaturasConteudo').innerHTML = `
         <div class="viaturas-grid">
-          ${montarBlocoViaturas('TÁTICO', 'Relação de viaturas TÁTICO', VIATURAS_IMAGENS.topoTatico, tatico)}
-          ${montarBlocoViaturas('ROCAM', 'Relação de viaturas ROCAM', VIATURAS_IMAGENS.topoRocam, rocam)}
+          ${montarBlocoViaturas('TÁTICO', 'Relação Total', VIATURAS_IMAGENS.topoTatico, tatico)}
+          ${montarBlocoViaturas('ROCAM', 'Relação Total', VIATURAS_IMAGENS.topoRocam, rocam)}
         </div>
       `;
     }
