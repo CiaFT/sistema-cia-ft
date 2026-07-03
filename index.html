@@ -3254,6 +3254,137 @@ Banco de dados: Google Sheets.
 
 
 
+
+
+    /* ============================================================
+     * MEUS DADOS — ACORDEÕES V1.2.2
+     * ============================================================ */
+
+    .dados-accordion-wrap {
+      display: grid;
+      gap: 14px;
+    }
+
+    .dados-accordion-card {
+      background: #ffffff;
+      border: 1px solid rgba(23,32,42,.12);
+      border-radius: 22px;
+      box-shadow: 0 16px 34px rgba(15,23,42,.10);
+      overflow: hidden;
+    }
+
+    .dados-accordion-toggle {
+      width: 100%;
+      border: 0;
+      background:
+        radial-gradient(circle at top left, rgba(55,66,71,.24), transparent 56%),
+        linear-gradient(180deg, #ffffff, #f8fafc);
+      border-bottom: 1px solid rgba(55,66,71,.12);
+      padding: 15px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .dados-accordion-toggle h2 {
+      margin: 0;
+      color: #17202a;
+      font-size: 17px;
+      line-height: 1.2;
+      text-transform: uppercase;
+      letter-spacing: .2px;
+    }
+
+    .dados-accordion-toggle small {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #e9edf1;
+      color: #374247;
+      border: 1px solid rgba(55,66,71,.14);
+      font-weight: 1000;
+      flex: 0 0 auto;
+    }
+
+    .dados-accordion-body {
+      padding: 15px 16px 16px;
+      display: block;
+    }
+
+    .dados-accordion-card.fechado .dados-accordion-body {
+      display: none;
+    }
+
+    .dados-accordion-card.fechado .dados-accordion-toggle small::before {
+      content: '+';
+    }
+
+    .dados-accordion-card:not(.fechado) .dados-accordion-toggle small::before {
+      content: '−';
+    }
+
+    .senha-app-box {
+      display: grid;
+      gap: 10px;
+    }
+
+    .senha-app-box input {
+      width: 100%;
+      border: 1px solid rgba(55,66,71,.16);
+      background: #ffffff;
+      color: #17202a;
+      border-radius: 13px;
+      padding: 12px 13px;
+      font-size: 18px;
+      font-weight: 900;
+      outline: none;
+      box-sizing: border-box;
+      text-align: center;
+      letter-spacing: 7px;
+      min-height: 48px;
+    }
+
+    .senha-app-box input:focus {
+      border-color: rgba(55,66,71,.38);
+      box-shadow: 0 0 0 3px rgba(55,66,71,.10);
+    }
+
+    /* Ajuste mobile do formulário de KM/OBS das viaturas */
+    @media (max-width: 560px) {
+      .viatura-modal {
+        max-height: calc(100dvh - 20px);
+      }
+
+      .viatura-modal-body {
+        padding-bottom: 92px;
+      }
+
+      .viatura-form-field input,
+      .viatura-form-field textarea {
+        min-height: 50px;
+        font-size: 16px;
+      }
+
+      .viatura-form-field textarea {
+        min-height: 112px;
+      }
+
+      .viatura-atualizar-btn {
+        position: sticky;
+        bottom: 10px;
+        z-index: 5;
+        min-height: 54px;
+        border-radius: 16px;
+        box-shadow: 0 14px 30px rgba(15,23,42,.20);
+      }
+    }
+
     /* ============================================================
      * CONSULTA DE VIATURAS — V1.2.2
      * Listagem resumida por modalidade, banner com texto sobreposto
@@ -3933,68 +4064,76 @@ Banco de dados: Google Sheets.
               </div>
             </div>
 
-            <div class="dados-section-grid basicas">
-              <div class="dados-card informacoes-basicas">
-                <div class="dados-card-header">
-                  <h2>Informações Básicas</h2>
-                  <p>Dados pessoais, funcionais e administrativos do policial.</p>
-                </div>
-                <div class="dados-card-body">
-                  <div class="info-basica-grid">
-                    ${dadosItem('Nome Completo', valorCampo(u, ['nomeCompleto', 'nome', 'nomePm']))}
-                    ${dadosItem('Nome de Guerra', u.nomeGuerra)}
-                    ${dadosItem('Graduação', u.postoGrad)}
-                    ${dadosItem('RE', u.re)}
-                    ${dadosItem('CPF', valorCampo(u, ['cpf', 'CPF']))}
-                    ${dadosItem('RG', valorCampo(u, ['rg', 'RG']))}
-                    ${dadosItem('Data de nascimento', valorCampo(u, ['dataNascimento', 'nascimento', 'dtNascimento']))}
-                    ${dadosItem('Data de entrada na Cia FT', valorCampo(u, ['dataEntrada', 'entradaCiaFt', 'entrada', 'dataEntradaCia']))}
-                    ${dadosItem('Férias', ferias)}
-                    ${dadosItem('EAP', eap)}
-                  </div>
-                </div>
-              </div>
-
-              <div class="dados-card contato-card">
-                <div class="dados-card-header">
-                  <h2>Contato</h2>
-                  <p>Dados usados para comunicação e localização.</p>
-                </div>
-                <div class="dados-card-body">
-                  <div class="contato-grid">
-                    ${dadosItem('Telefone', u.telefone)}
-                    ${dadosItem('E-mail', u.email)}
-                    ${dadosItem('Endereço', u.endereco, 'endereco')}
-                  </div>
-                </div>
-              </div>
-
-              <div class="dados-card full">
-                <div class="dados-card-header">
-                  <h2>Solicitação de alteração</h2>
-                  <p>O policial pode solicitar correção cadastral. A alteração somente será aplicada após aprovação administrativa.</p>
-                </div>
-                <div class="dados-card-body">
-                  <div class="solicitacao-box">
-                    <h3>Solicitar correção cadastral</h3>
-                    <p>Selecione o campo cadastral que precisa de correção e envie para análise administrativa.</p>
-
-                    <button class="btn-primary-soft" onclick="abrirSolicitacaoDados()">SOLICITAR ALTERAÇÃO DE DADOS</button>
-
-                    <div class="campos-liberados">
-                      ${chipCampo('Nome Completo')}
-                      ${chipCampo('Nome de Guerra')}
-                      ${chipCampo('CPF')}
-                      ${chipCampo('RG')}
-                      ${chipCampo('Nascimento')}
-                      ${chipCampo('Férias')}
-                      ${chipCampo('EAP')}
-                      ${chipCampo('Telefone')}
-                      ${chipCampo('E-mail')}
-                      ${chipCampo('Endereço')}
+            <div class="dados-accordion-wrap">
+              <div class="dados-accordion-card" id="secInfoPessoais">
+                ${dadosAccordionTitulo('INFORMAÇÕES PESSOAIS', 'secInfoPessoais')}
+                <div class="dados-accordion-body">
+                  <div class="dados-card informacoes-basicas" style="box-shadow:none;border-radius:18px;margin-bottom:14px;">
+                    <div class="dados-card-header">
+                      <h2>Informações Básicas</h2>
+                      <p>Dados pessoais, funcionais e administrativos do policial.</p>
                     </div>
+                    <div class="dados-card-body">
+                      <div class="info-basica-grid">
+                        ${dadosItem('Nome Completo', valorCampo(u, ['nomeCompleto', 'nome', 'nomePm']))}
+                        ${dadosItem('Nome de Guerra', u.nomeGuerra)}
+                        ${dadosItem('Graduação', u.postoGrad)}
+                        ${dadosItem('RE', u.re)}
+                        ${dadosItem('CPF', valorCampo(u, ['cpf', 'CPF']))}
+                        ${dadosItem('RG', valorCampo(u, ['rg', 'RG']))}
+                        ${dadosItem('Data de nascimento', valorCampo(u, ['dataNascimento', 'nascimento', 'dtNascimento']))}
+                        ${dadosItem('Data de entrada na Cia FT', valorCampo(u, ['dataEntrada', 'entradaCiaFt', 'entrada', 'dataEntradaCia']))}
+                        ${dadosItem('Férias', ferias)}
+                        ${dadosItem('EAP', eap)}
+                      </div>
+                    </div>
+                  </div>
 
-                    <div class="aviso-discreto">Nesta etapa, a página está preparada visualmente. A gravação da solicitação será conectada à API na próxima atualização.</div>
+                  <div class="dados-card contato-card" style="box-shadow:none;border-radius:18px;margin-bottom:14px;">
+                    <div class="dados-card-header">
+                      <h2>Contato</h2>
+                      <p>Dados usados para comunicação e localização.</p>
+                    </div>
+                    <div class="dados-card-body">
+                      <div class="contato-grid">
+                        ${dadosItem('Telefone', u.telefone)}
+                        ${dadosItem('E-mail', u.email)}
+                        ${dadosItem('Endereço', u.endereco, 'endereco')}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="solicitacao-box">
+                    <h3>Solicitação de alteração</h3>
+                    <p>O policial pode solicitar correção cadastral. A alteração somente será aplicada após aprovação administrativa.</p>
+                    <button class="btn-primary-soft" onclick="abrirSolicitacaoDados()">SOLICITAR ALTERAÇÃO DE DADOS</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dados-accordion-card fechado" id="secMaterialBelico">
+                ${dadosAccordionTitulo('MATERIAL BÉLICO', 'secMaterialBelico')}
+                <div class="dados-accordion-body">
+                  ${montarMaterialBelico(u)}
+                </div>
+              </div>
+
+              <div class="dados-accordion-card fechado" id="secRomaneio">
+                ${dadosAccordionTitulo('ROMANEIO', 'secRomaneio')}
+                <div class="dados-accordion-body">
+                  <div class="solicitacao-box">
+                    <h3>Romaneio</h3>
+                    <p>Área preparada para implantação futura.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dados-accordion-card fechado" id="secSenhaApp">
+                ${dadosAccordionTitulo('ALTERAÇÃO DE SENHA DO APP', 'secSenhaApp')}
+                <div class="dados-accordion-body">
+                  <div class="senha-app-box">
+                    <input id="novaSenhaApp" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="0000" oninput="this.value=this.value.replace(/\\D/g,'').slice(0,4)">
+                    <button id="btnMudarSenhaApp" class="btn-primary-soft" onclick="mudarSenhaApp()">MUDAR SENHA APP</button>
                   </div>
                 </div>
               </div>
@@ -4012,6 +4151,98 @@ Banco de dados: Google Sheets.
           <strong>${escapar(valor || '-')}</strong>
         </div>
       `;
+    }
+
+
+    function dadosAccordionTitulo(titulo, id) {
+      return `
+        <button class="dados-accordion-toggle" type="button" onclick="alternarDadosAccordion('${escaparAttr(id)}')">
+          <h2>${escapar(titulo)}</h2>
+          <small aria-hidden="true"></small>
+        </button>
+      `;
+    }
+
+    function alternarDadosAccordion(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.toggle('fechado');
+    }
+
+    function montarMaterialBelico(u) {
+      const material = u && u.materialBelico ? u.materialBelico : {};
+      const arma = Array.isArray(material.arma) ? material.arma : [];
+      const colete = Array.isArray(material.colete) ? material.colete : [];
+      const algema = Array.isArray(material.algema) ? material.algema : [];
+
+      return `
+        <div class="dados-section-grid basicas">
+          ${montarGrupoMaterialBelico('ARMA', arma)}
+          ${montarGrupoMaterialBelico('COLETE', colete)}
+          ${montarGrupoMaterialBelico('ALGEMA', algema)}
+        </div>
+      `;
+    }
+
+    function montarGrupoMaterialBelico(titulo, lista) {
+      return `
+        <div class="dados-card full" style="box-shadow:none;border-radius:18px;">
+          <div class="dados-card-header">
+            <h2>${escapar(titulo)}</h2>
+          </div>
+          <div class="dados-card-body">
+            <div class="info-basica-grid">
+              ${lista.length ? lista.map(function(item) {
+                return dadosItem(item.rotulo, item.valor);
+              }).join('') : dadosItem('Registro', '-')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function mudarSenhaApp() {
+      const input = document.getElementById('novaSenhaApp');
+      const btn = document.getElementById('btnMudarSenhaApp');
+      const novaSenha = input ? String(input.value || '').trim() : '';
+
+      if (!/^\d{4}$/.test(novaSenha)) {
+        mostrarToastFt('Senha não alterada', 'Digite exatamente quatro números.');
+        return;
+      }
+
+      if (!APP.credenciais || !APP.credenciais.login || !APP.credenciais.senha) {
+        mostrarToastFt('Sessão inválida', 'Faça login novamente.');
+        return;
+      }
+
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'ALTERANDO...';
+      }
+
+      chamarApi('alterar_senha_app', {
+          login: APP.credenciais.login,
+          senha: APP.credenciais.senha,
+          novaSenha: novaSenha
+        })
+        .then(function(resp) {
+          if (!resp || !resp.ok) {
+            throw new Error(resp && resp.erro ? resp.erro : 'Falha ao alterar a senha.');
+          }
+
+          APP.credenciais.senha = novaSenha;
+          if (input) input.value = '';
+          mostrarToastFt('Senha alterada', 'Senha do app alterada com sucesso.');
+        })
+        .catch(function(err) {
+          mostrarToastFt('Senha não alterada', err.message || String(err));
+        })
+        .finally(function() {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'MUDAR SENHA APP';
+          }
+        });
     }
 
 
@@ -6131,11 +6362,11 @@ Banco de dados: Google Sheets.
           <div class="viatura-form-grid">
             <div class="viatura-form-field">
               <label>NOVO KM</label>
-              <input id="viaturaNovoKm" type="number" inputmode="numeric" min="0" step="1" placeholder="Ex.: 125430">
+              <input id="viaturaNovoKm" type="number" inputmode="numeric" min="0" step="1" placeholder="Ex.: 125430" onfocus="ajustarFocoFormularioViatura()">
             </div>
             <div class="viatura-form-field">
               <label>OBSERVAÇÕES</label>
-              <textarea id="viaturaObservacoes" placeholder="Alterações, avarias ou observações constatadas"></textarea>
+              <textarea id="viaturaObservacoes" placeholder="Alterações, avarias ou observações constatadas" onfocus="ajustarFocoFormularioViatura()"></textarea>
             </div>
           </div>
 
@@ -6144,6 +6375,13 @@ Banco de dados: Google Sheets.
           </button>
         </div>
       `;
+    }
+
+    function ajustarFocoFormularioViatura() {
+      setTimeout(function() {
+        const box = document.querySelector('.viatura-atualizacao-box');
+        if (box) box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 280);
     }
 
     function atualizarKmViatura(prefixo) {
