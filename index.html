@@ -6126,10 +6126,16 @@ Banco de dados: Google Sheets.
 
 
     function aplicarCacheFotoApp(url) {
-      const texto = String(url || '').trim();
+      let texto = String(url || '').trim();
       if (!texto) return '';
-      if (texto.includes('vFoto=')) return texto;
-      return texto + (texto.includes('?') ? '&' : '?') + 'vFoto=' + Date.now();
+
+      // Auditoria V1.2.2: remove qualquer vFoto antigo e força nova busca.
+      texto = texto
+        .replace(/([?&])vFoto=[^&]*/g, '$1')
+        .replace(/[?&]$/, '');
+
+      const chave = encodeURIComponent(texto).slice(-80);
+      return texto + (texto.includes('?') ? '&' : '?') + 'vFoto=' + chave + '-' + Date.now();
     }
 
     function resolverFotoApp(valor, tamanho) {
@@ -6435,10 +6441,30 @@ Banco de dados: Google Sheets.
     }
 
     function consultaInput(rotulo, campo, valor) {
+      return consultaInputTipo(rotulo, campo, valor, 'text', '', '');
+    }
+
+    function consultaInputTipo(rotulo, campo, valor, tipo, placeholder, attrs) {
       return `
         <div class="consulta-edit-field">
           <label>${escapar(rotulo)}</label>
-          <input data-consulta-campo="${escaparAttr(campo)}" type="text" value="${escaparAttr(valor || '')}">
+          <input data-consulta-campo="${escaparAttr(campo)}" type="${escaparAttr(tipo || 'text')}" placeholder="${escaparAttr(placeholder || '')}" value="${escaparAttr(valor || '')}" ${attrs || ''}>
+        </div>
+      `;
+    }
+
+    function consultaSelect(rotulo, campo, valor, lista) {
+      const opcoes = Array.isArray(lista) ? lista : [];
+      const atual = String(valor || '');
+      const htmlOpcoes = ['<option value="">Selecione</option>'].concat(opcoes.map(function(item) {
+        const v = String(item || '');
+        return `<option value="${escaparAttr(v)}" ${normalizarTexto(v) === normalizarTexto(atual) ? 'selected' : ''}>${escapar(v)}</option>`;
+      })).join('');
+
+      return `
+        <div class="consulta-edit-field">
+          <label>${escapar(rotulo)}</label>
+          <select data-consulta-campo="${escaparAttr(campo)}">${htmlOpcoes}</select>
         </div>
       `;
     }
@@ -6450,6 +6476,37 @@ Banco de dados: Google Sheets.
           <textarea data-consulta-campo="${escaparAttr(campo)}">${escapar(valor || '')}</textarea>
         </div>
       `;
+    }
+
+    function mascararTelefoneConsulta(el) {
+      const d = String(el.value || '').replace(/\D/g, '').slice(0, 11);
+      el.value = d.length > 2 ? d.slice(0, 2) + '-' + d.slice(2) : d;
+    }
+
+    function mascararCpfConsulta(el) {
+      const d = String(el.value || '').replace(/\D/g, '').slice(0, 11);
+      let out = d;
+      if (d.length > 3) out = d.slice(0, 3) + '.' + d.slice(3);
+      if (d.length > 6) out = d.slice(0, 3) + '.' + d.slice(3, 6) + '.' + d.slice(6);
+      if (d.length > 9) out = d.slice(0, 3) + '.' + d.slice(3, 6) + '.' + d.slice(6, 9) + '-' + d.slice(9);
+      el.value = out;
+    }
+
+    function emailValidoConsulta(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim());
+    }
+
+    function cpfValidoConsulta(cpf) {
+      const s = String(cpf || '').replace(/\D/g, '');
+      if (s.length !== 11 || /^(\d)\1{10}$/.test(s)) return false;
+      let soma = 0;
+      for (let i = 0; i < 9; i++) soma += Number(s[i]) * (10 - i);
+      let d1 = 11 - (soma % 11); if (d1 >= 10) d1 = 0;
+      if (d1 !== Number(s[9])) return false;
+      soma = 0;
+      for (let i = 0; i < 10; i++) soma += Number(s[i]) * (11 - i);
+      let d2 = 11 - (soma % 11); if (d2 >= 10) d2 = 0;
+      return d2 === Number(s[10]);
     }
 
     function alternarEdicaoConsultaEfetivo(editar) {
@@ -6835,6 +6892,9 @@ Banco de dados: Google Sheets.
         return;
       }
 
+      const cfg = (APP.dadosConsultaEfetivo && APP.dadosConsultaEfetivo.configListas) || {};
+      const hoje = dataISOHoje();
+
       let modal = document.getElementById('consultaModalBackdrop');
       if (!modal) {
         modal = document.createElement('div');
@@ -6861,21 +6921,21 @@ Banco de dados: Google Sheets.
               <div class="consulta-edit-section">
                 <h3>Dados cadastrais</h3>
                 <div class="consulta-edit-grid">
-                  ${consultaInput('Posto/Graduação', 'postoGrad', '')}
+                  ${consultaSelect('Posto/Graduação', 'postoGrad', '', cfg.postoGrad || [])}
                   ${consultaInput('RE', 're', '')}
                   ${consultaInput('Nome de guerra', 'nomeGuerra', '')}
                   ${consultaInput('Nome completo', 'nomeCompleto', '')}
-                  ${consultaInput('Pelotão', 'pelotao', '')}
-                  ${consultaInput('Modalidade', 'modalidade', '')}
-                  ${consultaInput('Função', 'funcao', '')}
-                  ${consultaInput('Status', 'status', '')}
-                  ${consultaInput('Telefone', 'telefone', '')}
-                  ${consultaInput('E-mail', 'email', '')}
-                  ${consultaInput('CPF', 'cpf', '')}
+                  ${consultaSelect('Pelotão', 'pelotao', '', cfg.pelotoes || [])}
+                  ${consultaSelect('Modalidade', 'modalidade', '', cfg.modalidades || [])}
+                  ${consultaSelect('Função', 'funcao', '', cfg.funcoes || [])}
+                  ${consultaSelect('Status', 'status', '', cfg.status || [])}
+                  ${consultaInputTipo('Telefone', 'telefone', '', 'tel', '11-999999999', 'maxlength="12" inputmode="numeric" oninput="mascararTelefoneConsulta(this)"')}
+                  ${consultaInputTipo('E-mail', 'email', '', 'email', 'email@dominio.com', '')}
+                  ${consultaInputTipo('CPF', 'cpf', '', 'text', '000.000.000-00', 'maxlength="14" inputmode="numeric" oninput="mascararCpfConsulta(this)"')}
                   ${consultaInput('RG', 'rg', '')}
-                  ${consultaInput('Data de nascimento', 'dataNascimento', '')}
-                  ${consultaInput('Data de entrada na Cia FT', 'dataEntrada', '')}
-                  ${consultaInput('Senha APP', 'senhaApp', '1234')}
+                  ${consultaInputTipo('Data de nascimento', 'dataNascimento', '', 'date', '', '')}
+                  ${consultaInputTipo('Data de entrada na Cia FT', 'dataEntrada', hoje, 'date', '', '')}
+                  ${consultaInputTipo('Senha APP', 'senhaApp', '1234', 'text', '4 números', 'maxlength="4" inputmode="numeric" oninput="this.value=this.value.replace(/\\D/g,\'\').slice(0,4)"')}
                   ${consultaInput('Perfil APP', 'perfilAcesso', 'EFETIVO')}
                   ${consultaTextarea('Foto (link Google Drive)', 'foto', '')}
                   ${consultaTextarea('Endereço', 'endereco', '')}
@@ -6946,6 +7006,21 @@ Banco de dados: Google Sheets.
         return;
       }
 
+      if (campos.telefone && !/^\d{2}-\d{9}$/.test(campos.telefone)) {
+        mostrarToastFt('Cadastro não enviado', 'Telefone deve seguir o padrão 11-999999999.');
+        return;
+      }
+
+      if (campos.email && !emailValidoConsulta(campos.email)) {
+        mostrarToastFt('Cadastro não enviado', 'Informe um e-mail válido.');
+        return;
+      }
+
+      if (campos.cpf && !cpfValidoConsulta(campos.cpf)) {
+        mostrarToastFt('Cadastro não enviado', 'Informe um CPF válido.');
+        return;
+      }
+
       const btn = document.getElementById('btnSalvarNovoPolicial');
       if (btn) {
         btn.disabled = true;
@@ -6986,8 +7061,12 @@ Banco de dados: Google Sheets.
       }
 
       const dados = APP.dadosViaturas || {};
+      const cfg = dados.configListas || {};
       const cabecalho = Array.isArray(dados.cabecalho) && dados.cabecalho.length ? dados.cabecalho : ['PREFIXO', 'SITUAÇÃO', 'STATUS_APP', 'PLACA', 'MODELO/ANO', 'MODALIDADE'];
       const modalidade = modalidadeInicial || '';
+      const hoje = dataISOHoje();
+      const usuario = dados.usuarioAtualizacao || [APP.usuario && APP.usuario.postoGrad, APP.usuario && APP.usuario.re, APP.usuario && APP.usuario.nomeGuerra].filter(Boolean).join(' ');
+      const reUsuario = (APP.usuario && (APP.usuario.re || APP.usuario.login)) || '';
 
       let modal = document.getElementById('viaturaModalBackdrop');
       if (!modal) {
@@ -6996,6 +7075,36 @@ Banco de dados: Google Sheets.
         modal.className = 'viatura-modal-backdrop';
         document.body.appendChild(modal);
       }
+
+      const camposHtml = cabecalho.map(function(rotulo, idx) {
+        const norm = normalizarTexto(rotulo || '').replace(/\s+/g, '_');
+        if (norm === 'MODALIDADE') return '';
+
+        let valor = '';
+        let tipo = 'text';
+        let extra = '';
+
+        if (norm === 'STATUS_APP' || norm === 'STATUS APP') valor = 'ATIVA';
+        if (norm === 'ULTIMA_ATUALIZACAO' || norm === 'ÚLTIMA_ATUALIZAÇÃO' || norm === 'DATA_ATUALIZACAO') {
+          valor = hoje;
+          tipo = 'date';
+        }
+        if (norm === 'ATUALIZADO_POR_RE') {
+          valor = reUsuario;
+          extra = 'readonly';
+        }
+        if (norm === 'ATUALIZADO_POR_NOME') {
+          valor = usuario;
+          extra = 'readonly';
+        }
+
+        return `
+          <div class="viatura-form-field">
+            <label>${escapar(rotulo || ('Coluna ' + (idx + 1)))}</label>
+            <input data-viatura-campo="col${idx + 1}" data-viatura-rotulo="${escaparAttr(rotulo || '')}" type="${tipo}" value="${escaparAttr(valor)}" ${extra}>
+          </div>
+        `;
+      }).join('');
 
       modal.innerHTML = `
         <div class="viatura-modal" role="dialog" aria-modal="true">
@@ -7012,16 +7121,13 @@ Banco de dados: Google Sheets.
             <div class="viatura-atualizacao-box">
               <h3>Dados da viatura</h3>
               <div class="viatura-form-grid">
-                ${cabecalho.map(function(rotulo, idx) {
-                  const norm = normalizarTexto(rotulo || '');
-                  const valor = norm === 'MODALIDADE' ? modalidade : (norm === 'STATUS_APP' || norm === 'STATUS APP' ? 'ATIVA' : '');
-                  return `
-                    <div class="viatura-form-field">
-                      <label>${escapar(rotulo || ('Coluna ' + (idx + 1)))}</label>
-                      <input data-viatura-campo="col${idx + 1}" data-viatura-rotulo="${escaparAttr(rotulo || '')}" type="text" value="${escaparAttr(valor)}">
-                    </div>
-                  `;
-                }).join('')}
+                <div class="viatura-form-field">
+                  <label>MODALIDADE</label>
+                  <select data-viatura-campo="modalidade" data-viatura-rotulo="MODALIDADE">
+                    ${optionsViaturaModalidade(cfg.modalidadesViatura || [], modalidade)}
+                  </select>
+                </div>
+                ${camposHtml}
               </div>
               <button id="btnSalvarNovaViatura" class="viatura-atualizar-btn" type="button" onclick="salvarNovaViatura()">SALVAR NOVA VIATURA</button>
             </div>
@@ -7032,6 +7138,15 @@ Banco de dados: Google Sheets.
       modal.onclick = function(evt) {
         if (evt.target === modal) fecharFichaViatura();
       };
+    }
+
+    function optionsViaturaModalidade(lista, valorAtual) {
+      const valores = Array.isArray(lista) && lista.length ? lista : ['TÁTICO', 'ROCAM'];
+      const atual = normalizarTexto(valorAtual || '');
+      return '<option value="">Selecione</option>' + valores.map(function(v) {
+        const texto = String(v || '');
+        return `<option value="${escaparAttr(texto)}" ${normalizarTexto(texto) === atual ? 'selected' : ''}>${escapar(texto)}</option>`;
+      }).join('');
     }
 
     function salvarNovaViatura() {
