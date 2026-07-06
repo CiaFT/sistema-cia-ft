@@ -6846,6 +6846,7 @@ Banco de dados: Google Sheets.
         const query = new URLSearchParams();
         query.set('action', action);
         query.set('callback', callbackName);
+        query.set('_cache', String(Date.now()));
 
         Object.keys(params).forEach(function(chave) {
           query.set(chave, params[chave]);
