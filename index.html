@@ -3256,6 +3256,153 @@ Banco de dados: Google Sheets.
 
 
 
+
+    /* ============================================================
+     * CONSULTA EFETIVO — EDIÇÃO V1.2.2
+     * ============================================================ */
+
+    .consulta-modal-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-left: auto;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .consulta-edit-btn {
+      width: auto;
+      border: 1px solid rgba(55,66,71,.16);
+      background:
+        radial-gradient(circle at top left, rgba(55,66,71,.18), transparent 58%),
+        linear-gradient(180deg, #ffffff, #f8fafc);
+      color: #17202a;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 12px;
+      font-weight: 1000;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(15,23,42,.07);
+    }
+
+    .consulta-edit-panel {
+      display: none;
+      margin-top: 14px;
+      border-top: 1px solid rgba(55,66,71,.12);
+      padding-top: 14px;
+    }
+
+    .consulta-modal.editando .consulta-read-panel {
+      display: none;
+    }
+
+    .consulta-modal.editando .consulta-edit-panel {
+      display: block;
+    }
+
+    .consulta-edit-section {
+      background:
+        radial-gradient(circle at top left, rgba(55,66,71,.09), transparent 54%),
+        linear-gradient(180deg, #ffffff, #f8fafc);
+      border: 1px solid rgba(55,66,71,.12);
+      border-radius: 18px;
+      padding: 13px;
+      margin-bottom: 12px;
+    }
+
+    .consulta-edit-section h3 {
+      margin: 0 0 10px;
+      color: #17202a;
+      font-size: 15px;
+      line-height: 1.2;
+      text-transform: uppercase;
+      letter-spacing: .2px;
+    }
+
+    .consulta-edit-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 9px;
+    }
+
+    .consulta-edit-field {
+      display: grid;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .consulta-edit-field.full {
+      grid-column: 1 / -1;
+    }
+
+    .consulta-edit-field label {
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .12px;
+      text-transform: uppercase;
+    }
+
+    .consulta-edit-field input,
+    .consulta-edit-field textarea {
+      width: 100%;
+      border: 1px solid rgba(55,66,71,.16);
+      background: #ffffff;
+      color: #17202a;
+      border-radius: 13px;
+      padding: 11px 12px;
+      font-size: 13.5px;
+      outline: none;
+      box-sizing: border-box;
+      min-height: 44px;
+    }
+
+    .consulta-edit-field textarea {
+      resize: vertical;
+      min-height: 76px;
+      line-height: 1.35;
+    }
+
+    .consulta-edit-field input:focus,
+    .consulta-edit-field textarea:focus {
+      border-color: rgba(55,66,71,.38);
+      box-shadow: 0 0 0 3px rgba(55,66,71,.10);
+    }
+
+    .consulta-edit-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 9px;
+      margin-top: 12px;
+    }
+
+    .consulta-read-section-title {
+      margin: 14px 0 9px;
+      color: #374247;
+      font-size: 12px;
+      font-weight: 1000;
+      letter-spacing: .25px;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 560px) {
+      .consulta-modal-actions {
+        width: 100%;
+        margin-left: 0;
+        justify-content: stretch;
+      }
+
+      .consulta-modal-actions .consulta-edit-btn,
+      .consulta-modal-actions .consulta-modal-close {
+        flex: 1 1 auto;
+      }
+
+      .consulta-edit-grid,
+      .consulta-edit-actions {
+        grid-template-columns: 1fr;
+      }
+    }
+
     /* ============================================================
      * MEUS DADOS — ACORDEÕES V1.2.2
      * ============================================================ */
@@ -6099,6 +6246,9 @@ Banco de dados: Google Sheets.
         ? `<img class="consulta-foto ${classeHierarquia}" src="${escaparAttr(fotoUrl)}" alt="Foto de ${escaparAttr(nome)}" loading="lazy" onerror="fallbackFotoConsulta(this, '${classeHierarquia}')">`
         : `<div class="consulta-foto sem-foto ${classeHierarquia}">FT</div>`;
 
+      const podeEditar = usuarioPodeEditarConsultaEfetivo();
+      const reKey = escaparAttr(alvoLogin);
+
       let modal = document.getElementById('consultaModalBackdrop');
 
       if (!modal) {
@@ -6109,29 +6259,24 @@ Banco de dados: Google Sheets.
       }
 
       modal.innerHTML = `
-        <div class="consulta-modal" role="dialog" aria-modal="true">
+        <div class="consulta-modal" role="dialog" aria-modal="true" data-re-login="${reKey}">
           <div class="consulta-modal-header">
             ${foto}
             <div>
               <h2>${escapar(nome || alvo.nomeCompleto || '-')}</h2>
               <p>Card do policial — Consulta do Efetivo</p>
             </div>
-            <button class="consulta-modal-close" type="button" onclick="fecharCardConsultaEfetivo()">FECHAR</button>
+            <div class="consulta-modal-actions">
+              ${podeEditar ? `<button id="btnEditarConsultaEfetivo" class="consulta-edit-btn" type="button" onclick="alternarEdicaoConsultaEfetivo(true)">EDITAR DADOS</button>` : ''}
+              <button class="consulta-modal-close" type="button" onclick="fecharCardConsultaEfetivo()">FECHAR</button>
+            </div>
           </div>
 
           <div class="consulta-modal-body">
-            <div class="consulta-modal-grid">
-              ${consultaDetail('RE', alvo.re)}
-              ${consultaDetail('Status', alvo.status)}
-              ${consultaDetail('Nome completo', alvo.nomeCompleto)}
-              ${consultaDetail('Pelotão', alvo.pelotao)}
-              ${consultaDetail('Modalidade', alvo.modalidade)}
-              ${consultaDetail('Função', alvo.funcao)}
-              ${consultaDetail('Telefone', alvo.telefone)}
-              ${consultaDetail('E-mail', alvo.email)}
-              ${consultaDetail('Entrada Cia FT', alvo.entradaCia)}
-              ${consultaDetail('Perfil APP', alvo.perfilAcesso)}
+            <div class="consulta-read-panel">
+              ${montarLeituraConsultaEfetivo(alvo)}
             </div>
+            ${podeEditar ? montarFormularioEdicaoConsultaEfetivo(alvo) : ''}
           </div>
         </div>
       `;
@@ -6139,6 +6284,200 @@ Banco de dados: Google Sheets.
       modal.onclick = function(evt) {
         if (evt.target === modal) fecharCardConsultaEfetivo();
       };
+    }
+
+
+    function usuarioPodeEditarConsultaEfetivo() {
+      const permissao = obterPermissaoCliente('CONSULTA_EFETIVO') || {};
+      return !!(permissao.acessoTotal || permissao.editar);
+    }
+
+    function montarLeituraConsultaEfetivo(pm) {
+      return `
+        <div class="consulta-modal-grid">
+          ${consultaDetail('RE', pm.re)}
+          ${consultaDetail('Status', pm.status)}
+          ${consultaDetail('Nome completo', pm.nomeCompleto)}
+          ${consultaDetail('Nome de guerra', pm.nomeGuerra)}
+          ${consultaDetail('Pelotão', pm.pelotao)}
+          ${consultaDetail('Modalidade', pm.modalidade)}
+          ${consultaDetail('Função', pm.funcao)}
+          ${consultaDetail('Telefone', pm.telefone)}
+          ${consultaDetail('E-mail', pm.email)}
+          ${consultaDetail('CPF', pm.cpf)}
+          ${consultaDetail('RG', pm.rg)}
+          ${consultaDetail('Nascimento', pm.dataNascimento)}
+          ${consultaDetail('Entrada Cia FT', pm.entradaCia || pm.dataEntrada)}
+          ${consultaDetail('Férias 30 dias', pm.ferias30)}
+          ${consultaDetail('Férias 15 dias 1', pm.ferias15a)}
+          ${consultaDetail('Férias 15 dias 2', pm.ferias15b)}
+          ${consultaDetail('EAP', pm.eap)}
+          ${consultaDetail('Perfil APP', pm.perfilAcesso)}
+          ${consultaDetail('Endereço', pm.endereco)}
+        </div>
+        ${montarLeituraMaterialConsulta(pm)}
+      `;
+    }
+
+    function montarLeituraMaterialConsulta(pm) {
+      const material = pm && pm.materialBelico ? pm.materialBelico : {};
+      return `
+        <div class="consulta-read-section-title">Material Bélico</div>
+        ${montarGrupoLeituraMaterialConsulta('ARMA', material.arma || [])}
+        ${montarGrupoLeituraMaterialConsulta('COLETE', material.colete || [])}
+        ${montarGrupoLeituraMaterialConsulta('ALGEMA', material.algema || [])}
+      `;
+    }
+
+    function montarGrupoLeituraMaterialConsulta(titulo, lista) {
+      const campos = Array.isArray(lista) ? lista : [];
+      return `
+        <div class="consulta-edit-section">
+          <h3>${escapar(titulo)}</h3>
+          <div class="consulta-modal-grid">
+            ${campos.length ? campos.map(function(item) {
+              return consultaDetail(item.rotulo, item.valor);
+            }).join('') : consultaDetail('Registro', '-')}
+          </div>
+        </div>
+      `;
+    }
+
+    function montarFormularioEdicaoConsultaEfetivo(pm) {
+      const material = pm && pm.materialBelico ? pm.materialBelico : {};
+      return `
+        <div class="consulta-edit-panel">
+          <div class="consulta-edit-section">
+            <h3>Dados pessoais e funcionais</h3>
+            <div class="consulta-edit-grid">
+              ${consultaInput('Nome completo', 'nomeCompleto', pm.nomeCompleto)}
+              ${consultaInput('Nome de guerra', 'nomeGuerra', pm.nomeGuerra)}
+              ${consultaInput('Pelotão', 'pelotao', pm.pelotao)}
+              ${consultaInput('Modalidade', 'modalidade', pm.modalidade)}
+              ${consultaInput('Função', 'funcao', pm.funcao)}
+              ${consultaInput('Status', 'status', pm.status)}
+              ${consultaInput('Telefone', 'telefone', pm.telefone)}
+              ${consultaInput('E-mail', 'email', pm.email)}
+              ${consultaInput('CPF', 'cpf', pm.cpf)}
+              ${consultaInput('RG', 'rg', pm.rg)}
+              ${consultaInput('Data de nascimento', 'dataNascimento', pm.dataNascimento)}
+              ${consultaInput('Data de entrada na Cia FT', 'dataEntrada', pm.dataEntrada || pm.entradaCia)}
+              ${consultaInput('Férias 30 dias', 'ferias30', pm.ferias30)}
+              ${consultaInput('Férias 15 dias 1', 'ferias15a', pm.ferias15a)}
+              ${consultaInput('Férias 15 dias 2', 'ferias15b', pm.ferias15b)}
+              ${consultaInput('EAP', 'eap', pm.eap)}
+              ${consultaInput('Perfil APP', 'perfilAcesso', pm.perfilAcesso)}
+              ${consultaTextarea('Endereço', 'endereco', pm.endereco)}
+            </div>
+          </div>
+
+          ${montarGrupoEdicaoMaterialConsulta('ARMA', material.arma || [])}
+          ${montarGrupoEdicaoMaterialConsulta('COLETE', material.colete || [])}
+          ${montarGrupoEdicaoMaterialConsulta('ALGEMA', material.algema || [])}
+
+          <div class="consulta-edit-actions">
+            <button id="btnSalvarConsultaEfetivo" class="btn-primary-soft" type="button" onclick="salvarEdicaoConsultaEfetivo('${escaparAttr(normalizarLoginConsultaCliente(pm.re))}')">SALVAR ALTERAÇÕES</button>
+            <button class="btn-primary-soft" type="button" onclick="alternarEdicaoConsultaEfetivo(false)">CANCELAR</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function montarGrupoEdicaoMaterialConsulta(titulo, lista) {
+      const campos = Array.isArray(lista) ? lista : [];
+      return `
+        <div class="consulta-edit-section">
+          <h3>${escapar(titulo)}</h3>
+          <div class="consulta-edit-grid">
+            ${campos.map(function(item) {
+              return consultaInput(item.rotulo, item.campo, item.valor);
+            }).join('') || consultaDetail('Registro', '-')}
+          </div>
+        </div>
+      `;
+    }
+
+    function consultaInput(rotulo, campo, valor) {
+      return `
+        <div class="consulta-edit-field">
+          <label>${escapar(rotulo)}</label>
+          <input data-consulta-campo="${escaparAttr(campo)}" type="text" value="${escaparAttr(valor || '')}">
+        </div>
+      `;
+    }
+
+    function consultaTextarea(rotulo, campo, valor) {
+      return `
+        <div class="consulta-edit-field full">
+          <label>${escapar(rotulo)}</label>
+          <textarea data-consulta-campo="${escaparAttr(campo)}">${escapar(valor || '')}</textarea>
+        </div>
+      `;
+    }
+
+    function alternarEdicaoConsultaEfetivo(editar) {
+      const modal = document.querySelector('#consultaModalBackdrop .consulta-modal');
+      if (!modal) return;
+      modal.classList.toggle('editando', !!editar);
+      const btn = document.getElementById('btnEditarConsultaEfetivo');
+      if (btn) btn.textContent = editar ? 'EDITANDO' : 'EDITAR DADOS';
+    }
+
+    function salvarEdicaoConsultaEfetivo(reLogin) {
+      if (!usuarioPodeEditarConsultaEfetivo()) {
+        mostrarToastFt('Edição bloqueada', 'Seu perfil não possui permissão de edição na Consulta do Efetivo.');
+        return;
+      }
+
+      if (!APP.credenciais || !APP.credenciais.login || !APP.credenciais.senha) {
+        mostrarToastFt('Sessão inválida', 'Faça login novamente.');
+        return;
+      }
+
+      const campos = {};
+      document.querySelectorAll('#consultaModalBackdrop [data-consulta-campo]').forEach(function(el) {
+        campos[el.getAttribute('data-consulta-campo')] = String(el.value || '').trim();
+      });
+
+      const btn = document.getElementById('btnSalvarConsultaEfetivo');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'SALVANDO...';
+      }
+
+      chamarApi('atualizar_dados_efetivo', {
+          login: APP.credenciais.login,
+          senha: APP.credenciais.senha,
+          reAlvo: reLogin,
+          campos: JSON.stringify(campos)
+        })
+        .then(function(resp) {
+          if (!resp || !resp.ok) {
+            throw new Error(resp && resp.erro ? resp.erro : 'Falha ao salvar alterações.');
+          }
+
+          const atualizado = resp.dados && resp.dados.policial ? resp.dados.policial : null;
+          if (atualizado && APP.dadosConsultaEfetivo && Array.isArray(APP.dadosConsultaEfetivo.efetivo)) {
+            const lista = APP.dadosConsultaEfetivo.efetivo;
+            const idx = lista.findIndex(function(pm) {
+              return normalizarLoginConsultaCliente(pm.re || '') === normalizarLoginConsultaCliente(atualizado.re || reLogin);
+            });
+            if (idx !== -1) lista[idx] = Object.assign({}, lista[idx], atualizado);
+          }
+
+          mostrarToastFt('Dados atualizados', 'As alterações foram gravadas na CADASTRO GERAL.');
+          filtrarConsultaEfetivo();
+          abrirCardConsultaEfetivo(atualizado ? atualizado.re : reLogin);
+        })
+        .catch(function(err) {
+          mostrarToastFt('Dados não atualizados', err.message || String(err));
+        })
+        .finally(function() {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'SALVAR ALTERAÇÕES';
+          }
+        });
     }
 
 
