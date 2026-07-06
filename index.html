@@ -6408,7 +6408,7 @@ Banco de dados: Google Sheets.
               ${consultaInput('Férias 15 dias 1', 'ferias15a', pm.ferias15a)}
               ${consultaInput('Férias 15 dias 2', 'ferias15b', pm.ferias15b)}
               ${consultaInput('EAP', 'eap', pm.eap)}
-              ${consultaInput('Perfil APP', 'perfilAcesso', pm.perfilAcesso)}
+              ${consultaCampoPerfilApp(pm.perfilAcesso)}
               ${consultaTextarea('Foto (link Google Drive)', 'foto', pm.foto)}
               ${consultaTextarea('Endereço', 'endereco', pm.endereco)}
             </div>
@@ -6465,6 +6465,40 @@ Banco de dados: Google Sheets.
         <div class="consulta-edit-field">
           <label>${escapar(rotulo)}</label>
           <select data-consulta-campo="${escaparAttr(campo)}">${htmlOpcoes}</select>
+        </div>
+      `;
+    }
+
+
+
+    function usuarioPodeEditarPerfilApp() {
+      const perfil = normalizarTexto((APP.usuario && APP.usuario.perfilAcesso) || '');
+      return perfil === 'GESTOR_TEC_FT' || perfil === 'ENC_ADM_FT';
+    }
+
+    function consultaCampoPerfilApp(valor) {
+      const cfg = (APP.dadosConsultaEfetivo && APP.dadosConsultaEfetivo.configListas) || {};
+      if (usuarioPodeEditarPerfilApp()) {
+        return consultaSelect('Perfil APP', 'perfilAcesso', valor || 'EFETIVO', cfg.perfisApp || ['EFETIVO']);
+      }
+      return `
+        <div class="consulta-edit-field">
+          <label>Perfil APP</label>
+          <input type="text" value="${escaparAttr(valor || 'EFETIVO')}" disabled>
+        </div>
+      `;
+    }
+
+    function consultaCampoPerfilAppNovo() {
+      const cfg = (APP.dadosConsultaEfetivo && APP.dadosConsultaEfetivo.configListas) || {};
+      if (usuarioPodeEditarPerfilApp()) {
+        return consultaSelect('Perfil APP', 'perfilAcesso', 'EFETIVO', cfg.perfisApp || ['EFETIVO']);
+      }
+      return `
+        <div class="consulta-edit-field">
+          <label>Perfil APP</label>
+          <input type="text" value="EFETIVO" disabled>
+          <input data-consulta-campo="perfilAcesso" type="hidden" value="EFETIVO">
         </div>
       `;
     }
@@ -6936,7 +6970,7 @@ Banco de dados: Google Sheets.
                   ${consultaInputTipo('Data de nascimento', 'dataNascimento', '', 'date', '', '')}
                   ${consultaInputTipo('Data de entrada na Cia FT', 'dataEntrada', hoje, 'date', '', '')}
                   ${consultaInputTipo('Senha APP', 'senhaApp', '1234', 'text', '4 números', 'maxlength="4" inputmode="numeric" oninput="this.value=this.value.replace(/\\D/g,\'\').slice(0,4)"')}
-                  ${consultaInput('Perfil APP', 'perfilAcesso', 'EFETIVO')}
+                  ${consultaCampoPerfilAppNovo()}
                   ${consultaTextarea('Foto (link Google Drive)', 'foto', '')}
                   ${consultaTextarea('Endereço', 'endereco', '')}
                 </div>
