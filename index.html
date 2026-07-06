@@ -5900,6 +5900,7 @@ Banco de dados: Google Sheets.
                 <p>Consulte policiais conforme o escopo liberado para o seu perfil em PERMISSOES_FT.</p>
               </div>
               <div class="page-actions">
+                ${usuarioPodeInserirConsultaEfetivo() ? '<button class="btn-page" onclick="abrirFormularioNovoPolicial()">ADICIONAR POLICIAL</button>' : ''}
                 <button class="btn-page" onclick="abrirHome()">VOLTAR</button>
               </div>
             </div>
@@ -6175,13 +6176,13 @@ Banco de dados: Google Sheets.
       // URL /file/d/ID/view
       let m = raw.match(/\/d\/([a-zA-Z0-9_-]+)/);
       if (m && m[1]) {
-        return 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(m[1]) + '&sz=w240';
+        return aplicarCacheFotoApp('https://drive.google.com/thumbnail?id=' + encodeURIComponent(m[1]) + '&sz=w240');
       }
 
       // URL open?id=ID ou uc?id=ID
       m = raw.match(/[?&]id=([a-zA-Z0-9_-]+)/);
       if (m && m[1]) {
-        return 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(m[1]) + '&sz=w240';
+        return aplicarCacheFotoApp('https://drive.google.com/thumbnail?id=' + encodeURIComponent(m[1]) + '&sz=w240');
       }
 
       return resolverFotoApp(raw, 'w240');
@@ -6553,6 +6554,7 @@ Banco de dados: Google Sheets.
                 <p>Listagem resumida das viaturas por modalidade. Clique no prefixo para abrir a ficha completa.</p>
               </div>
               <div class="page-actions">
+                ${usuarioPodeInserirViatura() ? '<button class="btn-page" onclick="abrirFormularioNovaViatura()">ADICIONAR VIATURA</button>' : ''}
                 <button class="btn-page" onclick="abrirHome()">VOLTAR</button>
               </div>
             </div>
@@ -6819,6 +6821,273 @@ Banco de dados: Google Sheets.
       return `<div class="viatura-detail ${full ? 'full' : ''}"><small>${escapar(rotulo || '-')}</small><strong>${escapar(valor || '-')}</strong></div>`;
     }
 
+
+
+
+    function usuarioPodeInserirConsultaEfetivo() {
+      const permissao = obterPermissaoCliente('CONSULTA_EFETIVO') || {};
+      return !!(permissao.acessoTotal || permissao.inserir);
+    }
+
+    function abrirFormularioNovoPolicial() {
+      if (!usuarioPodeInserirConsultaEfetivo()) {
+        mostrarToastFt('Inclusão bloqueada', 'Seu perfil não possui permissão para adicionar policial.');
+        return;
+      }
+
+      let modal = document.getElementById('consultaModalBackdrop');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'consultaModalBackdrop';
+        modal.className = 'consulta-modal-backdrop';
+        document.body.appendChild(modal);
+      }
+
+      modal.innerHTML = `
+        <div class="consulta-modal editando" role="dialog" aria-modal="true">
+          <div class="consulta-modal-header">
+            <div class="consulta-foto sem-foto hierarquia-cb-sd">+</div>
+            <div>
+              <h2>Adicionar novo policial</h2>
+              <p>Preencha os dados principais do policial. A inclusão respeita a PERMISSOES_FT.</p>
+            </div>
+            <div class="consulta-modal-actions">
+              <button class="consulta-modal-close" type="button" onclick="fecharCardConsultaEfetivo()">FECHAR</button>
+            </div>
+          </div>
+
+          <div class="consulta-modal-body">
+            <div class="consulta-edit-panel" style="display:block;">
+              <div class="consulta-edit-section">
+                <h3>Dados cadastrais</h3>
+                <div class="consulta-edit-grid">
+                  ${consultaInput('Posto/Graduação', 'postoGrad', '')}
+                  ${consultaInput('RE', 're', '')}
+                  ${consultaInput('Nome de guerra', 'nomeGuerra', '')}
+                  ${consultaInput('Nome completo', 'nomeCompleto', '')}
+                  ${consultaInput('Pelotão', 'pelotao', '')}
+                  ${consultaInput('Modalidade', 'modalidade', '')}
+                  ${consultaInput('Função', 'funcao', '')}
+                  ${consultaInput('Status', 'status', '')}
+                  ${consultaInput('Telefone', 'telefone', '')}
+                  ${consultaInput('E-mail', 'email', '')}
+                  ${consultaInput('CPF', 'cpf', '')}
+                  ${consultaInput('RG', 'rg', '')}
+                  ${consultaInput('Data de nascimento', 'dataNascimento', '')}
+                  ${consultaInput('Data de entrada na Cia FT', 'dataEntrada', '')}
+                  ${consultaInput('Senha APP', 'senhaApp', '1234')}
+                  ${consultaInput('Perfil APP', 'perfilAcesso', 'EFETIVO')}
+                  ${consultaTextarea('Foto (link Google Drive)', 'foto', '')}
+                  ${consultaTextarea('Endereço', 'endereco', '')}
+                </div>
+              </div>
+
+              ${montarGrupoEdicaoMaterialConsulta('ARMA', materialBelicoNovoConsulta('arma'))}
+              ${montarGrupoEdicaoMaterialConsulta('COLETE', materialBelicoNovoConsulta('colete'))}
+              ${montarGrupoEdicaoMaterialConsulta('ALGEMA', materialBelicoNovoConsulta('algema'))}
+
+              <div class="consulta-edit-actions">
+                <button id="btnSalvarNovoPolicial" class="btn-primary-soft" type="button" onclick="salvarNovoPolicial()">SALVAR NOVO POLICIAL</button>
+                <button class="btn-primary-soft" type="button" onclick="fecharCardConsultaEfetivo()">CANCELAR</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      modal.onclick = function(evt) {
+        if (evt.target === modal) fecharCardConsultaEfetivo();
+      };
+    }
+
+    function materialBelicoNovoConsulta(tipo) {
+      const modelos = {
+        arma: [
+          ['armaSerie', 'Nº SERIE'],
+          ['armaPatrimonio', 'PATRIMONIO'],
+          ['armaModelo', 'MODELO'],
+          ['armaMunicaoLote', 'MUNIÇÃO  LOTE'],
+          ['armaLcm', 'LCM']
+        ],
+        colete: [
+          ['coleteSerie', 'Nº SERIE'],
+          ['coletePatrimonio', 'PATRIMONIO'],
+          ['coleteValidadePlaca', 'VALIDADE PLACA'],
+          ['coleteValidadeLcm', 'VALIDADE LCM'],
+          ['coleteTamanho', 'TAMANHO'],
+          ['coleteTipo', 'TIPO'],
+          ['coleteLcm', 'LCM']
+        ],
+        algema: [
+          ['algemaSerie', 'Nº SERIE'],
+          ['algemaPatrimonio', 'PATRIMONIO'],
+          ['algemaQtdeChaves', 'QTDE CHAVES'],
+          ['algemaLcm', 'LCM']
+        ]
+      };
+      return (modelos[tipo] || []).map(function(item) {
+        return { campo: item[0], rotulo: item[1], valor: '' };
+      });
+    }
+
+    function salvarNovoPolicial() {
+      if (!usuarioPodeInserirConsultaEfetivo()) {
+        mostrarToastFt('Inclusão bloqueada', 'Seu perfil não possui permissão para adicionar policial.');
+        return;
+      }
+
+      const campos = {};
+      document.querySelectorAll('#consultaModalBackdrop [data-consulta-campo]').forEach(function(el) {
+        campos[el.getAttribute('data-consulta-campo')] = String(el.value || '').trim();
+      });
+
+      if (!campos.re || !campos.nomeGuerra) {
+        mostrarToastFt('Cadastro não enviado', 'Informe pelo menos RE e Nome de Guerra.');
+        return;
+      }
+
+      const btn = document.getElementById('btnSalvarNovoPolicial');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'SALVANDO...';
+      }
+
+      chamarApi('adicionar_policial', {
+          login: APP.credenciais.login,
+          senha: APP.credenciais.senha,
+          campos: JSON.stringify(campos)
+        })
+        .then(function(resp) {
+          if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao adicionar policial.');
+          mostrarToastFt('Policial adicionado', resp.dados && resp.dados.mensagem ? resp.dados.mensagem : 'Cadastro incluído com sucesso.');
+          fecharCardConsultaEfetivo();
+          return carregarConsultaEfetivo().then(function() { renderizarConsultaEfetivo(); });
+        })
+        .catch(function(err) {
+          mostrarToastFt('Cadastro não enviado', err.message || String(err));
+        })
+        .finally(function() {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'SALVAR NOVO POLICIAL';
+          }
+        });
+    }
+
+    function usuarioPodeInserirViatura() {
+      const permissao = obterPermissaoCliente('VIATURAS') || {};
+      return !!(permissao.acessoTotal || permissao.inserir);
+    }
+
+    function abrirFormularioNovaViatura(modalidadeInicial) {
+      if (!usuarioPodeInserirViatura()) {
+        mostrarToastFt('Inclusão bloqueada', 'Seu perfil não possui permissão para adicionar viatura.');
+        return;
+      }
+
+      const dados = APP.dadosViaturas || {};
+      const cabecalho = Array.isArray(dados.cabecalho) && dados.cabecalho.length ? dados.cabecalho : ['PREFIXO', 'SITUAÇÃO', 'STATUS_APP', 'PLACA', 'MODELO/ANO', 'MODALIDADE'];
+      const modalidade = modalidadeInicial || '';
+
+      let modal = document.getElementById('viaturaModalBackdrop');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'viaturaModalBackdrop';
+        modal.className = 'viatura-modal-backdrop';
+        document.body.appendChild(modal);
+      }
+
+      modal.innerHTML = `
+        <div class="viatura-modal" role="dialog" aria-modal="true">
+          <div class="viatura-modal-header">
+            <div class="viatura-modal-icone">+</div>
+            <div>
+              <h2>Adicionar nova viatura</h2>
+              <p>Preencha os dados conforme a aba VIATURAS.</p>
+            </div>
+            <button class="viatura-modal-close" type="button" onclick="fecharFichaViatura()">FECHAR</button>
+          </div>
+
+          <div class="viatura-modal-body">
+            <div class="viatura-atualizacao-box">
+              <h3>Dados da viatura</h3>
+              <div class="viatura-form-grid">
+                ${cabecalho.map(function(rotulo, idx) {
+                  const norm = normalizarTexto(rotulo || '');
+                  const valor = norm === 'MODALIDADE' ? modalidade : (norm === 'STATUS_APP' || norm === 'STATUS APP' ? 'ATIVA' : '');
+                  return `
+                    <div class="viatura-form-field">
+                      <label>${escapar(rotulo || ('Coluna ' + (idx + 1)))}</label>
+                      <input data-viatura-campo="col${idx + 1}" data-viatura-rotulo="${escaparAttr(rotulo || '')}" type="text" value="${escaparAttr(valor)}">
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+              <button id="btnSalvarNovaViatura" class="viatura-atualizar-btn" type="button" onclick="salvarNovaViatura()">SALVAR NOVA VIATURA</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      modal.onclick = function(evt) {
+        if (evt.target === modal) fecharFichaViatura();
+      };
+    }
+
+    function salvarNovaViatura() {
+      if (!usuarioPodeInserirViatura()) {
+        mostrarToastFt('Inclusão bloqueada', 'Seu perfil não possui permissão para adicionar viatura.');
+        return;
+      }
+
+      const campos = {};
+      document.querySelectorAll('#viaturaModalBackdrop [data-viatura-campo]').forEach(function(el) {
+        const col = el.getAttribute('data-viatura-campo');
+        const rotulo = el.getAttribute('data-viatura-rotulo');
+        const valor = String(el.value || '').trim();
+        campos[col] = valor;
+        if (rotulo) campos[rotulo] = valor;
+        const norm = normalizarTexto(rotulo || '').replace(/\s+/g, '_');
+        if (norm === 'PREFIXO') campos.prefixo = valor;
+        if (norm === 'MODALIDADE') campos.modalidade = valor;
+        if (norm === 'STATUS_APP' || norm === 'STATUS APP') campos.statusApp = valor;
+        if (norm === 'PLACA') campos.placa = valor;
+        if (norm === 'MODELO_ANO' || norm === 'MODELO/ANO') campos.modeloAno = valor;
+        if (norm === 'SITUACAO' || norm === 'SITUAÇÃO') campos.situacao = valor;
+      });
+
+      if (!campos.prefixo || !campos.modalidade) {
+        mostrarToastFt('Viatura não enviada', 'Informe pelo menos PREFIXO e MODALIDADE.');
+        return;
+      }
+
+      const btn = document.getElementById('btnSalvarNovaViatura');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'SALVANDO...';
+      }
+
+      chamarApi('adicionar_viatura', {
+          login: APP.credenciais.login,
+          senha: APP.credenciais.senha,
+          campos: JSON.stringify(campos)
+        })
+        .then(function(resp) {
+          if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao adicionar viatura.');
+          mostrarToastFt('Viatura adicionada', resp.dados && resp.dados.mensagem ? resp.dados.mensagem : 'Cadastro incluído com sucesso.');
+          fecharFichaViatura();
+          return carregarDadosViaturas(true).then(function() { renderizarViaturas(); });
+        })
+        .catch(function(err) {
+          mostrarToastFt('Viatura não enviada', err.message || String(err));
+        })
+        .finally(function() {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'SALVAR NOVA VIATURA';
+          }
+        });
+    }
 
     function sair() {
       APP.usuario = null;
