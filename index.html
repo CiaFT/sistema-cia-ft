@@ -4063,7 +4063,7 @@ Banco de dados: Google Sheets.
 
     function montarCardPolicial(u) {
       const foto = u.foto
-        ? '<img src="' + escapar(u.foto) + '" onerror="this.parentElement.innerHTML=\'👤\'">'
+        ? '<img src="' + escapar(resolverFotoApp(u.foto, 'w1000')) + '" onerror="this.parentElement.innerHTML=\'👤\'">'
         : '👤';
 
       const classeHierarquia = classeVisualHierarquia(u.postoGrad);
@@ -4174,7 +4174,7 @@ Banco de dados: Google Sheets.
       if (!u) return abrirHome();
 
       const foto = u.foto
-        ? '<img src="' + escapar(u.foto) + '" onerror="this.parentElement.innerHTML=\'👤\'">'
+        ? '<img src="' + escapar(resolverFotoApp(u.foto, 'w1000')) + '" onerror="this.parentElement.innerHTML=\'👤\'">'
         : '👤';
 
       const classeHierarquia = classeVisualHierarquia(u.postoGrad);
@@ -6123,18 +6123,53 @@ Banco de dados: Google Sheets.
 
 
 
+
+    function aplicarCacheFotoApp(url) {
+      const texto = String(url || '').trim();
+      if (!texto) return '';
+      if (texto.includes('vFoto=')) return texto;
+      return texto + (texto.includes('?') ? '&' : '?') + 'vFoto=' + Date.now();
+    }
+
+    function resolverFotoApp(valor, tamanho) {
+      const raw = String(valor || '').trim();
+      if (!raw) return '';
+
+      const sz = tamanho || 'w1000';
+
+      if (/^[a-zA-Z0-9_-]{20,}$/.test(raw) && !raw.includes('/') && !raw.includes('?')) {
+        return aplicarCacheFotoApp('https://drive.google.com/thumbnail?id=' + encodeURIComponent(raw) + '&sz=' + encodeURIComponent(sz));
+      }
+
+      if (raw.includes('drive.google.com/thumbnail')) {
+        return aplicarCacheFotoApp(raw);
+      }
+
+      let m = raw.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      if (m && m[1]) {
+        return aplicarCacheFotoApp('https://drive.google.com/thumbnail?id=' + encodeURIComponent(m[1]) + '&sz=' + encodeURIComponent(sz));
+      }
+
+      m = raw.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      if (m && m[1]) {
+        return aplicarCacheFotoApp('https://drive.google.com/thumbnail?id=' + encodeURIComponent(m[1]) + '&sz=' + encodeURIComponent(sz));
+      }
+
+      return aplicarCacheFotoApp(raw);
+    }
+
     function resolverFotoConsulta(valor) {
       const raw = String(valor || '').trim();
       if (!raw) return '';
 
       // ID puro do Google Drive
       if (/^[a-zA-Z0-9_-]{20,}$/.test(raw) && !raw.includes('/') && !raw.includes('?')) {
-        return 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(raw) + '&sz=w240';
+        return resolverFotoApp(raw, 'w240');
       }
 
       // URL já em formato thumbnail
       if (raw.includes('drive.google.com/thumbnail')) {
-        return raw;
+        return resolverFotoApp(raw, 'w240');
       }
 
       // URL /file/d/ID/view
@@ -6149,7 +6184,7 @@ Banco de dados: Google Sheets.
         return 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(m[1]) + '&sz=w240';
       }
 
-      return raw;
+      return resolverFotoApp(raw, 'w240');
     }
 
 
@@ -6367,6 +6402,7 @@ Banco de dados: Google Sheets.
               ${consultaInput('Férias 15 dias 2', 'ferias15b', pm.ferias15b)}
               ${consultaInput('EAP', 'eap', pm.eap)}
               ${consultaInput('Perfil APP', 'perfilAcesso', pm.perfilAcesso)}
+              ${consultaTextarea('Foto (link Google Drive)', 'foto', pm.foto)}
               ${consultaTextarea('Endereço', 'endereco', pm.endereco)}
             </div>
           </div>
