@@ -6965,11 +6965,11 @@ Banco de dados: Google Sheets.
                   ${consultaSelect('Status', 'status', '', cfg.status || [])}
                   ${consultaInputTipo('Telefone', 'telefone', '', 'tel', '11-999999999', 'maxlength="12" inputmode="numeric" oninput="mascararTelefoneConsulta(this)"')}
                   ${consultaInputTipo('E-mail', 'email', '', 'email', 'email@dominio.com', '')}
-                  ${consultaInputTipo('CPF', 'cpf', '', 'text', '000.000.000-00', 'maxlength="14" inputmode="numeric" oninput="mascararCpfConsulta(this)"')}
+                  ${consultaInputTipo('CPF', 'cpf', '', 'text', '000.000.000-00', 'maxlength="14" inputmode="numeric" oninput="mascararCpfConsulta(this); atualizarSenhaCpfNovoPolicial()"')}
                   ${consultaInput('RG', 'rg', '')}
                   ${consultaInputTipo('Data de nascimento', 'dataNascimento', '', 'date', '', '')}
                   ${consultaInputTipo('Data de entrada na Cia FT', 'dataEntrada', hoje, 'date', '', '')}
-                  ${consultaInputTipo('Senha APP', 'senhaApp', '1234', 'text', '4 números', 'maxlength="4" inputmode="numeric" oninput="this.value=this.value.replace(/\\D/g,\'\').slice(0,4)"')}
+                  ${consultaInputTipo('Senha APP', 'senhaApp', '', 'text', 'Gerada pelos 4 primeiros dígitos do CPF', 'maxlength="4" inputmode="numeric" readonly')}
                   ${consultaCampoPerfilAppNovo()}
                   ${consultaTextarea('Foto (link Google Drive)', 'foto', '')}
                   ${consultaTextarea('Endereço', 'endereco', '')}
@@ -7022,6 +7022,16 @@ Banco de dados: Google Sheets.
       return (modelos[tipo] || []).map(function(item) {
         return { campo: item[0], rotulo: item[1], valor: '' };
       });
+    }
+
+
+    function atualizarSenhaCpfNovoPolicial() {
+      const cpfEl = document.querySelector('#consultaModalBackdrop [data-consulta-campo="cpf"]');
+      const senhaEl = document.querySelector('#consultaModalBackdrop [data-consulta-campo="senhaApp"]');
+      if (!senhaEl) return;
+
+      const digitos = String(cpfEl ? cpfEl.value : '').replace(/\D/g, '');
+      senhaEl.value = digitos.length >= 4 ? digitos.substring(0, 4) : '';
     }
 
     function salvarNovoPolicial() {
