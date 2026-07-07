@@ -4062,6 +4062,101 @@ Banco de dados: Google Sheets.
       line-height: 1.4;
     }
 
+
+    .resenha-operacional-bloco {
+      border: 1px solid rgba(55,66,71,.12);
+      background: #ffffff;
+      border-radius: 18px;
+      overflow: hidden;
+      margin-top: 12px;
+      box-shadow: 0 10px 22px rgba(15,23,42,.06);
+    }
+
+    .resenha-operacional-titulo {
+      background:
+        radial-gradient(circle at top left, rgba(55,66,71,.20), transparent 56%),
+        linear-gradient(180deg, #ffffff, #f8fafc);
+      border-bottom: 1px solid rgba(55,66,71,.12);
+      color: #17202a;
+      padding: 12px 14px;
+      font-size: 13px;
+      font-weight: 1000;
+      letter-spacing: .35px;
+      text-transform: uppercase;
+    }
+
+    .resenha-operacional-corpo {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      background: #fbfdff;
+    }
+
+    .resenha-operacional-card {
+      border: 1px solid rgba(55,66,71,.12);
+      background:
+        radial-gradient(circle at top left, rgba(55,66,71,.08), transparent 56%),
+        linear-gradient(180deg, #ffffff, #f8fafc);
+      border-radius: 16px;
+      padding: 12px;
+    }
+
+    .resenha-operacional-card h4 {
+      margin: 0 0 9px;
+      color: #17202a;
+      font-size: 14px;
+      line-height: 1.2;
+      font-weight: 1000;
+    }
+
+    .resenha-operacional-linha {
+      display: grid;
+      grid-template-columns: 170px 1fr;
+      gap: 9px;
+      align-items: start;
+      border-top: 1px solid rgba(55,66,71,.08);
+      padding-top: 8px;
+      margin-top: 8px;
+      color: #17202a;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .resenha-operacional-linha:first-of-type {
+      border-top: 0;
+      padding-top: 0;
+      margin-top: 0;
+    }
+
+    .resenha-operacional-linha small {
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .15px;
+    }
+
+    .resenha-operacional-linha strong,
+    .resenha-operacional-linha span {
+      color: #17202a;
+      font-size: 13px;
+      font-weight: 850;
+      overflow-wrap: anywhere;
+    }
+
+    .resenha-operacional-dupla {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 8px;
+    }
+
+    .resenha-operacional-observacao {
+      white-space: pre-line;
+      color: #17202a;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
     @media (max-width: 760px) {
       .resenha-view-nav {
         grid-template-columns: 1fr;
@@ -4069,6 +4164,12 @@ Banco de dados: Google Sheets.
 
       .resenha-view-grid {
         grid-template-columns: 1fr;
+      }
+
+
+      .resenha-operacional-linha {
+        grid-template-columns: 1fr;
+        gap: 4px;
       }
 
       .resenha-view-card-header {
@@ -7438,7 +7539,9 @@ Banco de dados: Google Sheets.
 
     function usuarioPodeInserirViatura() {
       const permissao = obterPermissaoCliente('VIATURAS') || {};
-      return !!(permissao.acessoTotal || permissao.inserir);
+      const perfil = normalizarTexto(APP.usuario && APP.usuario.perfilAcesso);
+      const perfilAutorizado = ['GESTOR', 'GESTOR_TEC_FT', 'ENC_ADM_FT', 'AUX_ADM_FT'].indexOf(perfil) !== -1;
+      return perfilAutorizado && !!(permissao.acessoTotal || permissao.inserir);
     }
 
     function abrirFormularioNovaViatura(modalidadeInicial) {
@@ -7712,17 +7815,160 @@ Banco de dados: Google Sheets.
           </div>
           <div class="resenha-view-body">
             <div class="resenha-view-grid">
-              ${renderizarCamposObjetoResenha(cabecalho, ['id','titulo','status']).join('') || '<div class="resenha-view-empty">Cabeçalho sem campos detalhados.</div>'}
+              ${renderizarCamposObjetoResenha(cabecalho, ['id','titulo','status','observacoes']).join('') || '<div class="resenha-view-empty">Cabeçalho sem campos detalhados.</div>'}
             </div>
 
-            <div class="resenha-view-section-title">Itens da resenha</div>
-            ${itens.length ? '<div class="resenha-view-list">' + itens.map(renderizarLinhaObjetoResenha).join('') + '</div>' : '<div class="resenha-view-empty">Nenhum item vinculado a esta resenha.</div>'}
-
-            <div class="resenha-view-section-title">Complementos e observações</div>
-            ${complementos.length ? '<div class="resenha-view-list">' + complementos.map(renderizarLinhaObjetoResenha).join('') + '</div>' : '<div class="resenha-view-empty">Nenhum complemento registrado.</div>'}
+            ${renderizarBlocoForcaTaticaResenha(itens)}
+            ${renderizarBlocoRocamResenha(itens)}
+            ${renderizarBlocoFolgasResenha(itens)}
+            ${renderizarBlocoAfastamentosResenha(itens)}
+            ${renderizarBlocoObservacoesResenha(cabecalho, complementos)}
           </div>
         </div>
       `;
+    }
+
+
+    function agruparItensResenhaPorTipo(itens, tipoAlvo) {
+      const grupos = {};
+      (itens || []).forEach(function(item) {
+        const tipo = normalizarTexto(item.tipo || '');
+        if (tipo !== normalizarTexto(tipoAlvo)) return;
+        const grupo = String(item.grupo || '1').trim() || '1';
+        if (!grupos[grupo]) grupos[grupo] = [];
+        grupos[grupo].push(item);
+      });
+      return Object.keys(grupos)
+        .sort(function(a, b) { return Number(a) - Number(b); })
+        .map(function(chave) { return { grupo: chave, itens: grupos[chave] }; });
+    }
+
+
+    function valorItemResenha(itens, nomes) {
+      const alvos = (nomes || []).map(function(n) { return normalizarTexto(n); });
+      const achado = (itens || []).find(function(item) {
+        const campo = normalizarTexto(item.campo || '');
+        return alvos.some(function(alvo) { return campo === alvo || campo.includes(alvo); });
+      });
+      return achado ? String(achado.valor || '').trim() : '';
+    }
+
+
+    function linhaOperacionalResenha(rotulo, valor) {
+      return `
+        <div class="resenha-operacional-linha">
+          <small>${escapar(rotulo)}</small>
+          <strong>${escapar(valor || '-')}</strong>
+        </div>
+      `;
+    }
+
+
+    function blocoOperacionalResenha(titulo, conteudo) {
+      return `
+        <div class="resenha-operacional-bloco">
+          <div class="resenha-operacional-titulo">${escapar(titulo)}</div>
+          <div class="resenha-operacional-corpo">${conteudo || '<div class="resenha-view-empty">Nenhum registro informado.</div>'}</div>
+        </div>
+      `;
+    }
+
+
+    function renderizarBlocoForcaTaticaResenha(itens) {
+      const grupos = agruparItensResenhaPorTipo(itens, 'FT');
+      const html = grupos.map(function(g) {
+        const lista = g.itens;
+        return `
+          <div class="resenha-operacional-card">
+            <h4>Equipe ${escapar(g.grupo)}</h4>
+            ${linhaOperacionalResenha('Prefixo da VTR', valorItemResenha(lista, ['VTR', 'ft' + g.grupo + '_vtr']))}
+            ${linhaOperacionalResenha('Comandante', valorItemResenha(lista, ['Comandante']))}
+            ${linhaOperacionalResenha('Motorista', valorItemResenha(lista, ['Motorista']))}
+            ${linhaOperacionalResenha('Auxiliar 1', valorItemResenha(lista, ['Auxiliar 1', 'aux1']))}
+            ${linhaOperacionalResenha('Auxiliar 2', valorItemResenha(lista, ['Auxiliar 2', 'aux2']))}
+            ${linhaOperacionalResenha('Auxiliar 3', valorItemResenha(lista, ['Auxiliar 3', 'aux3']))}
+          </div>
+        `;
+      }).join('');
+      return blocoOperacionalResenha('EQUIPES DE FORÇA TÁTICA', html);
+    }
+
+
+    function renderizarBlocoRocamResenha(itens) {
+      const grupos = agruparItensResenhaPorTipo(itens, 'ROCAM');
+      const html = grupos.map(function(g) {
+        const lista = g.itens;
+        const motoEnc = valorItemResenha(lista, ['Moto do encarregado']);
+        const encarregado = valorItemResenha(lista, ['Encarregado']);
+        const motoAux = valorItemResenha(lista, ['Moto do auxiliar']);
+        const auxiliar = valorItemResenha(lista, ['Auxiliar']);
+        return `
+          <div class="resenha-operacional-card">
+            <h4>ROCAM ${escapar(g.grupo)}</h4>
+            <div class="resenha-operacional-dupla">
+              ${linhaOperacionalResenha('Prefixo VTR - Encarregado', [motoEnc, encarregado].filter(Boolean).join(' - '))}
+              ${linhaOperacionalResenha('Prefixo VTR - Auxiliar', [motoAux, auxiliar].filter(Boolean).join(' - '))}
+            </div>
+          </div>
+        `;
+      }).join('');
+      return blocoOperacionalResenha('EQUIPES DE ROCAM', html);
+    }
+
+
+    function renderizarBlocoFolgasResenha(itens) {
+      const grupos = agruparItensResenhaPorTipo(itens, 'FOLGA_DISPENSA');
+      const html = grupos.map(function(g) {
+        const lista = g.itens;
+        const policial = valorItemResenha(lista, ['Policial']);
+        const tipo = valorItemResenha(lista, ['Tipo']);
+        const outras = lista
+          .filter(function(item) {
+            const c = normalizarTexto(item.campo || '');
+            return c !== 'POLICIAL' && c !== 'TIPO';
+          })
+          .map(function(item) { return rotuloResenha(item.campo) + ': ' + item.valor; })
+          .join(' • ');
+        return `
+          <div class="resenha-operacional-card">
+            <h4>Folga / Dispensa ${escapar(g.grupo)}</h4>
+            ${linhaOperacionalResenha('Identificação do policial', policial)}
+            ${linhaOperacionalResenha('Tipo de afastamento', tipo)}
+            ${linhaOperacionalResenha('Outras informações', outras)}
+          </div>
+        `;
+      }).join('');
+      return blocoOperacionalResenha('FOLGAS E DISPENSAS', html);
+    }
+
+
+    function renderizarBlocoAfastamentosResenha(itens) {
+      const grupos = agruparItensResenhaPorTipo(itens, 'AFASTAMENTO');
+      const html = grupos.map(function(g) {
+        const lista = g.itens;
+        return `
+          <div class="resenha-operacional-card">
+            <h4>Afastamento ${escapar(g.grupo)}</h4>
+            ${linhaOperacionalResenha('Identificação do policial', valorItemResenha(lista, ['Policial']))}
+            ${linhaOperacionalResenha('Tipo de afastamento', valorItemResenha(lista, ['Tipo de afastamento', 'Tipo']))}
+          </div>
+        `;
+      }).join('');
+      return blocoOperacionalResenha('AFASTAMENTOS', html);
+    }
+
+
+    function renderizarBlocoObservacoesResenha(cabecalho, complementos) {
+      const textos = [];
+      if (cabecalho && cabecalho.observacoes) textos.push(cabecalho.observacoes);
+      (complementos || []).forEach(function(c) {
+        if (c && c.texto) textos.push(c.texto);
+      });
+      const texto = textos.filter(Boolean).join('\n');
+      const html = texto
+        ? '<div class="resenha-operacional-card"><div class="resenha-operacional-observacao">' + escapar(texto) + '</div></div>'
+        : '';
+      return blocoOperacionalResenha('OBSERVAÇÕES', html);
     }
 
 
