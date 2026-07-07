@@ -4087,9 +4087,15 @@ Banco de dados: Google Sheets.
 
     .resenha-operacional-corpo {
       display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px;
       padding: 12px;
       background: #fbfdff;
+      align-items: start;
+    }
+
+    .resenha-operacional-corpo .resenha-view-empty {
+      grid-column: 1 / -1;
     }
 
     .resenha-operacional-card {
@@ -4166,6 +4172,10 @@ Banco de dados: Google Sheets.
         grid-template-columns: 1fr;
       }
 
+
+      .resenha-operacional-corpo {
+        grid-template-columns: 1fr;
+      }
 
       .resenha-operacional-linha {
         grid-template-columns: 1fr;
@@ -7874,6 +7884,79 @@ Banco de dados: Google Sheets.
     }
 
 
+    function postoGradConhecidoResenha(texto) {
+      const original = String(texto || '').trim().replace(/\s+/g, ' ');
+      const norm = normalizarTexto(original).replace(/[º°ª.]/g, '').replace(/\s+/g, ' ');
+      const postos = [
+        { n: '1 TEN', r: '1º TEN' },
+        { n: '2 TEN', r: '2º TEN' },
+        { n: 'SUBTEN', r: 'SUBTEN' },
+        { n: '1 SGT', r: '1º SGT' },
+        { n: '2 SGT', r: '2º SGT' },
+        { n: '3 SGT', r: '3º SGT' },
+        { n: 'MAJ', r: 'MAJ' },
+        { n: 'CAP', r: 'CAP' },
+        { n: 'ASP', r: 'ASP' },
+        { n: 'CB', r: 'CB' },
+        { n: 'SD', r: 'SD' }
+      ];
+
+      for (let i = 0; i < postos.length; i++) {
+        if (norm === postos[i].n || norm.startsWith(postos[i].n + ' ')) {
+          return postos[i];
+        }
+      }
+
+      return null;
+    }
+
+
+    function formatarIdentificacaoResenha(valor) {
+      const texto = String(valor || '').trim().replace(/\s+/g, ' ');
+      if (!texto) return '';
+
+      let re = '';
+      let base = texto;
+
+      const reMatch = texto.match(/(?:^|\b)RE\s*[:\-]?\s*([0-9]{5,6}(?:\-[0-9Xx])?)/i);
+      if (reMatch) {
+        re = reMatch[1];
+        base = texto.replace(reMatch[0], '').replace(/[—–-]+\s*$/g, '').replace(/^\s*[—–-]+/g, '').trim();
+      } else {
+        const numMatch = texto.match(/\b([0-9]{5,6}(?:\-[0-9Xx])?)\b/);
+        if (numMatch) {
+          re = numMatch[1];
+          base = texto.replace(numMatch[0], '').trim();
+        }
+      }
+
+      base = base.replace(/\s*[—–]\s*/g, ' ').replace(/\s+-\s+/g, ' ').replace(/\s+/g, ' ').trim();
+      const posto = postoGradConhecidoResenha(base);
+
+      if (posto) {
+        const nome = base
+          .replace(new RegExp('^' + posto.n.replace(/ /g, '\\s+'), 'i'), '')
+          .replace(/^\s+/, '')
+          .trim();
+        return [posto.r, re, nome].filter(Boolean).join(' ');
+      }
+
+      return [re ? 'RE ' + re : '', base].filter(Boolean).join(' ').trim() || texto;
+    }
+
+
+    function prefixoViaturaResenha(valor) {
+      const texto = String(valor || '').trim();
+      if (!texto) return '';
+      return texto
+        .split('—')[0]
+        .split('–')[0]
+        .split(' / ')[0]
+        .split(' - ')[0]
+        .trim();
+    }
+
+
     function renderizarBlocoForcaTaticaResenha(itens) {
       const grupos = agruparItensResenhaPorTipo(itens, 'FT');
       const html = grupos.map(function(g) {
@@ -7881,12 +7964,12 @@ Banco de dados: Google Sheets.
         return `
           <div class="resenha-operacional-card">
             <h4>Equipe ${escapar(g.grupo)}</h4>
-            ${linhaOperacionalResenha('Prefixo da VTR', valorItemResenha(lista, ['VTR', 'ft' + g.grupo + '_vtr']))}
-            ${linhaOperacionalResenha('Comandante', valorItemResenha(lista, ['Comandante']))}
-            ${linhaOperacionalResenha('Motorista', valorItemResenha(lista, ['Motorista']))}
-            ${linhaOperacionalResenha('Auxiliar 1', valorItemResenha(lista, ['Auxiliar 1', 'aux1']))}
-            ${linhaOperacionalResenha('Auxiliar 2', valorItemResenha(lista, ['Auxiliar 2', 'aux2']))}
-            ${linhaOperacionalResenha('Auxiliar 3', valorItemResenha(lista, ['Auxiliar 3', 'aux3']))}
+            ${linhaOperacionalResenha('Prefixo da VTR', prefixoViaturaResenha(valorItemResenha(lista, ['VTR', 'ft' + g.grupo + '_vtr'])))}
+            ${linhaOperacionalResenha('Comandante', formatarIdentificacaoResenha(valorItemResenha(lista, ['Comandante'])))}
+            ${linhaOperacionalResenha('Motorista', formatarIdentificacaoResenha(valorItemResenha(lista, ['Motorista'])))}
+            ${linhaOperacionalResenha('Auxiliar 1', formatarIdentificacaoResenha(valorItemResenha(lista, ['Auxiliar 1', 'aux1'])))}
+            ${linhaOperacionalResenha('Auxiliar 2', formatarIdentificacaoResenha(valorItemResenha(lista, ['Auxiliar 2', 'aux2'])))}
+            ${linhaOperacionalResenha('Auxiliar 3', formatarIdentificacaoResenha(valorItemResenha(lista, ['Auxiliar 3', 'aux3'])))}
           </div>
         `;
       }).join('');
@@ -7898,16 +7981,16 @@ Banco de dados: Google Sheets.
       const grupos = agruparItensResenhaPorTipo(itens, 'ROCAM');
       const html = grupos.map(function(g) {
         const lista = g.itens;
-        const motoEnc = valorItemResenha(lista, ['Moto do encarregado']);
-        const encarregado = valorItemResenha(lista, ['Encarregado']);
-        const motoAux = valorItemResenha(lista, ['Moto do auxiliar']);
-        const auxiliar = valorItemResenha(lista, ['Auxiliar']);
+        const motoEnc = prefixoViaturaResenha(valorItemResenha(lista, ['Moto do encarregado']));
+        const encarregado = formatarIdentificacaoResenha(valorItemResenha(lista, ['Encarregado']));
+        const motoAux = prefixoViaturaResenha(valorItemResenha(lista, ['Moto do auxiliar']));
+        const auxiliar = formatarIdentificacaoResenha(valorItemResenha(lista, ['Auxiliar']));
         return `
           <div class="resenha-operacional-card">
             <h4>ROCAM ${escapar(g.grupo)}</h4>
             <div class="resenha-operacional-dupla">
-              ${linhaOperacionalResenha('Prefixo VTR - Encarregado', [motoEnc, encarregado].filter(Boolean).join(' - '))}
-              ${linhaOperacionalResenha('Prefixo VTR - Auxiliar', [motoAux, auxiliar].filter(Boolean).join(' - '))}
+              ${linhaOperacionalResenha('VTR - Comandante', [motoEnc, encarregado].filter(Boolean).join(' - '))}
+              ${linhaOperacionalResenha('VTR - Auxiliar', [motoAux, auxiliar].filter(Boolean).join(' - '))}
             </div>
           </div>
         `;
@@ -7920,7 +8003,7 @@ Banco de dados: Google Sheets.
       const grupos = agruparItensResenhaPorTipo(itens, 'FOLGA_DISPENSA');
       const html = grupos.map(function(g) {
         const lista = g.itens;
-        const policial = valorItemResenha(lista, ['Policial']);
+        const policial = formatarIdentificacaoResenha(valorItemResenha(lista, ['Policial']));
         const tipo = valorItemResenha(lista, ['Tipo']);
         const outras = lista
           .filter(function(item) {
@@ -7949,7 +8032,7 @@ Banco de dados: Google Sheets.
         return `
           <div class="resenha-operacional-card">
             <h4>Afastamento ${escapar(g.grupo)}</h4>
-            ${linhaOperacionalResenha('Identificação do policial', valorItemResenha(lista, ['Policial']))}
+            ${linhaOperacionalResenha('Identificação do policial', formatarIdentificacaoResenha(valorItemResenha(lista, ['Policial'])))}
             ${linhaOperacionalResenha('Tipo de afastamento', valorItemResenha(lista, ['Tipo de afastamento', 'Tipo']))}
           </div>
         `;
