@@ -4163,6 +4163,54 @@ Banco de dados: Google Sheets.
       line-height: 1.45;
     }
 
+    .resenha-rocam-linhas {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 8px;
+    }
+
+    .resenha-rocam-linha {
+      display: grid;
+      grid-template-columns: minmax(130px, 180px) minmax(0, 1fr);
+      gap: 14px;
+      align-items: center;
+      border-top: 1px solid rgba(55,66,71,.08);
+      padding-top: 8px;
+      margin-top: 8px;
+    }
+
+    .resenha-rocam-linha:first-child {
+      border-top: 0;
+      padding-top: 0;
+      margin-top: 0;
+    }
+
+    .resenha-rocam-vtr,
+    .resenha-rocam-pm {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .resenha-rocam-vtr small,
+    .resenha-rocam-pm small {
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: none;
+      letter-spacing: .1px;
+      white-space: nowrap;
+    }
+
+    .resenha-rocam-vtr strong,
+    .resenha-rocam-pm strong {
+      color: #17202a;
+      font-size: 13px;
+      font-weight: 850;
+      overflow-wrap: anywhere;
+    }
+
     @media (max-width: 760px) {
       .resenha-view-nav {
         grid-template-columns: 1fr;
@@ -4180,6 +4228,20 @@ Banco de dados: Google Sheets.
       .resenha-operacional-linha {
         grid-template-columns: 1fr;
         gap: 4px;
+      }
+
+      .resenha-rocam-linha {
+        grid-template-columns: 1fr;
+        gap: 5px;
+        align-items: start;
+      }
+
+      .resenha-rocam-vtr,
+      .resenha-rocam-pm {
+        display: grid;
+        grid-template-columns: 112px 1fr;
+        gap: 6px;
+        align-items: baseline;
       }
 
       .resenha-view-card-header {
@@ -7988,14 +8050,30 @@ Banco de dados: Google Sheets.
         return `
           <div class="resenha-operacional-card">
             <h4>ROCAM ${escapar(g.grupo)}</h4>
-            <div class="resenha-operacional-dupla">
-              ${linhaOperacionalResenha('VTR - Comandante', [motoEnc, encarregado].filter(Boolean).join(' - '))}
-              ${linhaOperacionalResenha('VTR - Auxiliar', [motoAux, auxiliar].filter(Boolean).join(' - '))}
+            <div class="resenha-rocam-linhas">
+              ${linhaRocamResenha(motoEnc, 'Encarregado', encarregado)}
+              ${linhaRocamResenha(motoAux, 'Auxiliar', auxiliar)}
             </div>
           </div>
         `;
       }).join('');
       return blocoOperacionalResenha('EQUIPES DE ROCAM', html);
+    }
+
+
+    function linhaRocamResenha(prefixo, funcao, policial) {
+      return `
+        <div class="resenha-rocam-linha">
+          <div class="resenha-rocam-vtr">
+            <small>Prefixo da VTR:</small>
+            <strong>${escapar(prefixo || '-')}</strong>
+          </div>
+          <div class="resenha-rocam-pm">
+            <small>${escapar(funcao || 'Policial')}:</small>
+            <strong>${escapar(policial || '-')}</strong>
+          </div>
+        </div>
+      `;
     }
 
 
