@@ -6191,6 +6191,9 @@ Banco de dados: Google Sheets.
 
       const podeEnviar = usuarioTemPermissaoCliente('ESCALAS_ADM', 'inserir');
       const podeAprovar = usuarioTemPermissaoCliente('ESCALAS_ADM', 'aprovar');
+      const minhaEscalaAdm = encontrarMinhaEscalaAdm(dados.escalas || []);
+      APP.minhaEscalaAdmAtual = minhaEscalaAdm || null;
+      const podeEditarMinhaEscala = podeEnviar && escalaAdmPodeSerEditadaPeloUsuario(minhaEscalaAdm);
 
       document.getElementById('escalasAdmConteudo').innerHTML = `
         <div class="adm-grid">
@@ -6222,7 +6225,7 @@ Banco de dados: Google Sheets.
             </div>
 
             <div class="adm-card-body">
-              ${podeEnviar ? montarFormularioEscalasAdm(dias) : montarBloqueioEnvioEscalasAdm()}
+              ${podeEnviar ? montarFormularioEscalasAdm(dias, minhaEscalaAdm, podeEditarMinhaEscala) : montarBloqueioEnvioEscalasAdm()}
             </div>
           </div>
         </div>
@@ -6242,25 +6245,58 @@ Banco de dados: Google Sheets.
       `;
 
       instalarEventosEscalasAdm();
+      preencherFormularioEscalasAdm(minhaEscalaAdm, dias, podeEditarMinhaEscala);
     }
 
 
-    function montarFormularioEscalasAdm(dias) {
+    function encontrarMinhaEscalaAdm(lista) {
+      const login = normalizarLoginCliente(APP.usuario && (APP.usuario.login || APP.usuario.re));
+      if (!login || !Array.isArray(lista)) return null;
+
+      return lista.find(function(item) {
+        return normalizarLoginCliente(item && item.re) === login;
+      }) || null;
+    }
+
+
+    function escalaAdmPodeSerEditadaPeloUsuario(item) {
+      if (!item) return true;
+
+      const podeEditarModulo = usuarioTemPermissaoCliente('ESCALAS_ADM', 'editar') || usuarioTemPermissaoCliente('ESCALAS_ADM', 'aprovar');
+      if (podeEditarModulo) return true;
+
+      const decisao = normalizarTexto(item.decisao || 'PENDENTE');
+      if (!decisao || decisao === 'PENDENTE' || decisao.includes('CORRECAO')) return true;
+
+      return false;
+    }
+
+
+    function montarFormularioEscalasAdm(dias, minhaEscala, podeEditarMinhaEscala) {
+      const temEscala = !!minhaEscala;
+      const decisao = temEscala ? (minhaEscala.decisao || 'PENDENTE') : '';
+      const textoBotao = temEscala ? 'ATUALIZAR ESCALA ADM' : 'ENVIAR ESCALA ADM';
+      const avisoEdicao = temEscala
+        ? `<div class="adm-alerta"><strong>Escala já enviada.</strong><br>Decisão atual: <strong>${escapar(decisao || '-')}</strong>. ${podeEditarMinhaEscala ? 'Você pode ajustar e reenviar. Após salvar, a decisão volta para PENDENTE para nova análise.' : 'Esta escala não está liberada para alteração pelo seu perfil neste momento.'}</div>`
+        : '';
+      const disabledAttr = podeEditarMinhaEscala ? '' : ' disabled';
+
       return `
-        <form id="formEscalasAdm">
+        <form id="formEscalasAdm" data-tem-escala="${temEscala ? 'SIM' : 'NAO'}">
+          ${avisoEdicao}
           <div class="adm-week-grid">
-            ${dias.map(montarDiaEscalaAdm).join('')}
+            ${dias.map(function(dia) { return montarDiaEscalaAdm(dia, disabledAttr); }).join('')}
           </div>
 
           <div class="adm-form-field">
             <label>Observações complementares</label>
-            <textarea id="escalaAdmObservacoes" placeholder="Observações da escala administrativa, se necessário"></textarea>
+            <textarea id="escalaAdmObservacoes" placeholder="Observações da escala administrativa, se necessário"${disabledAttr}></textarea>
           </div>
 
           <div id="admValidacao" class="adm-validacao"></div>
 
-          <button type="button" class="adm-submit" onclick="enviarEscalaAdm()">
-            ENVIAR ESCALA ADM
+          <button type="button" class="adm-submit" onclick="enviarEscalaAdm()"${disabledAttr}>
+            ${textoBotao}
           </button>
         </form>
       `;
@@ -6276,7 +6312,8 @@ Banco de dados: Google Sheets.
     }
 
 
-    function montarDiaEscalaAdm(dia) {
+    function montarDiaEscalaAdm(dia, disabledAttr) {
+      const disabled = disabledAttr || '';
       return `
         <div class="adm-day-card" data-dia="${escaparAttr(dia.chave)}">
           <div class="adm-day-head">
@@ -6284,13 +6321,13 @@ Banco de dados: Google Sheets.
             <strong>${escapar(dia.diaMes)}</strong>
           </div>
 
-          <select id="adm_${escaparAttr(dia.chave)}_tipo" onchange="atualizarDiaEscalaAdm('${escaparAttr(dia.chave)}')">
+          <select id="adm_${escaparAttr(dia.chave)}_tipo" onchange="atualizarDiaEscalaAdm('${escaparAttr(dia.chave)}')"${disabled}>
             ${optionsTiposEscalaAdm()}
           </select>
 
-          <input id="adm_${escaparAttr(dia.chave)}_horario" class="campo-oculto" type="text" placeholder="das 07h00 às 18h00">
+          <input id="adm_${escaparAttr(dia.chave)}_horario" class="campo-oculto" type="text" placeholder="das 07h00 às 18h00"${disabled}>
 
-          <input id="adm_${escaparAttr(dia.chave)}_detalhe" class="campo-oculto" type="text" placeholder="Descreva o dia">
+          <input id="adm_${escaparAttr(dia.chave)}_detalhe" class="campo-oculto" type="text" placeholder="Descreva o dia"${disabled}>
         </div>
       `;
     }
@@ -6310,6 +6347,51 @@ Banco de dados: Google Sheets.
       document.querySelectorAll('[data-dia]').forEach(function(card) {
         atualizarDiaEscalaAdm(card.getAttribute('data-dia'));
       });
+    }
+
+
+    function preencherFormularioEscalasAdm(item, dias, podeEditar) {
+      if (!item || !Array.isArray(dias)) return;
+
+      dias.forEach(function(dia) {
+        const valor = String(item[dia.chave] || '').trim();
+        const partes = interpretarValorEscalaAdm(valor);
+        const tipoEl = document.getElementById('adm_' + dia.chave + '_tipo');
+        const horarioEl = document.getElementById('adm_' + dia.chave + '_horario');
+        const detalheEl = document.getElementById('adm_' + dia.chave + '_detalhe');
+
+        if (tipoEl) tipoEl.value = partes.tipo;
+        atualizarDiaEscalaAdm(dia.chave);
+        if (horarioEl) horarioEl.value = partes.horario || '';
+        if (detalheEl) detalheEl.value = partes.detalhe || '';
+      });
+
+      const obsEl = document.getElementById('escalaAdmObservacoes');
+      if (obsEl) obsEl.value = item.observacoes || '';
+    }
+
+
+    function interpretarValorEscalaAdm(valor) {
+      const texto = String(valor || '').trim();
+      const norm = normalizarTexto(texto);
+
+      if (!texto) return { tipo: '', horario: '', detalhe: '' };
+      if (norm.indexOf('OUTROS -') === 0) {
+        return { tipo: 'OUTROS', horario: '', detalhe: texto.replace(/^OUTROS\s*-\s*/i, '') };
+      }
+      if (norm.indexOf('DAS ') === 0 || /\d{1,2}[:Hh]\d{0,2}/.test(texto)) {
+        return { tipo: 'EXPEDIENTE', horario: texto, detalhe: '' };
+      }
+
+      return { tipo: texto, horario: '', detalhe: '' };
+    }
+
+
+    function normalizarLoginCliente(valor) {
+      const texto = String(valor || '').trim();
+      const antesHifen = texto.split('-')[0];
+      const nums = antesHifen.replace(/\D/g, '');
+      return nums.length >= 6 ? nums.substring(0, 6) : nums;
     }
 
 
@@ -6338,6 +6420,11 @@ Banco de dados: Google Sheets.
         return;
       }
 
+      if (APP.minhaEscalaAdmAtual && !escalaAdmPodeSerEditadaPeloUsuario(APP.minhaEscalaAdmAtual)) {
+        mostrarToastFt('Edição bloqueada', 'Esta escala não está liberada para alteração pelo seu perfil neste momento.');
+        return;
+      }
+
       const dados = coletarEscalaAdmFormulario();
 
       if (!dados.ok) {
@@ -6357,7 +6444,8 @@ Banco de dados: Google Sheets.
             throw new Error(resp && resp.erro ? resp.erro : 'Falha ao enviar Escala ADM.');
           }
 
-          mostrarToastFt('Escala ADM enviada', 'Sua escala administrativa foi registrada com decisão PENDENTE.');
+          const jaTinhaEscala = !!APP.minhaEscalaAdmAtual;
+          mostrarToastFt(jaTinhaEscala ? 'Escala ADM atualizada' : 'Escala ADM enviada', jaTinhaEscala ? 'Sua escala administrativa foi atualizada e voltou para decisão PENDENTE.' : 'Sua escala administrativa foi registrada com decisão PENDENTE.');
 
           APP.dadosEscalasAdm = null;
       APP.dadosConsultaEfetivo = null;
