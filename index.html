@@ -6522,10 +6522,12 @@ Banco de dados: Google Sheets.
 
 
     function montarCardAnaliseEscalaAdm(item, dias) {
-      const idSeguro = String(item.id || '').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const chaveAnalise = String(item.id || item.numeroLinha || item.re || '').replace(/[^a-zA-Z0-9_-]/g, '_');
       const policial = [item.postoGrad, item.re, item.nomeGuerra].filter(Boolean).join(' ');
       const decisao = item.decisao || 'PENDENTE';
       const justificativaAtual = item.justificativa || '';
+      const idEscala = item.id || '';
+      const linhaEscala = item.numeroLinha || '';
 
       return `
         <div class="adm-analise-card">
@@ -6553,12 +6555,12 @@ Banco de dados: Google Sheets.
             ${justificativaAtual ? '<br><strong>Última justificativa:</strong> ' + escapar(justificativaAtual) : ''}
           </div>
 
-          <textarea id="admJust_${escaparAttr(idSeguro)}" class="adm-analise-justificativa" placeholder="Justificativa da análise, quando necessária"></textarea>
+          <textarea id="admJust_${escaparAttr(chaveAnalise)}" class="adm-analise-justificativa" placeholder="Justificativa da análise, quando necessária"></textarea>
 
           <div class="adm-analise-actions">
-            <button type="button" class="adm-analise-btn aprovar" onclick="analisarEscalaAdm('${escaparAttr(item.id)}','APROVADA')">APROVAR</button>
-            <button type="button" class="adm-analise-btn recusar" onclick="analisarEscalaAdm('${escaparAttr(item.id)}','RECUSADA')">RECUSAR</button>
-            <button type="button" class="adm-analise-btn corrigir" onclick="analisarEscalaAdm('${escaparAttr(item.id)}','CORREÇÃO SOLICITADA')">SOLICITAR CORREÇÃO</button>
+            <button type="button" class="adm-analise-btn aprovar" onclick="analisarEscalaAdm('${escaparAttr(idEscala)}','${escaparAttr(linhaEscala)}','APROVADA')">APROVAR</button>
+            <button type="button" class="adm-analise-btn recusar" onclick="analisarEscalaAdm('${escaparAttr(idEscala)}','${escaparAttr(linhaEscala)}','RECUSADA')">RECUSAR</button>
+            <button type="button" class="adm-analise-btn corrigir" onclick="analisarEscalaAdm('${escaparAttr(idEscala)}','${escaparAttr(linhaEscala)}','CORREÇÃO SOLICITADA')">SOLICITAR CORREÇÃO</button>
           </div>
         </div>
       `;
@@ -6574,14 +6576,14 @@ Banco de dados: Google Sheets.
     }
 
 
-    function analisarEscalaAdm(id, decisao) {
+    function analisarEscalaAdm(id, linha, decisao) {
       if (!usuarioTemPermissaoCliente('ESCALAS_ADM', 'aprovar')) {
         mostrarToastFt('Análise não permitida', 'Seu perfil não possui permissão para aprovar Escalas ADM.');
         return;
       }
 
-      const idSeguro = String(id || '').replace(/[^a-zA-Z0-9_-]/g, '_');
-      const justificativaEl = document.getElementById('admJust_' + idSeguro);
+      const chaveAnalise = String(id || linha || '').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const justificativaEl = document.getElementById('admJust_' + chaveAnalise);
       const justificativa = String(justificativaEl ? justificativaEl.value : '').trim();
       const decisaoNorm = normalizarTexto(decisao);
 
@@ -6594,7 +6596,8 @@ Banco de dados: Google Sheets.
       chamarApi('analisar_escala_adm', {
           login: APP.credenciais.login,
           senha: APP.credenciais.senha,
-          id: id,
+          id: id || '',
+          linha: linha || '',
           decisao: decisao,
           justificativa: justificativa
         })
