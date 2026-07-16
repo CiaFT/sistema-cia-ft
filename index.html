@@ -4765,6 +4765,166 @@ Banco de dados: Google Sheets.
       }
     }
 
+  
+
+    /* ============================================================
+     * V1.2.4 — CORREÇÃO FINAL VISUAL EFETIVA
+     * Selects da Consulta/Edit + Atualização da Viatura.
+     * Este bloco fica no fim do CSS para sobrepor os estilos antigos.
+     * ============================================================ */
+
+    #appScreen .consulta-edit-field select.select-ft-real,
+    #appScreen .viatura-atualizacao-box select.select-ft-real {
+      appearance: none !important;
+      -webkit-appearance: none !important;
+      display: block !important;
+      width: 100% !important;
+      min-height: 56px !important;
+      border: 1px solid rgba(55,66,71,.10) !important;
+      border-radius: 28px !important;
+      padding: 15px 58px 15px 18px !important;
+      color: #17202a !important;
+      font-size: 14px !important;
+      font-weight: 850 !important;
+      letter-spacing: .1px !important;
+      line-height: 1.2 !important;
+      cursor: pointer !important;
+      outline: none !important;
+      background-color: #ffffff !important;
+      background-image:
+        radial-gradient(circle at 0% 0%, rgba(55,66,71,.13), transparent 42%),
+        radial-gradient(circle at center, #edf2f7 0 58%, transparent 59%),
+        linear-gradient(45deg, transparent 50%, #374247 50%),
+        linear-gradient(135deg, #374247 50%, transparent 50%),
+        linear-gradient(180deg, #ffffff, #f8fafc) !important;
+      background-position:
+        left top,
+        calc(100% - 28px) center,
+        calc(100% - 32px) center,
+        calc(100% - 24px) center,
+        0 0 !important;
+      background-size:
+        100% 100%,
+        34px 34px,
+        8px 8px,
+        8px 8px,
+        100% 100% !important;
+      background-repeat: no-repeat !important;
+      box-shadow:
+        0 14px 30px rgba(15,23,42,.075),
+        inset 0 1px 0 rgba(255,255,255,.98) !important;
+      transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease !important;
+    }
+
+    #appScreen .consulta-edit-field select.select-ft-real:hover,
+    #appScreen .viatura-atualizacao-box select.select-ft-real:hover {
+      border-color: rgba(55,66,71,.26) !important;
+      box-shadow:
+        0 18px 34px rgba(15,23,42,.10),
+        inset 0 1px 0 rgba(255,255,255,1) !important;
+      transform: translateY(-1px) !important;
+    }
+
+    #appScreen .consulta-edit-field select.select-ft-real:focus,
+    #appScreen .viatura-atualizacao-box select.select-ft-real:focus {
+      border-color: rgba(55,66,71,.42) !important;
+      box-shadow:
+        0 0 0 4px rgba(55,66,71,.11),
+        0 18px 34px rgba(15,23,42,.10) !important;
+    }
+
+    #appScreen .consulta-edit-field input,
+    #appScreen .consulta-edit-field textarea,
+    #appScreen .viatura-atualizacao-box input,
+    #appScreen .viatura-atualizacao-box textarea {
+      border-radius: 20px !important;
+    }
+
+    #appScreen .viatura-atualizacao-box {
+      margin-top: 16px !important;
+      padding: 16px !important;
+      border-radius: 24px !important;
+      border: 1px solid rgba(55,66,71,.12) !important;
+      background:
+        radial-gradient(circle at top left, rgba(55,66,71,.10), transparent 54%),
+        linear-gradient(180deg, #ffffff, #f8fafc) !important;
+      box-shadow: 0 14px 30px rgba(15,23,42,.08) !important;
+    }
+
+    #appScreen .viatura-atualizacao-box .viatura-update-grid.com-situacao {
+      display: grid !important;
+      grid-template-columns: minmax(240px, 1fr) minmax(130px, 180px) !important;
+      gap: 12px !important;
+      align-items: end !important;
+    }
+
+    #appScreen .viatura-atualizacao-box .viatura-update-grid.sem-situacao {
+      display: grid !important;
+      grid-template-columns: minmax(130px, 180px) minmax(0, 1fr) !important;
+      gap: 12px !important;
+      align-items: end !important;
+    }
+
+    #appScreen .viatura-atualizacao-box .km-field {
+      max-width: 180px !important;
+      width: 100% !important;
+    }
+
+    #appScreen .viatura-atualizacao-box input#viaturaNovoKm {
+      width: 100% !important;
+      max-width: 180px !important;
+      min-height: 54px !important;
+      text-align: center !important;
+      font-weight: 900 !important;
+    }
+
+    #appScreen .viatura-atualizacao-box .obs-full {
+      grid-column: 1 / -1 !important;
+      width: 100% !important;
+      max-width: none !important;
+    }
+
+    #appScreen .viatura-atualizacao-box textarea#viaturaObservacoes {
+      display: block !important;
+      width: 100% !important;
+      max-width: none !important;
+      min-height: 138px !important;
+      padding: 15px 16px !important;
+      resize: vertical !important;
+      font-size: 14px !important;
+      line-height: 1.45 !important;
+      box-sizing: border-box !important;
+    }
+
+    #appScreen .viatura-atualizar-btn {
+      width: 100% !important;
+      border-radius: 999px !important;
+      min-height: 52px !important;
+      margin-top: 14px !important;
+      font-size: 13px !important;
+      letter-spacing: .25px !important;
+    }
+
+    @media (max-width: 700px) {
+      #appScreen .viatura-atualizacao-box .viatura-update-grid.com-situacao,
+      #appScreen .viatura-atualizacao-box .viatura-update-grid.sem-situacao {
+        grid-template-columns: 1fr !important;
+      }
+
+      #appScreen .viatura-atualizacao-box .km-field,
+      #appScreen .viatura-atualizacao-box input#viaturaNovoKm {
+        max-width: none !important;
+        width: 100% !important;
+        text-align: left !important;
+      }
+
+      #appScreen .consulta-edit-field select.select-ft-real,
+      #appScreen .viatura-atualizacao-box select.select-ft-real {
+        min-height: 54px !important;
+        border-radius: 24px !important;
+      }
+    }
+
   </style>
 </head>
 
@@ -7627,7 +7787,7 @@ Banco de dados: Google Sheets.
       return `
         <div class="consulta-edit-field">
           <label>${escapar(rotulo)}</label>
-          <select data-consulta-campo="${escaparAttr(campo)}">${htmlOpcoes}</select>
+          <select class="select-ft select-ft-real" data-consulta-campo="${escaparAttr(campo)}">${htmlOpcoes}</select>
         </div>
       `;
     }
@@ -8021,7 +8181,7 @@ Banco de dados: Google Sheets.
           <div class="viatura-form-grid">
             <div class="viatura-form-field">
               <label>SITUAÇÃO</label>
-              <select id="viaturaSituacao" class="select-ft">
+              <select id="viaturaSituacao" class="select-ft select-ft-real viatura-situacao-select">
                 ${optionsViaturaSituacao(opcoes, atual)}
               </select>
             </div>
@@ -8097,17 +8257,17 @@ Banco de dados: Google Sheets.
           <h3>Atualização da viatura</h3>
           <p>Atualize a situação, o KM ou registre observações constatadas na viatura.</p>
 
-          <div class="viatura-form-grid ${podeEditarSituacao ? 'com-situacao' : ''}">
+          <div class="viatura-form-grid viatura-update-grid ${podeEditarSituacao ? 'com-situacao' : 'sem-situacao'}">
             ${podeEditarSituacao ? `
-              <div class="viatura-form-field">
+              <div class="viatura-form-field situacao-field">
                 <label>SITUAÇÃO</label>
-                <select id="viaturaSituacao" class="select-ft">
+                <select id="viaturaSituacao" class="select-ft select-ft-real viatura-situacao-select">
                   ${optionsViaturaSituacao(opcoesSituacao, v.situacao || '')}
                 </select>
               </div>
             ` : ''}
 
-            <div class="viatura-form-field">
+            <div class="viatura-form-field km-field">
               <label>NOVO KM</label>
               <input id="viaturaNovoKm" type="number" inputmode="numeric" min="0" step="1" placeholder="Ex.: 125430" onfocus="ajustarFocoFormularioViatura()">
             </div>
