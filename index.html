@@ -7655,6 +7655,7 @@ Banco de dados: Google Sheets.
       }
 
       const podeAtualizar = usuarioPodeAtualizarViatura();
+      const podeEditarSituacao = usuarioPodeEditarSituacaoViatura();
       const campos = montarCamposFichaViatura(alvo);
 
       modal.innerHTML = `
@@ -7676,6 +7677,8 @@ Banco de dados: Google Sheets.
                 return viaturaDetail(campo.rotulo, campo.valor, campo.full);
               }).join('')}
             </div>
+
+            ${podeEditarSituacao ? montarFormularioSituacaoViatura(alvo) : ''}
 
             ${podeAtualizar ? montarFormularioAtualizacaoViatura(alvo) : `
               <div class="viatura-empty" style="margin-top:14px;">
@@ -7709,6 +7712,93 @@ Banco de dados: Google Sheets.
       campos.push({ rotulo: 'OBSERVAÇÕES', valor: v.observacoes || '', full: true });
 
       return campos;
+    }
+
+    function usuarioPodeEditarSituacaoViatura() {
+      return usuarioTemPermissaoCliente('VIATURAS', 'editar');
+    }
+
+    function optionsViaturaSituacao(lista, valorAtual) {
+      const valores = Array.isArray(lista) && lista.length ? lista : ['ATIVA', 'BAIXADA', 'MANUTENÇÃO', 'INDISPONÍVEL'];
+      const atual = normalizarTexto(valorAtual || '');
+      return '<option value="">Selecione a situação</option>' + valores.map(function(v) {
+        const texto = String(v || '');
+        return `<option value="${escaparAttr(texto)}" ${normalizarTexto(texto) === atual ? 'selected' : ''}>${escapar(texto)}</option>`;
+      }).join('');
+    }
+
+    function montarFormularioSituacaoViatura(v) {
+      const cfg = (APP.dadosViaturas && APP.dadosViaturas.configListas) || {};
+      const opcoes = cfg.situacoesViatura || [];
+      const atual = v.situacao || '';
+
+      return `
+        <div class="viatura-atualizacao-box">
+          <h3>Situação da viatura</h3>
+          <p>Atualize a situação operacional da viatura conforme as opções da aba CONFIG.</p>
+
+          <div class="viatura-form-grid">
+            <div class="viatura-form-field">
+              <label>SITUAÇÃO</label>
+              <select id="viaturaSituacao" class="select-ft">
+                ${optionsViaturaSituacao(opcoes, atual)}
+              </select>
+            </div>
+          </div>
+
+          <button id="btnAtualizarSituacaoViatura" class="viatura-atualizar-btn" type="button" onclick="atualizarSituacaoViatura('${escaparAttr(v.prefixo || '')}')">
+            ATUALIZAR SITUAÇÃO
+          </button>
+        </div>
+      `;
+    }
+
+    function atualizarSituacaoViatura(prefixo) {
+      const sel = document.getElementById('viaturaSituacao');
+      const btn = document.getElementById('btnAtualizarSituacaoViatura');
+      const situacao = sel ? String(sel.value || '').trim() : '';
+
+      if (!situacao) {
+        mostrarToastFt('Situação não atualizada', 'Selecione a situação da viatura.');
+        return;
+      }
+
+      if (!APP.credenciais || !APP.credenciais.login || !APP.credenciais.senha) {
+        mostrarToastFt('Sessão inválida', 'Faça login novamente.');
+        return;
+      }
+
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'ATUALIZANDO...';
+      }
+
+      chamarApi('atualizar_situacao_viatura', {
+          login: APP.credenciais.login,
+          senha: APP.credenciais.senha,
+          prefixo: prefixo,
+          situacao: situacao
+        })
+        .then(function(resp) {
+          if (!resp || !resp.ok) {
+            throw new Error(resp && resp.erro ? resp.erro : 'Falha ao atualizar a situação da viatura.');
+          }
+
+          mostrarToastFt('Situação atualizada', resp.dados && resp.dados.mensagem ? resp.dados.mensagem : 'Situação da viatura atualizada com sucesso.');
+          fecharFichaViatura();
+          return carregarDadosViaturas(true).then(function() {
+            renderizarViaturas();
+          });
+        })
+        .catch(function(err) {
+          mostrarToastFt('Situação não atualizada', err.message || String(err));
+        })
+        .finally(function() {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'ATUALIZAR SITUAÇÃO';
+          }
+        });
     }
 
     function usuarioPodeAtualizarViatura() {
