@@ -4538,6 +4538,95 @@ Banco de dados: Google Sheets.
     }
 
 
+
+    /* ============================================================
+     * V1.2.4 — Refinamento real das listas suspensas e campos
+     * ============================================================ */
+
+    #appScreen select {
+      appearance: none !important;
+      -webkit-appearance: none !important;
+      width: 100% !important;
+      min-height: 52px !important;
+      border-radius: 22px !important;
+      border: 1px solid rgba(55,66,71,.12) !important;
+      background-color: #ffffff !important;
+      color: #17202a !important;
+      font-weight: 800 !important;
+      letter-spacing: .08px !important;
+      padding: 13px 54px 13px 15px !important;
+      cursor: pointer !important;
+      background-image:
+        linear-gradient(135deg, rgba(55,66,71,.12), rgba(255,255,255,0) 62%),
+        radial-gradient(circle at center, rgba(55,66,71,.10) 0 56%, transparent 57%),
+        linear-gradient(45deg, transparent 50%, #374247 50%),
+        linear-gradient(135deg, #374247 50%, transparent 50%),
+        linear-gradient(180deg, #ffffff 0%, #f7fafc 100%) !important;
+      background-position:
+        left top,
+        calc(100% - 27px) center,
+        calc(100% - 31px) center,
+        calc(100% - 24px) center,
+        0 0 !important;
+      background-size:
+        100% 100%,
+        32px 32px,
+        7px 7px,
+        7px 7px,
+        100% 100% !important;
+      background-repeat: no-repeat !important;
+      box-shadow: 0 10px 22px rgba(15,23,42,.06), inset 0 1px 0 rgba(255,255,255,.92) !important;
+    }
+
+    #appScreen select:hover {
+      border-color: rgba(55,66,71,.25) !important;
+      box-shadow: 0 12px 26px rgba(15,23,42,.08), inset 0 1px 0 rgba(255,255,255,.96) !important;
+      transform: translateY(-1px) !important;
+    }
+
+    #appScreen select:focus {
+      border-color: rgba(55,66,71,.38) !important;
+      box-shadow: 0 0 0 4px rgba(55,66,71,.10), 0 12px 26px rgba(15,23,42,.08) !important;
+      outline: none !important;
+    }
+
+    #appScreen .adm-week-grid {
+      gap: 12px !important;
+    }
+
+    #appScreen .adm-day-card {
+      border-radius: 20px !important;
+      padding: 12px !important;
+    }
+
+    #appScreen .adm-day-card select {
+      min-height: 50px !important;
+      font-size: 12.8px !important;
+      padding-left: 12px !important;
+      padding-right: 46px !important;
+    }
+
+    #appScreen .viatura-form-grid .obs-full {
+      grid-column: 1 / -1 !important;
+    }
+
+    #appScreen .viatura-atualizacao-box textarea#viaturaObservacoes {
+      width: 100% !important;
+      min-height: 126px !important;
+    }
+
+    @media (max-width: 560px) {
+      #appScreen select {
+        border-radius: 19px !important;
+        min-height: 50px !important;
+        font-size: 14px !important;
+      }
+
+      #appScreen .adm-day-card select {
+        font-size: 14px !important;
+      }
+    }
+
   </style>
 </head>
 
@@ -6627,15 +6716,20 @@ Banco de dados: Google Sheets.
 
 
     function montarPainelAnaliseEscalasAdm(lista, dias) {
+      lista = (Array.isArray(lista) ? lista : []).filter(function(item) {
+        const decisao = normalizarTexto((item && item.decisao) || 'PENDENTE');
+        return !decisao || decisao === 'PENDENTE' || decisao.includes('CORRECAO');
+      });
+
       if (!lista || !lista.length) {
         return `
           <div class="adm-card" style="margin-top:14px;">
             <div class="adm-card-header">
               <h2>Análise e aprovação</h2>
-              <p>Nenhuma escala ADM enviada para análise nesta semana.</p>
+              <p>Nenhuma escala ADM pendente de análise nesta semana.</p>
             </div>
             <div class="adm-card-body">
-              <div class="adm-alerta">Aguardando envio das escalas administrativas.</div>
+              <div class="adm-alerta">Não há escalas pendentes ou com correção solicitada para análise.</div>
             </div>
           </div>
         `;
@@ -7863,7 +7957,7 @@ Banco de dados: Google Sheets.
       return `
         <div class="viatura-atualizacao-box">
           <h3>Atualização da viatura</h3>
-          <p>Informe o novo KM e registre observações constatadas na viatura.</p>
+          <p>Atualize a situação, o KM ou registre observações constatadas na viatura.</p>
 
           <div class="viatura-form-grid ${podeEditarSituacao ? 'com-situacao' : ''}">
             ${podeEditarSituacao ? `
@@ -7880,14 +7974,14 @@ Banco de dados: Google Sheets.
               <input id="viaturaNovoKm" type="number" inputmode="numeric" min="0" step="1" placeholder="Ex.: 125430" onfocus="ajustarFocoFormularioViatura()">
             </div>
 
-            <div class="viatura-form-field ${podeEditarSituacao ? 'obs-full' : ''}">
+            <div class="viatura-form-field obs-full">
               <label>OBSERVAÇÕES</label>
               <textarea id="viaturaObservacoes" placeholder="Alterações, avarias ou observações constatadas" onfocus="ajustarFocoFormularioViatura()"></textarea>
             </div>
           </div>
 
           <button id="btnAtualizarViatura" class="viatura-atualizar-btn" type="button" onclick="atualizarKmViatura('${escaparAttr(v.prefixo || '')}')">
-            CONFIRMAR ATUALIZAÇÃO DE KM E OBS.
+            CONFIRMAR ATUALIZAÇÃO DE VTR
           </button>
         </div>
       `;
@@ -7909,8 +8003,8 @@ Banco de dados: Google Sheets.
       const observacoes = obsEl ? String(obsEl.value || '').trim() : '';
       const situacao = sitEl ? String(sitEl.value || '').trim() : '';
 
-      if (!novoKm) {
-        mostrarToastFt('Atualização não enviada', 'Informe o novo KM da viatura.');
+      if (!novoKm && !observacoes && !situacao) {
+        mostrarToastFt('Atualização não enviada', 'Informe ao menos uma atualização: situação, KM ou observações.');
         return;
       }
 
@@ -7949,7 +8043,7 @@ Banco de dados: Google Sheets.
         .finally(function() {
           if (btn) {
             btn.disabled = false;
-            btn.textContent = 'CONFIRMAR ATUALIZAÇÃO DE KM E OBS.';
+            btn.textContent = 'CONFIRMAR ATUALIZAÇÃO DE VTR';
           }
         });
     }
