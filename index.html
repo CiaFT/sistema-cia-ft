@@ -5282,7 +5282,94 @@ Banco de dados: Google Sheets.
       }
     }
 
-  </style>
+  
+
+    /* ============================================================
+     * V1.2.4 — ESCALAS ADM: CONTORNO LEVE POR DIA DA SEMANA
+     * Delimita visualmente cada dia sem pesar a tela.
+     * ============================================================ */
+    #appScreen .adm-week-grid {
+      gap: 14px !important;
+      align-items: stretch !important;
+    }
+
+    #appScreen .adm-day-card {
+      position: relative !important;
+      overflow: hidden !important;
+      border: 1.5px solid rgba(55, 66, 71, .18) !important;
+      border-radius: 24px !important;
+      padding: 14px !important;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,252,.96)) !important;
+      box-shadow:
+        0 12px 28px rgba(15, 23, 42, .07),
+        inset 0 1px 0 rgba(255,255,255,.96) !important;
+      outline: 1px solid rgba(255,255,255,.72) !important;
+      min-height: 150px !important;
+    }
+
+    #appScreen .adm-day-card::before {
+      content: "" !important;
+      position: absolute !important;
+      inset: 0 !important;
+      border-radius: 24px !important;
+      pointer-events: none !important;
+      background:
+        radial-gradient(circle at top left, rgba(150,0,24,.08), transparent 42%),
+        linear-gradient(90deg, rgba(55,66,71,.10), transparent 35%, transparent 65%, rgba(55,66,71,.06)) !important;
+      opacity: .9 !important;
+    }
+
+    #appScreen .adm-day-card > * {
+      position: relative !important;
+      z-index: 1 !important;
+    }
+
+    #appScreen .adm-day-head {
+      border-bottom: 1px solid rgba(55,66,71,.12) !important;
+      padding-bottom: 10px !important;
+      margin-bottom: 2px !important;
+    }
+
+    #appScreen .adm-day-head span {
+      font-size: 12px !important;
+      letter-spacing: .45px !important;
+      color: #374247 !important;
+    }
+
+    #appScreen .adm-day-head strong {
+      width: 34px !important;
+      height: 34px !important;
+      border-radius: 999px !important;
+      background: linear-gradient(180deg, #ffffff, #edf2f7) !important;
+      border: 1px solid rgba(55,66,71,.16) !important;
+      box-shadow: 0 6px 14px rgba(15,23,42,.08) !important;
+    }
+
+    #appScreen .adm-day-card:focus-within {
+      border-color: rgba(150, 0, 24, .42) !important;
+      box-shadow:
+        0 16px 34px rgba(15, 23, 42, .10),
+        0 0 0 4px rgba(150,0,24,.08),
+        inset 0 1px 0 rgba(255,255,255,.96) !important;
+    }
+
+    @media (max-width: 560px) {
+      #appScreen .adm-week-grid {
+        gap: 12px !important;
+      }
+
+      #appScreen .adm-day-card {
+        border-radius: 22px !important;
+        padding: 13px !important;
+        min-height: auto !important;
+      }
+
+      #appScreen .adm-day-card::before {
+        border-radius: 22px !important;
+      }
+    }
+</style>
 </head>
 
 <body>
