@@ -5152,6 +5152,136 @@ Banco de dados: Google Sheets.
       }
     }
 
+
+    /* ============================================================
+     * V1.2.4 — CORREÇÃO REAL FINAL DOS CAMPOS SOLICITADOS
+     * Aplicação direta nos selects do modal de edição, Escalas ADM
+     * e card de atualização da viatura.
+     * ============================================================ */
+    #appScreen .consulta-modal.editando .consulta-edit-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      gap: 12px !important;
+    }
+
+    #appScreen .consulta-modal.editando .consulta-edit-field select,
+    #appScreen .consulta-modal.editando select.select-edit-policial-v124,
+    #appScreen .adm-day-card select.select-adm-dia-v124,
+    #appScreen .viatura-atualizacao-box select.select-viatura-v124 {
+      appearance: none !important;
+      -webkit-appearance: none !important;
+      display: block !important;
+      width: 100% !important;
+      min-height: 54px !important;
+      height: auto !important;
+      border: 1px solid rgba(55,66,71,.18) !important;
+      border-radius: 22px !important;
+      padding: 14px 48px 14px 16px !important;
+      background-color: #fff !important;
+      background-image:
+        linear-gradient(180deg,#ffffff,#f7fafc),
+        radial-gradient(circle at center,#edf2f7 0 58%,transparent 59%),
+        linear-gradient(45deg,transparent 50%,#374247 50%),
+        linear-gradient(135deg,#374247 50%,transparent 50%) !important;
+      background-position:
+        0 0,
+        calc(100% - 25px) center,
+        calc(100% - 28px) center,
+        calc(100% - 21px) center !important;
+      background-size:
+        100% 100%,
+        32px 32px,
+        7px 7px,
+        7px 7px !important;
+      background-repeat: no-repeat !important;
+      color: #17202a !important;
+      -webkit-text-fill-color: #17202a !important;
+      font-size: 14px !important;
+      font-weight: 850 !important;
+      line-height: 1.25 !important;
+      box-shadow: 0 10px 24px rgba(15,23,42,.08), inset 0 1px 0 rgba(255,255,255,.95) !important;
+      outline: none !important;
+      cursor: pointer !important;
+    }
+
+    #appScreen .adm-day-card select.select-adm-dia-v124 {
+      border-radius: 18px !important;
+      min-height: 56px !important;
+      font-weight: 900 !important;
+      color: #111827 !important;
+      -webkit-text-fill-color: #111827 !important;
+      background-color: #ffffff !important;
+    }
+
+    #appScreen .consulta-modal.editando .consulta-edit-field select option,
+    #appScreen .adm-day-card select.select-adm-dia-v124 option,
+    #appScreen .viatura-atualizacao-box select.select-viatura-v124 option {
+      color: #111827 !important;
+      background: #ffffff !important;
+      font-weight: 800 !important;
+    }
+
+    #appScreen .viatura-atualizacao-box .viatura-update-grid.com-situacao {
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) 150px !important;
+      gap: 14px !important;
+      align-items: end !important;
+      width: 100% !important;
+    }
+
+    #appScreen .viatura-atualizacao-box .viatura-update-grid.sem-situacao {
+      display: grid !important;
+      grid-template-columns: 150px minmax(0, 1fr) !important;
+      gap: 14px !important;
+      align-items: end !important;
+      width: 100% !important;
+    }
+
+    #appScreen .viatura-atualizacao-box .km-field {
+      width: 150px !important;
+      max-width: 150px !important;
+    }
+
+    #appScreen .viatura-atualizacao-box #viaturaNovoKm {
+      width: 150px !important;
+      max-width: 150px !important;
+      min-height: 54px !important;
+      border-radius: 18px !important;
+      text-align: center !important;
+      font-weight: 900 !important;
+      box-sizing: border-box !important;
+    }
+
+    #appScreen .viatura-atualizacao-box .obs-full {
+      grid-column: 1 / -1 !important;
+      width: 100% !important;
+      max-width: none !important;
+    }
+
+    #appScreen .viatura-atualizacao-box #viaturaObservacoes {
+      display: block !important;
+      width: 100% !important;
+      max-width: none !important;
+      min-height: 150px !important;
+      border-radius: 20px !important;
+      box-sizing: border-box !important;
+      resize: vertical !important;
+    }
+
+    @media (max-width: 760px) {
+      #appScreen .consulta-modal.editando .consulta-edit-grid,
+      #appScreen .viatura-atualizacao-box .viatura-update-grid.com-situacao,
+      #appScreen .viatura-atualizacao-box .viatura-update-grid.sem-situacao {
+        grid-template-columns: 1fr !important;
+      }
+
+      #appScreen .viatura-atualizacao-box .km-field,
+      #appScreen .viatura-atualizacao-box #viaturaNovoKm {
+        width: 100% !important;
+        max-width: none !important;
+        text-align: left !important;
+      }
+    }
+
   </style>
 </head>
 
@@ -6986,7 +7116,7 @@ Banco de dados: Google Sheets.
             <strong>${escapar(dia.diaMes)}</strong>
           </div>
 
-          <select id="adm_${escaparAttr(dia.chave)}_tipo" onchange="atualizarDiaEscalaAdm('${escaparAttr(dia.chave)}')"${disabled}>
+          <select id="adm_${escaparAttr(dia.chave)}_tipo" class="select-ft select-ft-real select-adm-dia-v124" style="appearance:none;-webkit-appearance:none;width:100%;min-height:54px;border:1px solid rgba(55,66,71,.18);border-radius:22px;padding:14px 48px 14px 16px;background:linear-gradient(180deg,#ffffff,#f7fafc);color:#17202a;-webkit-text-fill-color:#17202a;font-size:14px;font-weight:850;line-height:1.25;box-shadow:0 10px 24px rgba(15,23,42,.08);outline:none;;min-height:56px;border-radius:18px;padding-left:14px;padding-right:44px;" onchange="atualizarDiaEscalaAdm('${escaparAttr(dia.chave)}')"${disabled}>
             ${optionsTiposEscalaAdm()}
           </select>
 
@@ -8014,7 +8144,7 @@ Banco de dados: Google Sheets.
       return `
         <div class="consulta-edit-field">
           <label>${escapar(rotulo)}</label>
-          <select class="select-ft select-ft-real" data-consulta-campo="${escaparAttr(campo)}">${htmlOpcoes}</select>
+          <select class="select-ft select-ft-real select-edit-policial-v124" style="appearance:none;-webkit-appearance:none;width:100%;min-height:54px;border:1px solid rgba(55,66,71,.18);border-radius:22px;padding:14px 48px 14px 16px;background:linear-gradient(180deg,#ffffff,#f7fafc);color:#17202a;-webkit-text-fill-color:#17202a;font-size:14px;font-weight:850;line-height:1.25;box-shadow:0 10px 24px rgba(15,23,42,.08);outline:none;" data-consulta-campo="${escaparAttr(campo)}">${htmlOpcoes}</select>
         </div>
       `;
     }
@@ -8395,80 +8525,6 @@ Banco de dados: Google Sheets.
       }).join('');
     }
 
-    function montarFormularioSituacaoViatura(v) {
-      const cfg = (APP.dadosViaturas && APP.dadosViaturas.configListas) || {};
-      const opcoes = cfg.situacoesViatura || [];
-      const atual = v.situacao || '';
-
-      return `
-        <div class="viatura-atualizacao-box">
-          <h3>Situação da viatura</h3>
-          <p>Atualize a situação operacional da viatura conforme as opções da aba CONFIG.</p>
-
-          <div class="viatura-form-grid">
-            <div class="viatura-form-field">
-              <label>SITUAÇÃO</label>
-              <select id="viaturaSituacao" class="select-ft select-ft-real viatura-situacao-select">
-                ${optionsViaturaSituacao(opcoes, atual)}
-              </select>
-            </div>
-          </div>
-
-          <button id="btnAtualizarSituacaoViatura" class="viatura-atualizar-btn" type="button" onclick="atualizarSituacaoViatura('${escaparAttr(v.prefixo || '')}')">
-            ATUALIZAR SITUAÇÃO
-          </button>
-        </div>
-      `;
-    }
-
-    function atualizarSituacaoViatura(prefixo) {
-      const sel = document.getElementById('viaturaSituacao');
-      const btn = document.getElementById('btnAtualizarSituacaoViatura');
-      const situacao = sel ? String(sel.value || '').trim() : '';
-
-      if (!situacao) {
-        mostrarToastFt('Situação não atualizada', 'Selecione a situação da viatura.');
-        return;
-      }
-
-      if (!APP.credenciais || !APP.credenciais.login || !APP.credenciais.senha) {
-        mostrarToastFt('Sessão inválida', 'Faça login novamente.');
-        return;
-      }
-
-      if (btn) {
-        btn.disabled = true;
-        btn.textContent = 'ATUALIZANDO...';
-      }
-
-      chamarApi('atualizar_situacao_viatura', {
-          login: APP.credenciais.login,
-          senha: APP.credenciais.senha,
-          prefixo: prefixo,
-          situacao: situacao
-        })
-        .then(function(resp) {
-          if (!resp || !resp.ok) {
-            throw new Error(resp && resp.erro ? resp.erro : 'Falha ao atualizar a situação da viatura.');
-          }
-
-          mostrarToastFt('Situação atualizada', resp.dados && resp.dados.mensagem ? resp.dados.mensagem : 'Situação da viatura atualizada com sucesso.');
-          fecharFichaViatura();
-          return carregarDadosViaturas(true).then(function() {
-            renderizarViaturas();
-          });
-        })
-        .catch(function(err) {
-          mostrarToastFt('Situação não atualizada', err.message || String(err));
-        })
-        .finally(function() {
-          if (btn) {
-            btn.disabled = false;
-            btn.textContent = 'ATUALIZAR SITUAÇÃO';
-          }
-        });
-    }
-
     function usuarioPodeAtualizarViatura() {
       return usuarioTemPermissaoCliente('VIATURAS', 'editar') ||
              usuarioTemPermissaoCliente('VIATURAS', 'inserir');
@@ -8484,24 +8540,24 @@ Banco de dados: Google Sheets.
           <h3>Atualização da viatura</h3>
           <p>Atualize a situação, o KM ou registre observações constatadas na viatura.</p>
 
-          <div class="viatura-form-grid viatura-update-grid ${podeEditarSituacao ? 'com-situacao' : 'sem-situacao'}">
+          <div class="viatura-form-grid viatura-update-grid ${podeEditarSituacao ? 'com-situacao' : 'sem-situacao'}" style="display:grid;grid-template-columns:${podeEditarSituacao ? 'minmax(0,1fr) 150px' : '150px minmax(0,1fr)'};gap:14px;align-items:end;width:100%;">
             ${podeEditarSituacao ? `
-              <div class="viatura-form-field situacao-field">
+              <div class="viatura-form-field situacao-field" style="min-width:0;">
                 <label>SITUAÇÃO</label>
-                <select id="viaturaSituacao" class="select-ft select-ft-real viatura-situacao-select">
+                <select id="viaturaSituacao" class="select-ft select-ft-real viatura-situacao-select select-viatura-v124" style="appearance:none;-webkit-appearance:none;width:100%;min-height:54px;border:1px solid rgba(55,66,71,.18);border-radius:22px;padding:14px 48px 14px 16px;background:linear-gradient(180deg,#ffffff,#f7fafc);color:#17202a;-webkit-text-fill-color:#17202a;font-size:14px;font-weight:850;line-height:1.25;box-shadow:0 10px 24px rgba(15,23,42,.08);outline:none;">
                   ${optionsViaturaSituacao(opcoesSituacao, v.situacao || '')}
                 </select>
               </div>
             ` : ''}
 
-            <div class="viatura-form-field km-field">
+            <div class="viatura-form-field km-field" style="width:150px;max-width:150px;">
               <label>NOVO KM</label>
-              <input id="viaturaNovoKm" type="number" inputmode="numeric" min="0" step="1" placeholder="Ex.: 125430" onfocus="ajustarFocoFormularioViatura()">
+              <input id="viaturaNovoKm" type="number" inputmode="numeric" min="0" step="1" placeholder="Ex.: 125430" style="width:150px;max-width:150px;min-height:54px;border-radius:18px;text-align:center;font-weight:900;" onfocus="ajustarFocoFormularioViatura()">
             </div>
 
-            <div class="viatura-form-field obs-full">
+            <div class="viatura-form-field obs-full" style="grid-column:1 / -1;width:100%;max-width:none;">
               <label>OBSERVAÇÕES</label>
-              <textarea id="viaturaObservacoes" placeholder="Alterações, avarias ou observações constatadas" onfocus="ajustarFocoFormularioViatura()"></textarea>
+              <textarea id="viaturaObservacoes" placeholder="Alterações, avarias ou observações constatadas" style="display:block;width:100%;max-width:none;min-height:150px;border-radius:20px;box-sizing:border-box;resize:vertical;" onfocus="ajustarFocoFormularioViatura()"></textarea>
             </div>
           </div>
 
