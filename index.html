@@ -5369,6 +5369,40 @@ Banco de dados: Google Sheets.
         border-radius: 22px !important;
       }
     }
+
+
+    /* V1.2.4 — Histórico de Escalas ADM */
+    .adm-historico-filtros {
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:12px;
+      align-items:end;
+    }
+    .adm-historico-filtros .adm-submit { margin:0; min-height:52px; }
+    .adm-historico-resultado { margin-top:16px; }
+    .adm-historico-lista { display:grid; gap:10px; }
+    .adm-historico-item {
+      border:1px solid rgba(55,66,71,.16);
+      border-radius:18px;
+      background:#fff;
+      box-shadow:0 8px 22px rgba(15,23,42,.06);
+      overflow:hidden;
+    }
+    .adm-historico-item summary {
+      cursor:pointer;
+      list-style:none;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      padding:16px;
+    }
+    .adm-historico-item summary::-webkit-details-marker { display:none; }
+    .adm-historico-conteudo { padding:0 16px 16px; }
+    @media (max-width:820px) {
+      .adm-historico-filtros { grid-template-columns:1fr; }
+      .adm-historico-item summary { align-items:flex-start; flex-direction:column; }
+    }
 </style>
 </head>
 
@@ -7123,6 +7157,8 @@ Banco de dados: Google Sheets.
           </div>
         </div>
 
+        ${montarConsultaHistoricoEscalasAdm()}
+
         ${podeAprovar ? montarPainelAnaliseEscalasAdm(dados.escalas || [], dias) : ''}
       `;
 
@@ -7416,6 +7452,140 @@ Banco de dados: Google Sheets.
 
       box.innerHTML = '';
       box.classList.remove('visivel');
+    }
+
+
+    function montarConsultaHistoricoEscalasAdm() {
+      const hoje = new Date();
+      const fim = dataISOCliente_(hoje);
+      const inicioData = new Date(hoje.getFullYear(), hoje.getMonth() - 3, hoje.getDate());
+      const inicio = dataISOCliente_(inicioData);
+
+      return `
+        <div class="adm-card" style="margin-top:14px;">
+          <div class="adm-card-header">
+            <h2>Histórico de Escalas ADM</h2>
+            <p>Selecione um período para visualizar escalas administrativas enviadas anteriormente.</p>
+          </div>
+          <div class="adm-card-body">
+            <div class="adm-historico-filtros">
+              <div class="adm-form-field">
+                <label>Data inicial</label>
+                <input id="admHistoricoInicio" type="date" value="${escaparAttr(inicio)}">
+              </div>
+              <div class="adm-form-field">
+                <label>Data final</label>
+                <input id="admHistoricoFim" type="date" value="${escaparAttr(fim)}">
+              </div>
+              <div class="adm-form-field">
+                <label>Situação</label>
+                <select id="admHistoricoStatus" class="select-ft select-ft-real">
+                  <option value="TODOS">TODAS</option>
+                  <option value="PENDENTE">PENDENTE</option>
+                  <option value="APROVADA">APROVADA</option>
+                  <option value="RECUSADA">RECUSADA</option>
+                  <option value="CORREÇÃO SOLICITADA">CORREÇÃO SOLICITADA</option>
+                </select>
+              </div>
+              <button type="button" class="adm-submit adm-historico-btn" onclick="consultarHistoricoEscalasAdm()">CONSULTAR ESCALAS ANTERIORES</button>
+            </div>
+            <div id="admHistoricoResultado" class="adm-historico-resultado">
+              <div class="adm-alerta">Informe o período e clique em CONSULTAR ESCALAS ANTERIORES.</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+
+    function dataISOCliente_(data) {
+      const d = data instanceof Date ? data : new Date(data);
+      const ano = d.getFullYear();
+      const mes = String(d.getMonth() + 1).padStart(2, '0');
+      const dia = String(d.getDate()).padStart(2, '0');
+      return ano + '-' + mes + '-' + dia;
+    }
+
+
+    function consultarHistoricoEscalasAdm() {
+      const inicioEl = document.getElementById('admHistoricoInicio');
+      const fimEl = document.getElementById('admHistoricoFim');
+      const statusEl = document.getElementById('admHistoricoStatus');
+      const resultado = document.getElementById('admHistoricoResultado');
+      const dataInicio = String(inicioEl ? inicioEl.value : '').trim();
+      const dataFim = String(fimEl ? fimEl.value : '').trim();
+      const status = String(statusEl ? statusEl.value : 'TODOS').trim();
+
+      if (!dataInicio || !dataFim) {
+        mostrarToastFt('Período incompleto', 'Informe a data inicial e a data final.');
+        return;
+      }
+
+      if (dataInicio > dataFim) {
+        mostrarToastFt('Período inválido', 'A data inicial não pode ser posterior à data final.');
+        return;
+      }
+
+      if (resultado) resultado.innerHTML = '<div class="resenha-loading">Consultando escalas anteriores...</div>';
+
+      chamarApi('historico_escalas_adm', {
+          login: APP.credenciais.login,
+          senha: APP.credenciais.senha,
+          dataInicio: dataInicio,
+          dataFim: dataFim,
+          status: status
+        })
+        .then(function(resp) {
+          if (!resp || !resp.ok) {
+            throw new Error(resp && resp.erro ? resp.erro : 'Falha ao consultar histórico de Escalas ADM.');
+          }
+
+          const lista = resp.dados && Array.isArray(resp.dados.escalas) ? resp.dados.escalas : [];
+          if (resultado) resultado.innerHTML = montarHistoricoEscalasAdm(lista);
+        })
+        .catch(function(err) {
+          if (resultado) resultado.innerHTML = '<div class="adm-alerta">' + escapar(err.message || String(err)) + '</div>';
+          mostrarToastFt('Erro na consulta', err.message || String(err));
+        });
+    }
+
+
+    function montarHistoricoEscalasAdm(lista) {
+      if (!lista || !lista.length) {
+        return '<div class="adm-alerta">Nenhuma escala ADM encontrada no período selecionado.</div>';
+      }
+
+      return `
+        <div class="adm-historico-lista">
+          ${lista.map(function(item) {
+            const policial = [item.postoGrad, item.re, item.nomeGuerra].filter(Boolean).join(' ');
+            return `
+              <details class="adm-historico-item">
+                <summary>
+                  <span><strong>${escapar(item.semanaReferencia || '-')}</strong> — ${escapar(policial || 'Policial')}</span>
+                  <span class="adm-decisao ${classeDecisaoAdm(item.decisao)}">${escapar(item.decisao || 'PENDENTE')}</span>
+                </summary>
+                <div class="adm-historico-conteudo">
+                  <div class="adm-analise-semana">
+                    ${['seg','ter','qua','qui','sex','sab','dom'].map(function(chave, idx) {
+                      const rotulos = ['SEG','TER','QUA','QUI','SEX','SÁB','DOM'];
+                      return `<div class="adm-analise-dia"><small>${rotulos[idx]}</small><strong>${escapar(item[chave] || '-')}</strong></div>`;
+                    }).join('')}
+                  </div>
+                  <div class="adm-analise-obs"><strong>Observações:</strong> ${escapar(item.observacoes || '-')}</div>
+                  <div class="adm-info-list">
+                    ${admInfo('Enviada em', item.dataHoraEnvio || '-')}
+                    ${admInfo('Função', item.funcao || '-')}
+                    ${admInfo('Analisada em', item.dataHoraAnalise || '-')}
+                    ${admInfo('Analisada por', item.analisadoPorNome || '-')}
+                    ${admInfo('Justificativa', item.justificativa || '-')}
+                  </div>
+                </div>
+              </details>
+            `;
+          }).join('')}
+        </div>
+      `;
     }
 
 
