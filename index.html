@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.2.4
+SISTEMA CIA FT — PORTAL GITHUB V1.2.5
 Arquivo: index.html
 ============================================================
 
-Front-end externo hospedado no Netlify.
-Backend/API: Apps Script API_FT.gs V1.2.4.
+Front-end externo hospedado no GitHub Pages.
+Backend/API: Apps Script API_FT.gs V1.2.5.
 Banco de dados: Google Sheets.
 
 ============================================================
@@ -7569,45 +7569,6 @@ Banco de dados: Google Sheets.
     }
 
 
-    function montarHistoricoEscalasAdm(lista) {
-      if (!lista || !lista.length) {
-        return '<div class="adm-alerta">Nenhuma escala ADM encontrada no período selecionado.</div>';
-      }
-
-      return `
-        <div class="adm-historico-lista">
-          ${lista.map(function(item) {
-            const policial = [item.postoGrad, item.re, item.nomeGuerra].filter(Boolean).join(' ');
-            return `
-              <details class="adm-historico-item">
-                <summary>
-                  <span><strong>${escapar(item.semanaReferencia || '-')}</strong> — ${escapar(policial || 'Policial')}</span>
-                  <span class="adm-decisao ${classeDecisaoAdm(item.decisao)}">${escapar(item.decisao || 'PENDENTE')}</span>
-                </summary>
-                <div class="adm-historico-conteudo">
-                  <div class="adm-analise-semana">
-                    ${['seg','ter','qua','qui','sex','sab','dom'].map(function(chave, idx) {
-                      const rotulos = ['SEG','TER','QUA','QUI','SEX','SÁB','DOM'];
-                      return `<div class="adm-analise-dia"><small>${rotulos[idx]}</small><strong>${escapar(item[chave] || '-')}</strong></div>`;
-                    }).join('')}
-                  </div>
-                  <div class="adm-analise-obs"><strong>Observações:</strong> ${escapar(item.observacoes || '-')}</div>
-                  <div class="adm-info-list">
-                    ${admInfo('Enviada em', item.dataHoraEnvio || '-')}
-                    ${admInfo('Função', item.funcao || '-')}
-                    ${admInfo('Analisada em', item.dataHoraAnalise || '-')}
-                    ${admInfo('Analisada por', item.analisadoPorNome || '-')}
-                    ${admInfo('Justificativa', item.justificativa || '-')}
-                  </div>
-                </div>
-              </details>
-            `;
-          }).join('')}
-        </div>
-      `;
-    }
-
-
     function montarTabelaEscalasAdm(lista, dias) {
       if (!lista || !lista.length) {
         return `<div class="adm-alerta">Nenhuma escala ADM enviada para esta semana até o momento.</div>`;
@@ -8677,34 +8638,6 @@ Banco de dados: Google Sheets.
       `;
     }
 
-    function montarBlocoViaturas(titulo, subtitulo, imagem, lista) {
-      const itens = Array.isArray(lista) ? lista : [];
-
-      return `
-        <div class="viatura-bloco">
-          <div class="viatura-banner">
-            <img src="${escaparAttr(imagem)}" alt="${escaparAttr(titulo)}" loading="lazy" onerror="this.style.display='none'">
-            <div class="viatura-banner-texto">
-              <h2>${escapar(titulo)}</h2>
-              <p>${escapar(subtitulo)} • ${itens.length} viatura(s)</p>
-            </div>
-          </div>
-
-          <div class="viatura-lista">
-            ${itens.length ? itens.map(function(v) {
-              const key = escaparAttr(v.prefixo || '');
-              return `
-                <button class="viatura-prefixo-btn" type="button" onclick="abrirFichaViatura('${key}')">
-                  <span>${escapar(v.prefixo || '-')}</span>
-                  <small>Ficha completa</small>
-                </button>
-              `;
-            }).join('') : '<div class="viatura-empty">Nenhuma viatura cadastrada neste bloco.</div>'}
-          </div>
-        </div>
-      `;
-    }
-
     function imagemIconeViatura(modalidade) {
       const mod = normalizarTexto(modalidade || '');
       return mod.includes('ROCAM') ? VIATURAS_IMAGENS.iconeRocam : VIATURAS_IMAGENS.iconeTatico;
@@ -8853,60 +8786,6 @@ Banco de dados: Google Sheets.
         const box = document.querySelector('.viatura-atualizacao-box');
         if (box) box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }, 280);
-    }
-
-    function atualizarKmViatura(prefixo) {
-      const kmEl = document.getElementById('viaturaNovoKm');
-      const obsEl = document.getElementById('viaturaObservacoes');
-      const sitEl = document.getElementById('viaturaSituacao');
-      const btn = document.getElementById('btnAtualizarViatura');
-      const novoKm = kmEl ? String(kmEl.value || '').trim() : '';
-      const observacoes = obsEl ? String(obsEl.value || '').trim() : '';
-      const situacao = sitEl ? String(sitEl.value || '').trim() : '';
-
-      if (!novoKm && !observacoes && !situacao) {
-        mostrarToastFt('Atualização não enviada', 'Informe ao menos uma atualização: situação, KM ou observações.');
-        return;
-      }
-
-      if (!APP.credenciais || !APP.credenciais.login || !APP.credenciais.senha) {
-        mostrarToastFt('Sessão inválida', 'Faça login novamente.');
-        return;
-      }
-
-      if (btn) {
-        btn.disabled = true;
-        btn.textContent = 'ATUALIZANDO...';
-      }
-
-      chamarApi('atualizar_km_viatura', {
-          login: APP.credenciais.login,
-          senha: APP.credenciais.senha,
-          prefixo: prefixo,
-          novoKm: novoKm,
-          observacoes: observacoes,
-          situacao: situacao
-        })
-        .then(function(resp) {
-          if (!resp || !resp.ok) {
-            throw new Error(resp && resp.erro ? resp.erro : 'Falha ao atualizar a viatura.');
-          }
-
-          mostrarToastFt('Viatura atualizada', resp.dados && resp.dados.mensagem ? resp.dados.mensagem : 'KM e observações atualizados com sucesso.');
-          fecharFichaViatura();
-          return carregarDadosViaturas(true).then(function() {
-            renderizarViaturas();
-          });
-        })
-        .catch(function(err) {
-          mostrarToastFt('Atualização não enviada', err.message || String(err));
-        })
-        .finally(function() {
-          if (btn) {
-            btn.disabled = false;
-            btn.textContent = 'CONFIRMAR ATUALIZAÇÃO DE VTR';
-          }
-        });
     }
 
     function fecharFichaViatura() {
@@ -9796,19 +9675,181 @@ Banco de dados: Google Sheets.
       }).join('')}</div>`;
     }
 
-    function abrirEdicaoHistoricoEscalaAdm(item){
-      if(!item||!item.id){mostrarToastFt('Escala não localizada','Não foi possível carregar os dados da escala.');return;}
-      const antigo=document.getElementById('modalV125');if(antigo)antigo.remove();
-      const m=document.createElement('div');m.id='modalV125';m.className='modal-v125-overlay';
-      const dias=['seg','ter','qua','qui','sex','sab','dom'],rotulos=['SEG','TER','QUA','QUI','SEX','SÁB','DOM'];
-      m.innerHTML=`<div class="modal-v125-card" role="dialog" aria-modal="true"><h2>EDIÇÃO DE ESCALA ADM</h2><p>${escapar([item.postoGrad,item.re,item.nomeGuerra].filter(Boolean).join(' '))} — ${escapar(item.semanaReferencia||'')}</p><div class="modal-v125-grid">${dias.map(function(k,i){return `<label>${rotulos[i]}<input type="text" id="hist_${k}" autocomplete="off"></label>`}).join('')}<label>Observações<textarea id="hist_obs"></textarea></label><div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap"><button type="button" class="btn-page" id="btnCancelarModalV125">CANCELAR</button><button type="button" class="adm-submit" id="btnSalvarHistV125">SALVAR ALTERAÇÕES</button></div></div></div>`;
-      (document.getElementById('appScreen')||document.body).appendChild(m);
-      dias.forEach(function(k){const el=document.getElementById('hist_'+k);if(el)el.value=String(item[k]||'');});const obs=document.getElementById('hist_obs');if(obs)obs.value=String(item.observacoes||'');
-      document.getElementById('btnCancelarModalV125').addEventListener('click',function(){m.remove();});document.getElementById('btnSalvarHistV125').addEventListener('click',function(){salvarEdicaoHistoricoEscalaAdm(String(item.id));});
+    function montarDiaHistoricoEscalaAdm(chave, rotulo) {
+      return `<div class="adm-day-card" data-hist-dia="${escaparAttr(chave)}">
+        <div class="adm-day-head"><span>${escapar(rotulo)}</span></div>
+        <select id="hist_${escaparAttr(chave)}_tipo" class="select-ft select-ft-real select-adm-dia-v124" onchange="atualizarDiaHistoricoEscalaAdm('${escaparAttr(chave)}')">
+          ${optionsTiposEscalaAdm()}
+        </select>
+        <input id="hist_${escaparAttr(chave)}_horario" class="campo-oculto" type="text" placeholder="das 07h00 às 18h00">
+        <input id="hist_${escaparAttr(chave)}_detalhe" class="campo-oculto" type="text" placeholder="Descreva o dia">
+      </div>`;
     }
-    function salvarEdicaoHistoricoEscalaAdm(id){const campos={};['seg','ter','qua','qui','sex','sab','dom'].forEach(function(k){const el=document.getElementById('hist_'+k);campos[k]=el?String(el.value||'').trim():'';});const obs=document.getElementById('hist_obs');campos.observacoes=obs?String(obs.value||'').trim():'';chamarApi('editar_escala_adm_historico',{login:APP.credenciais.login,senha:APP.credenciais.senha,id:id,campos:JSON.stringify(campos)}).then(function(r){if(!r||!r.ok)throw new Error(r&&r.erro?r.erro:'Falha ao editar escala.');const modal=document.getElementById('modalV125');if(modal)modal.remove();mostrarToastFt('Escala atualizada',r.dados.mensagem);consultarHistoricoEscalasAdm();}).catch(function(e){mostrarToastFt('Erro',e.message||String(e));});}
-    function abrirArquivamentoPolicial(re){const antigo=document.getElementById('modalV125');if(antigo)antigo.remove();const m=document.createElement('div');m.id='modalV125';m.className='modal-v125-overlay';m.innerHTML=`<div class="modal-v125-card" role="dialog" aria-modal="true"><h2>EXCLUSÃO DE POLICIAL</h2><p>O registro será movido integralmente para ARQUIVO_EFETIVO.</p><div class="modal-v125-grid"><label>Motivo Saída<input type="text" id="arqMotivo" autocomplete="off"></label><label>Observações<textarea id="arqObs" placeholder="Inclua o número do Memorando de movimentação ao P1"></textarea></label><label>Destino<input type="text" id="arqDestino" autocomplete="off"></label><div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap"><button type="button" class="btn-page" id="btnCancelarArqV125">CANCELAR</button><button type="button" class="btn-danger-outline" id="btnConfirmarArqV125">CONFIRMAR EXCLUSÃO</button></div></div></div>`;(document.getElementById('appScreen')||document.body).appendChild(m);document.getElementById('btnCancelarArqV125').addEventListener('click',function(){m.remove();});document.getElementById('btnConfirmarArqV125').addEventListener('click',function(){confirmarArquivamentoPolicial(String(re));});}
-    function confirmarArquivamentoPolicial(re){const a=document.getElementById('arqMotivo'),b=document.getElementById('arqObs'),c=document.getElementById('arqDestino');const motivo=a?String(a.value||'').trim():'',observacoes=b?String(b.value||'').trim():'',destino=c?String(c.value||'').trim():'';if(!motivo||!observacoes||!destino){mostrarToastFt('Dados obrigatórios','Preencha todos os campos.');return;}chamarApi('arquivar_policial',{login:APP.credenciais.login,senha:APP.credenciais.senha,re:re,motivoSaida:motivo,observacoes:observacoes,destino:destino}).then(function(r){if(!r||!r.ok)throw new Error(r&&r.erro?r.erro:'Falha ao arquivar policial.');const modal=document.getElementById('modalV125');if(modal)modal.remove();fecharCardConsultaEfetivo();APP.dadosConsultaEfetivo=null;mostrarToastFt('Policial arquivado',r.dados.mensagem);return carregarDadosConsultaEfetivo(true).then(renderizarConsultaEfetivo);}).catch(function(e){mostrarToastFt('Erro',e.message||String(e));});}
+
+    function atualizarDiaHistoricoEscalaAdm(chave) {
+      const tipoEl = document.getElementById('hist_' + chave + '_tipo');
+      const horarioEl = document.getElementById('hist_' + chave + '_horario');
+      const detalheEl = document.getElementById('hist_' + chave + '_detalhe');
+      if (!tipoEl || !horarioEl || !detalheEl) return;
+
+      const tipo = normalizarTexto(tipoEl.value);
+      const exigeHorario = tipo === 'EXPEDIENTE';
+      const exigeDetalhe = tipo === 'OUTROS';
+      horarioEl.classList.toggle('campo-oculto', !exigeHorario);
+      detalheEl.classList.toggle('campo-oculto', !exigeDetalhe);
+      if (!exigeHorario) horarioEl.value = '';
+      if (!exigeDetalhe) detalheEl.value = '';
+    }
+
+    function abrirEdicaoHistoricoEscalaAdm(item) {
+      if (!item || !item.id) {
+        mostrarToastFt('Escala não localizada', 'Não foi possível carregar os dados da escala.');
+        return;
+      }
+
+      const antigo = document.getElementById('modalV125');
+      if (antigo) antigo.remove();
+      const dias = ['seg','ter','qua','qui','sex','sab','dom'];
+      const rotulos = ['SEG','TER','QUA','QUI','SEX','SÁB','DOM'];
+      const m = document.createElement('div');
+      m.id = 'modalV125';
+      m.className = 'modal-v125-overlay';
+      m.innerHTML = `<div class="modal-v125-card" role="dialog" aria-modal="true">
+        <h2>EDIÇÃO DE ESCALA ADM</h2>
+        <p>${escapar([item.postoGrad,item.re,item.nomeGuerra].filter(Boolean).join(' '))} — ${escapar(item.semanaReferencia || '')}</p>
+        <div class="adm-week-grid">${dias.map(function(k, i) { return montarDiaHistoricoEscalaAdm(k, rotulos[i]); }).join('')}</div>
+        <div class="modal-v125-grid">
+          <label>Observações<textarea id="hist_obs"></textarea></label>
+          <div id="histValidacao" class="adm-validacao"></div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
+            <button type="button" class="btn-page" id="btnCancelarModalV125">CANCELAR</button>
+            <button type="button" class="adm-submit" id="btnSalvarHistV125">SALVAR ALTERAÇÕES</button>
+          </div>
+        </div>
+      </div>`;
+      (document.getElementById('appScreen') || document.body).appendChild(m);
+
+      dias.forEach(function(k) {
+        const partes = interpretarValorEscalaAdm(item[k]);
+        const tipoEl = document.getElementById('hist_' + k + '_tipo');
+        const horarioEl = document.getElementById('hist_' + k + '_horario');
+        const detalheEl = document.getElementById('hist_' + k + '_detalhe');
+        if (tipoEl) tipoEl.value = partes.tipo;
+        atualizarDiaHistoricoEscalaAdm(k);
+        if (horarioEl) horarioEl.value = partes.horario || '';
+        if (detalheEl) detalheEl.value = partes.detalhe || '';
+      });
+      const obs = document.getElementById('hist_obs');
+      if (obs) obs.value = String(item.observacoes || '');
+      document.getElementById('btnCancelarModalV125').addEventListener('click', function() { m.remove(); });
+      document.getElementById('btnSalvarHistV125').addEventListener('click', function() { salvarEdicaoHistoricoEscalaAdm(String(item.id)); });
+    }
+
+    function salvarEdicaoHistoricoEscalaAdm(id) {
+      const campos = {};
+      const erros = [];
+      const rotulos = {seg:'SEG',ter:'TER',qua:'QUA',qui:'QUI',sex:'SEX',sab:'SÁB',dom:'DOM'};
+
+      Object.keys(rotulos).forEach(function(k) {
+        const tipoEl = document.getElementById('hist_' + k + '_tipo');
+        const horarioEl = document.getElementById('hist_' + k + '_horario');
+        const detalheEl = document.getElementById('hist_' + k + '_detalhe');
+        const tipo = tipoEl ? String(tipoEl.value || '').trim() : '';
+        const tipoNorm = normalizarTexto(tipo);
+        const horario = horarioEl ? String(horarioEl.value || '').trim() : '';
+        const detalhe = detalheEl ? String(detalheEl.value || '').trim() : '';
+
+        if (!tipo) erros.push(rotulos[k] + ': selecione o tipo.');
+        else if (tipoNorm === 'EXPEDIENTE' && !horario) erros.push(rotulos[k] + ': informe o horário do expediente.');
+        else if (tipoNorm === 'OUTROS' && !detalhe) erros.push(rotulos[k] + ': descreva o campo OUTROS.');
+        else if (tipoNorm === 'EXPEDIENTE') campos[k] = horario;
+        else if (tipoNorm === 'OUTROS') campos[k] = 'OUTROS - ' + detalhe;
+        else campos[k] = tipo;
+      });
+
+      if (erros.length) {
+        const box = document.getElementById('histValidacao');
+        if (box) {
+          box.innerHTML = '<strong>Escala não atualizada</strong>' + erros.map(function(e) { return '<div>• ' + escapar(e) + '</div>'; }).join('');
+          box.classList.add('visivel');
+        }
+        mostrarToastFt('Dados obrigatórios', 'Corrija os dias indicados antes de salvar.');
+        return;
+      }
+
+      const obs = document.getElementById('hist_obs');
+      campos.observacoes = obs ? String(obs.value || '').trim() : '';
+      chamarApi('editar_escala_adm_historico', {
+        login: APP.credenciais.login,
+        senha: APP.credenciais.senha,
+        id: id,
+        campos: JSON.stringify(campos)
+      }).then(function(r) {
+        if (!r || !r.ok) throw new Error(r && r.erro ? r.erro : 'Falha ao editar escala.');
+        const modal = document.getElementById('modalV125');
+        if (modal) modal.remove();
+        mostrarToastFt('Escala atualizada', r.dados.mensagem);
+        consultarHistoricoEscalasAdm();
+      }).catch(function(e) {
+        mostrarToastFt('Erro', e.message || String(e));
+      });
+    }
+
+    function abrirArquivamentoPolicial(re) {
+      const antigo = document.getElementById('modalV125');
+      if (antigo) antigo.remove();
+      const m = document.createElement('div');
+      m.id = 'modalV125';
+      m.className = 'modal-v125-overlay';
+      m.innerHTML = `<div class="modal-v125-card" role="dialog" aria-modal="true">
+        <h2>EXCLUSÃO DE POLICIAL</h2>
+        <p>O registro será movido integralmente para ARQUIVO_EFETIVO.</p>
+        <div class="modal-v125-grid">
+          <label>Motivo Saída<input type="text" id="arqMotivo" autocomplete="off"></label>
+          <label>Número do Memorando de Saída<input type="text" id="arqMemorando" autocomplete="off" placeholder="Informe o memorando encaminhado ao P1"></label>
+          <label>Destino<input type="text" id="arqDestino" autocomplete="off"></label>
+          <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
+            <button type="button" class="btn-page" id="btnCancelarArqV125">CANCELAR</button>
+            <button type="button" class="btn-danger-outline" id="btnConfirmarArqV125">CONFIRMAR EXCLUSÃO</button>
+          </div>
+        </div>
+      </div>`;
+      (document.getElementById('appScreen') || document.body).appendChild(m);
+      document.getElementById('btnCancelarArqV125').addEventListener('click', function() { m.remove(); });
+      document.getElementById('btnConfirmarArqV125').addEventListener('click', function() { confirmarArquivamentoPolicial(String(re)); });
+    }
+
+    function confirmarArquivamentoPolicial(re) {
+      const motivoEl = document.getElementById('arqMotivo');
+      const memorandoEl = document.getElementById('arqMemorando');
+      const destinoEl = document.getElementById('arqDestino');
+      const motivo = motivoEl ? String(motivoEl.value || '').trim() : '';
+      const memorando = memorandoEl ? String(memorandoEl.value || '').trim() : '';
+      const destino = destinoEl ? String(destinoEl.value || '').trim() : '';
+      if (!motivo || !memorando || !destino) {
+        mostrarToastFt('Dados obrigatórios', 'Preencha Motivo Saída, Memorando de Saída e Destino.');
+        return;
+      }
+
+      chamarApi('arquivar_policial', {
+        login: APP.credenciais.login,
+        senha: APP.credenciais.senha,
+        re: re,
+        motivoSaida: motivo,
+        memorandoSaida: memorando,
+        destino: destino
+      }).then(function(r) {
+        if (!r || !r.ok) throw new Error(r && r.erro ? r.erro : 'Falha ao arquivar policial.');
+        const modal = document.getElementById('modalV125');
+        if (modal) modal.remove();
+        fecharCardConsultaEfetivo();
+        APP.dadosConsultaEfetivo = null;
+        mostrarToastFt('Policial arquivado', r.dados.mensagem);
+        return carregarDadosConsultaEfetivo(true).then(renderizarConsultaEfetivo);
+      }).catch(function(e) {
+        mostrarToastFt('Erro', e.message || String(e));
+      });
+    }
 
     function usuarioPodeGerenciarViaturaV125(){const p=normalizarTexto((APP.usuario&&APP.usuario.perfilAcesso)||'');return ['GESTOR_TEC_FT','ENC_ADM_FT','AUX_ADM_FT'].indexOf(p)!==-1;}
     function classeStatusViaturaV125(s){const n=normalizarTexto(s||'');if(n==='OPERANDO')return'verde';if(['BAIXADA','BAIXADA PEL','SINDICANCIA','SINDICÂNCIA'].includes(n))return'amarelo';if(n==='PROJETO BASICO'||n==='PROJETO BÁSICO')return'azul';if(n==='DESCARGA')return'vermelho';return'cinza';}
