@@ -5428,6 +5428,41 @@ Banco de dados: Google Sheets.
     #appScreen .adm-analise-dia{display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:center!important;text-align:center!important;min-height:84px!important;padding:10px 8px!important}
     #appScreen .adm-analise-dia small,#appScreen .adm-analise-dia strong{width:100%;text-align:center!important}
     .modal-v125-overlay{pointer-events:auto!important}.modal-v125-card{color:#17202a!important;pointer-events:auto!important}.modal-v125-card h2{margin:0 0 8px!important;text-align:center!important;text-transform:uppercase!important}.modal-v125-card p{text-align:center!important;color:#59666d!important}.modal-v125-grid label{display:grid!important;gap:6px!important;color:#17202a!important;font-weight:800!important}.modal-v125-grid input,.modal-v125-grid textarea,.modal-v125-grid select{display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;user-select:text!important;background:#fff!important;color:#17202a!important;-webkit-text-fill-color:#17202a!important;border:1.5px solid rgba(55,66,71,.32)!important}.modal-v125-grid textarea{resize:vertical!important}.viatura-resumo-status{margin-top:14px!important;padding-top:10px!important;border-top:1px solid rgba(255,255,255,.25)!important}
+
+    /* Controle de Frequência */
+    .freq-launch-card{border:1px solid rgba(55,66,71,.16);border-radius:22px;background:#fff;padding:20px;box-shadow:0 12px 28px rgba(15,23,42,.07)}
+    .freq-launch-card h2{margin:0 0 8px;color:#17202a}.freq-launch-card p{margin:0 0 16px;color:#59666d}
+    .freq-months{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 10px;scrollbar-width:thin}
+    .freq-month-btn{flex:0 0 auto;border:1px solid rgba(55,66,71,.2);border-radius:999px;background:#fff;color:#374247;padding:10px 15px;font:inherit;font-size:12px;font-weight:900;cursor:pointer}
+    .freq-month-btn.ativo{background:#960018;border-color:#960018;color:#fff;box-shadow:0 8px 18px rgba(150,0,24,.22)}
+    .freq-legend{margin:16px 0;border:1px solid rgba(55,66,71,.14);border-radius:18px;background:#f8fafc;padding:14px 16px}
+    .freq-legend summary{cursor:pointer;font-weight:900;color:#17202a}.freq-legend-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 14px;margin-top:12px;font-size:12px;color:#475569}
+    .freq-legend-grid strong{display:inline-flex;min-width:42px;color:#960018}
+    .freq-audit-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:16px 0}
+    .freq-audit-card{border:1px solid rgba(55,66,71,.16);border-radius:16px;background:#fff;padding:12px;text-align:center}
+    .freq-audit-card small{display:block;color:#64748b;font-weight:800}.freq-audit-card strong{display:block;margin:5px 0 9px;color:#17202a;font-size:12px}.freq-audit-card strong.ok{color:#15803d}
+    .freq-audit-card button,.freq-close-card button{width:100%;border:1px solid #960018;border-radius:12px;background:#fff;color:#960018;padding:8px;font:inherit;font-size:11px;font-weight:900;cursor:pointer}
+    .freq-close-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0 18px}
+    .freq-close-card{border:1px solid rgba(55,66,71,.16);border-radius:18px;background:#fff;padding:14px}.freq-close-card h3{margin:0 0 6px;font-size:14px}.freq-close-card p{min-height:34px;margin:0 0 10px;font-size:12px;color:#64748b}
+    .freq-table-wrap{width:100%;overflow:auto;border:1px solid rgba(55,66,71,.2);border-radius:18px;background:#fff;max-height:68vh}
+    .freq-table{border-collapse:separate;border-spacing:0;min-width:1510px;width:100%;font-size:11px}
+    .freq-table th,.freq-table td{height:38px;border-right:1px solid #dbe1e7;border-bottom:1px solid #dbe1e7;text-align:center;background:#fff;padding:3px}
+    .freq-table thead th{position:sticky;top:0;z-index:6;background:#374247;color:#fff;font-weight:900}
+    .freq-table .freq-pm{position:sticky;left:0;z-index:4;width:220px;min-width:220px;max-width:220px;text-align:left;padding:6px 10px;background:#fff;box-shadow:3px 0 6px rgba(15,23,42,.06)}
+    .freq-table thead .freq-pm{z-index:8;background:#374247}
+    .freq-table .freq-pm strong{display:block;color:#17202a}.freq-table .freq-pm small{color:#64748b}
+    .freq-table thead .freq-pm strong{color:#fff}.freq-table thead .freq-pm small{color:#e2e8f0}
+    .freq-table .freq-day{width:37px;min-width:37px}.freq-table thead .freq-day small{display:block;margin-top:1px;color:#cbd5e1;font-size:8px;font-weight:800}.freq-table select{width:34px;height:31px;border:1px solid rgba(55,66,71,.18);border-radius:7px;background:#fff;color:#17202a;font-size:10px;font-weight:900;text-align:center;padding:0;cursor:pointer}
+    .freq-table select:disabled{cursor:not-allowed;background:#eef2f6;color:#64748b;opacity:.8}
+    .freq-table .freq-total{width:88px;min-width:88px;background:#f8fafc;font-weight:900;color:#17202a}
+    .freq-table .freq-total.diarias{position:sticky;right:88px;z-index:4}.freq-table .freq-total.trabalhados{position:sticky;right:0;z-index:4}
+    .freq-table thead .freq-total{z-index:8;background:#374247;color:#fff}
+    .freq-group td{position:sticky;left:0;z-index:5!important;background:#e9edf1!important;color:#17202a!important;text-align:left!important;font-weight:950!important;letter-spacing:.45px;padding:8px 12px!important}
+    .freq-saving{outline:2px solid #eab308!important}.freq-saved{outline:2px solid #16a34a!important}
+    .freq-note{font-size:12px;color:#64748b;margin:10px 0}
+    @media(min-width:761px){.freq-legend[open] summary{margin-bottom:2px}.freq-legend summary{pointer-events:none}.freq-legend summary::-webkit-details-marker{display:none}}
+    @media(max-width:900px){.freq-audit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.freq-legend-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:760px){.freq-launch-card{padding:14px}.freq-close-grid{grid-template-columns:1fr}.freq-table-wrap{max-height:62vh}.freq-table{min-width:1430px}.freq-table .freq-pm{width:168px;min-width:168px;max-width:168px}.freq-table .freq-total.diarias,.freq-table .freq-total.trabalhados{position:static}.freq-legend-grid{grid-template-columns:1fr}.freq-audit-grid{grid-template-columns:1fr 1fr}.freq-note{font-size:11px}}
 </style>
 </head>
 
@@ -5499,7 +5534,8 @@ Banco de dados: Google Sheets.
       usuario: null,
       menus: [],
       permissoes: {},
-      credenciais: null
+      credenciais: null,
+      dadosControleFrequencia: null
     };
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -6052,6 +6088,15 @@ Banco de dados: Google Sheets.
         return;
       }
 
+      if (normalizarModuloCliente(id) === 'PAINEL_ADMINISTRATIVO') {
+        if (!usuarioTemPermissaoCliente('PAINEL_ADMINISTRATIVO', 'visualizar')) {
+          abrirAcessoNegado('Painel Administrativo');
+          return;
+        }
+        abrirPainelAdministrativo();
+        return;
+      }
+
       if (!usuarioTemPermissaoCliente(id, 'visualizar')) {
         abrirAcessoNegado(id);
         return;
@@ -6080,6 +6125,255 @@ Banco de dados: Google Sheets.
           </div>
         </div>
       `;
+    }
+
+
+    function abrirPainelAdministrativo() {
+      window.scrollTo(0, 0);
+      document.getElementById('appConteudo').innerHTML = `
+        <div class="page-wrap">
+          <div class="page-header">
+            <div class="page-header-row">
+              <div>
+                <div class="page-kicker">Gestão da Companhia</div>
+                <h1>Painel Administrativo</h1>
+                <p>Ferramentas de lançamento, conferência e controle administrativo.</p>
+              </div>
+              <div class="page-actions"><button class="btn-page" onclick="abrirHome()">VOLTAR</button></div>
+            </div>
+          </div>
+          <div class="freq-launch-card">
+            <h2>Controle de Frequência</h2>
+            <p>Lançamento mensal para apuração de diárias, dias trabalhados e auditorias administrativas.</p>
+            <button class="adm-submit" style="width:auto" type="button" onclick="abrirControleFrequencia()">CONTROLE DE FREQUÊNCIA</button>
+          </div>
+        </div>`;
+    }
+
+
+    function abrirControleFrequencia(competencia) {
+      window.scrollTo(0, 0);
+      const alvo = competencia || (APP.dadosControleFrequencia && APP.dadosControleFrequencia.competencia) || '2026-08';
+      document.getElementById('appConteudo').innerHTML = `
+        <div class="page-wrap">
+          <div class="page-header">
+            <div class="page-header-row">
+              <div>
+                <div class="page-kicker">Painel Administrativo</div>
+                <h1>Controle de Frequência</h1>
+                <p>Lançamento manual, auditoria semanal e fechamento mensal.</p>
+              </div>
+              <div class="page-actions"><button class="btn-page" onclick="abrirPainelAdministrativo()">VOLTAR</button></div>
+            </div>
+          </div>
+          <div id="freqConteudo"><div class="resenha-loading">Carregando controle de frequência...</div></div>
+        </div>`;
+
+      chamarApi('dados_controle_frequencia', {
+        login: APP.credenciais.login,
+        senha: APP.credenciais.senha,
+        competencia: alvo
+      }).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao carregar o Controle de Frequência.');
+        APP.dadosControleFrequencia = resp.dados;
+        renderizarControleFrequencia();
+      }).catch(function(err) {
+        const box = document.getElementById('freqConteudo');
+        if (box) box.innerHTML = '<div class="adm-alerta">' + escapar(err.message || String(err)) + '</div>';
+      });
+    }
+
+
+    function renderizarControleFrequencia() {
+      const box = document.getElementById('freqConteudo');
+      const d = APP.dadosControleFrequencia;
+      if (!box || !d) return;
+      const fechado = d.auditoria && d.auditoria.fechamentoCmt && d.auditoria.fechamentoCmt.status === 'APROVADO';
+      box.innerHTML = `
+        <div class="freq-months" aria-label="Meses do Controle de Frequência">
+          ${(d.meses || []).map(function(mes) {
+            return '<button type="button" class="freq-month-btn ' + (mes === d.competencia ? 'ativo' : '') + '" onclick="abrirControleFrequencia(\'' + escaparAttr(mes) + '\')">' + escapar(rotuloCompetenciaFrequencia(mes)) + '</button>';
+          }).join('')}
+        </div>
+
+        <details class="freq-legend" open>
+          <summary>LEGENDA DOS LANÇAMENTOS</summary>
+          <div class="freq-legend-grid">
+            ${itemLegendaFrequencia('0', 'Inferior a 8 horas')}
+            ${itemLegendaFrequencia('1', 'Entre 8 horas e inferior a 12 horas')}
+            ${itemLegendaFrequencia('2', '12 horas ou mais')}
+            ${itemLegendaFrequencia('3', '18 horas e igual ou inferior a 24 horas')}
+            ${itemLegendaFrequencia('F', 'Férias')}
+            ${itemLegendaFrequencia('LP', 'Licença-prêmio')}
+            ${itemLegendaFrequencia('CV', 'Convalescença médica')}
+            ${itemLegendaFrequencia('TS', 'Licença para tratamento de saúde')}
+            ${itemLegendaFrequencia('DS/DR', 'Dispensa de serviço/recompensa')}
+            ${itemLegendaFrequencia('N', 'Núpcias')}
+            ${itemLegendaFrequencia('A', 'Outro tipo de afastamento')}
+          </div>
+        </details>
+
+        <div id="freqAuditArea">${montarAuditoriaFrequencia(d)}</div>
+        <div class="freq-note">Os lançamentos são salvos individualmente. ${fechado ? '<strong>Este mês está encerrado pelo Cmt de Cia.</strong>' : 'Role a tabela horizontalmente para acessar todos os dias e os totais.'}</div>
+        ${montarTabelaFrequencia(d, fechado)}
+      `;
+    }
+
+
+    function itemLegendaFrequencia(codigo, texto) {
+      return '<div><strong>' + escapar(codigo) + '</strong>' + escapar(texto) + '</div>';
+    }
+
+
+    function rotuloCompetenciaFrequencia(competencia) {
+      const partes = String(competencia || '').split('-');
+      const nomes = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'];
+      const mes = Number(partes[1] || 0);
+      return (nomes[mes - 1] || competencia) + '/' + String(partes[0] || '').slice(-2);
+    }
+
+
+    function montarAuditoriaFrequencia(d) {
+      const a = d.auditoria || {};
+      const cap = d.capacidades || {};
+      const semanas = a.semanas || [];
+      const diasNoMes = Number(d.diasNoMes || 31);
+      return `
+        <div class="freq-audit-grid">
+          ${Array.from({length:Math.ceil(diasNoMes / 7)}, function(_, indiceSemana) {
+            const numero = indiceSemana + 1;
+            const item = semanas[numero - 1] || { numero: numero, status: 'PENDENTE' };
+            const inicio = ((numero - 1) * 7) + 1;
+            const fim = Math.min(numero * 7, diasNoMes);
+            const ok = item.status === 'AUDITADA';
+            return '<div class="freq-audit-card"><small>SEMANA ' + numero + ' • ' + inicio + ' A ' + fim + '</small>' +
+              '<strong class="' + (ok ? 'ok' : '') + '">' + escapar(item.status || 'PENDENTE') + '</strong>' +
+              (item.nome ? '<small>' + escapar(item.nome) + ' • ' + escapar(item.dataHora || '') + '</small>' : '') +
+              (cap.podeAuditarSemana && !ok ? '<button type="button" onclick="auditarControleFrequencia(\'SEMANAL\',' + numero + ')">MARCAR COMO AUDITADA</button>' : '') +
+              '</div>';
+          }).join('')}
+        </div>
+        <div class="freq-close-grid">
+          ${montarFechamentoFrequencia('CONFERÊNCIA FINAL • ENC ADM', a.fechamentoEnc, cap.podeFecharEnc, 'FECHAMENTO_ENC')}
+          ${montarFechamentoFrequencia('APROVAÇÃO FINAL • CMT CIA', a.fechamentoCmt, cap.podeFecharCmt, 'FECHAMENTO_CMT')}
+        </div>`;
+    }
+
+
+    function montarFechamentoFrequencia(titulo, item, pode, tipo) {
+      item = item || { status: 'PENDENTE' };
+      const concluido = item.status === 'CONFERIDO' || item.status === 'APROVADO';
+      return '<div class="freq-close-card"><h3>' + escapar(titulo) + '</h3>' +
+        '<p><strong>' + escapar(item.status || 'PENDENTE') + '</strong>' + (item.nome ? ' por ' + escapar(item.nome) + ' em ' + escapar(item.dataHora || '') : '') + '</p>' +
+        (pode && !concluido ? '<button type="button" onclick="auditarControleFrequencia(\'' + tipo + '\',0)">' + (tipo === 'FECHAMENTO_ENC' ? 'CONCLUIR CONFERÊNCIA' : 'APROVAR E ENCERRAR MÊS') + '</button>' : '') +
+        '</div>';
+    }
+
+
+    function montarTabelaFrequencia(d, fechado) {
+      const diasNoMes = Number(d.diasNoMes || 31);
+      const opcoes = d.opcoes || [];
+      const efetivo = d.efetivo || [];
+      const lancamentos = d.lancamentos || {};
+      const podeEditar = !!(d.capacidades && d.capacidades.podeEditar) && (!fechado || !!d.capacidades.podeReabrir);
+      let corpo = '';
+      ['ADM','1º PEL','2º PEL'].forEach(function(grupo) {
+        const lista = efetivo.filter(function(pm) { return pm.pelotao === grupo; });
+        if (!lista.length) return;
+        corpo += '<tr class="freq-group"><td colspan="' + (diasNoMes + 3) + '">' + escapar(grupo) + '</td></tr>';
+        lista.forEach(function(pm) {
+          const chave = normalizarReClienteFrequencia(pm.re);
+          const reg = lancamentos[chave] || { dias: [], diarias: 0, diasTrabalhados: 0 };
+          corpo += '<tr data-freq-re="' + escaparAttr(pm.re || '') + '">' +
+            '<td class="freq-pm"><strong>' + escapar([pm.postoGrad, pm.nomeGuerra].filter(Boolean).join(' ')) + '</strong><small>RE ' + escapar(pm.re || '') + '</small></td>' +
+            Array.from({length:diasNoMes}, function(_, indice) {
+              const dia = indice + 1;
+              const atual = String((reg.dias || [])[indice] || '');
+              return '<td class="freq-day"><select aria-label="Dia ' + dia + ' de ' + escapar(pm.nomeGuerra || '') + '" data-re="' + escaparAttr(pm.re || '') + '" data-dia="' + dia + '" data-valor-anterior="' + escaparAttr(atual) + '" onchange="salvarCelulaFrequencia(this)" ' + (podeEditar ? '' : 'disabled') + '>' +
+                '<option value=""></option>' + opcoes.map(function(op) { return '<option value="' + escaparAttr(op) + '" ' + (atual === String(op) ? 'selected' : '') + '>' + escapar(op) + '</option>'; }).join('') +
+                '</select></td>';
+            }).join('') +
+            '<td class="freq-total diarias" data-total-diarias="' + escaparAttr(pm.re || '') + '">' + Number(reg.diarias || 0) + '</td>' +
+            '<td class="freq-total trabalhados" data-total-trabalhados="' + escaparAttr(pm.re || '') + '">' + Number(reg.diasTrabalhados || 0) + '</td></tr>';
+        });
+      });
+
+      return '<div class="freq-table-wrap"><table class="freq-table"><thead><tr><th class="freq-pm"><strong>POLICIAL</strong><small>POSTO/GRAD • RE • NOME</small></th>' +
+        Array.from({length:diasNoMes}, function(_, i) { return '<th class="freq-day">' + (i + 1) + '<small>' + escapar(rotuloDiaSemanaFrequencia(d.competencia, i + 1)) + '</small></th>'; }).join('') +
+        '<th class="freq-total diarias">DIÁRIAS</th><th class="freq-total trabalhados">DIAS TRAB.</th></tr></thead><tbody>' + corpo + '</tbody></table></div>';
+    }
+
+
+    function rotuloDiaSemanaFrequencia(competencia, dia) {
+      const partes = String(competencia || '').split('-');
+      const data = new Date(Number(partes[0]), Number(partes[1]) - 1, Number(dia));
+      return ['DOM','SEG','TER','QUA','QUI','SEX','SÁB'][data.getDay()] || '';
+    }
+
+
+    function normalizarReClienteFrequencia(re) {
+      const base = String(re == null ? '' : re).trim().split('-')[0].replace(/\D/g, '');
+      return base.length >= 6 ? base.substring(0, 6) : base;
+    }
+
+
+    function salvarCelulaFrequencia(select) {
+      if (!select || select.disabled) return;
+      select.disabled = true;
+      select.classList.add('freq-saving');
+
+      chamarApi('salvar_frequencia', {
+        login: APP.credenciais.login,
+        senha: APP.credenciais.senha,
+        competencia: APP.dadosControleFrequencia.competencia,
+        re: select.getAttribute('data-re'),
+        dia: select.getAttribute('data-dia'),
+        valor: select.value
+      }).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao salvar o lançamento.');
+        const dados = resp.dados || {};
+        const re = select.getAttribute('data-re');
+        const totalD = document.querySelector('[data-total-diarias="' + CSS.escape(re) + '"]');
+        const totalT = document.querySelector('[data-total-trabalhados="' + CSS.escape(re) + '"]');
+        if (totalD) totalD.textContent = Number(dados.diarias || 0);
+        if (totalT) totalT.textContent = Number(dados.diasTrabalhados || 0);
+        select.setAttribute('data-valor-anterior', select.value || '');
+        select.classList.remove('freq-saving');
+        select.classList.add('freq-saved');
+        if (APP.dadosControleFrequencia) {
+          APP.dadosControleFrequencia.auditoria = dados.auditoria || APP.dadosControleFrequencia.auditoria;
+          const auditArea = document.getElementById('freqAuditArea');
+          if (auditArea) auditArea.innerHTML = montarAuditoriaFrequencia(APP.dadosControleFrequencia);
+        }
+        setTimeout(function() { select.classList.remove('freq-saved'); }, 800);
+      }).catch(function(err) {
+        const anterior = select.getAttribute('data-valor-anterior');
+        if (anterior !== null) select.value = anterior;
+        select.classList.remove('freq-saving');
+        mostrarToastFt('Lançamento não salvo', err.message || String(err));
+      }).finally(function() {
+        const fechado = APP.dadosControleFrequencia && APP.dadosControleFrequencia.auditoria && APP.dadosControleFrequencia.auditoria.fechamentoCmt.status === 'APROVADO';
+        select.disabled = fechado && !(APP.dadosControleFrequencia.capacidades || {}).podeReabrir;
+      });
+    }
+
+
+    function auditarControleFrequencia(tipo, semana) {
+      const texto = tipo === 'SEMANAL' ? 'Confirma a auditoria da semana ' + semana + '?' : (tipo === 'FECHAMENTO_ENC' ? 'Confirma a conferência final do Enc Adm?' : 'Confirma a aprovação final e o encerramento deste mês?');
+      if (!confirm(texto)) return;
+      chamarApi('auditar_frequencia', {
+        login: APP.credenciais.login,
+        senha: APP.credenciais.senha,
+        competencia: APP.dadosControleFrequencia.competencia,
+        tipo: tipo,
+        semana: semana || ''
+      }).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao registrar a auditoria.');
+        mostrarToastFt('Auditoria registrada', resp.dados.mensagem || 'Conferência salva.');
+        abrirControleFrequencia(APP.dadosControleFrequencia.competencia);
+      }).catch(function(err) {
+        mostrarToastFt('Auditoria não registrada', err.message || String(err));
+      });
     }
 
 
