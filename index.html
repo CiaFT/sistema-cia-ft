@@ -5737,12 +5737,9 @@ Banco de dados: Google Sheets.
       letter-spacing: .25px;
     }
 
-    #appScreen .vtr126-field input,
-    #appScreen .vtr126-field textarea,
-    #appScreen .vtr126-field select,
-    #appScreen .vtr126-admin-grid input,
-    #appScreen .vtr126-admin-grid textarea,
-    #appScreen .vtr126-admin-grid select {
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field input,
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field textarea,
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field select {
       width: 100%;
       min-width: 0;
       min-height: 48px;
@@ -5757,23 +5754,64 @@ Banco de dados: Google Sheets.
       font-size: 13px;
       font-weight: 750;
       outline: none;
+      color-scheme: light;
     }
 
-    #appScreen .vtr126-field input[type="number"] {
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field input:focus,
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field textarea:focus,
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field select:focus,
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field input:active,
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field textarea:active,
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field select:active {
+      color: #6B7280 !important;
+      -webkit-text-fill-color: #6B7280 !important;
+      caret-color: #6B7280 !important;
+    }
+
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field input::placeholder,
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field textarea::placeholder {
+      color: #6B7280 !important;
+      -webkit-text-fill-color: #6B7280 !important;
+      opacity: 1;
+    }
+
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field input::selection,
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field textarea::selection {
+      color: #6B7280 !important;
+      -webkit-text-fill-color: #6B7280 !important;
+      background: #dbeafe;
+    }
+
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field input::-moz-selection,
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field textarea::-moz-selection {
+      color: #6B7280 !important;
+      background: #dbeafe;
+    }
+
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field input:-webkit-autofill,
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field input:-webkit-autofill:hover,
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field input:-webkit-autofill:focus,
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field textarea:-webkit-autofill,
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field select:-webkit-autofill {
+      color: #6B7280 !important;
+      -webkit-text-fill-color: #6B7280 !important;
+      caret-color: #6B7280 !important;
+    }
+
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field input[type="number"] {
       text-align: center;
       font-weight: 950;
       color: #6B7280 !important;
       -webkit-text-fill-color: #6B7280 !important;
     }
 
-    #appScreen .vtr126-modal .vtr126-field select option {
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field select option {
       color: #6B7280 !important;
       -webkit-text-fill-color: #6B7280 !important;
       background: #ffffff !important;
     }
 
-    #appScreen .vtr126-field textarea,
-    #appScreen .vtr126-admin-grid textarea { min-height: 88px; resize: vertical; }
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field textarea { min-height: 88px; resize: vertical; }
 
     .vtr126-divergence {
       display: none;
