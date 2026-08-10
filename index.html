@@ -9117,7 +9117,8 @@ Banco de dados: Google Sheets.
             </div>
             <div>
               <h2>${escapar(alvo.prefixo || 'Viatura')}</h2>
-              <p>Ficha completa da viatura — ${escapar(alvo.modalidade || '-')}</p>
+              <p>Policial Responsável</p>
+              <p>${escapar(alvo.policialResponsavel || 'Não informado')}</p>
             </div>
             <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
               ${usuarioPodeGerenciarViaturaV125() ? `<button class="btn-danger-outline" type="button" onclick="confirmarInativacaoViatura('${escaparAttr(alvo.prefixo || '')}')">EXCLUIR VTR</button>` : ''}
@@ -9148,11 +9149,12 @@ Banco de dados: Google Sheets.
 
     function montarCamposFichaViatura(v) {
       const camposOriginais = Array.isArray(v.campos) ? v.campos : [];
-      const bloqueados = ['PREFIXO', 'STATUS_APP', 'STATUS APP', 'MODALIDADE'];
+      const bloqueados = ['PREFIXO', 'STATUS_APP', 'STATUS APP', 'MODALIDADE', 'POLICIAL RESPONSAVEL', 'POLICIAL RESPONSÁVEL'];
       const especiais = ['ULTIMO KM', 'ULTIMO_KM', 'ÚLTIMO KM', 'ULTIMA ATUALIZACAO', 'ULTIMA_ATUALIZACAO', 'ÚLTIMA ATUALIZAÇÃO', 'ATUALIZADO POR RE', 'ATUALIZADO_POR_RE', 'ATUALIZADO POR', 'ATUALIZADO_POR', 'OBSERVACOES', 'OBSERVAÇÕES'];
 
       const campos = camposOriginais.filter(function(campo) {
         const rotuloNorm = normalizarTexto(campo.rotulo || '').replace(/_/g, ' ');
+        if (Number(campo.coluna || 0) === 24) return false;
         if (bloqueados.indexOf(rotuloNorm) !== -1) return false;
         if (especiais.indexOf(rotuloNorm) !== -1) return false;
         return true;
@@ -9184,10 +9186,28 @@ Banco de dados: Google Sheets.
              usuarioTemPermissaoCliente('VIATURAS', 'inserir');
     }
 
+    function usuarioPodeEditarResponsavelViatura() {
+      return usuarioTemPermissaoCliente('VIATURAS', 'editar');
+    }
+
+    function optionsResponsavelViatura(lista, valorAtual) {
+      const atual = String(valorAtual || '').trim();
+      const valores = (Array.isArray(lista) ? lista : []).map(function(v) {
+        return String(v || '').trim();
+      }).filter(Boolean);
+
+      if (atual && valores.indexOf(atual) === -1) valores.unshift(atual);
+
+      return '<option value="">Nenhum policial selecionado</option>' + valores.map(function(v) {
+        return '<option value="' + escaparAttr(v) + '" ' + (v === atual ? 'selected' : '') + '>' + escapar(v) + '</option>';
+      }).join('');
+    }
+
     function montarFormularioAtualizacaoViatura(v) {
       const podeEditarSituacao = usuarioPodeEditarSituacaoViatura();
       const cfg = (APP.dadosViaturas && APP.dadosViaturas.configListas) || {};
       const opcoesSituacao = cfg.situacoesViatura || [];
+      const efetivoResponsavel = (APP.dadosViaturas && APP.dadosViaturas.efetivoResponsavel) || [];
 
       return `
         <div class="viatura-atualizacao-box">
@@ -9195,6 +9215,15 @@ Banco de dados: Google Sheets.
           <p>Atualize a situação, o KM ou registre observações constatadas na viatura.</p>
 
           <div class="viatura-form-grid viatura-update-grid ${podeEditarSituacao ? 'com-situacao' : 'sem-situacao'}" style="display:grid;grid-template-columns:${podeEditarSituacao ? 'minmax(0,1fr) 150px' : '150px minmax(0,1fr)'};gap:14px;align-items:end;width:100%;">
+            ${usuarioPodeEditarResponsavelViatura() ? `
+              <div class="viatura-form-field responsavel-field" style="grid-column:1 / -1;min-width:0;width:100%;">
+                <label>POLICIAL RESPONSÁVEL</label>
+                <select id="viaturaPolicialResponsavel" class="select-ft select-ft-real select-viatura-v124" data-valor-anterior="${escaparAttr(v.policialResponsavel || '')}" style="appearance:none;-webkit-appearance:none;width:100%;min-height:54px;border:1px solid rgba(55,66,71,.18);border-radius:22px;padding:14px 48px 14px 16px;background:linear-gradient(180deg,#ffffff,#f7fafc);color:#17202a;-webkit-text-fill-color:#17202a;font-size:14px;font-weight:850;line-height:1.25;box-shadow:0 10px 24px rgba(15,23,42,.08);outline:none;">
+                  ${optionsResponsavelViatura(efetivoResponsavel, v.policialResponsavel || '')}
+                </select>
+              </div>
+            ` : ''}
+
             ${podeEditarSituacao ? `
               <div class="viatura-form-field situacao-field" style="min-width:0;">
                 <label>SITUAÇÃO</label>
@@ -10302,7 +10331,63 @@ Banco de dados: Google Sheets.
     const _abrirFichaViaturaV124=abrirFichaViatura;
     abrirFichaViatura=function(prefixo){_abrirFichaViaturaV124(prefixo);setTimeout(function(){const dados=APP.dadosViaturas||{},lista=[].concat(dados.tatico||[],dados.rocam||[],dados.outras||[]),v=lista.find(x=>normalizarTexto(x.prefixo||'')===normalizarTexto(prefixo||''));const box=document.querySelector('.viatura-atualizacao-box');if(box&&v&&usuarioPodeGerenciarViaturaV125()){box.insertAdjacentHTML('afterbegin',`<h3>Dados cadastrais editáveis</h3>${montarCamposEditaveisViaturaV125(v)}<button class="viatura-historico-btn" type="button" onclick="abrirHistoricoVtrV125('${escaparAttr(v.prefixo||'')}')">Histórico VTR</button>`);}},0);};
 
-    function atualizarKmViatura(prefixo){const kmEl=document.getElementById('viaturaNovoKm'),obsEl=document.getElementById('viaturaObservacoes'),sitEl=document.getElementById('viaturaSituacao'),btn=document.getElementById('btnAtualizarViatura');const novoKm=kmEl?String(kmEl.value||'').trim():'',observacoes=obsEl?String(obsEl.value||'').trim():'',situacao=sitEl?String(sitEl.value||'').trim():'';const campos={};document.querySelectorAll('[data-vtr-col]').forEach(el=>campos['col'+el.getAttribute('data-vtr-col')]=el.value);if(!novoKm&&!observacoes&&!situacao&&!Object.keys(campos).length){mostrarToastFt('Atualização não enviada','Informe ao menos uma alteração.');return;}if(btn){btn.disabled=true;btn.textContent='ATUALIZANDO...';}chamarApi('atualizar_dados_viatura',{login:APP.credenciais.login,senha:APP.credenciais.senha,prefixo:prefixo,novoKm:novoKm,observacoes:observacoes,situacao:situacao,campos:JSON.stringify(campos)}).then(function(r){if(!r||!r.ok)throw new Error(r&&r.erro?r.erro:'Falha ao atualizar viatura.');mostrarToastFt('Viatura atualizada',r.dados.mensagem);fecharFichaViatura();return carregarDadosViaturas(true).then(renderizarViaturas)}).catch(e=>mostrarToastFt('Erro',e.message||String(e))).finally(function(){if(btn){btn.disabled=false;btn.textContent='CONFIRMAR ATUALIZAÇÃO DE VTR';}});}
+    function atualizarKmViatura(prefixo) {
+      const kmEl = document.getElementById('viaturaNovoKm');
+      const obsEl = document.getElementById('viaturaObservacoes');
+      const sitEl = document.getElementById('viaturaSituacao');
+      const responsavelEl = document.getElementById('viaturaPolicialResponsavel');
+      const btn = document.getElementById('btnAtualizarViatura');
+      const novoKm = kmEl ? String(kmEl.value || '').trim() : '';
+      const observacoes = obsEl ? String(obsEl.value || '').trim() : '';
+      const situacao = sitEl ? String(sitEl.value || '').trim() : '';
+      const policialResponsavel = responsavelEl ? String(responsavelEl.value || '').trim() : '';
+      const responsavelAnterior = responsavelEl ? String(responsavelEl.getAttribute('data-valor-anterior') || '').trim() : '';
+      const responsavelAlterado = !!responsavelEl && policialResponsavel !== responsavelAnterior;
+      const campos = {};
+
+      document.querySelectorAll('[data-vtr-col]').forEach(function(el) {
+        campos['col' + el.getAttribute('data-vtr-col')] = el.value;
+      });
+
+      if (!novoKm && !observacoes && !situacao && !responsavelAlterado && !Object.keys(campos).length) {
+        mostrarToastFt('Atualização não enviada', 'Informe ao menos uma alteração.');
+        return;
+      }
+
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'ATUALIZANDO...';
+      }
+
+      const parametros = {
+        login: APP.credenciais.login,
+        senha: APP.credenciais.senha,
+        prefixo: prefixo,
+        novoKm: novoKm,
+        observacoes: observacoes,
+        situacao: situacao,
+        campos: JSON.stringify(campos)
+      };
+
+      if (responsavelAlterado) parametros.policialResponsavel = policialResponsavel;
+
+      chamarApi('atualizar_dados_viatura', parametros)
+        .then(function(r) {
+          if (!r || !r.ok) throw new Error(r && r.erro ? r.erro : 'Falha ao atualizar viatura.');
+          mostrarToastFt('Viatura atualizada', r.dados.mensagem);
+          fecharFichaViatura();
+          return carregarDadosViaturas(true).then(renderizarViaturas);
+        })
+        .catch(function(e) {
+          mostrarToastFt('Erro', e.message || String(e));
+        })
+        .finally(function() {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'CONFIRMAR ATUALIZAÇÃO DE VTR';
+          }
+        });
+    }
     function confirmarInativacaoViatura(prefixo){if(!confirm('Confirma a exclusão da viatura '+prefixo+' do aplicativo? A linha será mantida e o STATUS_APP será alterado para INATIVA.'))return;chamarApi('inativar_viatura',{login:APP.credenciais.login,senha:APP.credenciais.senha,prefixo:prefixo}).then(function(r){if(!r||!r.ok)throw new Error(r&&r.erro?r.erro:'Falha ao inativar viatura.');fecharFichaViatura();mostrarToastFt('Viatura inativada',r.dados.mensagem);return carregarDadosViaturas(true).then(renderizarViaturas)}).catch(e=>mostrarToastFt('Erro',e.message||String(e)));}
 </script>
 </body>
