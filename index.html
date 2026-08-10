@@ -5452,17 +5452,110 @@ Banco de dados: Google Sheets.
     .freq-table thead .freq-pm{z-index:8;background:#374247}
     .freq-table .freq-pm strong{display:block;color:#17202a}.freq-table .freq-pm small{color:#64748b}
     .freq-table thead .freq-pm strong{color:#fff}.freq-table thead .freq-pm small{color:#e2e8f0}
-    .freq-table .freq-day{width:42px;min-width:42px}.freq-table thead .freq-day small{display:block;margin-top:1px;color:#cbd5e1;font-size:8px;font-weight:800}.freq-select-wrap{width:39px;height:31px;margin:0 auto}.freq-table select{display:block;width:39px;height:31px;margin:0 auto;border:1px solid rgba(55,66,71,.18);border-radius:7px;background-color:#fff;color:#17202a;font-size:10px;font-weight:900;text-align:center;text-align-last:center;padding:0 13px 0 2px;cursor:pointer;line-height:31px}
-    .freq-table select.freq-preenchido{-webkit-appearance:none!important;-moz-appearance:none!important;appearance:none!important;background-image:none!important;padding:0 2px!important;color:#17202a!important;-webkit-text-fill-color:#17202a!important;text-align:center!important;text-align-last:center!important}
-    .freq-table select.freq-destaque{color:#5D001E!important;-webkit-text-fill-color:#5D001E!important;font-weight:950!important;background:#fff7f9!important;border-color:rgba(93,0,30,.34)!important}
-    .freq-table select.freq-preenchido.freq-destaque{color:#5D001E!important;-webkit-text-fill-color:#5D001E!important}
-    .freq-table select:disabled{cursor:not-allowed;background:#eef2f6;color:#64748b;opacity:.8}
-    .freq-table select.freq-destaque:disabled{color:#5D001E!important;-webkit-text-fill-color:#5D001E!important;background:#f7e9ed!important;opacity:1}
+    .freq-table .freq-day{
+      width:42px;
+      min-width:42px;
+      max-width:42px;
+      padding:3px;
+      box-sizing:border-box;
+      overflow:hidden;
+      vertical-align:middle;
+    }
+    .freq-table thead .freq-day small{display:block;margin-top:1px;color:#cbd5e1;font-size:8px;font-weight:800}
+
+    /* O seletor nativo permanece funcional, mas nunca é desenhado na célula.
+       Toda a parte visível fica rigidamente contida no campo de 34 x 29 px. */
+    .freq-select-wrap{
+      position:relative;
+      display:block;
+      width:34px;
+      height:29px;
+      margin:0 auto;
+      overflow:hidden;
+      box-sizing:border-box;
+      border:1px solid rgba(55,66,71,.18);
+      border-radius:6px;
+      background:#fff;
+      color:#17202a;
+      box-shadow:none;
+    }
+    .freq-select-display{
+      position:absolute;
+      inset:0;
+      z-index:1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      width:100%;
+      height:100%;
+      padding:0;
+      overflow:hidden;
+      box-sizing:border-box;
+      color:#17202a;
+      font-size:10px;
+      font-weight:900;
+      line-height:1;
+      text-align:center;
+      white-space:nowrap;
+      pointer-events:none;
+    }
+    .freq-select-wrap:not(.freq-preenchido) .freq-select-display::before{
+      content:"";
+      display:block;
+      width:0;
+      height:0;
+      border-left:3px solid transparent;
+      border-right:3px solid transparent;
+      border-top:4px solid #374247;
+    }
+    .freq-select-wrap.freq-preenchido .freq-select-display::before{content:none}
+    .freq-select-wrap.freq-destaque{
+      border-color:rgba(93,0,30,.34);
+      background:#fff7f9;
+    }
+    .freq-select-wrap.freq-destaque .freq-select-display{
+      color:#5D001E;
+      font-weight:950;
+    }
+    .freq-select-wrap.freq-bloqueado{background:#eef2f6}
+    .freq-select-wrap.freq-bloqueado.freq-destaque{background:#f7e9ed}
+
+    #appScreen .freq-table .freq-select-wrap select.freq-native-select{
+      position:absolute!important;
+      inset:0!important;
+      z-index:2!important;
+      display:block!important;
+      width:100%!important;
+      min-width:0!important;
+      max-width:none!important;
+      height:100%!important;
+      min-height:0!important;
+      max-height:none!important;
+      margin:0!important;
+      padding:0!important;
+      overflow:hidden!important;
+      border:0!important;
+      border-radius:0!important;
+      background:transparent!important;
+      background-image:none!important;
+      color:transparent!important;
+      -webkit-text-fill-color:transparent!important;
+      opacity:0!important;
+      font-size:16px!important;
+      line-height:normal!important;
+      cursor:pointer!important;
+      box-shadow:none!important;
+      transform:none!important;
+      -webkit-appearance:menulist!important;
+      -moz-appearance:menulist!important;
+      appearance:auto!important;
+    }
+    #appScreen .freq-table .freq-select-wrap select.freq-native-select:disabled{cursor:not-allowed!important}
     .freq-table .freq-total{width:88px;min-width:88px;background:#D1D5DB;font-weight:900;color:#17202a}
     .freq-table .freq-total.diarias{position:sticky;right:88px;z-index:4}.freq-table .freq-total.trabalhados{position:sticky;right:0;z-index:4}
     .freq-table thead .freq-total{z-index:8;background:#374247;color:#fff}
     .freq-group td{position:sticky;left:0;z-index:5!important;background:#e9edf1!important;color:#17202a!important;text-align:left!important;font-weight:950!important;letter-spacing:.45px;padding:8px 12px!important}
-    .freq-saving{outline:2px solid #eab308!important}.freq-saved{outline:2px solid #16a34a!important}
+    .freq-select-wrap.freq-saving{outline:2px solid #eab308!important}.freq-select-wrap.freq-saved{outline:2px solid #16a34a!important}
     .freq-note{font-size:12px;color:#64748b;margin:10px 0}
     @media(min-width:761px){.freq-legend[open] summary{margin-bottom:2px}.freq-legend summary{pointer-events:none}.freq-legend summary::-webkit-details-marker{display:none}}
     @media(max-width:900px){.freq-audit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.freq-legend-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -6296,7 +6389,7 @@ Banco de dados: Google Sheets.
               const dia = indice + 1;
               const atual = String((reg.dias || [])[indice] || '');
               const classeVisual = classesCelulaFrequencia(grupo, atual);
-              return '<td class="freq-day"><div class="freq-select-wrap"><select class="' + classeVisual + '" aria-label="Dia ' + dia + ' de ' + escapar(pm.nomeGuerra || '') + '" data-grupo="' + escaparAttr(grupo) + '" data-re="' + escaparAttr(pm.re || '') + '" data-dia="' + dia + '" data-valor-anterior="' + escaparAttr(atual) + '" onchange="salvarCelulaFrequencia(this)" ' + (podeEditar ? '' : 'disabled') + '>' +
+              return '<td class="freq-day"><div class="freq-select-wrap ' + classeVisual + (podeEditar ? '' : ' freq-bloqueado') + '"><span class="freq-select-display" aria-hidden="true">' + escapar(atual) + '</span><select class="freq-native-select ' + classeVisual + '" aria-label="Dia ' + dia + ' de ' + escapar(pm.nomeGuerra || '') + '" data-grupo="' + escaparAttr(grupo) + '" data-re="' + escaparAttr(pm.re || '') + '" data-dia="' + dia + '" data-valor-anterior="' + escaparAttr(atual) + '" onchange="salvarCelulaFrequencia(this)" ' + (podeEditar ? '' : 'disabled') + '>' +
                 '<option value=""></option>' + opcoes.map(function(op) { return '<option value="' + escaparAttr(op) + '" ' + (atual === String(op) ? 'selected' : '') + '>' + escapar(op) + '</option>'; }).join('') +
                 '</select></div></td>';
             }).join('') +
@@ -6338,18 +6431,26 @@ Banco de dados: Google Sheets.
 
     function atualizarVisualCelulaFrequencia(select) {
       if (!select) return;
+      const wrap = select.closest('.freq-select-wrap');
+      const display = wrap ? wrap.querySelector('.freq-select-display') : null;
+      const classes = classesCelulaFrequencia(select.getAttribute('data-grupo'), select.value).split(' ').filter(Boolean);
       select.classList.remove('freq-preenchido', 'freq-destaque');
-      classesCelulaFrequencia(select.getAttribute('data-grupo'), select.value).split(' ').filter(Boolean).forEach(function(classe) {
+      if (wrap) wrap.classList.remove('freq-preenchido', 'freq-destaque');
+      classes.forEach(function(classe) {
         select.classList.add(classe);
+        if (wrap) wrap.classList.add(classe);
       });
+      if (display) display.textContent = String(select.value || '');
     }
 
 
     function salvarCelulaFrequencia(select) {
       if (!select || select.disabled) return;
+      const wrap = select.closest('.freq-select-wrap');
       atualizarVisualCelulaFrequencia(select);
       select.disabled = true;
       select.classList.add('freq-saving');
+      if (wrap) wrap.classList.add('freq-saving');
 
       chamarApi('salvar_frequencia', {
         login: APP.credenciais.login,
@@ -6369,17 +6470,25 @@ Banco de dados: Google Sheets.
         select.setAttribute('data-valor-anterior', select.value || '');
         select.classList.remove('freq-saving');
         select.classList.add('freq-saved');
+        if (wrap) {
+          wrap.classList.remove('freq-saving');
+          wrap.classList.add('freq-saved');
+        }
         if (APP.dadosControleFrequencia) {
           APP.dadosControleFrequencia.auditoria = dados.auditoria || APP.dadosControleFrequencia.auditoria;
           const auditArea = document.getElementById('freqAuditArea');
           if (auditArea) auditArea.innerHTML = montarAuditoriaFrequencia(APP.dadosControleFrequencia);
         }
-        setTimeout(function() { select.classList.remove('freq-saved'); }, 800);
+        setTimeout(function() {
+          select.classList.remove('freq-saved');
+          if (wrap) wrap.classList.remove('freq-saved');
+        }, 800);
       }).catch(function(err) {
         const anterior = select.getAttribute('data-valor-anterior');
         if (anterior !== null) select.value = anterior;
         atualizarVisualCelulaFrequencia(select);
         select.classList.remove('freq-saving');
+        if (wrap) wrap.classList.remove('freq-saving');
         mostrarToastFt('Lançamento não salvo', err.message || String(err));
       }).finally(function() {
         const fechado = APP.dadosControleFrequencia && APP.dadosControleFrequencia.auditoria && APP.dadosControleFrequencia.auditoria.fechamentoCmt.status === 'APROVADO';
