@@ -5453,7 +5453,10 @@ Banco de dados: Google Sheets.
     .freq-table .freq-pm strong{display:block;color:#17202a}.freq-table .freq-pm small{color:#64748b}
     .freq-table thead .freq-pm strong{color:#fff}.freq-table thead .freq-pm small{color:#e2e8f0}
     .freq-table .freq-day{width:37px;min-width:37px}.freq-table thead .freq-day small{display:block;margin-top:1px;color:#cbd5e1;font-size:8px;font-weight:800}.freq-table select{width:34px;height:31px;border:1px solid rgba(55,66,71,.18);border-radius:7px;background:#fff;color:#17202a;font-size:10px;font-weight:900;text-align:center;padding:0;cursor:pointer}
+    .freq-table select.freq-preenchido{-webkit-appearance:none;appearance:none;background-image:none;padding:0 2px;color:#17202a;-webkit-text-fill-color:#17202a}
+    .freq-table select.freq-destaque{color:#5D001E!important;-webkit-text-fill-color:#5D001E!important;font-weight:950!important;background:#fff7f9!important;border-color:rgba(93,0,30,.34)!important}
     .freq-table select:disabled{cursor:not-allowed;background:#eef2f6;color:#64748b;opacity:.8}
+    .freq-table select.freq-destaque:disabled{color:#5D001E!important;-webkit-text-fill-color:#5D001E!important;background:#f7e9ed!important;opacity:1}
     .freq-table .freq-total{width:88px;min-width:88px;background:#f8fafc;font-weight:900;color:#17202a}
     .freq-table .freq-total.diarias{position:sticky;right:88px;z-index:4}.freq-table .freq-total.trabalhados{position:sticky;right:0;z-index:4}
     .freq-table thead .freq-total{z-index:8;background:#374247;color:#fff}
@@ -6142,10 +6145,12 @@ Banco de dados: Google Sheets.
               <div class="page-actions"><button class="btn-page" onclick="abrirHome()">VOLTAR</button></div>
             </div>
           </div>
-          <div class="freq-launch-card">
-            <h2>Controle de Frequência</h2>
-            <p>Lançamento mensal para apuração de diárias, dias trabalhados e auditorias administrativas.</p>
-            <button class="adm-submit" style="width:auto" type="button" onclick="abrirControleFrequencia()">CONTROLE DE FREQUÊNCIA</button>
+          <div class="menu-grid">
+            <div class="menu-card" data-modulo="CONTROLE_FREQUENCIA" onclick="abrirControleFrequencia()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirControleFrequencia();}">
+              <div class="menu-icon">📅</div>
+              <h3>CONTROLE DE FREQUÊNCIA</h3>
+              <p>Lançamento mensal para apuração de diárias, dias trabalhados e auditorias administrativas.</p>
+            </div>
           </div>
         </div>`;
     }
@@ -6289,7 +6294,8 @@ Banco de dados: Google Sheets.
             Array.from({length:diasNoMes}, function(_, indice) {
               const dia = indice + 1;
               const atual = String((reg.dias || [])[indice] || '');
-              return '<td class="freq-day"><select aria-label="Dia ' + dia + ' de ' + escapar(pm.nomeGuerra || '') + '" data-re="' + escaparAttr(pm.re || '') + '" data-dia="' + dia + '" data-valor-anterior="' + escaparAttr(atual) + '" onchange="salvarCelulaFrequencia(this)" ' + (podeEditar ? '' : 'disabled') + '>' +
+              const classeVisual = classesCelulaFrequencia(grupo, atual);
+              return '<td class="freq-day"><select class="' + classeVisual + '" aria-label="Dia ' + dia + ' de ' + escapar(pm.nomeGuerra || '') + '" data-grupo="' + escaparAttr(grupo) + '" data-re="' + escaparAttr(pm.re || '') + '" data-dia="' + dia + '" data-valor-anterior="' + escaparAttr(atual) + '" onchange="salvarCelulaFrequencia(this)" ' + (podeEditar ? '' : 'disabled') + '>' +
                 '<option value=""></option>' + opcoes.map(function(op) { return '<option value="' + escaparAttr(op) + '" ' + (atual === String(op) ? 'selected' : '') + '>' + escapar(op) + '</option>'; }).join('') +
                 '</select></td>';
             }).join('') +
@@ -6317,8 +6323,30 @@ Banco de dados: Google Sheets.
     }
 
 
+    function classesCelulaFrequencia(grupo, valor) {
+      const v = String(valor == null ? '' : valor).trim();
+      const g = String(grupo == null ? '' : grupo).trim().toUpperCase();
+      const classes = [];
+      if (v) classes.push('freq-preenchido');
+      if ((g === 'ADM' && (v === '2' || v === '3')) || (g !== 'ADM' && v === '3')) {
+        classes.push('freq-destaque');
+      }
+      return classes.join(' ');
+    }
+
+
+    function atualizarVisualCelulaFrequencia(select) {
+      if (!select) return;
+      select.classList.remove('freq-preenchido', 'freq-destaque');
+      classesCelulaFrequencia(select.getAttribute('data-grupo'), select.value).split(' ').filter(Boolean).forEach(function(classe) {
+        select.classList.add(classe);
+      });
+    }
+
+
     function salvarCelulaFrequencia(select) {
       if (!select || select.disabled) return;
+      atualizarVisualCelulaFrequencia(select);
       select.disabled = true;
       select.classList.add('freq-saving');
 
@@ -6349,6 +6377,7 @@ Banco de dados: Google Sheets.
       }).catch(function(err) {
         const anterior = select.getAttribute('data-valor-anterior');
         if (anterior !== null) select.value = anterior;
+        atualizarVisualCelulaFrequencia(select);
         select.classList.remove('freq-saving');
         mostrarToastFt('Lançamento não salvo', err.message || String(err));
       }).finally(function() {
