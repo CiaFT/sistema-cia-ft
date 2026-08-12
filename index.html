@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.2.8
+SISTEMA CIA FT — PORTAL GITHUB V1.2.8.1
 Arquivo: index.html
 ============================================================
 
-IMPLANTAÇÃO V1.2.8 — ESCALAS CIA FT E FOLGAS PENDENTES
+CORREÇÃO V1.2.8.1 — UPLOAD MÚLTIPLO DAS ESCALAS CIA FT
 - Preserva a última versão encerrada do Controle de Frequência.
 - Preserva a implantação completa de Viaturas V1.2.6.
 - Corrige a leitura e a identificação funcional em Resenhas Enviadas.
@@ -13,9 +13,10 @@ IMPLANTAÇÃO V1.2.8 — ESCALAS CIA FT E FOLGAS PENDENTES
 - Inclui Controle de Folgas com ciclo de 14 EO e saldos individuais.
 - Inclui upload e consulta privada das Escalas Cia FT em PDF.
 - Inclui Folgas Pendentes conforme o escopo de visualização do usuário.
+- Corrige a autorização do upload e permite enviar várias escalas no mesmo lote.
 
 Front-end externo hospedado no GitHub Pages.
-Backend/API: Apps Script API_FT.gs V1.2.8.
+Backend/API: Apps Script API_FT.gs V1.2.8.1.
 Banco de dados: Google Sheets.
 
 ============================================================
@@ -24,7 +25,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Portal Força Tática • V1.2.8</title>
+  <title>Portal Força Tática • V1.2.8.1</title>
 
   <style>
     :root {
@@ -6134,7 +6135,7 @@ Banco de dados: Google Sheets.
     .ef-section-head button{flex:0 0 auto;border:1px solid #374247;border-radius:12px;background:#fff;color:#374247;padding:9px 12px;font:inherit;font-size:10px;font-weight:950;cursor:pointer}
     .ef-uploader{margin:0 0 17px;border:1px solid rgba(142,27,27,.18);border-radius:20px;background:linear-gradient(135deg,#fff7f8,#fff);padding:14px;box-shadow:0 10px 24px rgba(15,23,42,.05)}
     .ef-uploader-title{display:flex;align-items:center;gap:10px;margin-bottom:10px}.ef-uploader-title span{display:grid;place-items:center;width:40px;height:40px;border-radius:13px;background:#8E1B1B;color:#fff;font-size:20px}.ef-uploader-title h3{margin:0;color:#17202a;font-size:13px}.ef-uploader-title p{margin:3px 0 0;color:#64748b;font-size:10.5px}
-    .ef-uploader iframe{display:block;width:100%;height:154px;border:0;background:transparent}
+    .ef-uploader iframe{display:block;width:100%;height:300px;border:0;background:transparent;transition:height .2s ease}
     .ef-escalas-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
     .ef-escala-card{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;min-width:0;border:1px solid rgba(55,66,71,.15);border-radius:18px;background:#fff;padding:14px;box-shadow:0 9px 22px rgba(15,23,42,.055)}
     .ef-escala-card.amanha{border-color:rgba(21,128,61,.32);background:linear-gradient(135deg,#f0fdf4,#fff)}
@@ -6146,7 +6147,7 @@ Banco de dados: Google Sheets.
     .ef-table{width:100%;border-collapse:separate;border-spacing:0;min-width:690px;color:#17202a}.ef-table th{position:sticky;top:0;z-index:2;background:#374247;color:#fff;padding:10px 12px;font-size:9px;font-weight:950;letter-spacing:.25px;text-align:center}.ef-table th:first-child{text-align:left}.ef-table td{border-bottom:1px solid #e5e7eb;padding:10px 12px;font-size:11px;text-align:center}.ef-table tbody tr:last-child td{border-bottom:0}.ef-table td:first-child{text-align:left}.ef-table .ef-pm strong{display:block;color:#17202a;font-size:11.5px}.ef-table .ef-pm small{display:block;margin-top:2px;color:#64748b;font-size:9.5px}.ef-table .ef-num{font-size:15px;font-weight:950}.ef-table .ef-fm{color:#1B5E20}.ef-table .ef-ff{color:#64748b}.ef-table .ef-grupo td{background:#e9edf1;color:#374247;font-size:9px;font-weight:950;letter-spacing:.3px;text-align:left}
     .ef-scope-note{margin:0 0 12px;border-left:5px solid #8E1B1B;border-radius:12px;background:#f8fafc;color:#475569;padding:10px 12px;font-size:10.5px;line-height:1.45}
     .ef-pdf-modal{position:fixed;inset:0;z-index:10050;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.82);padding:18px}.ef-pdf-dialog{display:flex;flex-direction:column;width:min(1180px,96vw);height:min(900px,94vh);overflow:hidden;border:1px solid rgba(255,255,255,.2);border-radius:20px;background:#fff;box-shadow:0 28px 80px rgba(0,0,0,.5)}.ef-pdf-head{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#374247;color:#fff;padding:11px 14px}.ef-pdf-head strong{min-width:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ef-pdf-actions{display:flex;gap:8px}.ef-pdf-actions a,.ef-pdf-actions button{border:1px solid rgba(255,255,255,.35);border-radius:10px;background:#fff;color:#374247;padding:7px 10px;font:inherit;font-size:9px;font-weight:950;text-decoration:none;cursor:pointer}.ef-pdf-frame{flex:1;width:100%;border:0;background:#d1d5db}
-    @media(max-width:760px){.ef-menu-grid,.ef-escalas-list{grid-template-columns:1fr}.ef-menu-grid .menu-card{min-height:0}.ef-section-head{align-items:flex-start;flex-direction:column}.ef-uploader iframe{height:290px}.ef-escala-card{grid-template-columns:auto minmax(0,1fr)}.ef-view-btn{grid-column:1/-1;width:100%}.ef-pdf-modal{padding:5px}.ef-pdf-dialog{width:100%;height:98vh;border-radius:14px}.ef-pdf-head{align-items:flex-start;flex-direction:column}.ef-pdf-actions{width:100%}.ef-pdf-actions a,.ef-pdf-actions button{flex:1;text-align:center}}
+    @media(max-width:760px){.ef-menu-grid,.ef-escalas-list{grid-template-columns:1fr}.ef-menu-grid .menu-card{min-height:0}.ef-section-head{align-items:flex-start;flex-direction:column}.ef-uploader iframe{height:390px}.ef-escala-card{grid-template-columns:auto minmax(0,1fr)}.ef-view-btn{grid-column:1/-1;width:100%}.ef-pdf-modal{padding:5px}.ef-pdf-dialog{width:100%;height:98vh;border-radius:14px}.ef-pdf-head{align-items:flex-start;flex-direction:column}.ef-pdf-actions{width:100%}.ef-pdf-actions button{flex:1;text-align:center}}
 
     /* ============================================================
      * ROTINAS ADMINISTRATIVAS
@@ -6423,7 +6424,7 @@ Banco de dados: Google Sheets.
       <div id="loginAlerta" class="alerta"></div>
 
       <div class="footer">
-        Portal Força Tática • V1.2.8
+        Portal Força Tática • V1.2.8.1
       </div>
     </main>
   </section>
@@ -7977,10 +7978,11 @@ Banco de dados: Google Sheets.
         return Number(!!b.ehAmanha) - Number(!!a.ehAmanha) || String(b.dataServicoISO || '').localeCompare(String(a.dataServicoISO || ''));
       });
       const podeUpload = !!(dados.capacidades && dados.capacidades.podeUpload);
+      const uploadToken = String(dados.capacidades && dados.capacidades.uploadToken || '');
       const uploader = podeUpload ? `
         <div class="ef-uploader">
-          <div class="ef-uploader-title"><span>⬆</span><div><h3>PUBLICAR ESCALA CIA FT</h3><p>O PDF fica privado e acessível somente aos usuários autenticados no módulo.</p></div></div>
-          <iframe id="efUploaderFrame" title="Enviar PDF da Escala Cia FT" src="${escaparAttr(API_URL + '?action=upload_escala_cia_ft_form&_cache=' + Date.now())}" onload="configurarUploaderEscalaCiaFt()"></iframe>
+          <div class="ef-uploader-title"><span>⬆</span><div><h3>PUBLICAR ESCALAS CIA FT</h3><p>Envie no mesmo lote as escalas de sábado, domingo, segunda-feira, feriados ou outras datas necessárias.</p></div></div>
+          <iframe id="efUploaderFrame" title="Enviar PDFs das Escalas Cia FT" src="${escaparAttr(API_URL + '?action=upload_escala_cia_ft_form&token=' + encodeURIComponent(uploadToken) + '&_cache=' + Date.now())}"></iframe>
         </div>` : '';
       box.innerHTML = `
         <div class="ef-section-head"><div><h2>Escalas Cia FT</h2><p>Escalas de serviço publicadas em PDF. A escala do dia seguinte aparece em destaque.</p></div><button type="button" onclick="renderizarMenuEscalasFolgas()">VOLTAR ÀS OPÇÕES</button></div>
@@ -8010,27 +8012,21 @@ Banco de dados: Google Sheets.
 
 
     function configurarUploaderEscalaCiaFt() {
-      const frame = document.getElementById('efUploaderFrame');
-      if (!frame || !frame.contentWindow || !APP.credenciais) return;
-      frame.contentWindow.postMessage({
-        type: 'FT_ESCALA_CIA_CONFIG',
-        login: APP.credenciais.login,
-        senha: APP.credenciais.senha,
-        dataAmanha: (APP.dadosEscalasFolgas && APP.dadosEscalasFolgas.amanhaISO) || ''
-      }, '*');
+      return !!document.getElementById('efUploaderFrame');
     }
 
 
     function tratarMensagemUploaderEscalaCiaFt(event) {
       const frame = document.getElementById('efUploaderFrame');
       if (!frame || event.source !== frame.contentWindow || !event.data) return;
-      if (event.data.type === 'FT_ESCALA_CIA_READY') {
-        configurarUploaderEscalaCiaFt();
+      if (event.data.type === 'FT_ESCALA_CIA_ALTURA') {
+        const altura = Math.max(240, Math.min(760, Number(event.data.altura || 300)));
+        frame.style.height = altura + 'px';
         return;
       }
-      if (event.data.type === 'FT_ESCALA_CIA_ENVIADA') {
-        const resp = event.data.resposta || {};
-        mostrarToastFt('Escala Cia FT publicada', resp.dados && resp.dados.mensagem ? resp.dados.mensagem : 'O PDF foi enviado com sucesso.');
+      if (event.data.type === 'FT_ESCALA_CIA_LOTE_ENVIADO') {
+        const quantidade = Array.isArray(event.data.resultados) ? event.data.resultados.length : 0;
+        mostrarToastFt('Escalas Cia FT publicadas', quantidade + ' escala(s) enviada(s) com sucesso.');
         carregarDadosEscalasFolgas('escalas');
       }
     }
@@ -8092,7 +8088,7 @@ Banco de dados: Google Sheets.
       const modal = document.createElement('div');
       modal.id = 'efPdfModal';
       modal.className = 'ef-pdf-modal';
-      modal.innerHTML = '<div class="ef-pdf-dialog" role="dialog" aria-modal="true" aria-label="Visualizador da Escala Cia FT"><div class="ef-pdf-head"><strong>' + escapar(nomeArquivo || 'Escala Cia FT.pdf') + '</strong><div class="ef-pdf-actions"><a href="' + escaparAttr(url) + '" download="' + escaparAttr(nomeArquivo || 'Escala_Cia_FT.pdf') + '">BAIXAR</a><button type="button" onclick="fecharVisualizadorPdfEscalaCiaFt()">FECHAR</button></div></div><iframe class="ef-pdf-frame" src="' + escaparAttr(url) + '" title="PDF da Escala Cia FT"></iframe></div>';
+      modal.innerHTML = '<div class="ef-pdf-dialog" role="dialog" aria-modal="true" aria-label="Visualizador da Escala Cia FT"><div class="ef-pdf-head"><strong>' + escapar(nomeArquivo || 'Escala Cia FT.pdf') + '</strong><div class="ef-pdf-actions"><button type="button" onclick="fecharVisualizadorPdfEscalaCiaFt()">FECHAR</button></div></div><iframe class="ef-pdf-frame" src="' + escaparAttr(url + '#toolbar=0&navpanes=0') + '" title="PDF da Escala Cia FT"></iframe></div>';
       modal.addEventListener('click', function(ev) { if (ev.target === modal) fecharVisualizadorPdfEscalaCiaFt(); });
       document.body.appendChild(modal);
     }
