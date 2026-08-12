@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.2.6
+SISTEMA CIA FT — PORTAL GITHUB V1.2.7
 Arquivo: index.html
 ============================================================
 
-CONSOLIDAÇÃO V1.2.6 CORREÇÕES
+IMPLANTAÇÃO V1.2.7 — CONTROLE DE FOLGAS
 - Preserva a última versão encerrada do Controle de Frequência.
 - Preserva a implantação completa de Viaturas V1.2.6.
 - Corrige a leitura e a identificação funcional em Resenhas Enviadas.
 - Inclui Rotinas Administrativas mensais, semanais e diárias.
+- Inclui Controle de Folgas com ciclo de 14 EO e saldos individuais.
 
 Front-end externo hospedado no GitHub Pages.
-Backend/API: Apps Script API_FT.gs V1.2.6.
+Backend/API: Apps Script API_FT.gs V1.2.7.
 Banco de dados: Google Sheets.
 
 ============================================================
@@ -21,7 +22,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Portal Força Tática • V1.2.6</title>
+  <title>Portal Força Tática • V1.2.7</title>
 
   <style>
     :root {
@@ -5671,9 +5672,15 @@ Banco de dados: Google Sheets.
     .freq-group td{position:sticky;left:0;z-index:5!important;background:#e9edf1!important;color:#17202a!important;text-align:left!important;font-weight:950!important;letter-spacing:.45px;padding:8px 12px!important}
     .freq-select-wrap.freq-saving{outline:2px solid #eab308!important}.freq-select-wrap.freq-saved{outline:2px solid #16a34a!important}
     .freq-note{font-size:12px;color:#64748b;margin:10px 0}
+    .folga-rule-note{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0 16px}
+    .folga-rule-note div{border:1px solid rgba(55,66,71,.14);border-radius:14px;background:#fff;padding:10px 12px;color:#475569;font-size:11px;line-height:1.45}
+    .folga-rule-note strong{display:block;margin-bottom:2px;color:#17202a;font-size:11px}
+    .folga-table .folga-dia-inativo{background:#eef2f6!important}
+    .folga-table .folga-dia-inativo .freq-select-wrap{border-color:#d1d5db;background:#e5e7eb}
+    .folga-table .folga-dia-inativo .freq-select-display::before{display:none!important}
     @media(min-width:761px){.freq-legend[open] summary{margin-bottom:2px}.freq-legend summary{pointer-events:none}.freq-legend summary::-webkit-details-marker{display:none}}
     @media(max-width:900px){.freq-audit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.freq-legend-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-    @media(max-width:760px){.freq-launch-card{padding:14px}.freq-close-grid{grid-template-columns:1fr}.freq-pdf-card{grid-template-columns:1fr}.freq-pdf-card button{width:100%;min-width:0}.freq-table-wrap{max-height:62vh;-webkit-overflow-scrolling:touch}.freq-table{min-width:1650px}.freq-table .freq-pm{width:168px;min-width:168px;max-width:168px}.freq-table .freq-total.diarias,.freq-table .freq-total.trabalhados{position:static}.freq-legend-grid{grid-template-columns:1fr}.freq-audit-grid{grid-template-columns:1fr 1fr}.freq-note{font-size:11px}}
+    @media(max-width:760px){.freq-launch-card{padding:14px}.freq-close-grid{grid-template-columns:1fr}.freq-pdf-card{grid-template-columns:1fr}.freq-pdf-card button{width:100%;min-width:0}.freq-table-wrap{max-height:62vh;-webkit-overflow-scrolling:touch}.freq-table{min-width:1650px}.freq-table .freq-pm{width:168px;min-width:168px;max-width:168px}.freq-table .freq-total.diarias,.freq-table .freq-total.trabalhados{position:static}.freq-legend-grid{grid-template-columns:1fr}.freq-audit-grid{grid-template-columns:1fr 1fr}.freq-note{font-size:11px}.folga-rule-note{grid-template-columns:1fr}}
     /* ============================================================
      * VIATURAS — V1.2.6
      * Card reorganizado, controle de utilização e histórico.
@@ -6380,7 +6387,7 @@ Banco de dados: Google Sheets.
       <div id="loginAlerta" class="alerta"></div>
 
       <div class="footer">
-        Portal Força Tática • V1.2.6
+        Portal Força Tática • V1.2.7
       </div>
     </main>
   </section>
@@ -6423,6 +6430,7 @@ Banco de dados: Google Sheets.
       permissoes: {},
       credenciais: null,
       dadosControleFrequencia: null,
+      dadosControleFolgas: null,
       dadosRotinasAdministrativas: null
     };
 
@@ -7041,6 +7049,11 @@ Banco de dados: Google Sheets.
               <h3>ROTINAS ADMINISTRATIVAS</h3>
               <p>Acompanhamento e confirmação das rotinas mensais, semanais e diárias da administração.</p>
             </div>
+            <div class="menu-card" data-modulo="CONTROLE_FOLGAS" onclick="abrirControleFolgas()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirControleFolgas();}">
+              <div class="menu-icon">🏖️</div>
+              <h3>CONTROLE FOLGAS</h3>
+              <p>Lançamento diário, ciclo de 14 serviços e acompanhamento dos saldos individuais de folgas.</p>
+            </div>
           </div>
         </div>`;
     }
@@ -7636,6 +7649,181 @@ Banco de dados: Google Sheets.
       link.click();
       document.body.removeChild(link);
       setTimeout(function() { URL.revokeObjectURL(url); }, 1500);
+    }
+
+
+    function abrirControleFolgas(competencia) {
+      window.scrollTo(0, 0);
+      const alvo = competencia || (APP.dadosControleFolgas && APP.dadosControleFolgas.competencia) || competenciaAtualClienteControleFolgas();
+      document.getElementById('appConteudo').innerHTML = `
+        <div class="page-wrap">
+          <div class="page-header">
+            <div class="page-header-row">
+              <div>
+                <div class="page-kicker">Painel Administrativo</div>
+                <h1>Controle Folgas</h1>
+                <p>Lançamento diário, ciclo de 14 escalas ordinárias e controle dos saldos de folgas.</p>
+              </div>
+              <div class="page-actions"><button class="btn-page" onclick="abrirPainelAdministrativo()">VOLTAR</button></div>
+            </div>
+          </div>
+          <div id="folgasConteudo"><div class="resenha-loading">Carregando controle de folgas...</div></div>
+        </div>`;
+
+      chamarApi('dados_controle_folgas', {
+        login: APP.credenciais.login,
+        senha: APP.credenciais.senha,
+        competencia: alvo
+      }).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao carregar o Controle de Folgas.');
+        APP.dadosControleFolgas = resp.dados;
+        renderizarControleFolgas();
+      }).catch(function(err) {
+        const box = document.getElementById('folgasConteudo');
+        if (box) box.innerHTML = '<div class="adm-alerta">' + escapar(err.message || String(err)) + '</div>';
+      });
+    }
+
+
+    function competenciaAtualClienteControleFolgas() {
+      const hoje = new Date();
+      const competencia = hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0');
+      return competencia < '2026-08' ? '2026-08' : competencia;
+    }
+
+
+    function renderizarControleFolgas() {
+      const box = document.getElementById('folgasConteudo');
+      const d = APP.dadosControleFolgas;
+      if (!box || !d) return;
+      box.innerHTML = `
+        <div class="freq-months" aria-label="Meses do Controle de Folgas">
+          ${(d.meses || []).map(function(mes) {
+            return '<button type="button" class="freq-month-btn ' + (mes === d.competencia ? 'ativo' : '') + '" onclick="abrirControleFolgas(\'' + escaparAttr(mes) + '\')">' + escapar(rotuloCompetenciaFrequencia(mes)) + '</button>';
+          }).join('')}
+        </div>
+
+        <details class="freq-legend" open>
+          <summary>LEGENDA DOS LANÇAMENTOS</summary>
+          <div class="freq-legend-grid">
+            ${itemLegendaFrequencia('EO', 'Escala Ordinária')}
+            ${itemLegendaFrequencia('FF', 'Folga Flagrante')}
+            ${itemLegendaFrequencia('FM', 'Folga Mensal')}
+            ${itemLegendaFrequencia('DS', 'Dispensa de Serviço')}
+            ${itemLegendaFrequencia('CM', 'Convalescença Médica')}
+            ${itemLegendaFrequencia('LTS', 'Licença Tratamento de Saúde')}
+            ${itemLegendaFrequencia('FER', 'Férias')}
+            ${itemLegendaFrequencia('LP', 'Licença Prêmio')}
+            ${itemLegendaFrequencia('LSV', 'Licença sem Vencimentos')}
+            ${itemLegendaFrequencia('CEP', 'Cursos e Estágios')}
+            ${itemLegendaFrequencia('EAP', 'Estágio de Aperfeiçoamento Profissional')}
+            ${itemLegendaFrequencia('OUT', 'Outros — Núpcias, Paternidade, Luto etc.')}
+          </div>
+        </details>
+
+        <div class="folga-rule-note">
+          <div><strong>GERAÇÃO DE FOLGA</strong>A cada 14 lançamentos EO, o sistema soma uma FM ao saldo e reinicia o ciclo.</div>
+          <div><strong>MANTÊM O CICLO</strong>Campo vazio, FF, FM, FER, LP e EAP não somam e não zeram os dias.</div>
+          <div><strong>ZERAM O CICLO</strong>DS, CM, LTS, LSV, CEP e OUT zeram os dias, sem eliminar folgas adquiridas.</div>
+        </div>
+        <div class="freq-note">Os lançamentos são salvos individualmente. FOLGAS mostra o saldo disponível e DIAS TRAB. mostra o progresso atual do ciclo, de 0 a 13.</div>
+        ${montarTabelaControleFolgas(d)}
+      `;
+    }
+
+
+    function montarTabelaControleFolgas(d) {
+      const diasNoMes = Number(d.diasNoMes || 31);
+      const efetivo = d.efetivo || [];
+      const lancamentos = d.lancamentos || {};
+      const saldos = d.saldos || {};
+      const opcoes = d.opcoes || [];
+      const podeEditar = !!(d.capacidades && d.capacidades.podeEditar);
+      let corpo = '';
+
+      ['ADM', '1º PEL', '2º PEL'].forEach(function(grupo) {
+        const lista = efetivo.filter(function(pm) { return pm.pelotao === grupo; });
+        if (!lista.length) return;
+        corpo += '<tr class="freq-group"><td colspan="' + (diasNoMes + 3) + '">' + escapar(grupo) + '</td></tr>';
+        lista.forEach(function(pm) {
+          const chave = normalizarReClienteFrequencia(pm.re);
+          const reg = lancamentos[chave] || { dias: [] };
+          const saldo = saldos[chave] || { folgas: 0, diasTrabalhados: 0 };
+          corpo += '<tr data-folga-re="' + escaparAttr(pm.re || '') + '">' +
+            '<td class="freq-pm"><strong>' + escapar([pm.postoGrad, pm.nomeGuerra].filter(Boolean).join(' ')) + '</strong><small>RE ' + escapar(pm.re || '') + '</small></td>' +
+            Array.from({ length: diasNoMes }, function(_, indice) {
+              const dia = indice + 1;
+              const dataISO = d.competencia + '-' + String(dia).padStart(2, '0');
+              const anteriorImplantacao = dataISO < String(d.implantacaoISO || '2026-08-12');
+              const atual = String((reg.dias || [])[indice] || '');
+              const classes = atual ? 'freq-preenchido' : '';
+              const bloqueado = !podeEditar || anteriorImplantacao;
+              return '<td class="freq-day ' + (anteriorImplantacao ? 'folga-dia-inativo' : '') + '"><div class="freq-select-wrap ' + classes + (bloqueado ? ' freq-bloqueado' : '') + '"><span class="freq-select-display" aria-hidden="true">' + escapar(atual) + '</span><select class="freq-native-select ' + classes + '" aria-label="Dia ' + dia + ' de ' + escapar(pm.nomeGuerra || '') + '" data-grupo="' + escaparAttr(grupo) + '" data-re="' + escaparAttr(pm.re || '') + '" data-dia="' + dia + '" data-valor-anterior="' + escaparAttr(atual) + '" onchange="salvarCelulaControleFolgas(this)" ' + (bloqueado ? 'disabled' : '') + '>' +
+                '<option value=""></option>' + opcoes.map(function(op) { return '<option value="' + escaparAttr(op) + '" ' + (atual === String(op) ? 'selected' : '') + '>' + escapar(op) + '</option>'; }).join('') +
+                '</select></div></td>';
+            }).join('') +
+            '<td class="freq-total diarias" data-total-folgas="' + escaparAttr(pm.re || '') + '">' + Number(saldo.folgas || 0) + '</td>' +
+            '<td class="freq-total trabalhados" data-total-ciclo-folgas="' + escaparAttr(pm.re || '') + '">' + Number(saldo.diasTrabalhados || 0) + '</td></tr>';
+        });
+      });
+
+      return '<div class="freq-table-wrap"><table class="freq-table folga-table"><thead><tr><th class="freq-pm"><strong>POLICIAL</strong><small>POSTO/GRAD • RE • NOME</small></th>' +
+        Array.from({ length: diasNoMes }, function(_, i) { return '<th class="freq-day">' + (i + 1) + '<small>' + escapar(rotuloDiaSemanaFrequencia(d.competencia, i + 1)) + '</small></th>'; }).join('') +
+        '<th class="freq-total diarias">FOLGAS</th><th class="freq-total trabalhados">DIAS TRAB.</th></tr></thead><tbody>' + corpo + '</tbody></table></div>';
+    }
+
+
+    function salvarCelulaControleFolgas(select) {
+      if (!select || select.disabled) return;
+      const wrap = select.closest('.freq-select-wrap');
+      atualizarVisualCelulaFrequencia(select);
+      select.disabled = true;
+      select.classList.add('freq-saving');
+      if (wrap) wrap.classList.add('freq-saving');
+
+      chamarApi('salvar_controle_folgas', {
+        login: APP.credenciais.login,
+        senha: APP.credenciais.senha,
+        competencia: APP.dadosControleFolgas.competencia,
+        re: select.getAttribute('data-re'),
+        dia: select.getAttribute('data-dia'),
+        valor: select.value
+      }).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao salvar o lançamento.');
+        const dados = resp.dados || {};
+        const re = select.getAttribute('data-re');
+        const totalFolgas = document.querySelector('[data-total-folgas="' + CSS.escape(re) + '"]');
+        const totalDias = document.querySelector('[data-total-ciclo-folgas="' + CSS.escape(re) + '"]');
+        if (totalFolgas) totalFolgas.textContent = Number(dados.folgas || 0);
+        if (totalDias) totalDias.textContent = Number(dados.diasTrabalhados || 0);
+        select.setAttribute('data-valor-anterior', select.value || '');
+        select.classList.remove('freq-saving');
+        select.classList.add('freq-saved');
+        if (wrap) { wrap.classList.remove('freq-saving'); wrap.classList.add('freq-saved'); }
+
+        const chave = normalizarReClienteFrequencia(re);
+        if (APP.dadosControleFolgas.lancamentos[chave]) {
+          APP.dadosControleFolgas.lancamentos[chave].dias[Number(select.getAttribute('data-dia')) - 1] = select.value || '';
+        }
+        APP.dadosControleFolgas.saldos[chave] = Object.assign({}, APP.dadosControleFolgas.saldos[chave] || {}, {
+          folgas: Number(dados.folgas || 0),
+          diasTrabalhados: Number(dados.diasTrabalhados || 0)
+        });
+        mostrarToastFt('Controle de Folgas atualizado', dados.mensagem || 'Lançamento salvo.');
+        setTimeout(function() {
+          select.classList.remove('freq-saved');
+          if (wrap) wrap.classList.remove('freq-saved');
+        }, 800);
+      }).catch(function(err) {
+        const anterior = select.getAttribute('data-valor-anterior');
+        if (anterior !== null) select.value = anterior;
+        atualizarVisualCelulaFrequencia(select);
+        select.classList.remove('freq-saving');
+        if (wrap) wrap.classList.remove('freq-saving');
+        mostrarToastFt('Lançamento não salvo', err.message || String(err));
+      }).finally(function() {
+        if (select && document.body.contains(select)) select.disabled = false;
+      });
     }
 
 
