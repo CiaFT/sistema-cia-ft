@@ -5678,6 +5678,13 @@ Banco de dados: Google Sheets.
     .folga-table .folga-dia-inativo{background:#eef2f6!important}
     .folga-table .folga-dia-inativo .freq-select-wrap{border-color:#d1d5db;background:#e5e7eb}
     .folga-table .folga-dia-inativo .freq-select-display::before{display:none!important}
+    .folga-table .freq-select-wrap.folga-eo-confirmado .freq-select-display{
+      color:#1B5E20;
+      font-weight:950;
+    }
+    .folga-table .freq-select-wrap.folga-reset-confirmado .freq-select-display{
+      color:#C62828;
+    }
     @media(min-width:761px){.freq-legend[open] summary{margin-bottom:2px}.freq-legend summary{pointer-events:none}.freq-legend summary::-webkit-details-marker{display:none}}
     @media(max-width:900px){.freq-audit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.freq-legend-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:760px){.freq-launch-card{padding:14px}.freq-close-grid{grid-template-columns:1fr}.freq-pdf-card{grid-template-columns:1fr}.freq-pdf-card button{width:100%;min-width:0}.freq-table-wrap{max-height:62vh;-webkit-overflow-scrolling:touch}.freq-table{min-width:1650px}.freq-table .freq-pm{width:168px;min-width:168px;max-width:168px}.freq-table .freq-total.diarias,.freq-table .freq-total.trabalhados{position:static}.freq-legend-grid{grid-template-columns:1fr}.freq-audit-grid{grid-template-columns:1fr 1fr}.freq-note{font-size:11px}.folga-rule-note{grid-template-columns:1fr}}
@@ -7756,7 +7763,7 @@ Banco de dados: Google Sheets.
               const dataISO = d.competencia + '-' + String(dia).padStart(2, '0');
               const anteriorImplantacao = dataISO < String(d.implantacaoISO || '2026-08-12');
               const atual = String((reg.dias || [])[indice] || '');
-              const classes = atual ? 'freq-preenchido' : '';
+              const classes = classesCelulaControleFolgas(atual, true);
               const bloqueado = !podeEditar || anteriorImplantacao;
               return '<td class="freq-day ' + (anteriorImplantacao ? 'folga-dia-inativo' : '') + '"><div class="freq-select-wrap ' + classes + (bloqueado ? ' freq-bloqueado' : '') + '"><span class="freq-select-display" aria-hidden="true">' + escapar(atual) + '</span><select class="freq-native-select ' + classes + '" aria-label="Dia ' + dia + ' de ' + escapar(pm.nomeGuerra || '') + '" data-grupo="' + escaparAttr(grupo) + '" data-re="' + escaparAttr(pm.re || '') + '" data-dia="' + dia + '" data-valor-anterior="' + escaparAttr(atual) + '" onchange="salvarCelulaControleFolgas(this)" ' + (bloqueado ? 'disabled' : '') + '>' +
                 '<option value=""></option>' + opcoes.map(function(op) { return '<option value="' + escaparAttr(op) + '" ' + (atual === String(op) ? 'selected' : '') + '>' + escapar(op) + '</option>'; }).join('') +
@@ -7773,10 +7780,40 @@ Banco de dados: Google Sheets.
     }
 
 
+    function classesCelulaControleFolgas(valor, confirmado) {
+      const codigo = String(valor == null ? '' : valor).trim().toUpperCase();
+      const classes = [];
+      if (codigo) classes.push('freq-preenchido');
+      if (confirmado && codigo === 'EO') classes.push('folga-eo-confirmado');
+      if (confirmado && ['DS', 'CM', 'LTS', 'LSV', 'CEP', 'OUT'].indexOf(codigo) !== -1) {
+        classes.push('folga-reset-confirmado');
+      }
+      return classes.join(' ');
+    }
+
+
+    function atualizarVisualCelulaControleFolgas(select, confirmado) {
+      if (!select) return;
+      const wrap = select.closest('.freq-select-wrap');
+      const display = wrap ? wrap.querySelector('.freq-select-display') : null;
+      const classesControladas = ['freq-preenchido', 'folga-eo-confirmado', 'folga-reset-confirmado'];
+      const classesAtuais = classesCelulaControleFolgas(select.value, !!confirmado).split(' ').filter(Boolean);
+      classesControladas.forEach(function(classe) {
+        select.classList.remove(classe);
+        if (wrap) wrap.classList.remove(classe);
+      });
+      classesAtuais.forEach(function(classe) {
+        select.classList.add(classe);
+        if (wrap) wrap.classList.add(classe);
+      });
+      if (display) display.textContent = String(select.value || '');
+    }
+
+
     function salvarCelulaControleFolgas(select) {
       if (!select || select.disabled) return;
       const wrap = select.closest('.freq-select-wrap');
-      atualizarVisualCelulaFrequencia(select);
+      atualizarVisualCelulaControleFolgas(select, false);
       select.disabled = true;
       select.classList.add('freq-saving');
       if (wrap) wrap.classList.add('freq-saving');
@@ -7797,6 +7834,7 @@ Banco de dados: Google Sheets.
         if (totalFolgas) totalFolgas.textContent = Number(dados.folgas || 0);
         if (totalDias) totalDias.textContent = Number(dados.diasTrabalhados || 0);
         select.setAttribute('data-valor-anterior', select.value || '');
+        atualizarVisualCelulaControleFolgas(select, true);
         select.classList.remove('freq-saving');
         select.classList.add('freq-saved');
         if (wrap) { wrap.classList.remove('freq-saving'); wrap.classList.add('freq-saved'); }
@@ -7817,7 +7855,7 @@ Banco de dados: Google Sheets.
       }).catch(function(err) {
         const anterior = select.getAttribute('data-valor-anterior');
         if (anterior !== null) select.value = anterior;
-        atualizarVisualCelulaFrequencia(select);
+        atualizarVisualCelulaControleFolgas(select, true);
         select.classList.remove('freq-saving');
         if (wrap) wrap.classList.remove('freq-saving');
         mostrarToastFt('Lançamento não salvo', err.message || String(err));
