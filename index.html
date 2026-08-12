@@ -1,12 +1,17 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.2.5
+SISTEMA CIA FT — PORTAL GITHUB V1.2.6
 Arquivo: index.html
 ============================================================
 
+CONSOLIDAÇÃO V1.2.6 CORREÇÕES
+- Preserva a última versão encerrada do Controle de Frequência.
+- Preserva a implantação completa de Viaturas V1.2.6.
+- Corrige a leitura e a identificação funcional em Resenhas Enviadas.
+
 Front-end externo hospedado no GitHub Pages.
-Backend/API: Apps Script API_FT.gs V1.2.5.
+Backend/API: Apps Script API_FT.gs V1.2.6.
 Banco de dados: Google Sheets.
 
 ============================================================
@@ -15,7 +20,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Portal Força Tática • V1.2.5</title>
+  <title>Portal Força Tática • V1.2.6</title>
 
   <style>
     :root {
@@ -5452,20 +5457,534 @@ Banco de dados: Google Sheets.
     .freq-table thead .freq-pm{z-index:8;background:#374247}
     .freq-table .freq-pm strong{display:block;color:#17202a}.freq-table .freq-pm small{color:#64748b}
     .freq-table thead .freq-pm strong{color:#fff}.freq-table thead .freq-pm small{color:#e2e8f0}
-    .freq-table .freq-day{width:37px;min-width:37px}.freq-table thead .freq-day small{display:block;margin-top:1px;color:#cbd5e1;font-size:8px;font-weight:800}.freq-table select{width:34px;height:31px;border:1px solid rgba(55,66,71,.18);border-radius:7px;background:#fff;color:#17202a;font-size:10px;font-weight:900;text-align:center;padding:0;cursor:pointer}
-    .freq-table select.freq-preenchido{-webkit-appearance:none;appearance:none;background-image:none;padding:0 2px;color:#17202a;-webkit-text-fill-color:#17202a}
-    .freq-table select.freq-destaque{color:#5D001E!important;-webkit-text-fill-color:#5D001E!important;font-weight:950!important;background:#fff7f9!important;border-color:rgba(93,0,30,.34)!important}
-    .freq-table select:disabled{cursor:not-allowed;background:#eef2f6;color:#64748b;opacity:.8}
-    .freq-table select.freq-destaque:disabled{color:#5D001E!important;-webkit-text-fill-color:#5D001E!important;background:#f7e9ed!important;opacity:1}
-    .freq-table .freq-total{width:88px;min-width:88px;background:#f8fafc;font-weight:900;color:#17202a}
+    .freq-table .freq-day{
+      width:42px;
+      min-width:42px;
+      max-width:42px;
+      padding:3px;
+      box-sizing:border-box;
+      overflow:hidden;
+      vertical-align:middle;
+    }
+    .freq-table thead .freq-day small{display:block;margin-top:1px;color:#cbd5e1;font-size:8px;font-weight:800}
+
+    /* O seletor nativo permanece funcional, mas nunca é desenhado na célula.
+       Toda a parte visível fica rigidamente contida no campo de 34 x 29 px. */
+    .freq-select-wrap{
+      position:relative;
+      display:block;
+      width:34px;
+      height:29px;
+      margin:0 auto;
+      overflow:hidden;
+      box-sizing:border-box;
+      border:1px solid rgba(55,66,71,.18);
+      border-radius:6px;
+      background:#fff;
+      color:#17202a;
+      box-shadow:none;
+    }
+    .freq-select-display{
+      position:absolute;
+      inset:0;
+      z-index:1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      width:100%;
+      height:100%;
+      padding:0;
+      overflow:hidden;
+      box-sizing:border-box;
+      color:#17202a;
+      font-size:10px;
+      font-weight:900;
+      line-height:1;
+      text-align:center;
+      white-space:nowrap;
+      pointer-events:none;
+    }
+    .freq-select-wrap:not(.freq-preenchido) .freq-select-display::before{
+      content:"";
+      display:block;
+      width:0;
+      height:0;
+      border-left:3px solid transparent;
+      border-right:3px solid transparent;
+      border-top:4px solid #374247;
+    }
+    .freq-select-wrap.freq-preenchido .freq-select-display::before{content:none}
+    .freq-select-wrap.freq-destaque{
+      border-color:rgba(93,0,30,.34);
+      background:#fff7f9;
+    }
+    .freq-select-wrap.freq-destaque .freq-select-display{
+      color:#5D001E;
+      font-weight:950;
+    }
+    .freq-select-wrap.freq-bloqueado{background:#eef2f6}
+    .freq-select-wrap.freq-bloqueado.freq-destaque{background:#f7e9ed}
+
+    #appScreen .freq-table .freq-select-wrap select.freq-native-select{
+      position:absolute!important;
+      inset:0!important;
+      z-index:2!important;
+      display:block!important;
+      width:100%!important;
+      min-width:0!important;
+      max-width:none!important;
+      height:100%!important;
+      min-height:0!important;
+      max-height:none!important;
+      margin:0!important;
+      padding:0!important;
+      overflow:hidden!important;
+      border:0!important;
+      border-radius:0!important;
+      background:transparent!important;
+      background-image:none!important;
+      color:transparent!important;
+      -webkit-text-fill-color:transparent!important;
+      opacity:0!important;
+      font-size:16px!important;
+      line-height:normal!important;
+      cursor:pointer!important;
+      box-shadow:none!important;
+      transform:none!important;
+      -webkit-appearance:menulist!important;
+      -moz-appearance:menulist!important;
+      appearance:auto!important;
+    }
+    #appScreen .freq-table .freq-select-wrap select.freq-native-select:disabled{cursor:not-allowed!important}
+    #appScreen .freq-table .freq-select-wrap select.freq-native-select option{
+      color:#374151!important;
+      -webkit-text-fill-color:#374151!important;
+      background:#ffffff!important;
+    }
+    .freq-table .freq-total{width:88px;min-width:88px;background:#D1D5DB;font-weight:900;color:#17202a}
     .freq-table .freq-total.diarias{position:sticky;right:88px;z-index:4}.freq-table .freq-total.trabalhados{position:sticky;right:0;z-index:4}
     .freq-table thead .freq-total{z-index:8;background:#374247;color:#fff}
     .freq-group td{position:sticky;left:0;z-index:5!important;background:#e9edf1!important;color:#17202a!important;text-align:left!important;font-weight:950!important;letter-spacing:.45px;padding:8px 12px!important}
-    .freq-saving{outline:2px solid #eab308!important}.freq-saved{outline:2px solid #16a34a!important}
+    .freq-select-wrap.freq-saving{outline:2px solid #eab308!important}.freq-select-wrap.freq-saved{outline:2px solid #16a34a!important}
     .freq-note{font-size:12px;color:#64748b;margin:10px 0}
     @media(min-width:761px){.freq-legend[open] summary{margin-bottom:2px}.freq-legend summary{pointer-events:none}.freq-legend summary::-webkit-details-marker{display:none}}
     @media(max-width:900px){.freq-audit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.freq-legend-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-    @media(max-width:760px){.freq-launch-card{padding:14px}.freq-close-grid{grid-template-columns:1fr}.freq-table-wrap{max-height:62vh}.freq-table{min-width:1430px}.freq-table .freq-pm{width:168px;min-width:168px;max-width:168px}.freq-table .freq-total.diarias,.freq-table .freq-total.trabalhados{position:static}.freq-legend-grid{grid-template-columns:1fr}.freq-audit-grid{grid-template-columns:1fr 1fr}.freq-note{font-size:11px}}
+    @media(max-width:760px){.freq-launch-card{padding:14px}.freq-close-grid{grid-template-columns:1fr}.freq-table-wrap{max-height:62vh;-webkit-overflow-scrolling:touch}.freq-table{min-width:1650px}.freq-table .freq-pm{width:168px;min-width:168px;max-width:168px}.freq-table .freq-total.diarias,.freq-table .freq-total.trabalhados{position:static}.freq-legend-grid{grid-template-columns:1fr}.freq-audit-grid{grid-template-columns:1fr 1fr}.freq-note{font-size:11px}}
+    /* ============================================================
+     * VIATURAS — V1.2.6
+     * Card reorganizado, controle de utilização e histórico.
+     * ============================================================ */
+    #viaturaModalBackdrop .viatura-modal.vtr126-modal {
+      width: min(1040px, 100%);
+      max-height: calc(100dvh - 36px);
+      overflow-x: hidden;
+    }
+
+    #viaturaModalBackdrop .vtr126-modal .viatura-modal-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      padding: 16px 18px;
+    }
+
+    .vtr126-title { min-width: 0; }
+    .vtr126-title h2 { font-size: 22px !important; letter-spacing: .2px; }
+    .vtr126-title-label {
+      margin: 5px 0 2px !important;
+      color: #64748b !important;
+      font-size: 10.5px !important;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .45px;
+    }
+    .vtr126-title-driver {
+      margin: 0 !important;
+      color: #374151 !important;
+      font-size: 13px !important;
+      font-weight: 850;
+      overflow-wrap: anywhere;
+    }
+
+    .vtr126-header-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .vtr126-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .vtr126-summary-card,
+    .vtr126-info-card {
+      min-width: 0;
+      border: 1px solid rgba(55,66,71,.14);
+      border-radius: 16px;
+      background: linear-gradient(180deg, #ffffff, #f8fafc);
+      padding: 12px 13px;
+      box-shadow: 0 8px 18px rgba(15,23,42,.05);
+    }
+
+    .vtr126-summary-card small,
+    .vtr126-info-card small {
+      display: block;
+      margin-bottom: 5px;
+      color: #64748b;
+      font-size: 10.5px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .28px;
+    }
+
+    .vtr126-summary-card strong,
+    .vtr126-info-card strong {
+      display: block;
+      color: #17202a;
+      font-size: 13px;
+      line-height: 1.3;
+      overflow-wrap: anywhere;
+      white-space: pre-line;
+    }
+
+    .vtr126-section {
+      margin-top: 14px;
+      border: 1px solid rgba(55,66,71,.14);
+      border-radius: 20px;
+      background: #ffffff;
+      padding: 16px;
+      box-shadow: 0 10px 24px rgba(15,23,42,.055);
+    }
+
+    .vtr126-section-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 13px;
+    }
+
+    .vtr126-section-head h3 {
+      margin: 0;
+      color: #17202a;
+      font-size: 15px;
+      line-height: 1.25;
+      text-transform: uppercase;
+      letter-spacing: .2px;
+    }
+
+    .vtr126-section-head p {
+      margin: 4px 0 0;
+      color: #64748b;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .vtr126-badge {
+      flex: 0 0 auto;
+      border-radius: 999px;
+      padding: 7px 11px;
+      background: #e5e7eb;
+      color: #374151;
+      font-size: 10.5px;
+      font-weight: 1000;
+      letter-spacing: .25px;
+      text-align: center;
+    }
+    .vtr126-badge.ok { background: #dcfce7; color: #166534; }
+    .vtr126-badge.alerta { background: #fce7f3; color: #5D001E; }
+    .vtr126-badge.andamento { background: #e0f2fe; color: #075985; }
+
+    .vtr126-ident-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 9px;
+    }
+    .vtr126-ident-grid .full { grid-column: 1 / -1; }
+
+    .vtr126-use-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 9px;
+    }
+
+    .vtr126-use-form {
+      display: grid;
+      grid-template-columns: 180px minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: end;
+      margin-top: 12px;
+    }
+
+    .vtr126-use-form.encerrar {
+      grid-template-columns: 180px minmax(0, 1fr) auto;
+    }
+
+    .vtr126-field {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .vtr126-field label {
+      color: #64748b;
+      font-size: 10.5px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .25px;
+    }
+
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field input,
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field textarea,
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field select {
+      width: 100%;
+      min-width: 0;
+      min-height: 48px;
+      box-sizing: border-box;
+      border: 1px solid rgba(55,66,71,.22);
+      border-radius: 14px;
+      background: #ffffff;
+      color: #6B7280 !important;
+      -webkit-text-fill-color: #6B7280 !important;
+      padding: 11px 12px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 750;
+      outline: none;
+      color-scheme: light;
+    }
+
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field input:focus,
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field textarea:focus,
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field select:focus,
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field input:active,
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field textarea:active,
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field select:active {
+      color: #6B7280 !important;
+      -webkit-text-fill-color: #6B7280 !important;
+      caret-color: #6B7280 !important;
+    }
+
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field input::placeholder,
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field textarea::placeholder {
+      color: #6B7280 !important;
+      -webkit-text-fill-color: #6B7280 !important;
+      opacity: 1;
+    }
+
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field input::selection,
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field textarea::selection {
+      color: #6B7280 !important;
+      -webkit-text-fill-color: #6B7280 !important;
+      background: #dbeafe;
+    }
+
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field input::-moz-selection,
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field textarea::-moz-selection {
+      color: #6B7280 !important;
+      background: #dbeafe;
+    }
+
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field input:-webkit-autofill,
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field input:-webkit-autofill:hover,
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field input:-webkit-autofill:focus,
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field textarea:-webkit-autofill,
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field select:-webkit-autofill {
+      color: #6B7280 !important;
+      -webkit-text-fill-color: #6B7280 !important;
+      caret-color: #6B7280 !important;
+    }
+
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field input[type="number"] {
+      text-align: center;
+      font-weight: 950;
+      color: #6B7280 !important;
+      -webkit-text-fill-color: #6B7280 !important;
+    }
+
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field select option {
+      color: #6B7280 !important;
+      -webkit-text-fill-color: #6B7280 !important;
+      background: #ffffff !important;
+    }
+
+    #viaturaModalBackdrop .vtr126-modal .vtr126-field textarea { min-height: 88px; resize: vertical; }
+
+    .vtr126-divergence {
+      display: none;
+      margin-top: 10px;
+      border: 1px solid rgba(93,0,30,.22);
+      border-radius: 14px;
+      background: #fff7fa;
+      color: #5D001E;
+      padding: 11px 12px;
+      font-size: 12px;
+      font-weight: 850;
+    }
+    .vtr126-divergence.visivel { display: block; }
+    .vtr126-divergence.ok { border-color: #bbf7d0; background: #f0fdf4; color: #166534; }
+
+    .vtr126-primary,
+    .vtr126-secondary {
+      min-height: 48px;
+      border-radius: 14px;
+      padding: 11px 16px;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 950;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .vtr126-primary { border: 1px solid #374247; background: #374247; color: #ffffff; }
+    .vtr126-primary:hover { background: #17202a; }
+    .vtr126-secondary { border: 1.5px solid #6B7280; background: #ffffff; color: #6B7280; }
+    .vtr126-primary:disabled,
+    .vtr126-secondary:disabled { opacity: .58; cursor: not-allowed; }
+
+    .vtr126-admin-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 11px;
+    }
+    .vtr126-admin-grid .full { grid-column: 1 / -1; }
+
+    .vtr126-history-button {
+      width: 100%;
+      margin-top: 14px;
+      min-height: 50px;
+      border: 1.5px solid #6B7280;
+      border-radius: 16px;
+      background: #ffffff;
+      color: #6B7280;
+      font: inherit;
+      font-size: 12.5px;
+      font-weight: 950;
+      cursor: pointer;
+    }
+    .vtr126-history-button:hover { background: #f3f4f6; color: #374151; }
+
+    .vtr126-history-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 10020;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(15,23,42,.68);
+    }
+
+    .vtr126-history-modal {
+      width: min(900px, 100%);
+      max-height: calc(100dvh - 36px);
+      overflow: auto;
+      border-radius: 24px;
+      background: #f8fafc;
+      box-shadow: 0 28px 80px rgba(0,0,0,.36);
+    }
+
+    .vtr126-history-head {
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 18px;
+      border-bottom: 1px solid rgba(55,66,71,.14);
+      background: rgba(255,255,255,.97);
+    }
+    .vtr126-history-head h2 { margin: 0; color: #17202a; font-size: 19px; }
+    .vtr126-history-head p { margin: 3px 0 0; color: #64748b; font-size: 12px; }
+    .vtr126-history-body { padding: 16px 18px 20px; }
+
+    .vtr126-history-filters {
+      display: flex;
+      gap: 7px;
+      overflow-x: auto;
+      padding: 1px 1px 10px;
+    }
+    .vtr126-history-filter {
+      flex: 0 0 auto;
+      border: 1px solid rgba(55,66,71,.2);
+      border-radius: 999px;
+      background: #ffffff;
+      color: #475569;
+      padding: 8px 12px;
+      font: inherit;
+      font-size: 10.5px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .vtr126-history-filter.ativo { border-color: #374247; background: #374247; color: #ffffff; }
+
+    .vtr126-timeline { display: grid; gap: 10px; }
+    .vtr126-event {
+      position: relative;
+      border: 1px solid rgba(55,66,71,.14);
+      border-left: 5px solid #94a3b8;
+      border-radius: 16px;
+      background: #ffffff;
+      padding: 13px 14px;
+      box-shadow: 0 7px 17px rgba(15,23,42,.045);
+    }
+    .vtr126-event.utilizacao { border-left-color: #0284c7; }
+    .vtr126-event.divergencia { border-left-color: #5D001E; }
+    .vtr126-event.manutencao { border-left-color: #d97706; }
+    .vtr126-event.avaria { border-left-color: #dc2626; }
+    .vtr126-event.correcao { border-left-color: #7c3aed; }
+    .vtr126-event-top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+    .vtr126-event h3 { margin: 0; color: #17202a; font-size: 13px; text-transform: uppercase; }
+    .vtr126-event time { flex: 0 0 auto; color: #64748b; font-size: 10.5px; font-weight: 800; }
+    .vtr126-event-meta { margin-top: 5px; color: #64748b; font-size: 11px; font-weight: 750; }
+    .vtr126-event-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; margin-top: 10px; }
+    .vtr126-event-grid span { border-radius: 10px; background: #f1f5f9; padding: 8px 9px; color: #475569; font-size: 11px; line-height: 1.35; overflow-wrap: anywhere; }
+    .vtr126-event-note { margin: 9px 0 0; color: #374151; font-size: 11.5px; line-height: 1.45; white-space: pre-line; }
+
+    @media (max-width: 760px) {
+      #viaturaModalBackdrop .viatura-modal.vtr126-modal { max-height: calc(100dvh - 16px); border-radius: 18px; }
+      #viaturaModalBackdrop .vtr126-modal .viatura-modal-header {
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: start;
+        padding: 13px;
+      }
+      .vtr126-header-actions { grid-column: 1 / -1; width: 100%; }
+      .vtr126-header-actions > button { flex: 1 1 130px; margin-left: 0; }
+      .vtr126-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .vtr126-ident-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .vtr126-use-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .vtr126-use-form,
+      .vtr126-use-form.encerrar { grid-template-columns: 1fr; }
+      .vtr126-use-form .vtr126-primary { width: 100%; }
+      .vtr126-event-grid { grid-template-columns: 1fr 1fr; }
+      .vtr126-history-backdrop { padding: 8px; align-items: flex-start; }
+      .vtr126-history-modal { max-height: calc(100dvh - 16px); border-radius: 18px; }
+    }
+
+    @media (max-width: 480px) {
+      .vtr126-summary-grid,
+      .vtr126-ident-grid,
+      .vtr126-use-grid,
+      .vtr126-admin-grid,
+      .vtr126-event-grid { grid-template-columns: 1fr; }
+      .vtr126-ident-grid .full,
+      .vtr126-admin-grid .full { grid-column: auto; }
+      .vtr126-section { padding: 13px; border-radius: 17px; }
+      .vtr126-section-head { flex-direction: column; }
+      .vtr126-badge { align-self: flex-start; }
+      .vtr126-history-head { align-items: flex-start; }
+      .vtr126-history-head .viatura-modal-close { margin-left: 0; }
+      .vtr126-event-top { flex-direction: column; gap: 4px; }
+    }
 </style>
 </head>
 
@@ -5496,7 +6015,7 @@ Banco de dados: Google Sheets.
       <div id="loginAlerta" class="alerta"></div>
 
       <div class="footer">
-        Portal Força Tática • V1.2.5
+        Portal Força Tática • V1.2.6
       </div>
     </main>
   </section>
@@ -6295,9 +6814,9 @@ Banco de dados: Google Sheets.
               const dia = indice + 1;
               const atual = String((reg.dias || [])[indice] || '');
               const classeVisual = classesCelulaFrequencia(grupo, atual);
-              return '<td class="freq-day"><select class="' + classeVisual + '" aria-label="Dia ' + dia + ' de ' + escapar(pm.nomeGuerra || '') + '" data-grupo="' + escaparAttr(grupo) + '" data-re="' + escaparAttr(pm.re || '') + '" data-dia="' + dia + '" data-valor-anterior="' + escaparAttr(atual) + '" onchange="salvarCelulaFrequencia(this)" ' + (podeEditar ? '' : 'disabled') + '>' +
+              return '<td class="freq-day"><div class="freq-select-wrap ' + classeVisual + (podeEditar ? '' : ' freq-bloqueado') + '"><span class="freq-select-display" aria-hidden="true">' + escapar(atual) + '</span><select class="freq-native-select ' + classeVisual + '" aria-label="Dia ' + dia + ' de ' + escapar(pm.nomeGuerra || '') + '" data-grupo="' + escaparAttr(grupo) + '" data-re="' + escaparAttr(pm.re || '') + '" data-dia="' + dia + '" data-valor-anterior="' + escaparAttr(atual) + '" onchange="salvarCelulaFrequencia(this)" ' + (podeEditar ? '' : 'disabled') + '>' +
                 '<option value=""></option>' + opcoes.map(function(op) { return '<option value="' + escaparAttr(op) + '" ' + (atual === String(op) ? 'selected' : '') + '>' + escapar(op) + '</option>'; }).join('') +
-                '</select></td>';
+                '</select></div></td>';
             }).join('') +
             '<td class="freq-total diarias" data-total-diarias="' + escaparAttr(pm.re || '') + '">' + Number(reg.diarias || 0) + '</td>' +
             '<td class="freq-total trabalhados" data-total-trabalhados="' + escaparAttr(pm.re || '') + '">' + Number(reg.diasTrabalhados || 0) + '</td></tr>';
@@ -6337,18 +6856,26 @@ Banco de dados: Google Sheets.
 
     function atualizarVisualCelulaFrequencia(select) {
       if (!select) return;
+      const wrap = select.closest('.freq-select-wrap');
+      const display = wrap ? wrap.querySelector('.freq-select-display') : null;
+      const classes = classesCelulaFrequencia(select.getAttribute('data-grupo'), select.value).split(' ').filter(Boolean);
       select.classList.remove('freq-preenchido', 'freq-destaque');
-      classesCelulaFrequencia(select.getAttribute('data-grupo'), select.value).split(' ').filter(Boolean).forEach(function(classe) {
+      if (wrap) wrap.classList.remove('freq-preenchido', 'freq-destaque');
+      classes.forEach(function(classe) {
         select.classList.add(classe);
+        if (wrap) wrap.classList.add(classe);
       });
+      if (display) display.textContent = String(select.value || '');
     }
 
 
     function salvarCelulaFrequencia(select) {
       if (!select || select.disabled) return;
+      const wrap = select.closest('.freq-select-wrap');
       atualizarVisualCelulaFrequencia(select);
       select.disabled = true;
       select.classList.add('freq-saving');
+      if (wrap) wrap.classList.add('freq-saving');
 
       chamarApi('salvar_frequencia', {
         login: APP.credenciais.login,
@@ -6368,17 +6895,25 @@ Banco de dados: Google Sheets.
         select.setAttribute('data-valor-anterior', select.value || '');
         select.classList.remove('freq-saving');
         select.classList.add('freq-saved');
+        if (wrap) {
+          wrap.classList.remove('freq-saving');
+          wrap.classList.add('freq-saved');
+        }
         if (APP.dadosControleFrequencia) {
           APP.dadosControleFrequencia.auditoria = dados.auditoria || APP.dadosControleFrequencia.auditoria;
           const auditArea = document.getElementById('freqAuditArea');
           if (auditArea) auditArea.innerHTML = montarAuditoriaFrequencia(APP.dadosControleFrequencia);
         }
-        setTimeout(function() { select.classList.remove('freq-saved'); }, 800);
+        setTimeout(function() {
+          select.classList.remove('freq-saved');
+          if (wrap) wrap.classList.remove('freq-saved');
+        }, 800);
       }).catch(function(err) {
         const anterior = select.getAttribute('data-valor-anterior');
         if (anterior !== null) select.value = anterior;
         atualizarVisualCelulaFrequencia(select);
         select.classList.remove('freq-saving');
+        if (wrap) wrap.classList.remove('freq-saving');
         mostrarToastFt('Lançamento não salvo', err.message || String(err));
       }).finally(function() {
         const fechado = APP.dadosControleFrequencia && APP.dadosControleFrequencia.auditoria && APP.dadosControleFrequencia.auditoria.fechamentoCmt.status === 'APROVADO';
@@ -9002,7 +9537,8 @@ Banco de dados: Google Sheets.
             </div>
             <div>
               <h2>${escapar(alvo.prefixo || 'Viatura')}</h2>
-              <p>Ficha completa da viatura — ${escapar(alvo.modalidade || '-')}</p>
+              <p>Policial Responsável</p>
+              <p>${escapar(alvo.policialResponsavel || 'Não informado')}</p>
             </div>
             <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
               ${usuarioPodeGerenciarViaturaV125() ? `<button class="btn-danger-outline" type="button" onclick="confirmarInativacaoViatura('${escaparAttr(alvo.prefixo || '')}')">EXCLUIR VTR</button>` : ''}
@@ -9033,11 +9569,12 @@ Banco de dados: Google Sheets.
 
     function montarCamposFichaViatura(v) {
       const camposOriginais = Array.isArray(v.campos) ? v.campos : [];
-      const bloqueados = ['PREFIXO', 'STATUS_APP', 'STATUS APP', 'MODALIDADE'];
+      const bloqueados = ['PREFIXO', 'STATUS_APP', 'STATUS APP', 'MODALIDADE', 'POLICIAL RESPONSAVEL', 'POLICIAL RESPONSÁVEL'];
       const especiais = ['ULTIMO KM', 'ULTIMO_KM', 'ÚLTIMO KM', 'ULTIMA ATUALIZACAO', 'ULTIMA_ATUALIZACAO', 'ÚLTIMA ATUALIZAÇÃO', 'ATUALIZADO POR RE', 'ATUALIZADO_POR_RE', 'ATUALIZADO POR', 'ATUALIZADO_POR', 'OBSERVACOES', 'OBSERVAÇÕES'];
 
       const campos = camposOriginais.filter(function(campo) {
         const rotuloNorm = normalizarTexto(campo.rotulo || '').replace(/_/g, ' ');
+        if (Number(campo.coluna || 0) === 24) return false;
         if (bloqueados.indexOf(rotuloNorm) !== -1) return false;
         if (especiais.indexOf(rotuloNorm) !== -1) return false;
         return true;
@@ -9069,10 +9606,28 @@ Banco de dados: Google Sheets.
              usuarioTemPermissaoCliente('VIATURAS', 'inserir');
     }
 
+    function usuarioPodeEditarResponsavelViatura() {
+      return usuarioTemPermissaoCliente('VIATURAS', 'editar');
+    }
+
+    function optionsResponsavelViatura(lista, valorAtual) {
+      const atual = String(valorAtual || '').trim();
+      const valores = (Array.isArray(lista) ? lista : []).map(function(v) {
+        return String(v || '').trim();
+      }).filter(Boolean);
+
+      if (atual && valores.indexOf(atual) === -1) valores.unshift(atual);
+
+      return '<option value="">Nenhum policial selecionado</option>' + valores.map(function(v) {
+        return '<option value="' + escaparAttr(v) + '" ' + (v === atual ? 'selected' : '') + '>' + escapar(v) + '</option>';
+      }).join('');
+    }
+
     function montarFormularioAtualizacaoViatura(v) {
       const podeEditarSituacao = usuarioPodeEditarSituacaoViatura();
       const cfg = (APP.dadosViaturas && APP.dadosViaturas.configListas) || {};
       const opcoesSituacao = cfg.situacoesViatura || [];
+      const efetivoResponsavel = (APP.dadosViaturas && APP.dadosViaturas.efetivoResponsavel) || [];
 
       return `
         <div class="viatura-atualizacao-box">
@@ -9080,6 +9635,15 @@ Banco de dados: Google Sheets.
           <p>Atualize a situação, o KM ou registre observações constatadas na viatura.</p>
 
           <div class="viatura-form-grid viatura-update-grid ${podeEditarSituacao ? 'com-situacao' : 'sem-situacao'}" style="display:grid;grid-template-columns:${podeEditarSituacao ? 'minmax(0,1fr) 150px' : '150px minmax(0,1fr)'};gap:14px;align-items:end;width:100%;">
+            ${usuarioPodeEditarResponsavelViatura() ? `
+              <div class="viatura-form-field responsavel-field" style="grid-column:1 / -1;min-width:0;width:100%;">
+                <label>POLICIAL RESPONSÁVEL</label>
+                <select id="viaturaPolicialResponsavel" class="select-ft select-ft-real select-viatura-v124" data-valor-anterior="${escaparAttr(v.policialResponsavel || '')}" style="appearance:none;-webkit-appearance:none;width:100%;min-height:54px;border:1px solid rgba(55,66,71,.18);border-radius:22px;padding:14px 48px 14px 16px;background:linear-gradient(180deg,#ffffff,#f7fafc);color:#17202a;-webkit-text-fill-color:#17202a;font-size:14px;font-weight:850;line-height:1.25;box-shadow:0 10px 24px rgba(15,23,42,.08);outline:none;">
+                  ${optionsResponsavelViatura(efetivoResponsavel, v.policialResponsavel || '')}
+                </select>
+              </div>
+            ` : ''}
+
             ${podeEditarSituacao ? `
               <div class="viatura-form-field situacao-field" style="min-width:0;">
                 <label>SITUAÇÃO</label>
@@ -10207,8 +10771,561 @@ Banco de dados: Google Sheets.
     const _abrirFichaViaturaV124=abrirFichaViatura;
     abrirFichaViatura=function(prefixo){_abrirFichaViaturaV124(prefixo);setTimeout(function(){const dados=APP.dadosViaturas||{},lista=[].concat(dados.tatico||[],dados.rocam||[],dados.outras||[]),v=lista.find(x=>normalizarTexto(x.prefixo||'')===normalizarTexto(prefixo||''));const box=document.querySelector('.viatura-atualizacao-box');if(box&&v&&usuarioPodeGerenciarViaturaV125()){box.insertAdjacentHTML('afterbegin',`<h3>Dados cadastrais editáveis</h3>${montarCamposEditaveisViaturaV125(v)}<button class="viatura-historico-btn" type="button" onclick="abrirHistoricoVtrV125('${escaparAttr(v.prefixo||'')}')">Histórico VTR</button>`);}},0);};
 
-    function atualizarKmViatura(prefixo){const kmEl=document.getElementById('viaturaNovoKm'),obsEl=document.getElementById('viaturaObservacoes'),sitEl=document.getElementById('viaturaSituacao'),btn=document.getElementById('btnAtualizarViatura');const novoKm=kmEl?String(kmEl.value||'').trim():'',observacoes=obsEl?String(obsEl.value||'').trim():'',situacao=sitEl?String(sitEl.value||'').trim():'';const campos={};document.querySelectorAll('[data-vtr-col]').forEach(el=>campos['col'+el.getAttribute('data-vtr-col')]=el.value);if(!novoKm&&!observacoes&&!situacao&&!Object.keys(campos).length){mostrarToastFt('Atualização não enviada','Informe ao menos uma alteração.');return;}if(btn){btn.disabled=true;btn.textContent='ATUALIZANDO...';}chamarApi('atualizar_dados_viatura',{login:APP.credenciais.login,senha:APP.credenciais.senha,prefixo:prefixo,novoKm:novoKm,observacoes:observacoes,situacao:situacao,campos:JSON.stringify(campos)}).then(function(r){if(!r||!r.ok)throw new Error(r&&r.erro?r.erro:'Falha ao atualizar viatura.');mostrarToastFt('Viatura atualizada',r.dados.mensagem);fecharFichaViatura();return carregarDadosViaturas(true).then(renderizarViaturas)}).catch(e=>mostrarToastFt('Erro',e.message||String(e))).finally(function(){if(btn){btn.disabled=false;btn.textContent='CONFIRMAR ATUALIZAÇÃO DE VTR';}});}
+    function atualizarKmViatura(prefixo) {
+      const kmEl = document.getElementById('viaturaNovoKm');
+      const obsEl = document.getElementById('viaturaObservacoes');
+      const sitEl = document.getElementById('viaturaSituacao');
+      const responsavelEl = document.getElementById('viaturaPolicialResponsavel');
+      const btn = document.getElementById('btnAtualizarViatura');
+      const novoKm = kmEl ? String(kmEl.value || '').trim() : '';
+      const observacoes = obsEl ? String(obsEl.value || '').trim() : '';
+      const situacao = sitEl ? String(sitEl.value || '').trim() : '';
+      const policialResponsavel = responsavelEl ? String(responsavelEl.value || '').trim() : '';
+      const responsavelAnterior = responsavelEl ? String(responsavelEl.getAttribute('data-valor-anterior') || '').trim() : '';
+      const responsavelAlterado = !!responsavelEl && policialResponsavel !== responsavelAnterior;
+      const campos = {};
+
+      document.querySelectorAll('[data-vtr-col]').forEach(function(el) {
+        campos['col' + el.getAttribute('data-vtr-col')] = el.value;
+      });
+
+      if (!novoKm && !observacoes && !situacao && !responsavelAlterado && !Object.keys(campos).length) {
+        mostrarToastFt('Atualização não enviada', 'Informe ao menos uma alteração.');
+        return;
+      }
+
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'ATUALIZANDO...';
+      }
+
+      const parametros = {
+        login: APP.credenciais.login,
+        senha: APP.credenciais.senha,
+        prefixo: prefixo,
+        novoKm: novoKm,
+        observacoes: observacoes,
+        situacao: situacao,
+        campos: JSON.stringify(campos)
+      };
+
+      if (responsavelAlterado) parametros.policialResponsavel = policialResponsavel;
+
+      chamarApi('atualizar_dados_viatura', parametros)
+        .then(function(r) {
+          if (!r || !r.ok) throw new Error(r && r.erro ? r.erro : 'Falha ao atualizar viatura.');
+          mostrarToastFt('Viatura atualizada', r.dados.mensagem);
+          fecharFichaViatura();
+          return carregarDadosViaturas(true).then(renderizarViaturas);
+        })
+        .catch(function(e) {
+          mostrarToastFt('Erro', e.message || String(e));
+        })
+        .finally(function() {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'CONFIRMAR ATUALIZAÇÃO DE VTR';
+          }
+        });
+    }
     function confirmarInativacaoViatura(prefixo){if(!confirm('Confirma a exclusão da viatura '+prefixo+' do aplicativo? A linha será mantida e o STATUS_APP será alterado para INATIVA.'))return;chamarApi('inativar_viatura',{login:APP.credenciais.login,senha:APP.credenciais.senha,prefixo:prefixo}).then(function(r){if(!r||!r.ok)throw new Error(r&&r.erro?r.erro:'Falha ao inativar viatura.');fecharFichaViatura();mostrarToastFt('Viatura inativada',r.dados.mensagem);return carregarDadosViaturas(true).then(renderizarViaturas)}).catch(e=>mostrarToastFt('Erro',e.message||String(e)));}
+
+    /* ============================================================
+     * VIATURAS — V1.2.6
+     * Componente final: utilização, divergência e histórico.
+     * ============================================================ */
+
+    function localizarViaturaV126(prefixo) {
+      const dados = APP.dadosViaturas || {};
+      return [].concat(dados.tatico || [], dados.rocam || [], dados.outras || []).find(function(v) {
+        return normalizarTexto(v.prefixo || '') === normalizarTexto(prefixo || '');
+      }) || null;
+    }
+
+    function usuarioPodeAdministrarViaturaV126() {
+      const permissao = obterPermissaoCliente('VIATURAS') || {};
+      const perfil = normalizarTexto((APP.usuario && APP.usuario.perfilAcesso) || '');
+      return !!(permissao.acessoTotal || permissao.editar) ||
+        ['GESTOR_TEC_FT', 'ENC_ADM_FT', 'AUX_ADM_FT'].indexOf(perfil) !== -1;
+    }
+
+    function usuarioEhMotoristaUsoV126(uso) {
+      const reAtual = normalizarTexto((APP.usuario && (APP.usuario.re || APP.usuario.login)) || '').replace(/\D/g, '').substring(0, 6);
+      const reUso = normalizarTexto(uso && uso.reMotorista || '').replace(/\D/g, '').substring(0, 6);
+      return !!reAtual && reAtual === reUso;
+    }
+
+    function textoKmV126(valor) {
+      const numero = Number(String(valor === null || valor === undefined ? '' : valor).replace(/\D/g, ''));
+      return Number.isFinite(numero) && String(valor).trim() !== '' ? numero.toLocaleString('pt-BR') + ' km' : '-';
+    }
+
+    montarBlocoViaturas = function(titulo, subtitulo, imagem, lista) {
+      const itens = Array.isArray(lista) ? lista : [];
+      const c = resumoViaturasV125(itens);
+      return `<div class="viatura-bloco">
+        <div class="viatura-banner">
+          <img src="${escaparAttr(imagem)}" alt="${escaparAttr(titulo)}" loading="lazy" onerror="this.style.display='none'">
+          <div class="viatura-banner-texto">
+            <h2>${escapar(titulo)}</h2>
+            <p><strong>TOTAL VTR</strong> ${itens.length}</p>
+            <div class="viatura-resumo-status">
+              <span>OPERANDO: ${c.operando}</span><span>RESERVA: ${c.reserva}</span>
+              <span>BAIXADA: ${c.baixada}</span><span>DESCARGA: ${c.descarga}</span>
+              <span>SINDICÂNCIA: ${c.sindicancia}</span><span>OUTROS: ${c.outros}</span>
+            </div>
+          </div>
+        </div>
+        <div class="viatura-lista">
+          ${itens.length ? itens.map(function(v) {
+            const emUso = !!v.utilizacaoAtual;
+            return `<button class="viatura-prefixo-btn" type="button" onclick="abrirFichaViatura('${escaparAttr(v.prefixo || '')}')">
+              <span style="display:flex;align-items:center;gap:10px"><i class="status-dot ${classeStatusViaturaV125(v.situacao)}"></i>${escapar(v.prefixo || '-')}</span>
+              <small>${emUso ? 'USO EM ANDAMENTO' : 'Ficha completa'}</small>
+            </button>`;
+          }).join('') : '<div class="viatura-empty">Nenhuma viatura cadastrada neste bloco.</div>'}
+        </div>
+      </div>`;
+    };
+
+    function camposIdentificacaoViaturaV126(v) {
+      const prioridades = { 4: 1, 7: 2, 5: 3, 6: 4, 9: 5, 10: 6, 11: 7, 12: 8, 13: 9, 14: 10, 15: 11, 16: 12, 17: 13, 18: 14 };
+      return (Array.isArray(v.campos) ? v.campos : [])
+        .filter(function(campo) {
+          const coluna = Number(campo.coluna || 0);
+          return Object.prototype.hasOwnProperty.call(prioridades, coluna);
+        })
+        .sort(function(a, b) { return prioridades[Number(a.coluna)] - prioridades[Number(b.coluna)]; });
+    }
+
+    function montarIdentificacaoViaturaV126(v) {
+      const campos = camposIdentificacaoViaturaV126(v);
+      if (v.observacoes) campos.push({ rotulo: 'OBSERVAÇÕES MAIS RECENTES', valor: v.observacoes, full: true });
+      return `<section class="vtr126-section">
+        <div class="vtr126-section-head"><div><h3>Identificação da viatura</h3><p>Dados cadastrais organizados para consulta rápida.</p></div></div>
+        <div class="vtr126-ident-grid">
+          ${campos.length ? campos.map(function(campo) {
+            return `<div class="vtr126-info-card ${campo.full ? 'full' : ''}"><small>${escapar(campo.rotulo || '-')}</small><strong>${escapar(campo.valor || '-')}</strong></div>`;
+          }).join('') : '<div class="viatura-empty full">Não há dados adicionais cadastrados.</div>'}
+        </div>
+      </section>`;
+    }
+
+    function montarResumoViaturaV126(v) {
+      const uso = v.utilizacaoAtual;
+      return `<div class="vtr126-summary-grid">
+        <div class="vtr126-summary-card"><small>Situação</small><strong>${escapar(v.situacao || '-')}</strong></div>
+        <div class="vtr126-summary-card"><small>Último KM final</small><strong>${escapar(textoKmV126(v.ultimoKm))}</strong></div>
+        <div class="vtr126-summary-card"><small>Última atualização</small><strong>${escapar(v.ultimaAtualizacao || '-')}</strong></div>
+        <div class="vtr126-summary-card"><small>Controle de uso</small><strong>${uso ? 'USO EM ANDAMENTO' : 'DISPONÍVEL PARA REGISTRO'}</strong></div>
+      </div>`;
+    }
+
+    function montarControleUtilizacaoV126(v) {
+      const uso = v.utilizacaoAtual;
+      const ultimo = v.ultimoUso || {};
+
+      if (!uso) {
+        const referencia = String(v.ultimoKm === null || v.ultimoKm === undefined ? '' : v.ultimoKm).trim();
+        return `<section class="vtr126-section">
+          <div class="vtr126-section-head">
+            <div><h3>Controle de utilização</h3><p>Confira o último encerramento antes de retirar a viatura.</p></div>
+            <span class="vtr126-badge">AGUARDANDO USO</span>
+          </div>
+          <div class="vtr126-use-grid">
+            <div class="vtr126-info-card"><small>KM final anterior</small><strong>${escapar(textoKmV126(v.ultimoKm))}</strong></div>
+            <div class="vtr126-info-card"><small>Encerramento anterior</small><strong>${escapar(ultimo.dataFim || v.ultimaAtualizacao || '-')}</strong></div>
+            <div class="vtr126-info-card"><small>Último motorista</small><strong>${escapar(ultimo.motorista || v.atualizadoPor || '-')}</strong></div>
+            <div class="vtr126-info-card"><small>Último percurso</small><strong>${escapar(textoKmV126(ultimo.kmPercorrido))}</strong></div>
+          </div>
+          <div class="vtr126-use-form">
+            <div class="vtr126-field">
+              <label>KM inicial atual</label>
+              <input id="vtr126KmInicial" type="number" min="0" step="1" inputmode="numeric" placeholder="Ex.: 125430" oninput="avaliarKmInicialV126('${escaparAttr(v.prefixo || '')}', '${escaparAttr(referencia)}')">
+            </div>
+            <div class="vtr126-field">
+              <label>Observação do início (opcional)</label>
+              <input id="vtr126ObsInicio" type="text" placeholder="Condição da viatura na retirada">
+            </div>
+            <button id="vtr126BtnIniciar" class="vtr126-primary" type="button" onclick="iniciarUtilizacaoViaturaV126('${escaparAttr(v.prefixo || '')}', '${escaparAttr(referencia)}')">INICIAR UTILIZAÇÃO</button>
+          </div>
+          <div id="vtr126StatusKm" class="vtr126-divergence"></div>
+          <div id="vtr126RelatoBox" class="vtr126-field" style="display:none;margin-top:10px">
+            <label>Relato obrigatório da divergência</label>
+            <textarea id="vtr126RelatoDivergencia" placeholder="Descreva a diferença encontrada entre o último KM final e o KM atual"></textarea>
+          </div>
+        </section>`;
+      }
+
+      const podeEncerrar = usuarioEhMotoristaUsoV126(uso) || usuarioPodeAdministrarViaturaV126();
+      const encerramentoAdministrativo = !usuarioEhMotoristaUsoV126(uso) && usuarioPodeAdministrarViaturaV126();
+      return `<section class="vtr126-section">
+        <div class="vtr126-section-head">
+          <div><h3>Controle de utilização</h3><p>A viatura possui uma movimentação aberta.</p></div>
+          <span class="vtr126-badge andamento">USO EM ANDAMENTO</span>
+        </div>
+        <div class="vtr126-use-grid">
+          <div class="vtr126-info-card"><small>Motorista</small><strong>${escapar(uso.motorista || '-')}</strong></div>
+          <div class="vtr126-info-card"><small>Início</small><strong>${escapar(uso.dataInicio || '-')}</strong></div>
+          <div class="vtr126-info-card"><small>KM inicial</small><strong>${escapar(textoKmV126(uso.kmInicial))}</strong></div>
+          <div class="vtr126-info-card"><small>Conferência</small><strong style="color:${Number(uso.divergenciaKm || 0) > 0 ? '#5D001E' : '#166534'}">${Number(uso.divergenciaKm || 0) > 0 ? 'DIVERGÊNCIA +' + Number(uso.divergenciaKm) + ' KM' : 'QUILOMETRAGEM CONFERE'}</strong></div>
+        </div>
+        ${uso.relatoDivergencia ? `<div class="vtr126-divergence visivel"><strong>Relato da divergência:</strong> ${escapar(uso.relatoDivergencia)}</div>` : ''}
+        ${podeEncerrar ? `<div class="vtr126-use-form encerrar">
+          <div class="vtr126-field"><label>KM final</label><input id="vtr126KmFinal" type="number" min="${escaparAttr(uso.kmInicial || 0)}" step="1" inputmode="numeric" placeholder="KM no encerramento"></div>
+          <div class="vtr126-field"><label>${encerramentoAdministrativo ? 'Justificativa obrigatória' : 'Observação do encerramento'}</label><input id="vtr126ObsFim" type="text" placeholder="${encerramentoAdministrativo ? 'Motivo do encerramento administrativo' : 'Condição da viatura na devolução'}"></div>
+          <button id="vtr126BtnEncerrar" class="vtr126-primary" type="button" onclick="encerrarUtilizacaoViaturaV126('${escaparAttr(v.prefixo || '')}', ${encerramentoAdministrativo ? 'true' : 'false'})">ENCERRAR UTILIZAÇÃO</button>
+        </div>` : `<div class="viatura-empty" style="margin-top:12px">Somente ${escapar(uso.motorista || 'o motorista que iniciou')} pode encerrar esta utilização.</div>`}
+      </section>`;
+    }
+
+    function montarCamposAdministrativosV126(v) {
+      return (Array.isArray(v.campos) ? v.campos : [])
+        .filter(function(campo) {
+          const coluna = Number(campo.coluna || 0);
+          return coluna >= 4 && coluna <= 18 && coluna !== 8;
+        })
+        .map(function(campo) {
+          return `<div class="vtr126-field"><label>${escapar(campo.rotulo || ('Coluna ' + campo.coluna))}</label><input data-vtr-col="${Number(campo.coluna)}" value="${escaparAttr(campo.valor || '')}"></div>`;
+        }).join('');
+    }
+
+    function montarAtualizacaoAdministrativaV126(v) {
+      if (!usuarioPodeAdministrarViaturaV126()) return '';
+      const dados = APP.dadosViaturas || {};
+      const cfg = dados.configListas || {};
+      return `<section class="vtr126-section">
+        <div class="vtr126-section-head"><div><h3>Atualização administrativa</h3><p>Registre alterações, manutenção, avaria ou correção. Cada mudança será preservada no histórico.</p></div><span class="vtr126-badge">ACESSO RESTRITO</span></div>
+        <div class="vtr126-admin-grid">
+          <div class="vtr126-field full"><label>Policial responsável</label><select id="viaturaPolicialResponsavel" data-valor-anterior="${escaparAttr(v.policialResponsavel || '')}">${optionsResponsavelViatura(dados.efetivoResponsavel || [], v.policialResponsavel || '')}</select></div>
+          <div class="vtr126-field"><label>Tipo do registro</label><select id="vtr126TipoRegistro"><option value="ALTERACAO_CADASTRAL">Alteração cadastral</option><option value="MANUTENCAO">Manutenção realizada</option><option value="AVARIA">Avaria constatada</option><option value="OBSERVACAO">Observação</option><option value="CORRECAO_ADMINISTRATIVA">Correção administrativa</option></select></div>
+          <div class="vtr126-field"><label>Situação</label><select id="viaturaSituacao">${optionsViaturaSituacao(cfg.situacoesViatura || [], v.situacao || '')}</select></div>
+          ${montarCamposAdministrativosV126(v)}
+          <div class="vtr126-field"><label>Correção do KM de referência</label><input id="viaturaNovoKm" type="number" min="0" step="1" inputmode="numeric" placeholder="Preencher somente para correção"></div>
+          <div class="vtr126-field full"><label>Descrição / justificativa</label><textarea id="viaturaObservacoes" placeholder="Descreva o serviço, avaria, alteração ou justificativa"></textarea></div>
+        </div>
+        <button id="btnAtualizarViatura" class="viatura-atualizar-btn" type="button" onclick="atualizarKmViatura('${escaparAttr(v.prefixo || '')}')">CONFIRMAR ATUALIZAÇÃO DE VTR</button>
+      </section>`;
+    }
+
+    abrirFichaViatura = function(prefixo) {
+      const alvo = localizarViaturaV126(prefixo);
+      if (!alvo) {
+        mostrarToastFt('Viatura não localizada', 'Não foi possível abrir a ficha desta viatura.');
+        return;
+      }
+
+      let modal = document.getElementById('viaturaModalBackdrop');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'viaturaModalBackdrop';
+        modal.className = 'viatura-modal-backdrop';
+        document.body.appendChild(modal);
+      }
+
+      modal.innerHTML = `<div class="viatura-modal vtr126-modal" role="dialog" aria-modal="true">
+        <div class="viatura-modal-header">
+          <div class="viatura-modal-icone"><img src="${escaparAttr(imagemIconeViatura(alvo.modalidade))}" alt="${escaparAttr(alvo.modalidade || 'Viatura')}" loading="lazy" onerror="this.parentElement.textContent='🚔'"></div>
+          <div class="vtr126-title"><h2>${escapar(alvo.prefixo || 'Viatura')}</h2><p class="vtr126-title-label">Policial Responsável</p><p class="vtr126-title-driver">${escapar(alvo.policialResponsavel || 'Não informado')}</p></div>
+          <div class="vtr126-header-actions">
+            ${usuarioPodeAdministrarViaturaV126() ? `<button class="btn-danger-outline" type="button" onclick="confirmarInativacaoViatura('${escaparAttr(alvo.prefixo || '')}')">EXCLUIR VTR</button>` : ''}
+            <button class="viatura-modal-close" type="button" onclick="fecharFichaViatura()">FECHAR</button>
+          </div>
+        </div>
+        <div class="viatura-modal-body">
+          ${montarResumoViaturaV126(alvo)}
+          ${montarIdentificacaoViaturaV126(alvo)}
+          ${montarControleUtilizacaoV126(alvo)}
+          ${montarAtualizacaoAdministrativaV126(alvo)}
+          <button class="vtr126-history-button" type="button" onclick="abrirHistoricoViaturaV126('${escaparAttr(alvo.prefixo || '')}')">HISTÓRICO COMPLETO DA VIATURA</button>
+        </div>
+      </div>`;
+
+      modal.onclick = function(evt) { if (evt.target === modal) fecharFichaViatura(); };
+    };
+
+    function avaliarKmInicialV126(prefixo, referenciaTexto) {
+      const campo = document.getElementById('vtr126KmInicial');
+      const status = document.getElementById('vtr126StatusKm');
+      const relatoBox = document.getElementById('vtr126RelatoBox');
+      if (!campo || !status || !relatoBox) return;
+
+      const inicial = Number(campo.value);
+      const possuiReferencia = String(referenciaTexto || '').trim() !== '';
+      const referencia = possuiReferencia ? Number(String(referenciaTexto).replace(/\D/g, '')) : null;
+      status.className = 'vtr126-divergence';
+      relatoBox.style.display = 'none';
+
+      if (campo.value === '' || !Number.isFinite(inicial)) return;
+      if (!possuiReferencia || !Number.isFinite(referencia)) {
+        status.className = 'vtr126-divergence visivel ok';
+        status.textContent = 'PRIMEIRO REGISTRO — este valor será usado como referência inicial.';
+        return;
+      }
+
+      const diferenca = inicial - referencia;
+      if (diferenca === 0) {
+        status.className = 'vtr126-divergence visivel ok';
+        status.textContent = 'QUILOMETRAGEM CONFERE';
+      } else if (diferenca > 0) {
+        status.className = 'vtr126-divergence visivel';
+        status.textContent = 'DIVERGÊNCIA DE +' + diferenca + ' KM — o relato abaixo é obrigatório.';
+        relatoBox.style.display = 'grid';
+      } else {
+        status.className = 'vtr126-divergence visivel';
+        status.textContent = 'KM INFERIOR AO ÚLTIMO REGISTRO — confira a digitação. O lançamento será bloqueado.';
+      }
+    }
+
+    function iniciarUtilizacaoViaturaV126(prefixo, referenciaTexto) {
+      const kmEl = document.getElementById('vtr126KmInicial');
+      const relatoEl = document.getElementById('vtr126RelatoDivergencia');
+      const obsEl = document.getElementById('vtr126ObsInicio');
+      const btn = document.getElementById('vtr126BtnIniciar');
+      const kmInicial = kmEl ? String(kmEl.value || '').trim() : '';
+      const relato = relatoEl ? String(relatoEl.value || '').trim() : '';
+      const observacao = obsEl ? String(obsEl.value || '').trim() : '';
+      if (!kmInicial) { mostrarToastFt('Utilização não iniciada', 'Informe o KM inicial.'); return; }
+
+      const possuiReferencia = String(referenciaTexto || '').trim() !== '';
+      const referencia = possuiReferencia ? Number(String(referenciaTexto).replace(/\D/g, '')) : null;
+      const inicial = Number(kmInicial);
+      if (possuiReferencia && Number.isFinite(referencia) && inicial < referencia) {
+        mostrarToastFt('Utilização não iniciada', 'O KM inicial não pode ser menor que o último KM final.');
+        return;
+      }
+      if (possuiReferencia && Number.isFinite(referencia) && inicial > referencia && !relato) {
+        mostrarToastFt('Relato obrigatório', 'Descreva a divergência de quilometragem encontrada.');
+        return;
+      }
+
+      if (btn) { btn.disabled = true; btn.textContent = 'INICIANDO...'; }
+      chamarApi('iniciar_utilizacao_viatura', {
+        login: APP.credenciais.login,
+        senha: APP.credenciais.senha,
+        prefixo: prefixo,
+        kmInicial: kmInicial,
+        relatoDivergencia: relato,
+        observacao: observacao
+      }).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao iniciar utilização.');
+        mostrarToastFt('Utilização iniciada', resp.dados.mensagem);
+        return recarregarFichaViaturaV126(prefixo);
+      }).catch(function(erro) {
+        mostrarToastFt('Utilização não iniciada', erro.message || String(erro));
+      }).finally(function() {
+        if (btn && document.body.contains(btn)) { btn.disabled = false; btn.textContent = 'INICIAR UTILIZAÇÃO'; }
+      });
+    }
+
+    function encerrarUtilizacaoViaturaV126(prefixo, administrativo) {
+      const kmEl = document.getElementById('vtr126KmFinal');
+      const obsEl = document.getElementById('vtr126ObsFim');
+      const btn = document.getElementById('vtr126BtnEncerrar');
+      const kmFinal = kmEl ? String(kmEl.value || '').trim() : '';
+      const observacao = obsEl ? String(obsEl.value || '').trim() : '';
+      if (!kmFinal) { mostrarToastFt('Utilização não encerrada', 'Informe o KM final.'); return; }
+      if (administrativo && !observacao) { mostrarToastFt('Justificativa obrigatória', 'Informe o motivo do encerramento administrativo.'); return; }
+
+      if (btn) { btn.disabled = true; btn.textContent = 'ENCERRANDO...'; }
+      chamarApi('encerrar_utilizacao_viatura', {
+        login: APP.credenciais.login,
+        senha: APP.credenciais.senha,
+        prefixo: prefixo,
+        kmFinal: kmFinal,
+        observacao: observacao
+      }).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao encerrar utilização.');
+        mostrarToastFt('Utilização encerrada', resp.dados.mensagem);
+        return recarregarFichaViaturaV126(prefixo);
+      }).catch(function(erro) {
+        mostrarToastFt('Utilização não encerrada', erro.message || String(erro));
+      }).finally(function() {
+        if (btn && document.body.contains(btn)) { btn.disabled = false; btn.textContent = 'ENCERRAR UTILIZAÇÃO'; }
+      });
+    }
+
+    function recarregarFichaViaturaV126(prefixo) {
+      APP.dadosViaturas = null;
+      return carregarDadosViaturas(true).then(function() {
+        renderizarViaturas();
+        abrirFichaViatura(prefixo);
+      });
+    }
+
+    atualizarKmViatura = function(prefixo) {
+      if (!usuarioPodeAdministrarViaturaV126()) {
+        mostrarToastFt('Atualização bloqueada', 'Seu perfil não possui permissão para editar a viatura.');
+        return;
+      }
+
+      const kmEl = document.getElementById('viaturaNovoKm');
+      const obsEl = document.getElementById('viaturaObservacoes');
+      const sitEl = document.getElementById('viaturaSituacao');
+      const responsavelEl = document.getElementById('viaturaPolicialResponsavel');
+      const tipoEl = document.getElementById('vtr126TipoRegistro');
+      const btn = document.getElementById('btnAtualizarViatura');
+      const novoKm = kmEl ? String(kmEl.value || '').trim() : '';
+      const observacoes = obsEl ? String(obsEl.value || '').trim() : '';
+      const situacao = sitEl ? String(sitEl.value || '').trim() : '';
+      const tipoRegistro = tipoEl ? String(tipoEl.value || 'ALTERACAO_CADASTRAL') : 'ALTERACAO_CADASTRAL';
+      const policialResponsavel = responsavelEl ? String(responsavelEl.value || '').trim() : '';
+      const responsavelAnterior = responsavelEl ? String(responsavelEl.getAttribute('data-valor-anterior') || '').trim() : '';
+      const responsavelAlterado = !!responsavelEl && policialResponsavel !== responsavelAnterior;
+      const campos = {};
+
+      document.querySelectorAll('#viaturaModalBackdrop [data-vtr-col]').forEach(function(el) {
+        campos['col' + el.getAttribute('data-vtr-col')] = el.value;
+      });
+
+      if (novoKm && tipoRegistro !== 'CORRECAO_ADMINISTRATIVA') {
+        mostrarToastFt('Tipo de registro incorreto', 'Para alterar o KM de referência, selecione Correção administrativa.');
+        return;
+      }
+      if (novoKm && !observacoes) {
+        mostrarToastFt('Justificativa obrigatória', 'Descreva o motivo da correção do KM de referência.');
+        return;
+      }
+
+      if (btn) { btn.disabled = true; btn.textContent = 'ATUALIZANDO...'; }
+      const parametros = {
+        login: APP.credenciais.login,
+        senha: APP.credenciais.senha,
+        prefixo: prefixo,
+        novoKm: novoKm,
+        observacoes: observacoes,
+        situacao: situacao,
+        tipoRegistro: tipoRegistro,
+        campos: JSON.stringify(campos)
+      };
+      if (responsavelAlterado) parametros.policialResponsavel = policialResponsavel;
+
+      chamarApi('atualizar_dados_viatura', parametros).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao atualizar viatura.');
+        mostrarToastFt('Viatura atualizada', resp.dados.mensagem);
+        return recarregarFichaViaturaV126(prefixo);
+      }).catch(function(erro) {
+        mostrarToastFt('Atualização não concluída', erro.message || String(erro));
+      }).finally(function() {
+        if (btn && document.body.contains(btn)) { btn.disabled = false; btn.textContent = 'CONFIRMAR ATUALIZAÇÃO DE VTR'; }
+      });
+    };
+
+    function abrirHistoricoViaturaV126(prefixo) {
+      let overlay = document.getElementById('vtr126HistoricoBackdrop');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'vtr126HistoricoBackdrop';
+        overlay.className = 'vtr126-history-backdrop';
+        document.body.appendChild(overlay);
+      }
+
+      overlay.innerHTML = `<div class="vtr126-history-modal" role="dialog" aria-modal="true">
+        <div class="vtr126-history-head"><div><h2>Histórico VTR — ${escapar(prefixo)}</h2><p>Livro permanente de utilização, manutenção e alterações.</p></div><button class="viatura-modal-close" type="button" onclick="fecharHistoricoViaturaV126()">FECHAR</button></div>
+        <div class="vtr126-history-body"><div class="resenha-loading">Carregando histórico completo...</div></div>
+      </div>`;
+      overlay.onclick = function(evt) { if (evt.target === overlay) fecharHistoricoViaturaV126(); };
+
+      chamarApi('historico_viatura', {
+        login: APP.credenciais.login,
+        senha: APP.credenciais.senha,
+        prefixo: prefixo
+      }).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao carregar histórico.');
+        APP.historicoViaturaV126 = resp.dados || { prefixo: prefixo, itens: [] };
+        renderizarHistoricoViaturaV126('TODOS');
+      }).catch(function(erro) {
+        const body = overlay.querySelector('.vtr126-history-body');
+        if (body) body.innerHTML = `<div class="viatura-empty">${escapar(erro.message || String(erro))}</div>`;
+      });
+    }
+
+    function fecharHistoricoViaturaV126() {
+      const overlay = document.getElementById('vtr126HistoricoBackdrop');
+      if (overlay) overlay.remove();
+    }
+
+    function historicoViaturaCorrespondeFiltroV126(item, filtro) {
+      if (filtro === 'TODOS') return true;
+      const categoria = normalizarTexto(item.categoria || '');
+      const tipo = normalizarTexto(item.tipoAcao || '');
+      if (filtro === 'UTILIZACOES') return categoria === 'UTILIZACAO';
+      if (filtro === 'QUILOMETRAGEM') return categoria === 'UTILIZACAO' || categoria === 'CORRECAO' || tipo.indexOf('KM') !== -1;
+      if (filtro === 'DIVERGENCIAS') return Number(item.divergenciaKm || 0) > 0 || tipo.indexOf('DIVERGENCIA') !== -1;
+      if (filtro === 'MANUTENCOES') return categoria === 'MANUTENCAO';
+      if (filtro === 'AVARIAS') return categoria === 'AVARIA';
+      if (filtro === 'ALTERACOES') return ['ALTERACAO', 'CORRECAO', 'OBSERVACAO', 'MARCO_INICIAL'].indexOf(categoria) !== -1;
+      return true;
+    }
+
+    function tituloEventoViaturaV126(item) {
+      const mapa = {
+        INICIAR_UTILIZACAO: 'Utilização iniciada',
+        ENCERRAR_UTILIZACAO: 'Utilização encerrada',
+        REGISTRAR_MANUTENCAO: 'Manutenção realizada',
+        REGISTRAR_AVARIA: 'Avaria constatada',
+        REGISTRAR_OBSERVACAO: 'Observação registrada',
+        CORRECAO_ADMINISTRATIVA: 'Correção administrativa',
+        ATUALIZAR_DADOS_VIATURA: 'Dados da viatura atualizados',
+        ATUALIZAR_SITUACAO_VIATURA: 'Situação atualizada',
+        ADICIONAR_VIATURA: 'Viatura adicionada',
+        INATIVAR_VIATURA: 'Viatura inativada',
+        MARCO_INICIAL: 'Marco inicial do histórico'
+      };
+      return mapa[normalizarTexto(item.tipoAcao || '')] || String(item.tipoAcao || 'Registro').replace(/_/g, ' ');
+    }
+
+    function classeEventoViaturaV126(item) {
+      const categoria = normalizarTexto(item.categoria || '');
+      if (Number(item.divergenciaKm || 0) > 0) return 'divergencia';
+      if (categoria === 'UTILIZACAO') return 'utilizacao';
+      if (categoria === 'MANUTENCAO') return 'manutencao';
+      if (categoria === 'AVARIA') return 'avaria';
+      if (categoria === 'CORRECAO') return 'correcao';
+      return '';
+    }
+
+    function montarEventoHistoricoViaturaV126(item) {
+      const detalhes = [];
+      if (item.kmInicial !== '') detalhes.push('<span><strong>KM inicial:</strong> ' + escapar(textoKmV126(item.kmInicial)) + '</span>');
+      if (item.kmFinal !== '') detalhes.push('<span><strong>KM final:</strong> ' + escapar(textoKmV126(item.kmFinal)) + '</span>');
+      if (item.kmPercorrido !== '') detalhes.push('<span><strong>Percorrido:</strong> ' + escapar(textoKmV126(item.kmPercorrido)) + '</span>');
+      if (Number(item.divergenciaKm || 0) > 0) detalhes.push('<span><strong>Divergência:</strong> +' + escapar(item.divergenciaKm) + ' km</span>');
+      if (item.campoAlterado) detalhes.push('<span><strong>Campo:</strong> ' + escapar(item.campoAlterado) + '</span>');
+      if (item.valorAnterior !== '') detalhes.push('<span><strong>Anterior:</strong> ' + escapar(item.valorAnterior || '-') + '</span>');
+      if (item.valorNovo !== '') detalhes.push('<span><strong>Novo:</strong> ' + escapar(item.valorNovo || '-') + '</span>');
+      if (item.situacaoAnterior || item.situacaoNova) detalhes.push('<span><strong>Situação:</strong> ' + escapar(item.situacaoAnterior || '-') + ' → ' + escapar(item.situacaoNova || '-') + '</span>');
+      const notas = [item.relatoDivergencia ? 'Relato da divergência: ' + item.relatoDivergencia : '', item.observacao || ''].filter(Boolean).join('\n');
+      return `<article class="vtr126-event ${classeEventoViaturaV126(item)}">
+        <div class="vtr126-event-top"><h3>${escapar(tituloEventoViaturaV126(item))}</h3><time>${escapar(item.dataHora || '-')}</time></div>
+        <div class="vtr126-event-meta">${escapar(item.policialUsuario || 'SISTEMA FT')}${item.reUsuario && String(item.policialUsuario || '').indexOf(String(item.reUsuario)) === -1 ? ' • RE ' + escapar(item.reUsuario) : ''}</div>
+        ${detalhes.length ? `<div class="vtr126-event-grid">${detalhes.join('')}</div>` : ''}
+        ${notas ? `<p class="vtr126-event-note">${escapar(notas)}</p>` : ''}
+      </article>`;
+    }
+
+    function renderizarHistoricoViaturaV126(filtro) {
+      const dados = APP.historicoViaturaV126 || { itens: [] };
+      const body = document.querySelector('#vtr126HistoricoBackdrop .vtr126-history-body');
+      if (!body) return;
+      const todos = Array.isArray(dados.itens) ? dados.itens : [];
+      const encerrados = {};
+      todos.forEach(function(item) { if (normalizarTexto(item.tipoAcao || '') === 'ENCERRAR_UTILIZACAO' && item.idUtilizacao) encerrados[item.idUtilizacao] = true; });
+      const semInicioDuplicado = todos.filter(function(item) {
+        return !(normalizarTexto(item.tipoAcao || '') === 'INICIAR_UTILIZACAO' && item.idUtilizacao && encerrados[item.idUtilizacao]);
+      });
+      const itens = semInicioDuplicado.filter(function(item) { return historicoViaturaCorrespondeFiltroV126(item, filtro); });
+      const filtros = [
+        ['TODOS', 'Todos'], ['UTILIZACOES', 'Utilizações'], ['QUILOMETRAGEM', 'Quilometragem'],
+        ['DIVERGENCIAS', 'Divergências'], ['MANUTENCOES', 'Manutenções'], ['AVARIAS', 'Avarias'], ['ALTERACOES', 'Alterações']
+      ];
+      body.innerHTML = `<div class="vtr126-history-filters">${filtros.map(function(opcao) {
+        return `<button class="vtr126-history-filter ${opcao[0] === filtro ? 'ativo' : ''}" type="button" onclick="renderizarHistoricoViaturaV126('${opcao[0]}')">${opcao[1]}</button>`;
+      }).join('')}</div>
+      <div class="vtr126-timeline">${itens.length ? itens.map(montarEventoHistoricoViaturaV126).join('') : '<div class="viatura-empty">Nenhum registro encontrado neste filtro.</div>'}</div>`;
+    }
+
+    abrirHistoricoVtrV125 = abrirHistoricoViaturaV126;
 </script>
 </body>
 </html>
