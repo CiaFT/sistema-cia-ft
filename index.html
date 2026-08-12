@@ -5547,6 +5547,12 @@ Banco de dados: Google Sheets.
     .freq-audit-card button,.freq-close-card button{width:100%;border:1px solid #960018;border-radius:12px;background:#fff;color:#960018;padding:8px;font:inherit;font-size:11px;font-weight:900;cursor:pointer}
     .freq-close-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:12px 0 18px}
     .freq-close-card{border:1px solid rgba(55,66,71,.16);border-radius:18px;background:#fff;padding:14px}.freq-close-card h3{margin:0 0 6px;font-size:14px}.freq-close-card p{min-height:34px;margin:0 0 10px;font-size:12px;color:#64748b}
+    .freq-pdf-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;margin:0 0 18px;border:1px solid rgba(55,66,71,.16);border-radius:20px;background:linear-gradient(135deg,#ffffff,#f8fafc);padding:16px;box-shadow:0 10px 24px rgba(15,23,42,.055)}
+    .freq-pdf-card.pronto{border-color:rgba(21,128,61,.28);background:linear-gradient(135deg,#f0fdf4,#ffffff)}
+    .freq-pdf-info{display:flex;gap:12px;align-items:center;min-width:0}.freq-pdf-icon{display:grid;place-items:center;flex:0 0 auto;width:44px;height:44px;border-radius:14px;background:#e9edf1;color:#374247;font-size:22px}.freq-pdf-card.pronto .freq-pdf-icon{background:#dcfce7;color:#166534}
+    .freq-pdf-card h3{margin:0 0 4px;color:#17202a;font-size:14px}.freq-pdf-card p{margin:0;color:#64748b;font-size:11.5px;line-height:1.45}
+    .freq-pdf-card button{min-width:190px;border:1px solid #8E1B1B;border-radius:14px;background:#8E1B1B;color:#fff;padding:11px 15px;font:inherit;font-size:11px;font-weight:950;cursor:pointer;box-shadow:0 8px 18px rgba(142,27,27,.18)}
+    .freq-pdf-card button:hover{background:#721515}.freq-pdf-card button:disabled{border-color:#cbd5e1;background:#e5e7eb;color:#64748b;box-shadow:none;cursor:not-allowed}
     .freq-table-wrap{width:100%;overflow:auto;border:1px solid rgba(55,66,71,.2);border-radius:18px;background:#fff;max-height:68vh}
     .freq-table{border-collapse:separate;border-spacing:0;min-width:1510px;width:100%;font-size:11px}
     .freq-table th,.freq-table td{height:38px;border-right:1px solid #dbe1e7;border-bottom:1px solid #dbe1e7;text-align:center;background:#fff;padding:3px}
@@ -5667,7 +5673,7 @@ Banco de dados: Google Sheets.
     .freq-note{font-size:12px;color:#64748b;margin:10px 0}
     @media(min-width:761px){.freq-legend[open] summary{margin-bottom:2px}.freq-legend summary{pointer-events:none}.freq-legend summary::-webkit-details-marker{display:none}}
     @media(max-width:900px){.freq-audit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.freq-legend-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-    @media(max-width:760px){.freq-launch-card{padding:14px}.freq-close-grid{grid-template-columns:1fr}.freq-table-wrap{max-height:62vh;-webkit-overflow-scrolling:touch}.freq-table{min-width:1650px}.freq-table .freq-pm{width:168px;min-width:168px;max-width:168px}.freq-table .freq-total.diarias,.freq-table .freq-total.trabalhados{position:static}.freq-legend-grid{grid-template-columns:1fr}.freq-audit-grid{grid-template-columns:1fr 1fr}.freq-note{font-size:11px}}
+    @media(max-width:760px){.freq-launch-card{padding:14px}.freq-close-grid{grid-template-columns:1fr}.freq-pdf-card{grid-template-columns:1fr}.freq-pdf-card button{width:100%;min-width:0}.freq-table-wrap{max-height:62vh;-webkit-overflow-scrolling:touch}.freq-table{min-width:1650px}.freq-table .freq-pm{width:168px;min-width:168px;max-width:168px}.freq-table .freq-total.diarias,.freq-table .freq-total.trabalhados{position:static}.freq-legend-grid{grid-template-columns:1fr}.freq-audit-grid{grid-template-columns:1fr 1fr}.freq-note{font-size:11px}}
     /* ============================================================
      * VIATURAS — V1.2.6
      * Card reorganizado, controle de utilização e histórico.
@@ -7404,7 +7410,21 @@ Banco de dados: Google Sheets.
         <div class="freq-close-grid">
           ${montarFechamentoFrequencia('CONFERÊNCIA FINAL • ENC ADM', a.fechamentoEnc, cap.podeFecharEnc, 'FECHAMENTO_ENC')}
           ${montarFechamentoFrequencia('APROVAÇÃO FINAL • CMT CIA', a.fechamentoCmt, cap.podeFecharCmt, 'FECHAMENTO_CMT')}
-        </div>`;
+        </div>
+        ${montarGeracaoPdfFrequencia(d)}`;
+    }
+
+
+    function montarGeracaoPdfFrequencia(d) {
+      const fechamento = d && d.auditoria && d.auditoria.fechamentoCmt || { status: 'PENDENTE' };
+      const pronto = fechamento.status === 'APROVADO';
+      return '<div class="freq-pdf-card ' + (pronto ? 'pronto' : '') + '">' +
+        '<div class="freq-pdf-info"><span class="freq-pdf-icon" aria-hidden="true">▣</span><div>' +
+          '<h3>RELATÓRIO MENSAL EM PDF</h3>' +
+          '<p>' + (pronto ? 'Mês encerrado. Gere o relatório oficial de ' + escapar(rotuloCompetenciaFrequencia(d.competencia)) + ' com os lançamentos e totais consolidados.' : 'Disponível após a aprovação final e o encerramento do mês pelo Cmt de Cia.') + '</p>' +
+        '</div></div>' +
+        '<button id="freqPdfBtn" type="button" onclick="gerarPdfControleFrequencia()" ' + (pronto ? '' : 'disabled') + '>' + (pronto ? 'GERAR PLANILHA PDF' : 'AGUARDANDO FECHAMENTO') + '</button>' +
+      '</div>';
     }
 
 
@@ -7573,6 +7593,49 @@ Banco de dados: Google Sheets.
       }).catch(function(err) {
         mostrarToastFt('Auditoria não registrada', err.message || String(err));
       });
+    }
+
+
+    function gerarPdfControleFrequencia() {
+      const dados = APP.dadosControleFrequencia || {};
+      const fechamento = dados.auditoria && dados.auditoria.fechamentoCmt || {};
+      if (fechamento.status !== 'APROVADO') {
+        mostrarToastFt('PDF ainda indisponível', 'Conclua a aprovação final e o encerramento do mês antes de gerar o relatório.');
+        return;
+      }
+
+      const botao = document.getElementById('freqPdfBtn');
+      if (botao) { botao.disabled = true; botao.textContent = 'GERANDO PDF...'; }
+      chamarApi('gerar_pdf_frequencia', {
+        login: APP.credenciais.login,
+        senha: APP.credenciais.senha,
+        competencia: dados.competencia
+      }).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao gerar o PDF.');
+        baixarArquivoBase64Frequencia(resp.dados.base64, resp.dados.mimeType || 'application/pdf', resp.dados.nomeArquivo || 'Controle_de_Frequencia.pdf');
+        mostrarToastFt('PDF gerado', resp.dados.mensagem || 'Relatório mensal baixado com sucesso.');
+      }).catch(function(err) {
+        mostrarToastFt('PDF não gerado', err.message || String(err));
+      }).finally(function() {
+        if (botao && document.body.contains(botao)) { botao.disabled = false; botao.textContent = 'GERAR PLANILHA PDF'; }
+      });
+    }
+
+
+    function baixarArquivoBase64Frequencia(base64, mimeType, nomeArquivo) {
+      const texto = String(base64 || '').replace(/\s/g, '');
+      if (!texto) throw new Error('O arquivo PDF retornou vazio.');
+      const binario = window.atob(texto);
+      const bytes = new Uint8Array(binario.length);
+      for (let indice = 0; indice < binario.length; indice++) bytes[indice] = binario.charCodeAt(indice);
+      const url = URL.createObjectURL(new Blob([bytes], { type: mimeType || 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = nomeArquivo || 'Controle_de_Frequencia.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(function() { URL.revokeObjectURL(url); }, 1500);
     }
 
 
