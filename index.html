@@ -5800,6 +5800,21 @@ Banco de dados: Google Sheets.
     .vtr126-badge.ok { background: #dcfce7; color: #166534; }
     .vtr126-badge.alerta { background: #fce7f3; color: #5D001E; }
     .vtr126-badge.andamento { background: #e0f2fe; color: #075985; }
+    .vtr126-badge.bloqueada { background: #8E1B1B; color: #ffffff; }
+
+    .vtr126-use-blocked {
+      margin-top: 12px;
+      border: 1px solid rgba(142,27,27,.24);
+      border-radius: 16px;
+      background: linear-gradient(135deg, #fff7f8, #ffffff);
+      color: #5D001E;
+      padding: 13px 14px;
+      font-size: 12px;
+      font-weight: 750;
+      line-height: 1.45;
+    }
+
+    .vtr126-use-blocked strong { display: block; margin-bottom: 3px; font-weight: 950; }
 
     .vtr126-ident-grid {
       display: grid;
@@ -11694,19 +11709,43 @@ Banco de dados: Google Sheets.
       </section>`;
     }
 
+    function viaturaBloqueadaParaIniciarUtilizacaoV126(v) {
+      const situacao = normalizarTexto((v && v.situacao) || '');
+      const statusApp = normalizarTexto((v && v.statusApp) || '');
+      return ['SINDICANCIA', 'DESCARGA'].indexOf(situacao) !== -1 ||
+        ['SINDICANCIA', 'DESCARGA'].indexOf(statusApp) !== -1;
+    }
+
     function montarResumoViaturaV126(v) {
       const uso = v.utilizacaoAtual;
+      const bloqueada = !uso && viaturaBloqueadaParaIniciarUtilizacaoV126(v);
       return `<div class="vtr126-summary-grid">
         <div class="vtr126-summary-card"><small>Situação</small><strong>${escapar(v.situacao || '-')}</strong></div>
         <div class="vtr126-summary-card"><small>Último KM final</small><strong>${escapar(textoKmV126(v.ultimoKm))}</strong></div>
         <div class="vtr126-summary-card"><small>Última atualização</small><strong>${escapar(v.ultimaAtualizacao || '-')}</strong></div>
-        <div class="vtr126-summary-card"><small>Controle de uso</small><strong>${uso ? 'USO EM ANDAMENTO' : 'DISPONÍVEL PARA REGISTRO'}</strong></div>
+        <div class="vtr126-summary-card"><small>Controle de uso</small><strong>${uso ? 'USO EM ANDAMENTO' : (bloqueada ? 'INDISPONÍVEL PARA UTILIZAÇÃO' : 'DISPONÍVEL PARA REGISTRO')}</strong></div>
       </div>`;
     }
 
     function montarControleUtilizacaoV126(v) {
       const uso = v.utilizacaoAtual;
       const ultimo = v.ultimoUso || {};
+
+      if (!uso && viaturaBloqueadaParaIniciarUtilizacaoV126(v)) {
+        return `<section class="vtr126-section">
+          <div class="vtr126-section-head">
+            <div><h3>Controle de utilização</h3><p>Nova utilização bloqueada conforme a situação atual da viatura.</p></div>
+            <span class="vtr126-badge bloqueada">UTILIZAÇÃO INDISPONÍVEL</span>
+          </div>
+          <div class="vtr126-use-grid">
+            <div class="vtr126-info-card"><small>Situação atual</small><strong>${escapar(v.situacao || v.statusApp || '-')}</strong></div>
+            <div class="vtr126-info-card"><small>Último KM final</small><strong>${escapar(textoKmV126(v.ultimoKm))}</strong></div>
+            <div class="vtr126-info-card"><small>Último encerramento</small><strong>${escapar(ultimo.dataFim || v.ultimaAtualizacao || '-')}</strong></div>
+            <div class="vtr126-info-card"><small>Último motorista</small><strong>${escapar(ultimo.motorista || v.atualizadoPor || '-')}</strong></div>
+          </div>
+          <div class="vtr126-use-blocked"><strong>INÍCIO DE UTILIZAÇÃO BLOQUEADO</strong>Viaturas em SINDICÂNCIA ou DESCARGA não podem receber novo lançamento de KM inicial. O campo será liberado quando a situação da viatura for alterada.</div>
+        </section>`;
+      }
 
       if (!uso) {
         const referencia = String(v.ultimoKm === null || v.ultimoKm === undefined ? '' : v.ultimoKm).trim();
@@ -11861,6 +11900,11 @@ Banco de dados: Google Sheets.
     }
 
     function iniciarUtilizacaoViaturaV126(prefixo, referenciaTexto) {
+      const viatura = localizarViaturaV126(prefixo);
+      if (viaturaBloqueadaParaIniciarUtilizacaoV126(viatura)) {
+        mostrarToastFt('Utilização não permitida', 'Viaturas em SINDICÂNCIA ou DESCARGA não podem iniciar utilização.');
+        return;
+      }
       const kmEl = document.getElementById('vtr126KmInicial');
       const relatoEl = document.getElementById('vtr126RelatoDivergencia');
       const obsEl = document.getElementById('vtr126ObsInicio');
