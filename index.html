@@ -2338,43 +2338,140 @@ Banco de dados: Google Sheets.
       line-height: 1.4;
     }
 
-    .toast-ft {
+    .toast-ft-region {
       position: fixed;
-      left: 50%;
-      bottom: 22px;
-      transform: translateX(-50%) translateY(20px);
-      z-index: 9999;
-      min-width: min(420px, calc(100vw - 32px));
-      max-width: calc(100vw - 32px);
-      border: 1px solid rgba(55,66,71,.18);
+      top: 18px;
+      right: 18px;
+      z-index: 120000;
+      display: grid;
+      gap: 11px;
+      width: min(430px, calc(100vw - 32px));
+      pointer-events: none;
+    }
+
+    .toast-ft {
+      --toast-cor: #374247;
+      --toast-cor-suave: #eef2f6;
+      position: relative;
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr) 28px;
+      gap: 11px;
+      align-items: start;
+      width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
+      border: 1px solid color-mix(in srgb, var(--toast-cor) 32%, #ffffff);
+      border-left: 5px solid var(--toast-cor);
+      border-radius: 20px;
       background:
-        radial-gradient(circle at top left, rgba(55,66,71,.24), transparent 56%),
+        radial-gradient(circle at top right, color-mix(in srgb, var(--toast-cor) 12%, transparent), transparent 55%),
         linear-gradient(180deg, #ffffff, #f8fafc);
       color: #17202a;
-      border-radius: 18px;
-      box-shadow: 0 18px 44px rgba(15,23,42,.22);
-      padding: 14px 15px;
+      box-shadow: 0 22px 60px rgba(15,23,42,.24), 0 4px 12px rgba(15,23,42,.08);
+      padding: 14px 13px 15px 12px;
       opacity: 0;
-      pointer-events: none;
-      transition: opacity .18s ease, transform .18s ease;
+      pointer-events: auto;
+      transform: translateX(34px) scale(.97);
+      transition: opacity .2s ease, transform .22s ease;
     }
+    .toast-ft.visivel { opacity: 1; transform: translateX(0) scale(1); }
+    .toast-ft.saindo { opacity: 0; transform: translateX(28px) scale(.98); }
+    .toast-ft.sucesso { --toast-cor: #15803d; --toast-cor-suave: #dcfce7; }
+    .toast-ft.erro { --toast-cor: #b91c1c; --toast-cor-suave: #fee2e2; }
+    .toast-ft.atencao { --toast-cor: #D4AF37; --toast-cor-suave: #fef3c7; }
+    .toast-ft.info { --toast-cor: #374247; --toast-cor-suave: #e9edf1; }
+    .toast-ft.confirmacao { --toast-cor: #8E1B1B; --toast-cor-suave: #fce7eb; }
 
-    .toast-ft.visivel {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
+    .toast-ft-icone {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 13px;
+      background: var(--toast-cor-suave);
+      color: var(--toast-cor);
+      font-size: 19px;
+      font-weight: 950;
+      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--toast-cor) 14%, transparent);
     }
-
-    .toast-ft strong {
+    .toast-ft-conteudo { min-width: 0; padding-top: 1px; }
+    .toast-ft-titulo {
       display: block;
-      font-size: 14px;
-      margin-bottom: 4px;
+      margin: 0 0 4px;
+      color: #17202a;
+      font-size: 13.5px;
+      font-weight: 950;
+      line-height: 1.25;
+      overflow-wrap: anywhere;
     }
-
-    .toast-ft span {
+    .toast-ft-texto {
       display: block;
+      color: #59666d;
+      font-size: 11.8px;
+      font-weight: 650;
+      line-height: 1.45;
+      white-space: pre-line;
+      overflow-wrap: anywhere;
+    }
+    .toast-ft-fechar {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 27px;
+      height: 27px;
+      margin: -3px -3px 0 0;
+      border: 0;
+      border-radius: 9px;
+      background: transparent;
       color: #64748b;
-      font-size: 12.5px;
-      line-height: 1.35;
+      font: inherit;
+      font-size: 17px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .toast-ft-fechar:hover { background: #eef2f6; color: #17202a; }
+    .toast-ft-fechar:focus-visible,
+    .toast-ft-acao:focus-visible { outline: 3px solid color-mix(in srgb, var(--toast-cor) 24%, transparent); outline-offset: 2px; }
+    .toast-ft-acoes {
+      grid-column: 2 / -1;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 2px;
+    }
+    .toast-ft-acao {
+      min-width: 106px;
+      border: 1.5px solid var(--toast-cor);
+      border-radius: 12px;
+      padding: 9px 13px;
+      font: inherit;
+      font-size: 10.5px;
+      font-weight: 950;
+      letter-spacing: .2px;
+      cursor: pointer;
+    }
+    .toast-ft-acao.secundaria { background: #ffffff; color: #475569; border-color: #cbd5e1; }
+    .toast-ft-acao.primaria { background: var(--toast-cor); color: #ffffff; }
+    .toast-ft-progresso {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 4px;
+      background: var(--toast-cor);
+      transform-origin: left;
+      animation: toastFtTempo linear forwards;
+    }
+    .toast-ft.persistente .toast-ft-progresso { display: none; }
+    @keyframes toastFtTempo { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+    @media (max-width: 560px) {
+      .toast-ft-region { top: 10px; right: 10px; width: calc(100vw - 20px); }
+      .toast-ft { grid-template-columns: 38px minmax(0, 1fr) 27px; border-radius: 17px; padding: 12px 11px 14px 10px; }
+      .toast-ft-icone { width: 36px; height: 36px; border-radius: 11px; font-size: 17px; }
+      .toast-ft-acoes { grid-column: 1 / -1; }
+      .toast-ft-acao { flex: 1 1 0; min-width: 0; }
     }
 
     @media (max-width: 980px) {
@@ -6133,6 +6230,21 @@ Banco de dados: Google Sheets.
       line-height: 1.35;
       overflow-wrap: anywhere;
     }
+    .rotina-periodicidade {
+      display: inline-flex;
+      align-items: center;
+      margin-top: 5px;
+      border: 1px solid rgba(212,175,55,.45);
+      border-radius: 999px;
+      background: #fff8dc;
+      color: #755800;
+      padding: 3px 6px;
+      font-size: 8px;
+      font-weight: 950;
+      line-height: 1.2;
+      letter-spacing: .25px;
+      text-transform: uppercase;
+    }
     .rotina-prazo-wrap { min-width: 128px; text-align: right; }
     .rotina-prazo-regra { display: block; margin-top: 4px; color: #64748b; font-size: 9px; font-weight: 750; }
     .rotina-prazo {
@@ -7071,7 +7183,7 @@ Banco de dados: Google Sheets.
 
     function montarDiaRotinasAdministrativas(dia) {
       const tarefas = dia.tarefas || [];
-      const especificas = tarefas.filter(function(item) { return item.grupo === 'SEMANAL'; });
+      const especificas = tarefas.filter(function(item) { return item.grupo !== 'DIÁRIA'; });
       const diarias = tarefas.filter(function(item) { return item.grupo === 'DIÁRIA'; });
       return `
         <div class="rotina-dia-card ${dia.hoje ? 'hoje' : ''}">
@@ -7090,6 +7202,7 @@ Banco de dados: Google Sheets.
           ${botaoCheckRotinaCliente('SEMANAL', dataISO, tarefa)}
           <div class="rotina-conteudo">
             <strong>${escapar(tarefa.nome || '-')}</strong>
+            ${tarefa.periodicidade === 'QUINZENAL' ? '<span class="rotina-periodicidade">Quinzenal · 1ª e 3ª ocorrência no mês</span>' : ''}
             ${metadadosConclusaoRotinaCliente(tarefa.conclusao)}
           </div>
         </div>`;
@@ -7110,8 +7223,18 @@ Banco de dados: Google Sheets.
 
     function confirmarRotinaAdministrativa(tipo, referencia, idTarefa, nomeTarefa, botao) {
       const textoReferencia = tipo === 'MENSAL' ? ((APP.dadosRotinasAdministrativas || {}).mesReferencia || referencia) : dataISOParaBR(referencia);
-      if (!confirm('Confirma a conclusão da tarefa "' + nomeTarefa + '" em ' + textoReferencia + '?\n\nO registro ficará vinculado ao seu login e não poderá ser desfeito.')) return;
+      confirmarToastFt(
+        'CONFIRMAR CONCLUSÃO',
+        'Tarefa: ' + nomeTarefa + '\nReferência: ' + textoReferencia + '\n\nO registro ficará vinculado ao seu login e não poderá ser desfeito.',
+        { confirmar: 'CONFIRMAR TAREFA', cancelar: 'CANCELAR' }
+      ).then(function(confirmado) {
+        if (!confirmado) return;
+        executarRegistroRotinaAdministrativa(tipo, referencia, idTarefa, botao);
+      });
+    }
 
+
+    function executarRegistroRotinaAdministrativa(tipo, referencia, idTarefa, botao) {
       if (botao) {
         botao.disabled = true;
         botao.classList.add('salvando');
@@ -7410,7 +7533,18 @@ Banco de dados: Google Sheets.
 
     function auditarControleFrequencia(tipo, semana) {
       const texto = tipo === 'SEMANAL' ? 'Confirma a auditoria da semana ' + semana + '?' : (tipo === 'FECHAMENTO_ENC' ? 'Confirma a conferência final do Enc Adm?' : 'Confirma a aprovação final e o encerramento deste mês?');
-      if (!confirm(texto)) return;
+      const rotuloAcao = tipo === 'SEMANAL' ? 'CONFIRMAR AUDITORIA' : (tipo === 'FECHAMENTO_ENC' ? 'CONFIRMAR CONFERÊNCIA' : 'APROVAR E ENCERRAR');
+      confirmarToastFt('CONFIRMAÇÃO DE FREQUÊNCIA', texto, {
+        confirmar: rotuloAcao,
+        cancelar: 'CANCELAR'
+      }).then(function(confirmado) {
+        if (!confirmado) return;
+        executarAuditoriaControleFrequencia(tipo, semana);
+      });
+    }
+
+
+    function executarAuditoriaControleFrequencia(tipo, semana) {
       chamarApi('auditar_frequencia', {
         login: APP.credenciais.login,
         senha: APP.credenciais.senha,
@@ -8350,23 +8484,150 @@ Banco de dados: Google Sheets.
     }
 
 
-    function mostrarToastFt(titulo, texto) {
-      let toast = document.getElementById('toastFt');
+    function obterRegiaoToastFt() {
+      let regiao = document.getElementById('toastFtRegion');
+      if (regiao) return regiao;
 
-      if (!toast) {
-        toast = document.createElement('div');
-        toast.id = 'toastFt';
-        toast.className = 'toast-ft';
-        document.body.appendChild(toast);
+      regiao = document.createElement('div');
+      regiao.id = 'toastFtRegion';
+      regiao.className = 'toast-ft-region';
+      regiao.setAttribute('aria-live', 'polite');
+      regiao.setAttribute('aria-atomic', 'false');
+      document.body.appendChild(regiao);
+      return regiao;
+    }
+
+
+    function inferirTipoToastFt(titulo, tipoInformado) {
+      const permitido = ['sucesso', 'erro', 'atencao', 'info', 'confirmacao'];
+      const tipo = String(tipoInformado || '').toLowerCase();
+      if (permitido.indexOf(tipo) !== -1) return tipo;
+
+      const texto = String(titulo || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+      if (/(ERRO|FALHA|NAO SALV|NAO REGISTR|NAO ENCONTR|NEGAD|INVALID|OBRIGAT|BLOQUEAD)/.test(texto)) return 'erro';
+      if (/(ATENCAO|ALERTA|JA |PENDENTE|LIMITE|MINIMO|NENHUM)/.test(texto)) return 'atencao';
+      if (/(SUCESSO|ENVIAD|ATUALIZAD|REGISTRAD|CONCLUID|ALTERAD|ARQUIVAD|INATIVAD|INICIAD|ENCERRAD|ADICIONAD|SALV)/.test(texto)) return 'sucesso';
+      return 'info';
+    }
+
+
+    function visualTipoToastFt(tipo) {
+      const visuais = {
+        sucesso: { icone: '✓', titulo: 'SUCESSO' },
+        erro: { icone: '!', titulo: 'NÃO FOI POSSÍVEL' },
+        atencao: { icone: '!', titulo: 'ATENÇÃO' },
+        info: { icone: 'i', titulo: 'INFORMAÇÃO' },
+        confirmacao: { icone: '?', titulo: 'CONFIRMAÇÃO' }
+      };
+      return visuais[tipo] || visuais.info;
+    }
+
+
+    function criarToastFt(opcoes) {
+      const config = opcoes || {};
+      const tipo = inferirTipoToastFt(config.titulo, config.tipo);
+      const visual = visualTipoToastFt(tipo);
+      const duracao = Math.max(2500, Number(config.duracao || 4800));
+      const persistente = !!config.persistente;
+      const regiao = obterRegiaoToastFt();
+      const toastId = 'toastFt-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+
+      while (regiao.children.length >= 5) {
+        const descartavel = regiao.querySelector('.toast-ft:not(.persistente)') || regiao.firstElementChild;
+        if (!descartavel) break;
+        const fecharAntigo = descartavel.querySelector('.toast-ft-fechar');
+        if (fecharAntigo) fecharAntigo.click();
+        if (descartavel.parentNode) descartavel.parentNode.removeChild(descartavel);
       }
 
-      toast.innerHTML = `<strong>${escapar(titulo)}</strong><span>${escapar(texto)}</span>`;
-      toast.classList.add('visivel');
+      const toast = document.createElement('section');
+      toast.id = toastId;
+      toast.className = 'toast-ft ' + tipo + (persistente ? ' persistente' : '');
+      toast.setAttribute('role', tipo === 'erro' || tipo === 'confirmacao' ? 'alert' : 'status');
+      toast.setAttribute('aria-labelledby', toastId + '-titulo');
+      toast.setAttribute('aria-describedby', toastId + '-texto');
+      toast.innerHTML =
+        '<span class="toast-ft-icone" aria-hidden="true">' + escapar(visual.icone) + '</span>' +
+        '<div class="toast-ft-conteudo">' +
+          '<strong class="toast-ft-titulo" id="' + toastId + '-titulo">' + escapar(config.titulo || visual.titulo) + '</strong>' +
+          '<span class="toast-ft-texto" id="' + toastId + '-texto">' + escapar(config.texto || '') + '</span>' +
+        '</div>' +
+        '<button class="toast-ft-fechar" type="button" aria-label="Fechar aviso">×</button>' +
+        (config.acoes && config.acoes.length ?
+          '<div class="toast-ft-acoes">' + config.acoes.map(function(acao, indice) {
+            return '<button class="toast-ft-acao ' + (acao.primaria ? 'primaria' : 'secundaria') + '" type="button" data-toast-acao="' + indice + '">' + escapar(acao.rotulo || 'OK') + '</button>';
+          }).join('') + '</div>' : '') +
+        '<span class="toast-ft-progresso" aria-hidden="true" style="animation-duration:' + duracao + 'ms"></span>';
 
-      clearTimeout(window.__timerToastFt);
-      window.__timerToastFt = setTimeout(function() {
+      regiao.appendChild(toast);
+      let encerrado = false;
+      let timer = null;
+
+      function fechar(resultado) {
+        if (encerrado) return;
+        encerrado = true;
+        if (timer) clearTimeout(timer);
+        toast.classList.add('saindo');
         toast.classList.remove('visivel');
-      }, 3600);
+        if (typeof config.aoResponder === 'function') config.aoResponder(resultado);
+        setTimeout(function() {
+          if (toast.parentNode) toast.parentNode.removeChild(toast);
+        }, 230);
+      }
+
+      toast.querySelector('.toast-ft-fechar').addEventListener('click', function() { fechar(false); });
+      Array.prototype.forEach.call(toast.querySelectorAll('[data-toast-acao]'), function(botao) {
+        botao.addEventListener('click', function() {
+          const indice = Number(botao.getAttribute('data-toast-acao'));
+          const acao = (config.acoes || [])[indice] || {};
+          fechar(!!acao.resultado);
+        });
+      });
+      toast.addEventListener('keydown', function(evento) {
+        if (evento.key === 'Escape') fechar(false);
+      });
+
+      setTimeout(function() { toast.classList.add('visivel'); }, 10);
+      if (!persistente) timer = setTimeout(function() { fechar(null); }, duracao);
+
+      if (tipo === 'confirmacao') {
+        toast.tabIndex = -1;
+        setTimeout(function() {
+          const principal = toast.querySelector('.toast-ft-acao.primaria');
+          if (principal) principal.focus();
+          else toast.focus();
+        }, 30);
+      }
+
+      return { elemento: toast, fechar: fechar };
+    }
+
+
+    function mostrarToastFt(titulo, texto, tipo) {
+      return criarToastFt({
+        titulo: titulo,
+        texto: texto,
+        tipo: tipo,
+        duracao: 4800
+      });
+    }
+
+
+    function confirmarToastFt(titulo, texto, opcoes) {
+      const config = opcoes || {};
+      return new Promise(function(resolve) {
+        criarToastFt({
+          titulo: titulo,
+          texto: texto,
+          tipo: 'confirmacao',
+          persistente: true,
+          acoes: [
+            { rotulo: config.cancelar || 'CANCELAR', resultado: false, primaria: false },
+            { rotulo: config.confirmar || 'CONFIRMAR', resultado: true, primaria: true }
+          ],
+          aoResponder: resolve
+        });
+      });
     }
 
 
@@ -11330,7 +11591,27 @@ Banco de dados: Google Sheets.
           }
         });
     }
-    function confirmarInativacaoViatura(prefixo){if(!confirm('Confirma a exclusão da viatura '+prefixo+' do aplicativo? A linha será mantida e o STATUS_APP será alterado para INATIVA.'))return;chamarApi('inativar_viatura',{login:APP.credenciais.login,senha:APP.credenciais.senha,prefixo:prefixo}).then(function(r){if(!r||!r.ok)throw new Error(r&&r.erro?r.erro:'Falha ao inativar viatura.');fecharFichaViatura();mostrarToastFt('Viatura inativada',r.dados.mensagem);return carregarDadosViaturas(true).then(renderizarViaturas)}).catch(e=>mostrarToastFt('Erro',e.message||String(e)));}
+    function confirmarInativacaoViatura(prefixo) {
+      confirmarToastFt(
+        'INATIVAR VIATURA',
+        'Confirma a exclusão da viatura ' + prefixo + ' do aplicativo?\n\nA linha será preservada e o STATUS_APP será alterado para INATIVA.',
+        { confirmar: 'INATIVAR VIATURA', cancelar: 'CANCELAR' }
+      ).then(function(confirmado) {
+        if (!confirmado) return;
+        chamarApi('inativar_viatura', {
+          login: APP.credenciais.login,
+          senha: APP.credenciais.senha,
+          prefixo: prefixo
+        }).then(function(r) {
+          if (!r || !r.ok) throw new Error(r && r.erro ? r.erro : 'Falha ao inativar viatura.');
+          fecharFichaViatura();
+          mostrarToastFt('Viatura inativada', r.dados.mensagem);
+          return carregarDadosViaturas(true).then(renderizarViaturas);
+        }).catch(function(e) {
+          mostrarToastFt('Erro', e.message || String(e));
+        });
+      });
+    }
 
     /* ============================================================
      * VIATURAS — V1.2.6
