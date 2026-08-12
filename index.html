@@ -9,6 +9,7 @@ CONSOLIDAÇÃO V1.2.6 CORREÇÕES
 - Preserva a última versão encerrada do Controle de Frequência.
 - Preserva a implantação completa de Viaturas V1.2.6.
 - Corrige a leitura e a identificação funcional em Resenhas Enviadas.
+- Inclui Rotinas Administrativas mensais, semanais e diárias.
 
 Front-end externo hospedado no GitHub Pages.
 Backend/API: Apps Script API_FT.gs V1.2.6.
@@ -5985,6 +5986,237 @@ Banco de dados: Google Sheets.
       .vtr126-history-head .viatura-modal-close { margin-left: 0; }
       .vtr126-event-top { flex-direction: column; gap: 4px; }
     }
+
+    /* ============================================================
+     * ROTINAS ADMINISTRATIVAS
+     * ============================================================ */
+    .rotinas-resumo {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .rotinas-resumo-card {
+      min-width: 0;
+      border: 1px solid rgba(55,66,71,.15);
+      border-radius: 18px;
+      background: #ffffff;
+      padding: 13px 15px;
+      box-shadow: 0 9px 22px rgba(15,23,42,.055);
+    }
+    .rotinas-resumo-card small {
+      display: block;
+      color: #64748b;
+      font-size: 10.5px;
+      font-weight: 900;
+      letter-spacing: .28px;
+      text-transform: uppercase;
+    }
+    .rotinas-resumo-card strong {
+      display: block;
+      margin-top: 4px;
+      color: #17202a;
+      font-size: 15px;
+      overflow-wrap: anywhere;
+    }
+    .rotinas-regra {
+      margin: 0 0 18px;
+      border-left: 5px solid #8E1B1B;
+      border-radius: 12px;
+      background: #f8fafc;
+      color: #475569;
+      padding: 11px 13px;
+      font-size: 11.5px;
+      font-weight: 750;
+      line-height: 1.45;
+    }
+    .rotinas-secao { margin-top: 20px; }
+    .rotinas-secao-cabecalho {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .rotinas-secao-cabecalho h2 { margin: 0; color: #17202a; font-size: 20px; }
+    .rotinas-secao-cabecalho p { margin: 4px 0 0; color: #64748b; font-size: 12px; }
+    .rotinas-contador {
+      flex: 0 0 auto;
+      border-radius: 999px;
+      background: #374247;
+      color: #ffffff;
+      padding: 7px 11px;
+      font-size: 10.5px;
+      font-weight: 900;
+    }
+    .rotinas-mensais-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 13px;
+    }
+    .rotina-setor-card,
+    .rotina-semana-card {
+      min-width: 0;
+      border: 1px solid rgba(55,66,71,.15);
+      border-radius: 20px;
+      background: #ffffff;
+      overflow: hidden;
+      box-shadow: 0 10px 24px rgba(15,23,42,.06);
+    }
+    .rotina-setor-titulo,
+    .rotina-semana-titulo {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: #374247;
+      color: #ffffff;
+      padding: 11px 14px;
+    }
+    .rotina-setor-titulo h3,
+    .rotina-semana-titulo h3 { margin: 0; font-size: 13px; letter-spacing: .35px; }
+    .rotina-setor-titulo span,
+    .rotina-semana-titulo span { font-size: 10px; font-weight: 850; color: #e2e8f0; }
+    .rotina-setor-lista { display: grid; }
+    .rotina-mensal-item {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      min-width: 0;
+      padding: 12px 13px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .rotina-mensal-item:last-child { border-bottom: 0; }
+    .rotina-mensal-item.concluida { background: #f8fafc; }
+    .rotina-check {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      box-sizing: border-box;
+      border: 2px solid #8E1B1B;
+      border-radius: 8px;
+      background: #ffffff;
+      color: transparent;
+      font: inherit;
+      font-size: 17px;
+      font-weight: 950;
+      line-height: 1;
+      cursor: pointer;
+      transition: transform .16s ease, background .16s ease;
+    }
+    .rotina-check:hover { transform: translateY(-1px); background: #fff7f8; }
+    .rotina-check:focus-visible { outline: 3px solid rgba(142,27,27,.22); outline-offset: 2px; }
+    .rotina-check:disabled { cursor: default; transform: none; }
+    .rotina-check.concluida {
+      border-color: #15803d;
+      background: #15803d;
+      color: #ffffff;
+    }
+    .rotina-check.salvando { border-color: #D4AF37; background: #D4AF37; color: #17202a; }
+    .rotina-conteudo { min-width: 0; }
+    .rotina-conteudo strong {
+      display: block;
+      color: #17202a;
+      font-size: 12.5px;
+      line-height: 1.3;
+      overflow-wrap: anywhere;
+    }
+    .rotina-meta {
+      display: block;
+      margin-top: 4px;
+      color: #64748b;
+      font-size: 9.8px;
+      font-weight: 750;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+    .rotina-prazo-wrap { min-width: 128px; text-align: right; }
+    .rotina-prazo-regra { display: block; margin-top: 4px; color: #64748b; font-size: 9px; font-weight: 750; }
+    .rotina-prazo {
+      display: inline-block;
+      border-radius: 9px;
+      background: #eef2f6;
+      color: #374151;
+      padding: 6px 8px;
+      font-size: 10px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .rotina-prazo.alerta-dourado {
+      background: #D4AF37;
+      color: #111827;
+      font-weight: 950;
+    }
+    .rotina-prazo.alerta-vinho {
+      background: #8E1B1B;
+      color: #FFFFFF;
+      font-weight: 950;
+    }
+    .rotinas-semanas { display: grid; gap: 15px; }
+    .rotina-semana-dias {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 1px;
+      background: #dbe1e7;
+    }
+    .rotina-dia-card { min-width: 0; background: #ffffff; }
+    .rotina-dia-card.hoje { box-shadow: inset 0 0 0 3px #8E1B1B; }
+    .rotina-dia-cabecalho {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      background: #f1f5f9;
+      padding: 10px 11px;
+      border-bottom: 1px solid #dbe1e7;
+      text-align: center;
+    }
+    .rotina-dia-card.hoje .rotina-dia-cabecalho { background: #fff1f2; }
+    .rotina-dia-cabecalho strong { color: #17202a; font-size: 13px; }
+    .rotina-dia-cabecalho span { color: #64748b; font-size: 11px; font-weight: 900; }
+    .rotina-dia-grupo-titulo {
+      padding: 8px 10px 5px;
+      color: #8E1B1B;
+      font-size: 9px;
+      font-weight: 950;
+      letter-spacing: .35px;
+      text-transform: uppercase;
+    }
+    .rotina-dia-tarefas { display: grid; }
+    .rotina-diaria-item {
+      display: grid;
+      grid-template-columns: 26px minmax(0, 1fr);
+      gap: 7px;
+      align-items: start;
+      min-width: 0;
+      padding: 7px 10px;
+      border-top: 1px solid #eef2f6;
+    }
+    .rotina-diaria-item.concluida { background: #f8fafc; }
+    .rotina-diaria-item .rotina-check { width: 23px; height: 23px; border-radius: 6px; font-size: 13px; }
+    .rotina-diaria-item .rotina-conteudo strong { font-size: 10.7px; }
+    .rotina-diaria-item .rotina-meta { font-size: 8.8px; }
+
+    @media (max-width: 1180px) {
+      .rotina-semana-dias { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 760px) {
+      .rotinas-resumo { grid-template-columns: 1fr; }
+      .rotinas-mensais-grid { grid-template-columns: 1fr; }
+      .rotina-semana-dias { grid-template-columns: 1fr; }
+      .rotinas-secao-cabecalho { align-items: flex-start; flex-direction: column; }
+      .rotina-mensal-item { grid-template-columns: 32px minmax(0, 1fr); }
+      .rotina-prazo-wrap { grid-column: 2; min-width: 0; text-align: left; }
+    }
+    @media (max-width: 420px) {
+      .rotina-mensal-item { gap: 8px; padding: 11px 10px; }
+      .rotina-setor-titulo,
+      .rotina-semana-titulo { padding: 10px 11px; }
+    }
 </style>
 </head>
 
@@ -6057,7 +6289,8 @@ Banco de dados: Google Sheets.
       menus: [],
       permissoes: {},
       credenciais: null,
-      dadosControleFrequencia: null
+      dadosControleFrequencia: null,
+      dadosRotinasAdministrativas: null
     };
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -6670,8 +6903,261 @@ Banco de dados: Google Sheets.
               <h3>CONTROLE DE FREQUÊNCIA</h3>
               <p>Lançamento mensal para apuração de diárias, dias trabalhados e auditorias administrativas.</p>
             </div>
+            <div class="menu-card" data-modulo="ROTINAS_ADMINISTRATIVAS" onclick="abrirRotinasAdministrativas()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirRotinasAdministrativas();}">
+              <div class="menu-icon">✅</div>
+              <h3>ROTINAS ADMINISTRATIVAS</h3>
+              <p>Acompanhamento e confirmação das rotinas mensais, semanais e diárias da administração.</p>
+            </div>
           </div>
         </div>`;
+    }
+
+
+    function abrirRotinasAdministrativas() {
+      window.scrollTo(0, 0);
+      document.getElementById('appConteudo').innerHTML = `
+        <div class="page-wrap">
+          <div class="page-header">
+            <div class="page-header-row">
+              <div>
+                <div class="page-kicker">Painel Administrativo</div>
+                <h1>Rotinas Administrativas</h1>
+                <p>Controle mensal, semanal e diário das tarefas administrativas da Companhia.</p>
+              </div>
+              <div class="page-actions"><button class="btn-page" onclick="abrirPainelAdministrativo()">VOLTAR</button></div>
+            </div>
+          </div>
+          <div id="rotinasAdministrativasConteudo"><div class="resenha-loading">Carregando rotinas administrativas...</div></div>
+        </div>`;
+
+      chamarApi('dados_rotinas_administrativas', {
+        login: APP.credenciais.login,
+        senha: APP.credenciais.senha
+      }).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao carregar as Rotinas Administrativas.');
+        APP.dadosRotinasAdministrativas = resp.dados || {};
+        renderizarRotinasAdministrativas();
+      }).catch(function(err) {
+        const box = document.getElementById('rotinasAdministrativasConteudo');
+        if (box) box.innerHTML = '<div class="adm-alerta">' + escapar(err.message || String(err)) + '</div>';
+      });
+    }
+
+
+    function renderizarRotinasAdministrativas() {
+      const box = document.getElementById('rotinasAdministrativasConteudo');
+      const dados = APP.dadosRotinasAdministrativas || {};
+      if (!box) return;
+
+      const totaisMensais = contarRotinasMensaisCliente(dados.mensais || []);
+      const totaisSemanais = contarRotinasSemanaisCliente(dados.semanas || []);
+      box.innerHTML = `
+        <div class="rotinas-resumo">
+          <div class="rotinas-resumo-card"><small>Mês de referência</small><strong>${escapar(dados.mesReferencia || dados.competencia || '-')}</strong></div>
+          <div class="rotinas-resumo-card"><small>Rotinas mensais</small><strong>${totaisMensais.concluidas} de ${totaisMensais.total} concluídas</strong></div>
+          <div class="rotinas-resumo-card"><small>Rotinas semanais e diárias</small><strong>${totaisSemanais.concluidas} de ${totaisSemanais.total} concluídas</strong></div>
+        </div>
+        <div class="rotinas-regra">
+          ${escapar(dados.regraDiasUteis || '')} Cada confirmação é vinculada ao policial logado e não pode ser desfeita pelo usuário.
+        </div>
+
+        <section class="rotinas-secao">
+          <div class="rotinas-secao-cabecalho">
+            <div><h2>Rotinas Mensais</h2><p>Prazos calculados para ${escapar(dados.mesReferencia || 'o mês atual')}.</p></div>
+            <span class="rotinas-contador">${totaisMensais.concluidas}/${totaisMensais.total} CONCLUÍDAS</span>
+          </div>
+          <div class="rotinas-mensais-grid">
+            ${(dados.mensais || []).map(montarSetorRotinasMensais).join('')}
+          </div>
+        </section>
+
+        <section class="rotinas-secao">
+          <div class="rotinas-secao-cabecalho">
+            <div><h2>Rotinas Semanais</h2><p>Tarefas específicas e missões diárias de segunda a sexta-feira.</p></div>
+            <span class="rotinas-contador">${totaisSemanais.concluidas}/${totaisSemanais.total} CONCLUÍDAS</span>
+          </div>
+          <div class="rotinas-semanas">
+            ${(dados.semanas || []).map(montarSemanaRotinasAdministrativas).join('')}
+          </div>
+        </section>`;
+    }
+
+
+    function contarRotinasMensaisCliente(setores) {
+      let total = 0;
+      let concluidas = 0;
+      (setores || []).forEach(function(setor) {
+        (setor.tarefas || []).forEach(function(tarefa) {
+          total++;
+          if (tarefa.conclusao) concluidas++;
+        });
+      });
+      return { total: total, concluidas: concluidas };
+    }
+
+
+    function contarRotinasSemanaisCliente(semanas) {
+      let total = 0;
+      let concluidas = 0;
+      (semanas || []).forEach(function(semana) {
+        (semana.dias || []).forEach(function(dia) {
+          (dia.tarefas || []).forEach(function(tarefa) {
+            total++;
+            if (tarefa.conclusao) concluidas++;
+          });
+        });
+      });
+      return { total: total, concluidas: concluidas };
+    }
+
+
+    function montarSetorRotinasMensais(setor) {
+      const tarefas = setor.tarefas || [];
+      const concluidas = tarefas.filter(function(item) { return !!item.conclusao; }).length;
+      return `
+        <div class="rotina-setor-card">
+          <div class="rotina-setor-titulo"><h3>${escapar(setor.setor || '-')}</h3><span>${concluidas}/${tarefas.length}</span></div>
+          <div class="rotina-setor-lista">${tarefas.map(montarItemRotinaMensal).join('')}</div>
+        </div>`;
+    }
+
+
+    function montarItemRotinaMensal(tarefa) {
+      const concluida = !!tarefa.conclusao;
+      const classePrazo = classeAlertaPrazoRotinaCliente(tarefa, (APP.dadosRotinasAdministrativas || {}).hojeISO);
+      return `
+        <div class="rotina-mensal-item ${concluida ? 'concluida' : ''}">
+          ${botaoCheckRotinaCliente('MENSAL', (APP.dadosRotinasAdministrativas || {}).competencia, tarefa)}
+          <div class="rotina-conteudo">
+            <strong>${escapar(tarefa.nome || '-')}</strong>
+            ${metadadosConclusaoRotinaCliente(tarefa.conclusao)}
+          </div>
+          <div class="rotina-prazo-wrap">
+            <span class="rotina-prazo ${classePrazo}">PRAZO: ${escapar(tarefa.prazoBR || '-')}</span>
+            <span class="rotina-prazo-regra">${escapar(tarefa.regraPrazo || '')}</span>
+          </div>
+        </div>`;
+    }
+
+
+    function classeAlertaPrazoRotinaCliente(tarefa, hojeISO) {
+      if (!tarefa || tarefa.conclusao || !tarefa.prazoISO || !hojeISO) return '';
+      if (hojeISO >= tarefa.prazoISO) return 'alerta-vinho';
+      return diferencaDiasDatasRotinaCliente(hojeISO, tarefa.prazoISO) === 1 ? 'alerta-dourado' : '';
+    }
+
+
+    function diferencaDiasDatasRotinaCliente(inicioISO, fimISO) {
+      const inicio = String(inicioISO || '').split('-').map(Number);
+      const fim = String(fimISO || '').split('-').map(Number);
+      if (inicio.length !== 3 || fim.length !== 3) return NaN;
+      return Math.round((Date.UTC(fim[0], fim[1] - 1, fim[2]) - Date.UTC(inicio[0], inicio[1] - 1, inicio[2])) / 86400000);
+    }
+
+
+    function montarSemanaRotinasAdministrativas(semana) {
+      const dias = semana.dias || [];
+      const total = dias.reduce(function(soma, dia) { return soma + (dia.tarefas || []).length; }, 0);
+      const concluidas = dias.reduce(function(soma, dia) {
+        return soma + (dia.tarefas || []).filter(function(item) { return !!item.conclusao; }).length;
+      }, 0);
+      return `
+        <div class="rotina-semana-card">
+          <div class="rotina-semana-titulo"><h3>${escapar(semana.rotulo || ('SEMANA ' + semana.numero))}</h3><span>${concluidas}/${total} CONCLUÍDAS</span></div>
+          <div class="rotina-semana-dias">${dias.map(montarDiaRotinasAdministrativas).join('')}</div>
+        </div>`;
+    }
+
+
+    function montarDiaRotinasAdministrativas(dia) {
+      const tarefas = dia.tarefas || [];
+      const especificas = tarefas.filter(function(item) { return item.grupo === 'SEMANAL'; });
+      const diarias = tarefas.filter(function(item) { return item.grupo === 'DIÁRIA'; });
+      return `
+        <div class="rotina-dia-card ${dia.hoje ? 'hoje' : ''}">
+          <div class="rotina-dia-cabecalho"><strong>${escapar(dia.diaSemana || '-')}</strong><span>${escapar(dia.dataBR || '-')}</span></div>
+          ${especificas.length ? '<div class="rotina-dia-grupo-titulo">Rotinas do dia</div><div class="rotina-dia-tarefas">' + especificas.map(function(item) { return montarItemRotinaDia(item, dia.dataISO); }).join('') + '</div>' : ''}
+          <div class="rotina-dia-grupo-titulo">Missões diárias</div>
+          <div class="rotina-dia-tarefas">${diarias.map(function(item) { return montarItemRotinaDia(item, dia.dataISO); }).join('')}</div>
+        </div>`;
+    }
+
+
+    function montarItemRotinaDia(tarefa, dataISO) {
+      const concluida = !!tarefa.conclusao;
+      return `
+        <div class="rotina-diaria-item ${concluida ? 'concluida' : ''}">
+          ${botaoCheckRotinaCliente('SEMANAL', dataISO, tarefa)}
+          <div class="rotina-conteudo">
+            <strong>${escapar(tarefa.nome || '-')}</strong>
+            ${metadadosConclusaoRotinaCliente(tarefa.conclusao)}
+          </div>
+        </div>`;
+    }
+
+
+    function botaoCheckRotinaCliente(tipo, referencia, tarefa) {
+      const concluida = !!tarefa.conclusao;
+      return `<button class="rotina-check ${concluida ? 'concluida' : ''}" type="button" aria-label="${concluida ? 'Tarefa concluída' : 'Confirmar tarefa ' + escaparAttr(tarefa.nome || '')}" ${concluida ? 'disabled' : ''} onclick="confirmarRotinaAdministrativa('${escaparAttr(tipo)}','${escaparAttr(referencia || '')}','${escaparAttr(tarefa.id || '')}','${escaparAttr(tarefa.nome || '')}',this)">${concluida ? '✓' : '✓'}</button>`;
+    }
+
+
+    function metadadosConclusaoRotinaCliente(conclusao) {
+      if (!conclusao) return '<span class="rotina-meta">Pendente de confirmação.</span>';
+      return '<span class="rotina-meta">Concluído por: ' + escapar(conclusao.policial || '-') + '<br>' + escapar(conclusao.dataHora || '-') + '</span>';
+    }
+
+
+    function confirmarRotinaAdministrativa(tipo, referencia, idTarefa, nomeTarefa, botao) {
+      const textoReferencia = tipo === 'MENSAL' ? ((APP.dadosRotinasAdministrativas || {}).mesReferencia || referencia) : dataISOParaBR(referencia);
+      if (!confirm('Confirma a conclusão da tarefa "' + nomeTarefa + '" em ' + textoReferencia + '?\n\nO registro ficará vinculado ao seu login e não poderá ser desfeito.')) return;
+
+      if (botao) {
+        botao.disabled = true;
+        botao.classList.add('salvando');
+        botao.textContent = '…';
+      }
+
+      chamarApi('registrar_rotina_administrativa', {
+        login: APP.credenciais.login,
+        senha: APP.credenciais.senha,
+        tipo: tipo,
+        referencia: referencia,
+        idTarefa: idTarefa
+      }).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao registrar a rotina.');
+        aplicarConclusaoRotinaAdministrativaCliente(tipo, referencia, idTarefa, resp.dados.conclusao);
+        renderizarRotinasAdministrativas();
+        mostrarToastFt(resp.dados.jaConcluida ? 'Tarefa já concluída' : 'Rotina registrada', resp.dados.mensagem || 'Conclusão registrada.');
+      }).catch(function(err) {
+        if (botao && document.body.contains(botao)) {
+          botao.disabled = false;
+          botao.classList.remove('salvando');
+          botao.textContent = '✓';
+        }
+        mostrarToastFt('Rotina não registrada', err.message || String(err));
+      });
+    }
+
+
+    function aplicarConclusaoRotinaAdministrativaCliente(tipo, referencia, idTarefa, conclusao) {
+      const dados = APP.dadosRotinasAdministrativas || {};
+      if (tipo === 'MENSAL') {
+        (dados.mensais || []).forEach(function(setor) {
+          (setor.tarefas || []).forEach(function(tarefa) {
+            if (tarefa.id === idTarefa) tarefa.conclusao = conclusao;
+          });
+        });
+        return;
+      }
+      (dados.semanas || []).forEach(function(semana) {
+        (semana.dias || []).forEach(function(dia) {
+          if (dia.dataISO !== referencia) return;
+          (dia.tarefas || []).forEach(function(tarefa) {
+            if (tarefa.id === idTarefa) tarefa.conclusao = conclusao;
+          });
+        });
+      });
     }
 
 
@@ -8248,6 +8734,7 @@ Banco de dados: Google Sheets.
           APP.dadosEscalasAdm = null;
       APP.dadosConsultaEfetivo = null;
       APP.dadosViaturas = null;
+      APP.dadosRotinasAdministrativas = null;
           return carregarDadosEscalasAdm();
         })
         .then(renderizarEscalasAdm)
@@ -10356,6 +10843,19 @@ Banco de dados: Google Sheets.
     }
 
 
+    function formatarValorComplementarFolgaResenha(campo, valor) {
+      const campoNormalizado = normalizarTexto(campo || '');
+      const texto = String(valor == null ? '' : valor).trim();
+
+      if (campoNormalizado !== 'DATA DE REFERENCIA') return texto;
+
+      const dataISO = texto.match(/^(\d{4})-(\d{2})-(\d{2})(?:T.*)?$/);
+      if (!dataISO) return texto;
+
+      return dataISO[3] + '/' + dataISO[2] + '/' + dataISO[1];
+    }
+
+
     function renderizarBlocoFolgasResenha(itens) {
       const grupos = agruparItensResenhaPorTipo(itens, 'FOLGA_DISPENSA');
       const html = grupos.map(function(g) {
@@ -10367,7 +10867,9 @@ Banco de dados: Google Sheets.
             const c = normalizarTexto(item.campo || '');
             return c !== 'POLICIAL' && c !== 'TIPO';
           })
-          .map(function(item) { return rotuloResenha(item.campo) + ': ' + item.valor; })
+          .map(function(item) {
+            return rotuloResenha(item.campo) + ': ' + formatarValorComplementarFolgaResenha(item.campo, item.valor);
+          })
           .join(' • ');
         return `
           <div class="resenha-operacional-card">
