@@ -6463,6 +6463,47 @@ Banco de dados: Google Sheets.
       .rotina-setor-titulo,
       .rotina-semana-titulo { padding: 10px 11px; }
     }
+
+    /* VISTORIA DE COP — V1.2.10 */
+    .cop-menu-grid .menu-card { height: 170px; min-height: 170px; }
+    .cop-menu-grid .menu-card p { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+    .cop-card-icon { width: 54px; height: 54px; border-radius: 16px; display: grid; place-items: center; background: #eef2f6; color: #374247; font-size: 26px; font-weight: 950; }
+    .cop-card-icon img { width: 45px; height: 45px; object-fit: contain; }
+    .cop-toolbar { display: flex; gap: 9px; flex-wrap: wrap; align-items: center; justify-content: space-between; margin: 14px 0; }
+    .cop-toolbar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .cop-form-card { margin: 14px 0; }
+    .cop-form-grid { display: grid; grid-template-columns: minmax(130px,.7fr) minmax(210px,1.25fr) minmax(240px,1.8fr) minmax(100px,.55fr) auto; gap: 12px; align-items: end; }
+    .cop-campo { display: grid; gap: 6px; min-width: 0; }
+    .cop-campo label { color: #475569; font-size: 10px; font-weight: 950; letter-spacing: .35px; text-transform: uppercase; }
+    .cop-campo input { width: 100%; min-height: 43px; border: 1px solid #cbd5e1; border-radius: 11px; background: #fff; color: #17202a; padding: 9px 11px; font: inherit; font-size: 13px; font-weight: 750; box-sizing: border-box; }
+    .cop-campo input[readonly] { background: #f1f5f9; color: #475569; }
+    .cop-campo input:focus { outline: 3px solid rgba(142,27,27,.14); border-color: #8E1B1B; }
+    .cop-table-wrap { overflow: auto; max-height: 64vh; border: 1px solid #dbe1e7; border-radius: 15px; background: #fff; box-shadow: 0 12px 32px rgba(23,32,42,.07); }
+    .cop-table { width: 100%; min-width: 690px; border-collapse: separate; border-spacing: 0; }
+    .cop-table th { position: sticky; top: 0; z-index: 2; background: #374247; color: #fff; padding: 11px 10px; font-size: 10px; font-weight: 950; letter-spacing: .25px; text-align: center; text-transform: uppercase; }
+    .cop-table td { border-top: 1px solid #e5e7eb; padding: 10px; color: #17202a; font-size: 11px; font-weight: 700; text-align: center; }
+    .cop-table tbody tr:nth-child(even) td { background: #f8fafc; }
+    .cop-table td:nth-child(3) { overflow-wrap: anywhere; }
+    .cop-total-row { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 10px; color: #475569; font-size: 11px; font-weight: 900; }
+    .cop-total-row strong { min-width: 52px; border-radius: 10px; background: #374247; color: #fff; padding: 8px 12px; text-align: center; font-size: 15px; }
+    .cop-readonly-note { border-left: 4px solid #D4AF37; border-radius: 11px; background: #fffbeb; color: #713f12; margin: 14px 0; padding: 11px 13px; font-size: 11px; font-weight: 750; }
+    .cop-edit-backdrop { position: fixed; inset: 0; z-index: 10050; display: grid; place-items: center; padding: 16px; background: rgba(15,23,42,.66); backdrop-filter: blur(4px); }
+    .cop-edit-dialog { width: min(520px,100%); border-radius: 20px; background: #fff; box-shadow: 0 28px 80px rgba(0,0,0,.3); overflow: hidden; }
+    .cop-edit-head { background: #374247; color: #fff; padding: 17px 19px; }
+    .cop-edit-head h2 { margin: 0 0 4px; font-size: 18px; }
+    .cop-edit-head p { margin: 0; color: #dbe1e7; font-size: 11px; }
+    .cop-edit-body { display: grid; gap: 12px; padding: 18px; }
+    .cop-edit-actions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 3px; }
+    @media (max-width: 900px) { .cop-form-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } .cop-form-grid .btn-page { width: 100%; } }
+    @media (max-width: 620px) {
+      .cop-menu-grid .menu-card { height: 145px; min-height: 145px; }
+      .cop-form-grid { grid-template-columns: 1fr; }
+      .cop-toolbar { align-items: stretch; flex-direction: column; }
+      .cop-toolbar-actions { display: grid; grid-template-columns: 1fr 1fr; }
+      .cop-toolbar-actions .btn-page { width: 100%; padding-left: 8px; padding-right: 8px; font-size: 9px; }
+      .cop-table-wrap { max-height: 58vh; }
+      .cop-table { min-width: 610px; }
+    }
 </style>
 </head>
 
@@ -6544,6 +6585,7 @@ Banco de dados: Google Sheets.
       dadosEscalasFolgas: null,
       urlPdfEscalaCiaFt: null,
       dadosRotinasAdministrativas: null,
+      dadosVistoriaCop: null,
       apiBridgePronta: false,
       apiBridgePendentes: {},
       apiBridgeSequencia: 0,
@@ -7176,6 +7218,7 @@ Banco de dados: Google Sheets.
 
     function abrirCop() {
       window.scrollTo(0, 0);
+      const podeVistoria = capacidadesVistoriaCopCliente().podeVisualizar;
       document.getElementById('appConteudo').innerHTML = `
         <div class="page-wrap">
           <div class="page-header">
@@ -7189,16 +7232,229 @@ Banco de dados: Google Sheets.
             </div>
           </div>
 
-          <div class="modal-card cop-intro">
-            <div class="cop-intro-icone">
-              <img src="./cop.png?v=1210" alt="Câmera operacional COP">
+          <div class="menu-grid cop-menu-grid">
+            <div class="menu-card" onclick="abrirPortalCop()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirPortalCop();}">
+              <div class="cop-card-icon"><img src="./cop.png?v=1210" alt="Câmera operacional COP"></div>
+              <h3>PORTAL COP</h3>
+              <p>Acesso aos vídeos para análise, auditoria e criação de etiquetas.</p>
             </div>
-            <div class="cop-intro-texto">
-              <h2>Módulo COP</h2>
-              <p>Estrutura inicial implantada. Esta área receberá as próximas funções de análise, rotulagem e auditoria dos vídeos operacionais.</p>
-            </div>
+            ${podeVistoria ? `<div class="menu-card" onclick="abrirVistoriaCop()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirVistoriaCop();}">
+              <div class="cop-card-icon">▣</div>
+              <h3>VISTORIA DE COP</h3>
+              <p>Registro mensal das revisões de vídeos realizadas durante o serviço.</p>
+            </div>` : ''}
           </div>
         </div>`;
+    }
+
+
+    function abrirPortalCop() {
+      const janela = window.open('https://cop.pmesp.br.evm.online/app/dashboard', '_blank', 'noopener,noreferrer');
+      if (janela) janela.opener = null;
+      else mostrarToastFt('Abertura bloqueada', 'Autorize a abertura de novas janelas para acessar o Portal COP.', 'atencao');
+    }
+
+
+    function capacidadesVistoriaCopCliente() {
+      const perfil = normalizarTexto((APP.usuario && APP.usuario.perfilAcesso) || '').replace(/\s+/g, '_');
+      const gestor = ['GESTOR','GESTOR_TEC_FT','GESTOR_TECNICO_FT','ACESSO_TOTAL'].indexOf(perfil) !== -1;
+      const cmtEquipe = ['CMT_EQUIPE','CMT_EQUIPE_FT','COMANDANTE_EQUIPE','COMANDANTE_DE_EQUIPE'].indexOf(perfil) !== -1;
+      const auxAdm = ['AUX_ADM_FT','AUX_ADM','AUXILIAR_ADM_FT','AUXILIAR_ADMINISTRATIVO'].indexOf(perfil) !== -1;
+      const encAdm = ['ENC_ADM_FT','ENC_ADM','ENCARREGADO_ADM_FT','ENCARREGADO_ADMINISTRATIVO'].indexOf(perfil) !== -1;
+      const cmtCia = ['CMT_CIA_FT','CMT_CIA','COMANDANTE_CIA_FT','COMANDANTE_DE_CIA'].indexOf(perfil) !== -1;
+      return {
+        podeVisualizar: gestor || cmtEquipe || auxAdm || encAdm || cmtCia,
+        podeInserir: gestor || cmtEquipe || encAdm || cmtCia,
+        podeCorrigir: gestor || encAdm || cmtCia
+      };
+    }
+
+
+    function abrirVistoriaCop(competencia) {
+      const cap = capacidadesVistoriaCopCliente();
+      if (!cap.podeVisualizar) {
+        abrirAcessoNegado('Vistoria de COP');
+        return;
+      }
+      window.scrollTo(0, 0);
+      const alvo = competencia || (APP.dadosVistoriaCop && APP.dadosVistoriaCop.competencia) || competenciaAtualClienteControleFolgas();
+      document.getElementById('appConteudo').innerHTML = `
+        <div class="page-wrap">
+          <div class="page-header">
+            <div class="page-header-row">
+              <div>
+                <div class="page-kicker">COP</div>
+                <h1>Vistoria de COP</h1>
+                <p>Revisões de Vídeos das COP - OS Nº 46BPMM-409/03/25.</p>
+              </div>
+              <div class="page-actions"><button class="btn-page" onclick="abrirCop()">VOLTAR</button></div>
+            </div>
+          </div>
+          <div id="vistoriaCopConteudo"><div class="resenha-loading">Carregando vistorias de COP...</div></div>
+        </div>`;
+
+      chamarApi('dados_vistoria_cop', { competencia: alvo }).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao carregar a Vistoria de COP.');
+        APP.dadosVistoriaCop = resp.dados;
+        renderizarVistoriaCop();
+      }).catch(function(erro) {
+        const box = document.getElementById('vistoriaCopConteudo');
+        if (box) box.innerHTML = '<div class="adm-alerta">' + escapar(erro.message || String(erro)) + '</div>';
+      });
+    }
+
+
+    function renderizarVistoriaCop() {
+      const box = document.getElementById('vistoriaCopConteudo');
+      const d = APP.dadosVistoriaCop;
+      if (!box || !d) return;
+      const cap = d.capacidades || {};
+      const competenciaAtual = String(d.hojeISO || '').slice(0, 7);
+      const podeLancarNesteMes = !!cap.podeInserir && d.competencia === competenciaAtual;
+      const responsavel = [APP.usuario && APP.usuario.postoGrad, APP.usuario && APP.usuario.nomeGuerra].filter(Boolean).join(' ');
+      box.innerHTML = `
+        <div class="freq-months" aria-label="Meses da Vistoria de COP">
+          ${(d.meses || []).map(function(mes) {
+            return '<button type="button" class="freq-month-btn ' + (mes === d.competencia ? 'ativo' : '') + '" onclick="abrirVistoriaCop(\'' + escaparAttr(mes) + '\')">' + escapar(rotuloCompetenciaFrequencia(mes)) + '</button>';
+          }).join('')}
+        </div>
+
+        <div class="cop-toolbar">
+          <div class="freq-note">Referência: <strong>${escapar(rotuloCompetenciaFrequencia(d.competencia))}</strong></div>
+          <div class="cop-toolbar-actions">
+            ${cap.podeGerarPdf ? '<button type="button" class="btn-page" onclick="gerarPdfVistoriaCop(this,false)">BAIXAR PDF</button>' : ''}
+            ${cap.podeImprimir ? '<button type="button" class="btn-page" onclick="gerarPdfVistoriaCop(this,true)">IMPRIMIR</button>' : ''}
+          </div>
+        </div>
+
+        ${podeLancarNesteMes ? `<div class="modal-card cop-form-card">
+          <div class="cop-form-grid">
+            <div class="cop-campo"><label>Data</label><input value="${escaparAttr(formatarDataIsoCop(d.hojeISO))}" readonly></div>
+            <div class="cop-campo"><label>Militar responsável</label><input value="${escaparAttr(responsavel)}" readonly></div>
+            <div class="cop-campo"><label>Revisão da COP Nº</label><input id="copNumerosNovo" inputmode="numeric" maxlength="160" placeholder="Ex.: 0571/1496"></div>
+            <div class="cop-campo"><label>QTD vídeos</label><input id="copQuantidadeNova" type="number" inputmode="numeric" min="1" max="999" step="1" placeholder="0"></div>
+            <button id="btnSalvarVistoriaCop" type="button" class="btn-page" onclick="salvarVistoriaCop()">REGISTRAR</button>
+          </div>
+        </div>` : (cap.somenteLeitura ? '<div class="cop-readonly-note">Consulta liberada. O perfil Aux Adm pode visualizar, gerar PDF e imprimir, sem alterar lançamentos.</div>' : (cap.podeInserir ? '<div class="cop-readonly-note">Os novos lançamentos usam automaticamente a data atual. Selecione o mês vigente para registrar.</div>' : ''))}
+
+        <div class="cop-table-wrap">
+          <table class="cop-table">
+            <thead><tr><th>Data</th><th>Militar Responsável</th><th>Revisão da COP Nº</th><th>QTD</th>${cap.podeCorrigir ? '<th>Ação</th>' : ''}</tr></thead>
+            <tbody>${(d.registros || []).length ? d.registros.map(function(item) {
+              return '<tr><td>' + escapar(item.dataBR || '-') + '</td><td>' + escapar(item.militarResponsavel || '-') + '</td><td>' + escapar(item.numerosCop || '-') + '</td><td>' + escapar(item.quantidade) + '</td>' + (cap.podeCorrigir ? '<td><button type="button" class="btn-page" onclick="abrirCorrecaoVistoriaCop(\'' + escaparAttr(item.id) + '\')">CORRIGIR</button></td>' : '') + '</tr>';
+            }).join('') : '<tr><td colspan="' + (cap.podeCorrigir ? '5' : '4') + '">Nenhuma revisão registrada neste mês.</td></tr>'}</tbody>
+          </table>
+        </div>
+        <div class="cop-total-row"><span>TOTAL DE VÍDEOS</span><strong>${escapar(d.totalVideos || 0)}</strong></div>`;
+    }
+
+
+    function formatarDataIsoCop(dataISO) {
+      const partes = String(dataISO || '').split('-');
+      return partes.length === 3 ? partes[2] + '/' + partes[1] + '/' + partes[0] : String(dataISO || '');
+    }
+
+
+    function salvarVistoriaCop() {
+      const numeros = document.getElementById('copNumerosNovo');
+      const quantidade = document.getElementById('copQuantidadeNova');
+      const botao = document.getElementById('btnSalvarVistoriaCop');
+      if (!numeros || !quantidade) return;
+      if (!String(numeros.value || '').trim() || Number(quantidade.value || 0) < 1) {
+        mostrarToastFt('Dados incompletos', 'Informe o número da COP e a quantidade de vídeos.', 'atencao');
+        return;
+      }
+      botao.disabled = true;
+      botao.textContent = 'REGISTRANDO...';
+      chamarApi('salvar_vistoria_cop', { numerosCop: numeros.value, quantidade: quantidade.value }, { semCache: true }).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Não foi possível registrar a vistoria.');
+        mostrarToastFt('Vistoria registrada', resp.dados.mensagem || 'Lançamento concluído.', 'sucesso');
+        abrirVistoriaCop(resp.dados.competencia);
+      }).catch(function(erro) {
+        mostrarToastFt('Vistoria não registrada', erro.message || String(erro), 'erro');
+        if (botao && document.body.contains(botao)) { botao.disabled = false; botao.textContent = 'REGISTRAR'; }
+      });
+    }
+
+
+    function abrirCorrecaoVistoriaCop(id) {
+      const d = APP.dadosVistoriaCop;
+      const item = d && (d.registros || []).find(function(registro) { return registro.id === id; });
+      if (!item || !(d.capacidades && d.capacidades.podeCorrigir)) {
+        mostrarToastFt('Correção bloqueada', 'Este lançamento não está disponível para correção.', 'erro');
+        return;
+      }
+      const fundo = document.createElement('div');
+      fundo.id = 'copEditBackdrop';
+      fundo.className = 'cop-edit-backdrop';
+      fundo.innerHTML = '<div class="cop-edit-dialog" role="dialog" aria-modal="true" aria-labelledby="copEditTitulo"><div class="cop-edit-head"><h2 id="copEditTitulo">Corrigir Vistoria de COP</h2><p>' + escapar(item.dataBR + ' • ' + item.militarResponsavel) + '</p></div><div class="cop-edit-body"><div class="cop-campo"><label>Revisão da COP Nº</label><input id="copEditNumeros" inputmode="numeric" maxlength="160" value="' + escaparAttr(item.numerosCop) + '"></div><div class="cop-campo"><label>QTD vídeos</label><input id="copEditQuantidade" type="number" inputmode="numeric" min="1" max="999" step="1" value="' + escaparAttr(item.quantidade) + '"></div><div class="cop-edit-actions"><button type="button" class="btn-page" onclick="fecharCorrecaoVistoriaCop()">CANCELAR</button><button id="copEditSalvar" type="button" class="btn-page" onclick="salvarCorrecaoVistoriaCop(\'' + escaparAttr(item.id) + '\')">SALVAR CORREÇÃO</button></div></div></div>';
+      fundo.addEventListener('click', function(evento) { if (evento.target === fundo) fecharCorrecaoVistoriaCop(); });
+      document.body.appendChild(fundo);
+      setTimeout(function() { const campo = document.getElementById('copEditNumeros'); if (campo) campo.focus(); }, 20);
+    }
+
+
+    function fecharCorrecaoVistoriaCop() {
+      const fundo = document.getElementById('copEditBackdrop');
+      if (fundo) fundo.remove();
+    }
+
+
+    function salvarCorrecaoVistoriaCop(id) {
+      const numeros = document.getElementById('copEditNumeros');
+      const quantidade = document.getElementById('copEditQuantidade');
+      const botao = document.getElementById('copEditSalvar');
+      if (!numeros || !quantidade || !botao) return;
+      botao.disabled = true;
+      botao.textContent = 'SALVANDO...';
+      chamarApi('corrigir_vistoria_cop', { id: id, numerosCop: numeros.value, quantidade: quantidade.value }, { semCache: true }).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Não foi possível corrigir o lançamento.');
+        fecharCorrecaoVistoriaCop();
+        mostrarToastFt('Vistoria corrigida', resp.dados.mensagem || 'Correção salva.', 'sucesso');
+        abrirVistoriaCop(APP.dadosVistoriaCop.competencia);
+      }).catch(function(erro) {
+        mostrarToastFt('Correção não salva', erro.message || String(erro), 'erro');
+        if (botao && document.body.contains(botao)) { botao.disabled = false; botao.textContent = 'SALVAR CORREÇÃO'; }
+      });
+    }
+
+
+    function gerarPdfVistoriaCop(botao, imprimir) {
+      const d = APP.dadosVistoriaCop;
+      if (!d) return;
+      const janela = imprimir ? window.open('', '_blank') : null;
+      if (imprimir && janela) janela.document.write('<title>Vistoria de COP</title><p style="font-family:Arial;padding:20px">Preparando relatório para impressão...</p>');
+      if (botao) { botao.disabled = true; botao.textContent = imprimir ? 'PREPARANDO...' : 'GERANDO...'; }
+      chamarApi('gerar_pdf_vistoria_cop', { competencia: d.competencia }, { semCache: true }).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Não foi possível gerar o PDF.');
+        if (!imprimir) {
+          baixarArquivoBase64Frequencia(resp.dados.base64, resp.dados.mimeType || 'application/pdf', resp.dados.nomeArquivo || 'Vistoria_COP.pdf');
+          mostrarToastFt('PDF gerado', 'Relatório mensal baixado com sucesso.', 'sucesso');
+          return;
+        }
+        const url = criarUrlArquivoBase64Cop(resp.dados.base64, resp.dados.mimeType || 'application/pdf');
+        if (janela) {
+          janela.location.replace(url);
+          setTimeout(function() { try { janela.focus(); janela.print(); } catch (ignorado) {} }, 1200);
+          setTimeout(function() { URL.revokeObjectURL(url); }, 120000);
+        } else {
+          URL.revokeObjectURL(url);
+          mostrarToastFt('Impressão bloqueada', 'Autorize novas janelas no navegador e tente novamente.', 'atencao');
+        }
+      }).catch(function(erro) {
+        if (janela) janela.close();
+        mostrarToastFt('PDF não gerado', erro.message || String(erro), 'erro');
+      }).finally(function() {
+        if (botao && document.body.contains(botao)) { botao.disabled = false; botao.textContent = imprimir ? 'IMPRIMIR' : 'BAIXAR PDF'; }
+      });
+    }
+
+
+    function criarUrlArquivoBase64Cop(base64, mimeType) {
+      const binario = window.atob(String(base64 || '').replace(/\s/g, ''));
+      const bytes = new Uint8Array(binario.length);
+      for (let indice = 0; indice < binario.length; indice++) bytes[indice] = binario.charCodeAt(indice);
+      return URL.createObjectURL(new Blob([bytes], { type: mimeType || 'application/pdf' }));
     }
 
 
