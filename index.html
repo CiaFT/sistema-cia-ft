@@ -6469,6 +6469,7 @@ Banco de dados: Google Sheets.
     .cop-menu-grid .menu-card p { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
     .cop-card-icon { width: 54px; height: 54px; border-radius: 16px; display: grid; place-items: center; background: #eef2f6; color: #374247; font-size: 26px; font-weight: 950; }
     .cop-card-icon img { width: 45px; height: 45px; object-fit: contain; }
+    .cop-card-icon svg { width: 34px; height: 34px; display: block; }
     .cop-toolbar { display: flex; gap: 9px; flex-wrap: wrap; align-items: center; justify-content: space-between; margin: 14px 0; }
     .cop-toolbar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
     .cop-form-card { margin: 14px 0; }
@@ -7224,7 +7225,7 @@ Banco de dados: Google Sheets.
           <div class="page-header">
             <div class="page-header-row">
               <div>
-                <div class="page-kicker">Sistema Cia FT</div>
+                <div class="page-kicker">Sistema Câmeras Operacionais</div>
                 <h1>COP</h1>
                 <p>Análise, rótulo e auditoria de vídeos.</p>
               </div>
@@ -7236,10 +7237,10 @@ Banco de dados: Google Sheets.
             <div class="menu-card" onclick="abrirPortalCop()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirPortalCop();}">
               <div class="cop-card-icon"><img src="./cop.png?v=1210" alt="Câmera operacional COP"></div>
               <h3>PORTAL COP</h3>
-              <p>Acesso aos vídeos para análise, auditoria e criação de etiquetas.</p>
+              <p>Acesso ao sistema Motorola PMESP.</p>
             </div>
             ${podeVistoria ? `<div class="menu-card" onclick="abrirVistoriaCop()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirVistoriaCop();}">
-              <div class="cop-card-icon">▣</div>
+              <div class="cop-card-icon" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 7h17a4 4 0 0 1 4 4v14" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M29 41H12a4 4 0 0 1-4-4V11a4 4 0 0 1 4-4h3" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/><path d="M17 5h9a2 2 0 0 1 2 2v4H15V7a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="3"/><path d="m14 20 3 3 5-6M14 31l3 3 5-6" stroke="#1B5E20" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="34" cy="33" r="7" stroke="#8E1B1B" stroke-width="3.2"/><path d="m39 38 5 5" stroke="#8E1B1B" stroke-width="3.2" stroke-linecap="round"/></svg></div>
               <h3>VISTORIA DE COP</h3>
               <p>Registro mensal das revisões de vídeos realizadas durante o serviço.</p>
             </div>` : ''}
@@ -12396,7 +12397,7 @@ Banco de dados: Google Sheets.
 
     function acaoApiSomenteLeitura(action) {
       const acao = normalizarTexto(action || '').replace(/[^A-Z0-9]/g, '');
-      return acao === 'LOGIN' || acao === 'PING' || acao.indexOf('DADOS') === 0 || acao.indexOf('CONSULT') === 0 || acao.indexOf('HISTORICO') === 0 || acao.indexOf('BAIXAR') === 0;
+      return acao === 'LOGIN' || acao === 'PING' || acao.indexOf('DADOS') === 0 || acao.indexOf('CONSULT') === 0 || acao.indexOf('HISTORICO') === 0 || acao.indexOf('BAIXAR') === 0 || acao.indexOf('GERARPDF') === 0;
     }
 
 
@@ -12444,7 +12445,8 @@ Banco de dados: Google Sheets.
       const somenteLeitura = acaoApiSomenteLeitura(action);
       const chave = chaveChamadaApi(action, params);
       const agora = Date.now();
-      const podeCache = !opcoes.semCache && somenteLeitura && !ehLogin && normalizarTexto(action).indexOf('BAIXAR') !== 0;
+      const acaoNormalizada = normalizarTexto(action).replace(/[^A-Z0-9]/g, '');
+      const podeCache = !opcoes.semCache && somenteLeitura && !ehLogin && acaoNormalizada.indexOf('BAIXAR') !== 0 && acaoNormalizada.indexOf('GERARPDF') !== 0;
       const cache = APP.apiCache[chave];
       if (podeCache && cache && cache.expiraEm > agora) return Promise.resolve(cache.resp);
       if (somenteLeitura && APP.apiChamadasPendentes[chave]) return APP.apiChamadasPendentes[chave];
