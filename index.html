@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.2.9
+SISTEMA CIA FT — PORTAL GITHUB V1.2.10
 Arquivo: index.html
 ============================================================
 
-VERSÃO V1.2.9 — ESTABILIDADE, PDF E ANÁLISE DE RESENHAS
+VERSÃO V1.2.10 — PERFORMANCE DE LOGIN E CARREGAMENTOS
 - Preserva a última versão encerrada do Controle de Frequência.
 - Preserva a implantação completa de Viaturas V1.2.6.
 - Corrige a leitura e a identificação funcional em Resenhas Enviadas.
@@ -14,9 +14,13 @@ VERSÃO V1.2.9 — ESTABILIDADE, PDF E ANÁLISE DE RESENHAS
 - Inclui upload e consulta privada das Escalas Cia FT em PDF.
 - Inclui Folgas Pendentes conforme o escopo de visualização do usuário.
 - Corrige a autorização do upload e permite enviar várias escalas no mesmo lote.
+- Usa sessão temporária validada no servidor para eliminar autenticações repetidas.
+- Renova a sessão automaticamente e preserva todas as permissões por perfil.
+- Reduz leituras repetidas de cadastro, permissões, abas e preparação de Viaturas.
+- Inclui a estrutura inicial do módulo COP para análise, rótulo e auditoria de vídeos.
 
 Front-end externo hospedado no GitHub Pages.
-Backend/API: Apps Script API_FT.gs V1.2.9.
+Backend/API: Apps Script API_FT.gs V1.2.10.
 Banco de dados: Google Sheets.
 
 ============================================================
@@ -25,7 +29,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Portal Força Tática • V1.2.9</title>
+  <title>Portal Força Tática • V1.2.10</title>
 
   <style>
     :root {
@@ -978,6 +982,69 @@ Banco de dados: Google Sheets.
 
     #appScreen .menu-icon {
       color: #17202a;
+    }
+
+    #appScreen .menu-icon.menu-icon-cop {
+      width: 58px;
+      height: 58px;
+      margin-bottom: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #appScreen .menu-icon.menu-icon-cop img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      filter: drop-shadow(0 7px 9px rgba(15,23,42,.22));
+    }
+
+    #appScreen .cop-intro {
+      display: grid;
+      grid-template-columns: 150px minmax(0, 1fr);
+      gap: 24px;
+      align-items: center;
+    }
+
+    #appScreen .cop-intro-icone {
+      min-height: 170px;
+      border-radius: 20px;
+      background: linear-gradient(145deg, #111827, #030712);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 0 1px rgba(255,230,0,.16);
+    }
+
+    #appScreen .cop-intro-icone img {
+      width: 122px;
+      height: 122px;
+      object-fit: contain;
+      filter: drop-shadow(0 12px 18px rgba(0,0,0,.38));
+    }
+
+    #appScreen .cop-intro-texto h2 {
+      margin: 0 0 8px;
+      color: #17202a;
+    }
+
+    #appScreen .cop-intro-texto p {
+      margin: 0;
+      color: #64748b;
+      line-height: 1.55;
+    }
+
+    @media (max-width: 560px) {
+      #appScreen .cop-intro {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      #appScreen .cop-intro-icone {
+        min-height: 150px;
+      }
     }
 
     @media (max-width: 560px) {
@@ -6426,7 +6493,7 @@ Banco de dados: Google Sheets.
       <div id="loginAlerta" class="alerta"></div>
 
       <div class="footer">
-        Portal Força Tática • V1.2.9
+        Portal Força Tática • V1.2.10
       </div>
     </main>
   </section>
@@ -6460,7 +6527,7 @@ Banco de dados: Google Sheets.
   </section>
 
 
-  <script src="./pdf.min.js?v=129"></script>
+  <script src="./pdf.min.js?v=1210"></script>
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbx93RwTCtmiZ45_Tke0CqH6ArL4kTbQFW54_pnXRq69IYfE8_5JSjvECzBLoGaiMroGZQ/exec';
 
@@ -6469,6 +6536,9 @@ Banco de dados: Google Sheets.
       menus: [],
       permissoes: {},
       credenciais: null,
+      sessaoApi: null,
+      sessaoExpiraEm: 0,
+      renovacaoSessao: null,
       dadosControleFrequencia: null,
       dadosControleFolgas: null,
       dadosEscalasFolgas: null,
@@ -6488,7 +6558,7 @@ Banco de dados: Google Sheets.
         tratarMensagemPonteApiFt(event);
       });
       iniciarPonteApiFt();
-      if (window.pdfjsLib) window.pdfjsLib.GlobalWorkerOptions.workerSrc = './pdf.worker.min.js?v=129';
+      if (window.pdfjsLib) window.pdfjsLib.GlobalWorkerOptions.workerSrc = './pdf.worker.min.js?v=1210';
       document.getElementById('loginRE').addEventListener('keydown', function(ev) {
         if (ev.key === 'Enter') fazerLogin();
       });
@@ -6524,6 +6594,8 @@ Banco de dados: Google Sheets.
           APP.menus = resp.dados.menus || [];
           APP.permissoes = resp.dados.permissoes || {};
           APP.credenciais = { login: login, senha: senha };
+          APP.sessaoApi = resp.dados.sessaoToken || null;
+          APP.sessaoExpiraEm = Number(resp.dados.sessaoExpiraEm || 0);
 
           document.getElementById('loginScreen').classList.add('hidden');
           document.getElementById('appScreen').classList.remove('hidden');
@@ -6887,6 +6959,8 @@ Banco de dados: Google Sheets.
           }
 
           APP.credenciais.senha = novaSenha;
+          APP.sessaoApi = resp.dados.sessaoToken || APP.sessaoApi;
+          APP.sessaoExpiraEm = Number(resp.dados.sessaoExpiraEm || APP.sessaoExpiraEm || 0);
           if (input) input.value = '';
           mostrarToastFt('Senha alterada', 'Senha do app alterada com sucesso.');
         })
@@ -6979,10 +7053,13 @@ Banco de dados: Google Sheets.
 
     function montarMenuCard(menu) {
       const iconeMenu = menu.id === 'MEUS_DADOS' ? '🪪' : (menu.icone || '•');
+      const blocoIcone = normalizarModuloCliente(menu.id) === 'COP'
+        ? '<div class="menu-icon menu-icon-cop"><img src="./cop.png?v=1210" alt="Câmera operacional COP"></div>'
+        : '<div class="menu-icon">' + iconeMenu + '</div>';
 
       return `
         <div class="menu-card" data-modulo="${escaparAttr(menu.id)}" onclick="abrirModulo('${escaparAttr(menu.id)}')">
-          <div class="menu-icon">${iconeMenu}</div>
+          ${blocoIcone}
           <h3>${escapar(menu.titulo || menu.id)}</h3>
           <p>${escapar(menu.descricao || '')}</p>
         </div>
@@ -7057,6 +7134,15 @@ Banco de dados: Google Sheets.
         return;
       }
 
+      if (normalizarModuloCliente(id) === 'COP') {
+        if (!usuarioTemPermissaoCliente('COP', 'visualizar')) {
+          abrirAcessoNegado('COP');
+          return;
+        }
+        abrirCop();
+        return;
+      }
+
       if (!usuarioTemPermissaoCliente(id, 'visualizar')) {
         abrirAcessoNegado(id);
         return;
@@ -7085,6 +7171,34 @@ Banco de dados: Google Sheets.
           </div>
         </div>
       `;
+    }
+
+
+    function abrirCop() {
+      window.scrollTo(0, 0);
+      document.getElementById('appConteudo').innerHTML = `
+        <div class="page-wrap">
+          <div class="page-header">
+            <div class="page-header-row">
+              <div>
+                <div class="page-kicker">Sistema Cia FT</div>
+                <h1>COP</h1>
+                <p>Análise, rótulo e auditoria de vídeos.</p>
+              </div>
+              <div class="page-actions"><button class="btn-page" onclick="abrirHome()">VOLTAR</button></div>
+            </div>
+          </div>
+
+          <div class="modal-card cop-intro">
+            <div class="cop-intro-icone">
+              <img src="./cop.png?v=1210" alt="Câmera operacional COP">
+            </div>
+            <div class="cop-intro-texto">
+              <h2>Módulo COP</h2>
+              <p>Estrutura inicial implantada. Esta área receberá as próximas funções de análise, rotulagem e auditoria dos vídeos operacionais.</p>
+            </div>
+          </div>
+        </div>`;
     }
 
 
@@ -11910,6 +12024,9 @@ Banco de dados: Google Sheets.
       APP.menus = [];
       APP.permissoes = {};
       APP.credenciais = null;
+      APP.sessaoApi = null;
+      APP.sessaoExpiraEm = 0;
+      APP.renovacaoSessao = null;
       APP.dadosResenha = null;
       APP.dadosEscalasAdm = null;
       APP.dadosConsultaEfetivo = null;
@@ -11933,7 +12050,7 @@ Banco de dados: Google Sheets.
       frame.setAttribute('aria-hidden', 'true');
       frame.tabIndex = -1;
       frame.style.cssText = 'position:fixed;width:1px;height:1px;left:-9999px;bottom:0;border:0;opacity:0;pointer-events:none';
-      frame.src = API_URL + '?action=api_bridge_ft&_cache=129';
+      frame.src = API_URL + '?action=api_bridge_ft&_cache=1210';
       document.body.appendChild(frame);
     }
 
@@ -12033,12 +12150,45 @@ Banco de dados: Google Sheets.
     }
 
 
-    function chamarApi(action, params) {
+    function renovarSessaoApiFt() {
+      if (APP.renovacaoSessao) return APP.renovacaoSessao;
+      if (!APP.credenciais || !APP.credenciais.login || !APP.credenciais.senha) {
+        return Promise.reject(new Error('Sessão inválida. Faça login novamente.'));
+      }
+      APP.sessaoApi = null;
+      APP.sessaoExpiraEm = 0;
+      APP.renovacaoSessao = chamarApi('login', APP.credenciais, { semRenovar: true, semCache: true })
+        .then(function(resp) {
+          if (!resp || !resp.ok || !resp.dados || !resp.dados.sessaoToken) {
+            throw new Error(resp && resp.erro ? resp.erro : 'Não foi possível renovar a sessão.');
+          }
+          APP.sessaoApi = resp.dados.sessaoToken;
+          APP.sessaoExpiraEm = Number(resp.dados.sessaoExpiraEm || 0);
+          APP.usuario = resp.dados.usuario || APP.usuario;
+          APP.menus = resp.dados.menus || APP.menus;
+          APP.permissoes = resp.dados.permissoes || APP.permissoes;
+          return true;
+        })
+        .finally(function() { APP.renovacaoSessao = null; });
+      return APP.renovacaoSessao;
+    }
+
+
+    function chamarApi(action, params, opcoes) {
       params = params || {};
+      opcoes = opcoes || {};
+      const paramsOriginais = Object.assign({}, params);
+      const ehLogin = normalizarTexto(action) === 'LOGIN';
+      if (!ehLogin && APP.sessaoApi) {
+        params = Object.assign({}, params);
+        delete params.login;
+        delete params.senha;
+        params.sessao = APP.sessaoApi;
+      }
       const somenteLeitura = acaoApiSomenteLeitura(action);
       const chave = chaveChamadaApi(action, params);
       const agora = Date.now();
-      const podeCache = somenteLeitura && normalizarTexto(action) !== 'LOGIN' && normalizarTexto(action).indexOf('BAIXAR') !== 0;
+      const podeCache = !opcoes.semCache && somenteLeitura && !ehLogin && normalizarTexto(action).indexOf('BAIXAR') !== 0;
       const cache = APP.apiCache[chave];
       if (podeCache && cache && cache.expiraEm > agora) return Promise.resolve(cache.resp);
       if (somenteLeitura && APP.apiChamadasPendentes[chave]) return APP.apiChamadasPendentes[chave];
@@ -12058,6 +12208,12 @@ Banco de dados: Google Sheets.
       };
 
       const promessa = executar(1).then(function(resp) {
+        if (resp && !resp.ok && resp.codigo === 'SESSAO_EXPIRADA' && !ehLogin && !opcoes.semRenovar) {
+          APP.apiCache = {};
+          return renovarSessaoApiFt().then(function() {
+            return chamarApi(action, paramsOriginais, { semRenovar: true, semCache: opcoes.semCache });
+          });
+        }
         if (podeCache && resp && resp.ok) APP.apiCache[chave] = { resp: resp, expiraEm: Date.now() + 12000 };
         if (!somenteLeitura && resp && resp.ok) APP.apiCache = {};
         return resp;
