@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.2.8.3
+SISTEMA CIA FT — PORTAL GITHUB V1.2.9
 Arquivo: index.html
 ============================================================
 
-AJUSTE V1.2.8.3 — LAYOUT DE ESCALAS E FOLGAS PENDENTES
+VERSÃO V1.2.9 — ESTABILIDADE, PDF E ANÁLISE DE RESENHAS
 - Preserva a última versão encerrada do Controle de Frequência.
 - Preserva a implantação completa de Viaturas V1.2.6.
 - Corrige a leitura e a identificação funcional em Resenhas Enviadas.
@@ -16,7 +16,7 @@ AJUSTE V1.2.8.3 — LAYOUT DE ESCALAS E FOLGAS PENDENTES
 - Corrige a autorização do upload e permite enviar várias escalas no mesmo lote.
 
 Front-end externo hospedado no GitHub Pages.
-Backend/API: Apps Script API_FT.gs V1.2.8.3.
+Backend/API: Apps Script API_FT.gs V1.2.9.
 Banco de dados: Google Sheets.
 
 ============================================================
@@ -25,7 +25,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Portal Força Tática • V1.2.8.3</title>
+  <title>Portal Força Tática • V1.2.9</title>
 
   <style>
     :root {
@@ -6145,11 +6145,11 @@ Banco de dados: Google Sheets.
     .ef-view-btn{border:0;border-radius:12px;background:#8E1B1B;color:#fff;padding:10px 12px;font:inherit;font-size:9.5px;font-weight:950;cursor:pointer;white-space:nowrap}.ef-view-btn:disabled{background:#cbd5e1;color:#64748b;cursor:not-allowed}
     .ef-empty{border:1px dashed #cbd5e1;border-radius:18px;background:#f8fafc;color:#64748b;padding:24px;text-align:center;font-size:12px;line-height:1.5}
     .ef-table-wrap{overflow:visible;border:1px solid rgba(55,66,71,.16);border-radius:18px;background:#fff;box-shadow:0 10px 24px rgba(15,23,42,.055)}
-    .ef-table{width:100%;border-collapse:separate;border-spacing:0;min-width:690px;color:#17202a}.ef-table th{position:sticky;top:72px;z-index:18;background:#374247;color:#fff;padding:10px 12px;font-size:9px;font-weight:950;letter-spacing:.25px;text-align:center;box-shadow:0 2px 0 rgba(255,255,255,.12),0 5px 12px rgba(15,23,42,.16)}.ef-table th:first-child{border-top-left-radius:17px;text-align:left}.ef-table th:last-child{border-top-right-radius:17px}.ef-table td{border-bottom:1px solid #e5e7eb;padding:10px 12px;font-size:11px;text-align:center}.ef-table tbody tr:last-child td{border-bottom:0}.ef-table td:first-child{text-align:left}.ef-table .ef-pm strong{display:block;color:#17202a;font-size:11.5px}.ef-table .ef-pm small{display:block;margin-top:2px;color:#64748b;font-size:9.5px}.ef-table .ef-num{font-size:15px;font-weight:950}.ef-table .ef-fm{color:#1B5E20}.ef-table .ef-ff{color:#64748b}.ef-table .ef-grupo td{background:#e9edf1;color:#374247;font-size:9px;font-weight:950;letter-spacing:.3px;text-align:left}
+    .ef-table{width:100%;border-collapse:separate;border-spacing:0;min-width:760px;color:#17202a;table-layout:fixed}.ef-table col.ef-col-pm{width:40%}.ef-table col.ef-col-saldo{width:15%}.ef-table th{position:sticky;top:72px;z-index:18;background:#374247;color:#fff;padding:10px 8px;font-size:8.5px;font-weight:950;letter-spacing:.15px;text-align:center;box-shadow:0 2px 0 rgba(255,255,255,.12),0 5px 12px rgba(15,23,42,.16)}.ef-table th:first-child{border-top-left-radius:17px;text-align:left}.ef-table th:last-child{border-top-right-radius:17px}.ef-table td{border-bottom:1px solid #e5e7eb;padding:10px 8px;font-size:11px;text-align:center}.ef-table tbody tr:last-child td{border-bottom:0}.ef-table td:first-child{text-align:left}.ef-table .ef-pm strong{display:block;color:#17202a;font-size:11.5px}.ef-table .ef-pm small{display:block;margin-top:2px;color:#64748b;font-size:9.5px}.ef-table .ef-num{font-size:15px;font-weight:950}.ef-num-zero{color:#6B7280}.ef-num-normal{color:#000000}.ef-num-atencao{color:#F59E0B}.ef-num-folga{color:#1B5E20}.ef-num-folga-alta{color:#8E1B1B}.ef-table .ef-grupo td{background:#e9edf1;color:#374247;font-size:9px;font-weight:950;letter-spacing:.3px;text-align:left}
     .ef-scope-note{margin:0 0 12px;border-left:5px solid #8E1B1B;border-radius:12px;background:#f8fafc;color:#475569;padding:10px 12px;font-size:10.5px;line-height:1.45}
-    .ef-pdf-modal{position:fixed;inset:0;z-index:10050;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.82);padding:18px}.ef-pdf-dialog{display:flex;flex-direction:column;width:min(1180px,96vw);height:min(900px,94vh);overflow:hidden;border:1px solid rgba(255,255,255,.2);border-radius:20px;background:#fff;box-shadow:0 28px 80px rgba(0,0,0,.5)}.ef-pdf-head{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#374247;color:#fff;padding:11px 14px}.ef-pdf-head strong{min-width:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ef-pdf-actions{display:flex;gap:8px}.ef-pdf-actions a,.ef-pdf-actions button{border:1px solid rgba(255,255,255,.35);border-radius:10px;background:#fff;color:#374247;padding:7px 10px;font:inherit;font-size:9px;font-weight:950;text-decoration:none;cursor:pointer}.ef-pdf-frame{flex:1;width:100%;border:0;background:#d1d5db}
+    .ef-pdf-modal{position:fixed;inset:0;z-index:10050;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.82);padding:18px}.ef-pdf-dialog{display:flex;flex-direction:column;width:min(1180px,96vw);height:min(900px,94vh);overflow:hidden;border:1px solid rgba(255,255,255,.2);border-radius:20px;background:#fff;box-shadow:0 28px 80px rgba(0,0,0,.5)}.ef-pdf-head{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#374247;color:#fff;padding:11px 14px}.ef-pdf-head strong{min-width:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ef-pdf-actions{display:flex;gap:8px}.ef-pdf-actions button{border:1px solid rgba(255,255,255,.35);border-radius:10px;background:#fff;color:#374247;padding:7px 10px;font:inherit;font-size:9px;font-weight:950;cursor:pointer}.ef-pdf-pages{flex:1;overflow:auto;background:#cbd5e1;padding:12px;overscroll-behavior:contain}.ef-pdf-page{width:min(100%,1050px);margin:0 auto 12px;border-radius:4px;background:#fff;box-shadow:0 4px 18px rgba(15,23,42,.24);overflow:hidden}.ef-pdf-page:last-child{margin-bottom:0}.ef-pdf-page-label{background:#374247;color:#fff;padding:5px 8px;font-size:8px;font-weight:900;text-align:center}.ef-pdf-page canvas{display:block;width:100%;height:auto;background:#fff}.ef-pdf-loading{display:grid;place-items:center;min-height:100%;color:#374247;font-size:12px;font-weight:900;text-align:center;padding:24px}.ef-pdf-frame{width:100%;height:100%;border:0;background:#d1d5db}
     @media(max-width:980px){.ef-menu-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-    @media(max-width:760px){.ef-escalas-list{grid-template-columns:1fr}.ef-section-head{align-items:flex-start;flex-direction:column}.ef-uploader iframe{height:390px}.ef-escala-card{grid-template-columns:auto minmax(0,1fr)}.ef-view-btn{grid-column:1/-1;width:100%}.ef-pdf-modal{padding:5px}.ef-pdf-dialog{width:100%;height:98vh;border-radius:14px}.ef-pdf-head{align-items:flex-start;flex-direction:column}.ef-pdf-actions{width:100%}.ef-pdf-actions button{flex:1;text-align:center}.ef-menu-grid .menu-card{height:126px;min-height:126px}.ef-status-line{top:12px;right:12px;max-width:calc(100% - 56px)}.ef-pill{max-width:100%;padding:3px 5px;font-size:6.8px;line-height:1.1;white-space:normal}.ef-table-wrap{width:100%;overflow:visible}.ef-table{min-width:0;width:100%;table-layout:fixed}.ef-table col.ef-col-pm{width:40%}.ef-table col.ef-col-saldo{width:20%}.ef-table th{top:72px;padding:7px 3px;font-size:7.2px;line-height:1.12;letter-spacing:0;white-space:normal;overflow-wrap:anywhere}.ef-table th:first-child{padding-left:6px}.ef-table td{padding:8px 3px;font-size:9px;line-height:1.16;overflow-wrap:anywhere}.ef-table td:first-child{padding-left:6px}.ef-table .ef-pm strong{font-size:9.5px;line-height:1.18}.ef-table .ef-pm small{margin-top:2px;font-size:8px}.ef-table .ef-num{font-size:13px}.ef-table .ef-grupo td{padding:7px 6px;font-size:8px}.ef-scope-note{font-size:9.5px}}
+    @media(max-width:760px){.ef-escalas-list{grid-template-columns:1fr}.ef-section-head{align-items:flex-start;flex-direction:column}.ef-uploader iframe{height:390px}.ef-escala-card{grid-template-columns:auto minmax(0,1fr)}.ef-view-btn{grid-column:1/-1;width:100%}.ef-pdf-modal{padding:5px}.ef-pdf-dialog{width:100%;height:98vh;border-radius:14px}.ef-pdf-head{align-items:center;flex-direction:row}.ef-pdf-actions{flex:0 0 auto}.ef-pdf-pages{padding:6px}.ef-menu-grid .menu-card{height:126px;min-height:126px}.ef-status-line{top:12px;right:12px;max-width:calc(100% - 56px)}.ef-pill{max-width:100%;padding:3px 5px;font-size:6.8px;line-height:1.1;white-space:normal}.ef-table-wrap{width:100%;overflow:visible}.ef-table{min-width:0;width:100%;table-layout:fixed}.ef-table col.ef-col-pm{width:36%}.ef-table col.ef-col-saldo{width:16%}.ef-table th{top:72px;padding:7px 2px;font-size:6.5px;line-height:1.08;letter-spacing:0;white-space:normal;overflow-wrap:anywhere}.ef-table th:first-child{padding-left:4px}.ef-table td{padding:8px 2px;font-size:8.5px;line-height:1.12;overflow-wrap:anywhere}.ef-table td:first-child{padding-left:4px}.ef-table .ef-pm strong{font-size:9px;line-height:1.16}.ef-table .ef-pm small{margin-top:2px;font-size:7.5px}.ef-table .ef-num{font-size:12px}.ef-table .ef-grupo td{padding:7px 5px;font-size:8px}.ef-scope-note{font-size:9.5px}}
 
     /* ============================================================
      * ROTINAS ADMINISTRATIVAS
@@ -6426,7 +6426,7 @@ Banco de dados: Google Sheets.
       <div id="loginAlerta" class="alerta"></div>
 
       <div class="footer">
-        Portal Força Tática • V1.2.8.3
+        Portal Força Tática • V1.2.9
       </div>
     </main>
   </section>
@@ -6460,6 +6460,7 @@ Banco de dados: Google Sheets.
   </section>
 
 
+  <script src="./pdf.min.js?v=129"></script>
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbx93RwTCtmiZ45_Tke0CqH6ArL4kTbQFW54_pnXRq69IYfE8_5JSjvECzBLoGaiMroGZQ/exec';
 
@@ -6472,11 +6473,22 @@ Banco de dados: Google Sheets.
       dadosControleFolgas: null,
       dadosEscalasFolgas: null,
       urlPdfEscalaCiaFt: null,
-      dadosRotinasAdministrativas: null
+      dadosRotinasAdministrativas: null,
+      apiBridgePronta: false,
+      apiBridgePendentes: {},
+      apiBridgeSequencia: 0,
+      apiChamadasPendentes: {},
+      apiCache: {},
+      pdfRenderToken: 0
     };
 
     document.addEventListener('DOMContentLoaded', function() {
-      window.addEventListener('message', tratarMensagemUploaderEscalaCiaFt);
+      window.addEventListener('message', function(event) {
+        tratarMensagemUploaderEscalaCiaFt(event);
+        tratarMensagemPonteApiFt(event);
+      });
+      iniciarPonteApiFt();
+      if (window.pdfjsLib) window.pdfjsLib.GlobalWorkerOptions.workerSrc = './pdf.worker.min.js?v=129';
       document.getElementById('loginRE').addEventListener('keydown', function(ev) {
         if (ev.key === 'Enter') fazerLogin();
       });
@@ -7102,7 +7114,7 @@ Banco de dados: Google Sheets.
               <p>Acompanhamento e confirmação das rotinas mensais, semanais e diárias da administração.</p>
             </div>
             <div class="menu-card" data-modulo="CONTROLE_FOLGAS" onclick="abrirControleFolgas()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirControleFolgas();}">
-              <div class="menu-icon">🏖️</div>
+              <div class="menu-icon">🛡️</div>
               <h3>CONTROLE FOLGAS</h3>
               <p>Lançamento diário, ciclo de 14 serviços e acompanhamento dos saldos individuais de folgas.</p>
             </div>
@@ -7959,13 +7971,13 @@ Banco de dados: Google Sheets.
           <div class="menu-card" data-modulo="ESCALAS_CIA_FT" onclick="abrirEscalasCiaFt()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirEscalasCiaFt();}">
             <div class="menu-icon">📄</div>
             <h3>ESCALAS CIA FT</h3>
-            <p>Visualize em PDF a escala de serviço publicada para o dia seguinte e outras datas disponíveis.</p>
+            <p>Consulte as escalas de serviço em PDF.</p>
             <div class="ef-status-line">${escalaAmanha ? '<span class="ef-pill amanha">✓ ESCALA DE AMANHÃ DISPONÍVEL</span>' : '<span class="ef-pill">ESCALA DE AMANHÃ NÃO PUBLICADA</span>'}</div>
           </div>
           <div class="menu-card" data-modulo="FOLGAS_PENDENTES" onclick="abrirFolgasPendentes()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirFolgasPendentes();}">
-            <div class="menu-icon">🏖️</div>
+            <div class="menu-icon">🛡️</div>
             <h3>FOLGAS PENDENTES</h3>
-            <p>Consulte Folga Mensal, Dias Trabalhados e Folga Flagrante conforme seu privilégio de visualização.</p>
+            <p>Consulte seus saldos de folgas e dias trabalhados.</p>
             <div class="ef-status-line"><span class="ef-pill">${totalFolgas} POLICIAL(IS) VISÍVEL(IS)</span></div>
           </div>
         </div>`;
@@ -8044,18 +8056,39 @@ Banco de dados: Google Sheets.
       ['ADM', '1º PEL', '2º PEL'].forEach(function(grupo) {
         const policiais = lista.filter(function(pm) { return pm.pelotao === grupo; });
         if (!policiais.length) return;
-        corpo += '<tr class="ef-grupo"><td colspan="4">' + escapar(grupo) + '</td></tr>';
+        corpo += '<tr class="ef-grupo"><td colspan="5">' + escapar(grupo) + '</td></tr>';
         corpo += policiais.map(function(pm) {
+          const folgaMensal = Number(pm.folgaMensal || 0);
+          const diasTrabalhados = Number(pm.diasTrabalhados || 0);
+          const folgaFlagrante = Number(pm.folgaFlagrante || 0);
+          const folgaCompensatoria = Number(pm.folgaCompensatoria || 0);
           return '<tr><td class="ef-pm"><strong>' + escapar([pm.postoGrad, pm.nomeGuerra].filter(Boolean).join(' ')) + '</strong><small>RE ' + escapar(pm.re || '') + '</small></td>' +
-            '<td class="ef-num ef-fm">' + Number(pm.folgaMensal || 0) + '</td>' +
-            '<td class="ef-num">' + Number(pm.diasTrabalhados || 0) + '</td>' +
-            '<td class="ef-num ef-ff">' + Number(pm.folgaFlagrante || 0) + '</td></tr>';
+            '<td class="ef-num ' + classeSaldoFolgaPendente(folgaMensal) + '">' + folgaMensal + '</td>' +
+            '<td class="ef-num ' + classeDiasTrabalhadosPendente(diasTrabalhados) + '">' + diasTrabalhados + '</td>' +
+            '<td class="ef-num ' + classeSaldoFolgaPendente(folgaFlagrante) + '">' + folgaFlagrante + '</td>' +
+            '<td class="ef-num ' + classeSaldoFolgaPendente(folgaCompensatoria) + '">' + folgaCompensatoria + '</td></tr>';
         }).join('');
       });
       box.innerHTML = `
         <div class="ef-section-head"><div><h2>Folgas Pendentes</h2><p>Saldos atualizados a partir do Controle de Folgas.</p></div><button type="button" onclick="renderizarMenuEscalasFolgas()">VOLTAR ÀS OPÇÕES</button></div>
-        <div class="ef-scope-note">Escopo de visualização aplicado: <strong>${escapar(escopo)}</strong>. Folga Flagrante permanece inicialmente zerada para todos os policiais.</div>
-        <div class="ef-table-wrap"><table class="ef-table"><colgroup><col class="ef-col-pm"><col class="ef-col-saldo"><col class="ef-col-saldo"><col class="ef-col-saldo"></colgroup><thead><tr><th>GRAD • RE • NOME GUERRA</th><th>FOLGA MENSAL</th><th>DIAS TRABALHADOS</th><th>FOLGA FLAGRANTE</th></tr></thead><tbody>${corpo || '<tr><td colspan="4">Nenhum policial disponível para o escopo deste usuário.</td></tr>'}</tbody></table></div>`;
+        <div class="ef-scope-note">Escopo de visualização aplicado: <strong>${escapar(escopo)}</strong>. Folgas Flagrantes e Compensatórias permanecem inicialmente zeradas.</div>
+        <div class="ef-table-wrap"><table class="ef-table"><colgroup><col class="ef-col-pm"><col class="ef-col-saldo"><col class="ef-col-saldo"><col class="ef-col-saldo"><col class="ef-col-saldo"></colgroup><thead><tr><th>GRAD • RE • NOME GUERRA</th><th>FOLGA MENSAL</th><th>DIAS TRABALHADOS</th><th>FOLGA FLAGRANTE</th><th>FOLGA COMPENSATÓRIA</th></tr></thead><tbody>${corpo || '<tr><td colspan="5">Nenhum policial disponível para o escopo deste usuário.</td></tr>'}</tbody></table></div>`;
+    }
+
+
+    function classeDiasTrabalhadosPendente(valor) {
+      const numero = Number(valor || 0);
+      if (numero <= 0) return 'ef-num-zero';
+      if (numero >= 12) return 'ef-num-atencao';
+      return 'ef-num-normal';
+    }
+
+
+    function classeSaldoFolgaPendente(valor) {
+      const numero = Number(valor || 0);
+      if (numero <= 0) return 'ef-num-zero';
+      if (numero >= 3) return 'ef-num-folga-alta';
+      return 'ef-num-folga';
     }
 
 
@@ -8069,7 +8102,7 @@ Banco de dados: Google Sheets.
         idEscala: idEscala
       }).then(function(resp) {
         if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao abrir a escala.');
-        exibirPdfEscalaCiaFt(resp.dados.base64, resp.dados.nomeArquivo, resp.dados.mimeType);
+        return exibirPdfEscalaCiaFt(resp.dados.base64, resp.dados.nomeArquivo, resp.dados.mimeType);
       }).catch(function(err) {
         mostrarToastFt('Escala não aberta', err.message || String(err));
       }).finally(function() {
@@ -8078,25 +8111,66 @@ Banco de dados: Google Sheets.
     }
 
 
-    function exibirPdfEscalaCiaFt(base64, nomeArquivo, mimeType) {
+    async function exibirPdfEscalaCiaFt(base64, nomeArquivo, mimeType) {
       fecharVisualizadorPdfEscalaCiaFt();
       const texto = String(base64 || '').replace(/\s/g, '');
       if (!texto) throw new Error('O PDF retornado está vazio.');
       const binario = window.atob(texto);
       const bytes = new Uint8Array(binario.length);
       for (let indice = 0; indice < binario.length; indice++) bytes[indice] = binario.charCodeAt(indice);
-      const url = URL.createObjectURL(new Blob([bytes], { type: mimeType || 'application/pdf' }));
-      APP.urlPdfEscalaCiaFt = url;
+      const tokenRender = ++APP.pdfRenderToken;
       const modal = document.createElement('div');
       modal.id = 'efPdfModal';
       modal.className = 'ef-pdf-modal';
-      modal.innerHTML = '<div class="ef-pdf-dialog" role="dialog" aria-modal="true" aria-label="Visualizador da Escala Cia FT"><div class="ef-pdf-head"><strong>' + escapar(nomeArquivo || 'Escala Cia FT.pdf') + '</strong><div class="ef-pdf-actions"><button type="button" onclick="fecharVisualizadorPdfEscalaCiaFt()">FECHAR</button></div></div><iframe class="ef-pdf-frame" src="' + escaparAttr(url + '#toolbar=0&navpanes=0') + '" title="PDF da Escala Cia FT"></iframe></div>';
+      modal.innerHTML = '<div class="ef-pdf-dialog" role="dialog" aria-modal="true" aria-label="Visualizador da Escala Cia FT"><div class="ef-pdf-head"><strong>' + escapar(nomeArquivo || 'Escala Cia FT.pdf') + '</strong><div class="ef-pdf-actions"><button type="button" onclick="fecharVisualizadorPdfEscalaCiaFt()">FECHAR</button></div></div><div id="efPdfPages" class="ef-pdf-pages"><div class="ef-pdf-loading">Preparando todas as páginas da escala...</div></div></div>';
       modal.addEventListener('click', function(ev) { if (ev.target === modal) fecharVisualizadorPdfEscalaCiaFt(); });
       document.body.appendChild(modal);
+
+      const paginas = document.getElementById('efPdfPages');
+      if (!window.pdfjsLib) {
+        const url = URL.createObjectURL(new Blob([bytes], { type: mimeType || 'application/pdf' }));
+        APP.urlPdfEscalaCiaFt = url;
+        paginas.innerHTML = '<iframe class="ef-pdf-frame" src="' + escaparAttr(url + '#toolbar=0&navpanes=0') + '" title="PDF da Escala Cia FT"></iframe>';
+        return;
+      }
+
+      try {
+        const tarefa = window.pdfjsLib.getDocument({ data: bytes });
+        const pdf = await tarefa.promise;
+        if (tokenRender !== APP.pdfRenderToken || !document.getElementById('efPdfModal')) return;
+        paginas.innerHTML = '';
+
+        for (let numeroPagina = 1; numeroPagina <= pdf.numPages; numeroPagina++) {
+          if (tokenRender !== APP.pdfRenderToken || !document.getElementById('efPdfModal')) return;
+          const pagina = await pdf.getPage(numeroPagina);
+          const base = pagina.getViewport({ scale: 1 });
+          const larguraDisponivel = Math.max(280, Math.min(1050, paginas.clientWidth - 24));
+          const escalaCss = larguraDisponivel / base.width;
+          const viewport = pagina.getViewport({ scale: escalaCss });
+          const densidade = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+          const bloco = document.createElement('section');
+          bloco.className = 'ef-pdf-page';
+          bloco.innerHTML = '<div class="ef-pdf-page-label">PÁGINA ' + numeroPagina + ' DE ' + pdf.numPages + '</div>';
+          const canvas = document.createElement('canvas');
+          const contexto = canvas.getContext('2d', { alpha: false });
+          canvas.width = Math.floor(viewport.width * densidade);
+          canvas.height = Math.floor(viewport.height * densidade);
+          canvas.style.width = Math.floor(viewport.width) + 'px';
+          canvas.style.height = Math.floor(viewport.height) + 'px';
+          bloco.appendChild(canvas);
+          paginas.appendChild(bloco);
+          await pagina.render({ canvasContext: contexto, viewport: viewport, transform: densidade === 1 ? null : [densidade, 0, 0, densidade, 0, 0] }).promise;
+        }
+      } catch (erro) {
+        if (tokenRender !== APP.pdfRenderToken || !paginas) return;
+        paginas.innerHTML = '<div class="ef-pdf-loading">Não foi possível renderizar todas as páginas deste PDF.<br>' + escapar(erro && erro.message ? erro.message : erro) + '</div>';
+        throw erro;
+      }
     }
 
 
     function fecharVisualizadorPdfEscalaCiaFt() {
+      APP.pdfRenderToken = Number(APP.pdfRenderToken || 0) + 1;
       const modal = document.getElementById('efPdfModal');
       if (modal) modal.remove();
       if (APP && APP.urlPdfEscalaCiaFt) {
@@ -11403,6 +11477,7 @@ Banco de dados: Google Sheets.
       const dataISO = dados.dataISO || dataISOHoje();
       const dataBR = dados.dataBR || dataISOParaBR(dataISO);
       const resenhas = Array.isArray(dados.resenhas) ? dados.resenhas : [];
+      const podeAnalisar = !!dados.podeAnalisar;
       const anterior = dados.diaAnterior || '';
       const proximo = dados.diaProximo || '';
 
@@ -11421,14 +11496,14 @@ Banco de dados: Google Sheets.
               <input type="date" value="${escaparAttr(dataISO)}" onchange="abrirConsultaResenhasEnviadas(this.value)">
               <button class="btn-page" ${proximo ? '' : 'disabled'} onclick="abrirConsultaResenhasEnviadas('${escaparAttr(proximo)}')">PRÓXIMO DIA ▶</button>
             </div>
-            ${resenhas.length ? resenhas.map(renderizarResenhaEnviadaCard).join('') : '<div class="resenha-view-empty">Nenhuma resenha localizada para este dia.</div>'}
+            ${resenhas.length ? resenhas.map(function(resenha, indice) { return renderizarResenhaEnviadaCard(resenha, indice, podeAnalisar); }).join('') : '<div class="resenha-view-empty">Nenhuma resenha localizada para este dia.</div>'}
           </div>
         </div>
       `;
     }
 
 
-    function renderizarResenhaEnviadaCard(resenha, idx) {
+    function renderizarResenhaEnviadaCard(resenha, idx, podeAnalisar) {
       const cabecalho = resenha.cabecalho || {};
       const itens = Array.isArray(resenha.itens) ? resenha.itens : [];
       const complementos = Array.isArray(resenha.complementos) ? resenha.complementos : [];
@@ -11454,9 +11529,65 @@ Banco de dados: Google Sheets.
             ${renderizarBlocoFolgasResenha(itens)}
             ${renderizarBlocoAfastamentosResenha(itens)}
             ${renderizarBlocoObservacoesResenha(cabecalho, complementos)}
+            ${montarAnaliseResenhaEscala(cabecalho, podeAnalisar)}
           </div>
         </div>
       `;
+    }
+
+
+    function montarAnaliseResenhaEscala(cabecalho, podeAnalisar) {
+      if (!podeAnalisar || !cabecalho || !cabecalho.id) return '';
+      const decisao = normalizarTexto(cabecalho.status || 'PENDENTE');
+      const pendente = !decisao || decisao === 'PENDENTE' || decisao === 'ENVIADA' || decisao.includes('CORRECAO');
+      if (!pendente) return '';
+      const chave = String(cabecalho.id).replace(/[^a-zA-Z0-9_-]/g, '_');
+      return `
+        <div class="adm-analise-card" style="margin-top:14px;">
+          <div class="adm-analise-topo">
+            <div><h3>Análise da Resenha</h3><p>Verificação administrativa das pendências da escala.</p></div>
+            <span class="adm-decisao ${classeDecisaoAdm(decisao)}">${escapar(cabecalho.status || 'PENDENTE')}</span>
+          </div>
+          ${cabecalho.justificativaAnalise ? '<div class="adm-analise-obs"><strong>Última justificativa:</strong> ' + escapar(cabecalho.justificativaAnalise) + '</div>' : ''}
+          <textarea id="resenhaJust_${escaparAttr(chave)}" class="adm-analise-justificativa" placeholder="Justificativa da análise, obrigatória para recusar ou solicitar correção"></textarea>
+          <div class="adm-analise-actions">
+            <button type="button" class="adm-analise-btn aprovar" onclick="analisarResenhaEscala('${escaparAttr(cabecalho.id)}','APROVADA')">APROVAR</button>
+            <button type="button" class="adm-analise-btn recusar" onclick="analisarResenhaEscala('${escaparAttr(cabecalho.id)}','RECUSADA')">RECUSAR</button>
+            <button type="button" class="adm-analise-btn corrigir" onclick="analisarResenhaEscala('${escaparAttr(cabecalho.id)}','CORREÇÃO SOLICITADA')">SOLICITAR CORREÇÃO</button>
+          </div>
+        </div>`;
+    }
+
+
+    function analisarResenhaEscala(id, decisao) {
+      if (!usuarioTemPermissaoCliente('RESENHA_DE_ESCALAS', 'aprovar')) {
+        mostrarToastFt('Análise não permitida', 'Seu perfil não possui permissão para analisar Resenhas de Escalas.');
+        return;
+      }
+      const chave = String(id || '').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const campo = document.getElementById('resenhaJust_' + chave);
+      const justificativa = String(campo ? campo.value : '').trim();
+      const decisaoNorm = normalizarTexto(decisao || '');
+      if ((decisaoNorm === 'RECUSADA' || decisaoNorm.includes('CORRECAO')) && !justificativa) {
+        mostrarToastFt('Justificativa obrigatória', 'Explique o motivo da recusa ou da solicitação de correção.');
+        if (campo) campo.focus();
+        return;
+      }
+      const dataAtual = document.querySelector('.resenha-view-nav input[type="date"]');
+      const dataISO = dataAtual ? dataAtual.value : dataISOHoje();
+      chamarApi('analisar_resenha_escala', {
+        login: APP.credenciais.login,
+        senha: APP.credenciais.senha,
+        id: id,
+        decisao: decisao,
+        justificativa: justificativa
+      }).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao analisar a Resenha de Escala.');
+        mostrarToastFt('Resenha analisada', resp.dados && resp.dados.mensagem ? resp.dados.mensagem : 'Decisão registrada com sucesso.');
+        return carregarResenhasEnviadas(dataISO);
+      }).then(renderizarResenhasEnviadas).catch(function(erro) {
+        mostrarToastFt('Erro na análise', erro.message || String(erro));
+      });
     }
 
 
@@ -11784,6 +11915,8 @@ Banco de dados: Google Sheets.
       APP.dadosConsultaEfetivo = null;
       APP.dadosViaturas = null;
       APP.dadosEscalasFolgas = null;
+      APP.apiCache = {};
+      APP.apiChamadasPendentes = {};
 
       document.getElementById('appScreen').classList.add('hidden');
       document.getElementById('loginScreen').classList.remove('hidden');
@@ -11792,55 +11925,147 @@ Banco de dados: Google Sheets.
     }
 
 
-    function chamarApi(action, params) {
-      params = params || {};
+    function iniciarPonteApiFt() {
+      if (document.getElementById('ftApiBridge')) return;
+      const frame = document.createElement('iframe');
+      frame.id = 'ftApiBridge';
+      frame.title = 'Conexão segura com a API do Portal';
+      frame.setAttribute('aria-hidden', 'true');
+      frame.tabIndex = -1;
+      frame.style.cssText = 'position:fixed;width:1px;height:1px;left:-9999px;bottom:0;border:0;opacity:0;pointer-events:none';
+      frame.src = API_URL + '?action=api_bridge_ft&_cache=129';
+      document.body.appendChild(frame);
+    }
 
+
+    function tratarMensagemPonteApiFt(event) {
+      const frame = document.getElementById('ftApiBridge');
+      if (!frame || event.source !== frame.contentWindow || !event.data) return;
+      const msg = event.data;
+      if (msg.type === 'FT_API_BRIDGE_READY') {
+        APP.apiBridgePronta = true;
+        return;
+      }
+      if (msg.type !== 'FT_API_RESPONSE' || !msg.id) return;
+      const pendente = APP.apiBridgePendentes[msg.id];
+      if (!pendente) return;
+      delete APP.apiBridgePendentes[msg.id];
+      clearTimeout(pendente.timeout);
+      if (msg.erro) pendente.reject(new Error(msg.erro));
+      else pendente.resolve(msg.resp);
+    }
+
+
+    function chamadaPelaPonteApiFt(action, params) {
+      return new Promise(function(resolve, reject) {
+        const frame = document.getElementById('ftApiBridge');
+        if (!APP.apiBridgePronta || !frame || !frame.contentWindow) {
+          reject(new Error('A conexão otimizada com a API ainda não está disponível.'));
+          return;
+        }
+        const id = 'ft_req_' + Date.now() + '_' + (++APP.apiBridgeSequencia);
+        const timeout = setTimeout(function() {
+          delete APP.apiBridgePendentes[id];
+          reject(new Error('Tempo esgotado na conexão otimizada com a API.'));
+        }, 45000);
+        APP.apiBridgePendentes[id] = { resolve: resolve, reject: reject, timeout: timeout };
+        frame.contentWindow.postMessage({ type: 'FT_API_REQUEST', id: id, action: action, params: params || {} }, '*');
+      });
+    }
+
+
+    function aguardarPonteApiFt(limiteMs) {
+      if (APP.apiBridgePronta) return Promise.resolve(true);
+      const inicio = Date.now();
+      return new Promise(function(resolve) {
+        const verificar = function() {
+          if (APP.apiBridgePronta) return resolve(true);
+          if (Date.now() - inicio >= limiteMs) return resolve(false);
+          setTimeout(verificar, 100);
+        };
+        verificar();
+      });
+    }
+
+
+    function chamadaJsonpFt(action, params) {
       return new Promise(function(resolve, reject) {
         const callbackName = 'ft_cb_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
-
         const query = new URLSearchParams();
         query.set('action', action);
         query.set('callback', callbackName);
         query.set('_cache', String(Date.now()));
-
-        Object.keys(params).forEach(function(chave) {
-          query.set(chave, params[chave]);
-        });
-
+        Object.keys(params || {}).forEach(function(chave) { query.set(chave, params[chave]); });
         const script = document.createElement('script');
-
         const timeout = setTimeout(function() {
           cleanup();
-          reject(new Error('Tempo esgotado ao chamar a API. Aguarde alguns segundos e tente novamente. A consulta foi otimizada nesta versão.'));
+          reject(new Error('Tempo esgotado ao chamar a API.'));
         }, 45000);
-
         window[callbackName] = function(resp) {
           clearTimeout(timeout);
           cleanup();
           resolve(resp);
         };
-
         script.onerror = function() {
           clearTimeout(timeout);
           cleanup();
           reject(new Error('Falha ao carregar resposta da API.'));
         };
-
         script.src = API_URL + '?' + query.toString();
         document.body.appendChild(script);
-
         function cleanup() {
-          try {
-            delete window[callbackName];
-          } catch (e) {
-            window[callbackName] = undefined;
-          }
-
-          if (script && script.parentNode) {
-            script.parentNode.removeChild(script);
-          }
+          try { delete window[callbackName]; } catch (e) { window[callbackName] = undefined; }
+          if (script.parentNode) script.parentNode.removeChild(script);
         }
       });
+    }
+
+
+    function acaoApiSomenteLeitura(action) {
+      const acao = normalizarTexto(action || '').replace(/[^A-Z0-9]/g, '');
+      return acao === 'LOGIN' || acao === 'PING' || acao.indexOf('DADOS') === 0 || acao.indexOf('CONSULT') === 0 || acao.indexOf('HISTORICO') === 0 || acao.indexOf('BAIXAR') === 0;
+    }
+
+
+    function chaveChamadaApi(action, params) {
+      const chaves = Object.keys(params || {}).sort();
+      return action + '|' + chaves.map(function(chave) { return chave + '=' + String(params[chave]); }).join('&');
+    }
+
+
+    function chamarApi(action, params) {
+      params = params || {};
+      const somenteLeitura = acaoApiSomenteLeitura(action);
+      const chave = chaveChamadaApi(action, params);
+      const agora = Date.now();
+      const podeCache = somenteLeitura && normalizarTexto(action) !== 'LOGIN' && normalizarTexto(action).indexOf('BAIXAR') !== 0;
+      const cache = APP.apiCache[chave];
+      if (podeCache && cache && cache.expiraEm > agora) return Promise.resolve(cache.resp);
+      if (somenteLeitura && APP.apiChamadasPendentes[chave]) return APP.apiChamadasPendentes[chave];
+
+      const maxTentativas = somenteLeitura ? 3 : 1;
+      const executar = function(tentativa) {
+        if (navigator.onLine === false) return Promise.reject(new Error('Sem conexão com a internet. Verifique a rede do aparelho.'));
+        const prepararTransporte = !somenteLeitura && tentativa === 1 && !APP.apiBridgePronta ? aguardarPonteApiFt(3000) : Promise.resolve(APP.apiBridgePronta);
+        return prepararTransporte.then(function() {
+          const usarPonte = APP.apiBridgePronta && tentativa === 1;
+          return usarPonte ? chamadaPelaPonteApiFt(action, params) : chamadaJsonpFt(action, params);
+        }).catch(function(erro) {
+          if (tentativa >= maxTentativas) throw erro;
+          const espera = tentativa === 1 ? 700 : 1800;
+          return new Promise(function(resolve) { setTimeout(resolve, espera); }).then(function() { return executar(tentativa + 1); });
+        });
+      };
+
+      const promessa = executar(1).then(function(resp) {
+        if (podeCache && resp && resp.ok) APP.apiCache[chave] = { resp: resp, expiraEm: Date.now() + 12000 };
+        if (!somenteLeitura && resp && resp.ok) APP.apiCache = {};
+        return resp;
+      }).finally(function() {
+        if (somenteLeitura) delete APP.apiChamadasPendentes[chave];
+      });
+      if (somenteLeitura) APP.apiChamadasPendentes[chave] = promessa;
+      return promessa;
     }
 
 
