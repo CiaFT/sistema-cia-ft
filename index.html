@@ -6510,6 +6510,15 @@ Banco de dados: Google Sheets.
       .cop-table-wrap { max-height: 58vh; }
       .cop-table { min-width: 610px; }
     }
+
+    /* DEJEM ROCAM — inscrições semanais */
+    .dejem-status{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;margin:0 0 16px;border:1px solid rgba(55,66,71,.16);border-radius:20px;background:#fff;padding:16px;color:#17202a;box-shadow:0 10px 24px rgba(15,23,42,.06)}
+    .dejem-status h2{margin:0 0 4px;font-size:17px}.dejem-status p{margin:0;color:#64748b;font-size:12px;line-height:1.45}.dejem-deadline{border-radius:14px;background:#E8F5E9;color:#1B5E20;padding:10px 13px;text-align:center;font-size:10px;font-weight:900}.dejem-deadline.fechado{background:#8E1B1B;color:#fff}.dejem-deadline strong{display:block;margin-top:2px;font-size:12px}
+    .dejem-days{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.dejem-day{border:1px solid rgba(55,66,71,.16);border-radius:20px;background:#fff;color:#17202a;overflow:hidden;box-shadow:0 9px 22px rgba(15,23,42,.05)}.dejem-day-head{display:flex;justify-content:space-between;align-items:center;background:#374247;color:#fff;padding:12px 14px}.dejem-day-head strong{font-size:14px}.dejem-day-head span{font-size:11px;font-weight:850;color:#e2e8f0}.dejem-slots{display:grid;gap:10px;padding:12px}.dejem-slot{border:1px solid #dbe1e7;border-radius:15px;background:#f8fafc;padding:10px}.dejem-slot-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.dejem-slot-head strong{font-size:14px}.dejem-slot-head span{color:#64748b;font-size:9px;font-weight:900}.dejem-vagas{display:grid;gap:6px}.dejem-vaga{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:8px;align-items:center;min-height:42px;border:1px solid #e2e8f0;border-radius:11px;background:#fff;padding:6px 8px}.dejem-vaga.extra{border-color:#F59E0B;background:#FFFBEB}.dejem-vaga-num{display:grid;place-items:center;width:24px;height:24px;border-radius:8px;background:#e9edf1;color:#374247;font-size:9px;font-weight:950}.dejem-vaga.extra .dejem-vaga-num{background:#F59E0B;color:#fff}.dejem-pm{min-width:0}.dejem-pm strong{display:block;overflow:hidden;text-overflow:ellipsis;color:#17202a;font-size:10.5px;line-height:1.25}.dejem-pm small{color:#64748b;font-size:8px;font-weight:800}.dejem-empty{color:#94a3b8;font-size:10px;font-weight:800}.dejem-action{border:1px solid #1B5E20;border-radius:9px;background:#fff;color:#1B5E20;padding:6px 7px;font:inherit;font-size:8px;font-weight:950;cursor:pointer}.dejem-action.cancelar,.dejem-action.excluir{border-color:#C62828;color:#C62828}.dejem-action:disabled{opacity:.55;cursor:wait}
+    .dejem-close{margin-top:16px;border:1px solid rgba(55,66,71,.16);border-radius:20px;background:#fff;color:#17202a;padding:16px}.dejem-close h3{margin:0 0 5px;font-size:15px}.dejem-close p{margin:0 0 11px;color:#64748b;font-size:11px;line-height:1.45}.dejem-close.excesso{border-color:#F59E0B;background:#FFFBEB}.dejem-close button{border:1px solid #8E1B1B;border-radius:12px;background:#8E1B1B;color:#fff;padding:10px 14px;font:inherit;font-size:10px;font-weight:950;cursor:pointer}.dejem-close button:disabled{border-color:#cbd5e1;background:#e5e7eb;color:#64748b;cursor:not-allowed}
+    .dejem-panel{margin-top:18px;border:1px solid rgba(55,66,71,.16);border-radius:20px;background:#fff;color:#17202a;padding:16px;box-shadow:0 9px 22px rgba(15,23,42,.05)}.dejem-panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}.dejem-panel h3{margin:0 0 4px;font-size:15px}.dejem-panel p{margin:0;color:#64748b;font-size:10.5px;line-height:1.45}.dejem-copy{border:1px solid #374247;border-radius:11px;background:#fff;color:#374247;padding:8px 10px;font:inherit;font-size:9px;font-weight:950;cursor:pointer}.dejem-table-wrap{overflow:auto;border:1px solid #dbe1e7;border-radius:14px;max-height:48vh}.dejem-table{width:100%;border-collapse:collapse;min-width:520px;font-size:10px}.dejem-table th{position:sticky;top:0;z-index:2;background:#374247;color:#fff;padding:9px 8px;text-align:center}.dejem-table td{border-bottom:1px solid #e2e8f0;padding:8px;text-align:center;color:#17202a}.dejem-table td:first-child{text-align:left;font-weight:800}.dejem-table tbody tr:nth-child(even) td{background:#f8fafc}.dejem-total-zero{color:#6B7280!important}.dejem-total-low{color:#1B5E20!important;font-weight:950}.dejem-total-high{color:#8E1B1B!important;font-weight:950}
+    @media(max-width:820px){.dejem-days{grid-template-columns:1fr}}
+    @media(max-width:560px){.dejem-status{grid-template-columns:1fr}.dejem-deadline{text-align:left}.dejem-day-head{padding:10px 11px}.dejem-slots{padding:9px}.dejem-vaga{grid-template-columns:25px minmax(0,1fr) auto;padding:5px 6px}.dejem-pm strong{font-size:9.5px}.dejem-action{padding:6px 5px}.dejem-panel{padding:12px}.dejem-panel-head{display:grid}.dejem-copy{width:100%}.dejem-table{min-width:0;font-size:8.5px;table-layout:fixed}.dejem-table th,.dejem-table td{padding:7px 4px;overflow-wrap:anywhere}.dejem-table th:first-child,.dejem-table td:first-child{width:44%}}
 </style>
 </head>
 
@@ -6592,6 +6601,7 @@ Banco de dados: Google Sheets.
       urlPdfEscalaCiaFt: null,
       dadosRotinasAdministrativas: null,
       dadosVistoriaCop: null,
+      dadosDejemRocam: null,
       apiBridgePronta: false,
       apiBridgePendentes: {},
       apiBridgeSequencia: 0,
@@ -7211,6 +7221,15 @@ Banco de dados: Google Sheets.
         return;
       }
 
+      if (normalizarModuloCliente(id) === 'DEJEM_ROCAM') {
+        if (!usuarioTemPermissaoCliente('DEJEM_ROCAM', 'visualizar')) {
+          abrirAcessoNegado('DEJEM ROCAM');
+          return;
+        }
+        abrirDejemRocam();
+        return;
+      }
+
       if (!usuarioTemPermissaoCliente(id, 'visualizar')) {
         abrirAcessoNegado(id);
         return;
@@ -7278,6 +7297,195 @@ Banco de dados: Google Sheets.
       const janela = window.open('https://cop.pmesp.br.evm.online/app/dashboard', '_blank', 'noopener,noreferrer');
       if (janela) janela.opener = null;
       else mostrarToastFt('Abertura bloqueada', 'Autorize a abertura de novas janelas para acessar o Portal COP.', 'atencao');
+    }
+
+
+    function abrirDejemRocam() {
+      window.scrollTo(0, 0);
+      APP.dadosDejemRocam = null;
+      document.getElementById('appConteudo').innerHTML = `
+        <div class="page-wrap">
+          <div class="page-header">
+            <div class="page-header-row">
+              <div>
+                <div class="page-kicker">Serviço extraordinário • ROCAM e DUQUE</div>
+                <h1>DEJEM ROCAM</h1>
+                <p>Inscrições semanais para as escalas de segunda-feira a domingo.</p>
+              </div>
+              <div class="page-actions"><button class="btn-page" onclick="abrirHome()">VOLTAR</button></div>
+            </div>
+          </div>
+          <div id="dejemConteudo"><div class="resenha-loading">Carregando DEJEM ROCAM...</div></div>
+        </div>`;
+      carregarDejemRocam();
+    }
+
+
+    function carregarDejemRocam() {
+      return chamarApi('dados_dejem_rocam', {
+        login: APP.credenciais.login,
+        senha: APP.credenciais.senha
+      }, { semCache: true }).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao carregar a DEJEM ROCAM.');
+        APP.dadosDejemRocam = resp.dados;
+        renderizarDejemRocam();
+      }).catch(function(err) {
+        const box = document.getElementById('dejemConteudo');
+        if (box) box.innerHTML = '<div class="adm-alerta">' + escapar(err.message || String(err)) + '</div>';
+      });
+    }
+
+
+    function renderizarDejemRocam() {
+      const box = document.getElementById('dejemConteudo');
+      const d = APP.dadosDejemRocam;
+      if (!box || !d || !d.ciclo) return;
+      const cap = d.capacidades || {};
+      const prazoTexto = cap.prazoEncerrado ? 'INSCRIÇÕES ENCERRADAS' : 'INSCRIÇÕES ABERTAS';
+      box.innerHTML = `
+        <section class="dejem-status">
+          <div><h2>Escala de ${escapar(d.ciclo.inicioBR)} a ${escapar(d.ciclo.fimBR)}</h2><p>Cada horário possui duas vagas regulares e uma terceira posição para análise no fechamento.</p></div>
+          <div class="dejem-deadline ${cap.prazoEncerrado ? 'fechado' : ''}">${prazoTexto}<strong>Limite: ${escapar(d.ciclo.limiteBR)}</strong></div>
+        </section>
+        <div class="dejem-days">${(d.dias || []).map(function(dia) { return montarDiaDejemRocam(dia, d); }).join('')}</div>
+        ${montarFechamentoDejemRocam(d)}
+        ${montarResumoP3DejemRocam(d.ultimoFechamento)}
+        ${montarTotaisDejemRocam(d.totais || [])}
+      `;
+    }
+
+
+    function montarDiaDejemRocam(dia, dados) {
+      return '<section class="dejem-day"><div class="dejem-day-head"><strong>' + escapar(dia.diaSemana || '') + '</strong><span>' + escapar(dia.dataBR || '') + '</span></div><div class="dejem-slots">' +
+        (dados.horarios || []).map(function(horario) { return montarHorarioDejemRocam(dia, horario, dados); }).join('') + '</div></section>';
+    }
+
+
+    function montarHorarioDejemRocam(dia, horario, dados) {
+      const inscricoes = (dados.inscricoes || []).filter(function(item) { return item.dataISO === dia.dataISO && item.horario === horario; })
+        .sort(function(a, b) { return Number(a.posicao || 0) - Number(b.posicao || 0); });
+      const ocupadas = inscricoes.length;
+      return '<div class="dejem-slot"><div class="dejem-slot-head"><strong>' + escapar(horario) + 'h</strong><span>' + ocupadas + '/3 INSCRIÇÕES</span></div><div class="dejem-vagas">' +
+        [1,2,3].map(function(posicao) {
+          const item = inscricoes.find(function(registro) { return Number(registro.posicao) === posicao; }) || null;
+          return montarVagaDejemRocam(dia, horario, posicao, item, inscricoes, dados);
+        }).join('') + '</div></div>';
+    }
+
+
+    function montarVagaDejemRocam(dia, horario, posicao, item, inscricoesSlot, dados) {
+      const extra = posicao === 3;
+      const cap = dados.capacidades || {};
+      const usuarioRe = normalizarReClienteFrequencia(dados.usuarioRe || '');
+      const proprio = item && normalizarReClienteFrequencia(item.re || '') === usuarioRe;
+      const podeExcluir = item && cap.podeExcluirNoFechamento && inscricoesSlot.length > 2;
+      let conteudo = '<div class="dejem-empty">' + (extra ? 'Vaga extra disponível' : 'Vaga disponível') + '</div>';
+      let acao = '';
+      if (item) {
+        conteudo = '<div class="dejem-pm"><strong>' + escapar([item.postoGrad, item.re, item.nomeGuerra].filter(Boolean).join(' ')) + '</strong><small>' + escapar(item.modalidade || '') + (extra ? ' • 3ª POSIÇÃO' : '') + '</small></div>';
+        if (proprio && cap.podeCancelarPropria) acao = '<button type="button" class="dejem-action cancelar" onclick="confirmarCancelamentoDejemRocam(\'' + escaparAttr(item.id || '') + '\',this)">CANCELAR</button>';
+        else if (podeExcluir) acao = '<button type="button" class="dejem-action excluir" onclick="confirmarExclusaoInscricaoDejemRocam(\'' + escaparAttr(item.id || '') + '\',\'' + escaparAttr([item.postoGrad,item.re,item.nomeGuerra].filter(Boolean).join(' ')) + '\',this)">EXCLUIR</button>';
+      } else if (cap.podeInscrever && inscricoesSlot.length < 3) {
+        acao = '<button type="button" class="dejem-action" onclick="inscreverDejemRocam(\'' + escaparAttr(dia.dataISO || '') + '\',\'' + escaparAttr(horario) + '\',this)">INSCREVER</button>';
+      }
+      return '<div class="dejem-vaga ' + (extra ? 'extra' : '') + '"><div class="dejem-vaga-num">' + (extra ? '3ª' : posicao + 'ª') + '</div>' + conteudo + acao + '</div>';
+    }
+
+
+    function inscreverDejemRocam(dataISO, horario, botao) {
+      const d = APP.dadosDejemRocam || {};
+      confirmarToastFt('CONFIRMAR DEJEM', 'Deseja se inscrever em ' + dataISOParaBR(dataISO) + ' às ' + horario + 'h?', { confirmar: 'CONFIRMAR INSCRIÇÃO', cancelar: 'VOLTAR' }).then(function(confirmado) {
+        if (!confirmado) return;
+        executarAcaoDejemRocam('inscrever_dejem_rocam', { cicloId: d.ciclo && d.ciclo.id, dataISO: dataISO, horario: horario }, botao, 'INSCREVENDO...');
+      });
+    }
+
+
+    function confirmarCancelamentoDejemRocam(id, botao) {
+      confirmarToastFt('CANCELAR INSCRIÇÃO', 'Confirma o cancelamento da sua inscrição nesta escala?', { confirmar: 'CANCELAR INSCRIÇÃO', cancelar: 'MANTER' }).then(function(confirmado) {
+        if (confirmado) executarAcaoDejemRocam('cancelar_dejem_rocam', { idInscricao: id }, botao, 'CANCELANDO...');
+      });
+    }
+
+
+    function confirmarExclusaoInscricaoDejemRocam(id, policial, botao) {
+      confirmarToastFt('DECISÃO DO FECHAMENTO', 'Excluir ' + policial + ' desta data e horário?', { confirmar: 'EXCLUIR DA ESCALA', cancelar: 'MANTER' }).then(function(confirmado) {
+        if (confirmado) executarAcaoDejemRocam('excluir_inscricao_dejem_rocam', { idInscricao: id }, botao, 'EXCLUINDO...');
+      });
+    }
+
+
+    function executarAcaoDejemRocam(acao, params, botao, textoEspera) {
+      const anterior = botao ? botao.textContent : '';
+      if (botao) { botao.disabled = true; botao.textContent = textoEspera || 'AGUARDE...'; }
+      chamarApi(acao, Object.assign({ login: APP.credenciais.login, senha: APP.credenciais.senha }, params || {})).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'A operação não foi concluída.');
+        mostrarToastFt('DEJEM ROCAM', resp.dados && resp.dados.mensagem || 'Operação concluída.');
+        return carregarDejemRocam();
+      }).catch(function(err) {
+        mostrarToastFt('DEJEM ROCAM', err.message || String(err), 'erro');
+        if (botao && document.body.contains(botao)) { botao.disabled = false; botao.textContent = anterior; }
+      });
+    }
+
+
+    function montarFechamentoDejemRocam(dados) {
+      const cap = dados.capacidades || {};
+      if (!cap.prazoEncerrado) return '<div class="dejem-close"><h3>Fechamento semanal</h3><p>O fechamento administrativo será liberado após ' + escapar(dados.ciclo.limiteBR || '') + '.</p><button type="button" disabled>AGUARDANDO O PRAZO</button></div>';
+      if (!cap.podeExcluirNoFechamento && !cap.podeFechar) return '<div class="dejem-close"><h3>Inscrições encerradas</h3><p>A escala aguarda conferência e fechamento administrativo.</p></div>';
+      const excessos = dados.slotsComExcesso || [];
+      return '<div class="dejem-close ' + (excessos.length ? 'excesso' : '') + '"><h3>Fechamento semanal</h3><p>' +
+        (excessos.length ? 'Existem três inscritos em: <strong>' + escapar(excessos.join(', ')) + '</strong>. Exclua um policial de cada horário antes do fechamento.' : 'Todos os horários possuem no máximo dois policiais. A escala pode ser consolidada para o P3.') +
+        '</p><button type="button" onclick="confirmarFechamentoDejemRocam(this)" ' + (cap.podeFechar ? '' : 'disabled') + '>FECHAR E GERAR RESUMO P3</button></div>';
+    }
+
+
+    function confirmarFechamentoDejemRocam(botao) {
+      const d = APP.dadosDejemRocam || {};
+      confirmarToastFt('FECHAR DEJEM ROCAM', 'Após o fechamento, as inscrições serão confirmadas e não poderão mais ser alteradas. Deseja continuar?', { confirmar: 'FECHAR ESCALA', cancelar: 'CANCELAR' }).then(function(confirmado) {
+        if (confirmado) executarAcaoDejemRocam('fechar_dejem_rocam', { cicloId: d.ciclo && d.ciclo.id }, botao, 'FECHANDO...');
+      });
+    }
+
+
+    function montarResumoP3DejemRocam(resumo) {
+      if (!resumo) return '';
+      return '<section class="dejem-panel"><div class="dejem-panel-head"><div><h3>Último fechamento — solicitação ao P3</h3><p>Período de ' + escapar(resumo.inicioBR || '') + ' a ' + escapar(resumo.fimBR || '') + '. Quantidades separadas por Sgt e Cb/Sd.</p></div><button type="button" class="dejem-copy" onclick="copiarResumoP3DejemRocam()">COPIAR RESUMO P3</button></div>' +
+        '<div class="dejem-table-wrap"><table class="dejem-table"><thead><tr><th>DATA</th><th>HORÁRIO</th><th>SGT</th><th>CB/SD</th><th>TOTAL</th></tr></thead><tbody>' +
+        (resumo.linhas || []).map(function(item) { return '<tr><td>' + escapar(item.diaSemana + ' • ' + item.dataBR) + '</td><td>' + escapar(item.horario) + 'h</td><td>' + Number(item.sgt || 0) + '</td><td>' + Number(item.cbSd || 0) + '</td><td>' + Number(item.total || 0) + '</td></tr>'; }).join('') +
+        '</tbody></table></div></section>';
+    }
+
+
+    function copiarResumoP3DejemRocam() {
+      const texto = String(APP.dadosDejemRocam && APP.dadosDejemRocam.ultimoFechamento && APP.dadosDejemRocam.ultimoFechamento.texto || '');
+      if (!texto) return;
+      const concluir = function() { mostrarToastFt('Resumo copiado', 'A solicitação de vagas está pronta para ser encaminhada ao P3.'); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(texto).then(concluir).catch(function() { copiarTextoDejemFallback(texto); concluir(); });
+      else { copiarTextoDejemFallback(texto); concluir(); }
+    }
+
+
+    function copiarTextoDejemFallback(texto) {
+      const area = document.createElement('textarea');
+      area.value = texto; area.style.position = 'fixed'; area.style.left = '-9999px';
+      document.body.appendChild(area); area.select(); document.execCommand('copy'); area.remove();
+    }
+
+
+    function montarTotaisDejemRocam(totais) {
+      return '<section class="dejem-panel"><div class="dejem-panel-head"><div><h3>Quantidade de escalas por policial</h3><p>Contagem do mês atual e do ano, em ordem crescente do total anual, para subsidiar a escolha manual.</p></div></div>' +
+        '<div class="dejem-table-wrap"><table class="dejem-table"><thead><tr><th>POLICIAL</th><th>MODALIDADE</th><th>MÊS ATUAL</th><th>TOTAL DO ANO</th></tr></thead><tbody>' +
+        (totais || []).map(function(item) { return '<tr><td>' + escapar([item.postoGrad,item.re,item.nomeGuerra].filter(Boolean).join(' ')) + '</td><td>' + escapar(item.modalidade || '') + '</td><td class="' + classeTotalDejemRocam(item.mesAtual) + '">' + Number(item.mesAtual || 0) + '</td><td class="' + classeTotalDejemRocam(item.totalAno) + '">' + Number(item.totalAno || 0) + '</td></tr>'; }).join('') +
+        '</tbody></table></div></section>';
+    }
+
+
+    function classeTotalDejemRocam(valor) {
+      const numero = Number(valor || 0);
+      if (!numero) return 'dejem-total-zero';
+      if (numero >= 3) return 'dejem-total-high';
+      return 'dejem-total-low';
     }
 
 
@@ -12500,6 +12708,7 @@ Banco de dados: Google Sheets.
       APP.dadosEscalasFolgas = null;
       APP.dadosRotinasAdministrativas = null;
       APP.dadosVistoriaCop = null;
+      APP.dadosDejemRocam = null;
       APP.dadosFolgasPendentes = null;
       APP.historicoViaturaV126 = null;
       APP.minhaEscalaV126 = null;
