@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.2.10
+SISTEMA CIA FT — PORTAL GITHUB V1.2.10.3
 Arquivo: index.html
 ============================================================
 
-VERSÃO V1.2.10 — PERFORMANCE DE LOGIN E CARREGAMENTOS
+VERSÃO V1.2.10.3 — PERFORMANCE DE LOGIN, CARREGAMENTOS E PDF VIA DRIVE
 - Preserva a última versão encerrada do Controle de Frequência.
 - Preserva a implantação completa de Viaturas V1.2.6.
 - Corrige a leitura e a identificação funcional em Resenhas Enviadas.
@@ -20,7 +20,7 @@ VERSÃO V1.2.10 — PERFORMANCE DE LOGIN E CARREGAMENTOS
 - Inclui a estrutura inicial do módulo COP para análise, rótulo e auditoria de vídeos.
 
 Front-end externo hospedado no GitHub Pages.
-Backend/API: Apps Script API_FT.gs V1.2.10.
+Backend/API: Apps Script API_FT.gs V1.2.10.3.
 Banco de dados: Google Sheets.
 
 ============================================================
@@ -29,7 +29,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Portal Força Tática • V1.2.10</title>
+  <title>Portal Força Tática • V1.2.10.3</title>
 
   <style>
     :root {
@@ -6535,7 +6535,7 @@ Banco de dados: Google Sheets.
       <div id="loginAlerta" class="alerta"></div>
 
       <div class="footer">
-        Portal Força Tática • V1.2.10
+        Portal Força Tática • V1.2.10.3
       </div>
     </main>
   </section>
@@ -6600,7 +6600,6 @@ Banco de dados: Google Sheets.
         tratarMensagemUploaderEscalaCiaFt(event);
         tratarMensagemPonteApiFt(event);
       });
-      iniciarPonteApiFt();
       if (window.pdfjsLib) window.pdfjsLib.GlobalWorkerOptions.workerSrc = './pdf.worker.min.js?v=1210';
       document.getElementById('loginRE').addEventListener('keydown', function(ev) {
         if (ev.key === 'Enter') fazerLogin();
@@ -6645,6 +6644,9 @@ Banco de dados: Google Sheets.
           window.scrollTo(0, 0);
 
           abrirHome();
+          /* A ponte é preparada somente após o login. Antes, ela concorria com a
+             autenticação por uma segunda execução simultânea do Apps Script. */
+          setTimeout(iniciarPonteApiFt, 500);
         })
         .catch(function(err) {
           setBotaoLogin(false);
@@ -12307,7 +12309,7 @@ Banco de dados: Google Sheets.
       frame.setAttribute('aria-hidden', 'true');
       frame.tabIndex = -1;
       frame.style.cssText = 'position:fixed;width:1px;height:1px;left:-9999px;bottom:0;border:0;opacity:0;pointer-events:none';
-      frame.src = API_URL + '?action=api_bridge_ft&_cache=1210';
+      frame.src = API_URL + '?action=api_bridge_ft&_cache=12103';
       document.body.appendChild(frame);
     }
 
@@ -12454,7 +12456,7 @@ Banco de dados: Google Sheets.
       const maxTentativas = somenteLeitura ? 3 : 1;
       const executar = function(tentativa) {
         if (navigator.onLine === false) return Promise.reject(new Error('Sem conexão com a internet. Verifique a rede do aparelho.'));
-        const prepararTransporte = !somenteLeitura && tentativa === 1 && !APP.apiBridgePronta ? aguardarPonteApiFt(3000) : Promise.resolve(APP.apiBridgePronta);
+        const prepararTransporte = !somenteLeitura && tentativa === 1 && !APP.apiBridgePronta ? aguardarPonteApiFt(700) : Promise.resolve(APP.apiBridgePronta);
         return prepararTransporte.then(function() {
           const usarPonte = APP.apiBridgePronta && tentativa === 1;
           return usarPonte ? chamadaPelaPonteApiFt(action, params) : chamadaJsonpFt(action, params);
@@ -12472,7 +12474,7 @@ Banco de dados: Google Sheets.
             return chamarApi(action, paramsOriginais, { semRenovar: true, semCache: opcoes.semCache });
           });
         }
-        if (podeCache && resp && resp.ok) APP.apiCache[chave] = { resp: resp, expiraEm: Date.now() + 12000 };
+        if (podeCache && resp && resp.ok) APP.apiCache[chave] = { resp: resp, expiraEm: Date.now() + 90000 };
         if (!somenteLeitura && resp && resp.ok) APP.apiCache = {};
         return resp;
       }).finally(function() {
