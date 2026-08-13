@@ -5744,6 +5744,7 @@ Banco de dados: Google Sheets.
     .freq-group td{position:sticky;left:0;z-index:5!important;background:#e9edf1!important;color:#17202a!important;text-align:left!important;font-weight:950!important;letter-spacing:.45px;padding:8px 12px!important}
     .freq-select-wrap.freq-saving{outline:2px solid #eab308!important}.freq-select-wrap.freq-saved{outline:2px solid #16a34a!important}
     .freq-note{font-size:12px;color:#64748b;margin:10px 0}
+    .freq-mobile-weeks{display:none;gap:6px;overflow-x:auto;margin:10px 0;padding:2px 1px 8px;scrollbar-width:thin}.freq-mobile-week-btn{flex:0 0 auto;border:1px solid rgba(55,66,71,.22);border-radius:999px;background:#fff;color:#374247;padding:8px 10px;font:inherit;font-size:9px;font-weight:950;cursor:pointer}.freq-mobile-week-btn.ativo{border-color:#8E1B1B;background:#8E1B1B;color:#fff}.freq-mobile-hint{display:none;margin:-2px 0 9px;color:#64748b;font-size:9px;font-weight:750}
     .folga-rule-note{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0 16px}
     .folga-rule-note div{border:1px solid rgba(55,66,71,.14);border-radius:14px;background:#fff;padding:10px 12px;color:#475569;font-size:11px;line-height:1.45}
     .folga-rule-note strong{display:block;margin-bottom:2px;color:#17202a;font-size:11px}
@@ -5759,7 +5760,8 @@ Banco de dados: Google Sheets.
     }
     @media(min-width:761px){.freq-legend[open] summary{margin-bottom:2px}.freq-legend summary{pointer-events:none}.freq-legend summary::-webkit-details-marker{display:none}}
     @media(max-width:900px){.freq-audit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.freq-legend-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-    @media(max-width:760px){.freq-launch-card{padding:14px}.freq-close-grid{grid-template-columns:1fr}.freq-pdf-card{grid-template-columns:1fr}.freq-pdf-card button{width:100%;min-width:0}.freq-table-wrap{max-height:62vh;-webkit-overflow-scrolling:touch}.freq-table{min-width:1650px}.freq-table .freq-pm{width:168px;min-width:168px;max-width:168px}.freq-table .freq-total.diarias,.freq-table .freq-total.trabalhados{position:static}.freq-legend-grid{grid-template-columns:1fr}.freq-audit-grid{grid-template-columns:1fr 1fr}.freq-note{font-size:11px}.folga-rule-note{grid-template-columns:1fr}}
+    @media(max-width:760px){.freq-launch-card{padding:14px}.freq-close-grid{grid-template-columns:1fr}.freq-pdf-card{grid-template-columns:1fr}.freq-pdf-card button{width:100%;min-width:0}.freq-mobile-weeks{display:flex}.freq-mobile-hint{display:block}.freq-table-wrap{max-height:62vh;-webkit-overflow-scrolling:touch}.freq-table{min-width:650px}.freq-table .freq-pm{width:148px;min-width:148px;max-width:148px;padding-left:7px;padding-right:7px}.freq-table .freq-total{width:72px;min-width:72px}.freq-table .freq-total.diarias,.freq-table .freq-total.trabalhados{position:static}.freq-legend-grid{grid-template-columns:1fr}.freq-audit-grid{grid-template-columns:1fr 1fr}.freq-note{font-size:11px}.folga-rule-note{grid-template-columns:1fr}}
+    @media(max-width:480px){.freq-table-wrap{overflow-x:hidden}.freq-table{width:100%;min-width:0;table-layout:fixed}.freq-table .freq-pm{width:110px;min-width:110px;max-width:110px;padding:4px 5px}.freq-table .freq-pm strong{font-size:9px;line-height:1.15}.freq-table .freq-pm small{font-size:8px}.freq-table .freq-day{width:34px;min-width:34px;max-width:34px;padding:2px}.freq-select-wrap{width:29px}.freq-table .freq-total{width:54px;min-width:54px;font-size:9px;padding:2px}.freq-group td{padding:7px!important}}
     /* ============================================================
      * VIATURAS — V1.2.6
      * Card reorganizado, controle de utilização e histórico.
@@ -6205,20 +6207,21 @@ Banco de dados: Google Sheets.
     .ef-section-head button{flex:0 0 auto;border:1px solid #374247;border-radius:12px;background:#fff;color:#374247;padding:9px 12px;font:inherit;font-size:10px;font-weight:950;cursor:pointer}
     .ef-uploader{margin:0 0 17px;border:1px solid rgba(142,27,27,.18);border-radius:20px;background:linear-gradient(135deg,#fff7f8,#fff);padding:14px;box-shadow:0 10px 24px rgba(15,23,42,.05)}
     .ef-uploader-title{display:flex;align-items:center;gap:10px;margin-bottom:10px}.ef-uploader-title span{display:grid;place-items:center;width:40px;height:40px;border-radius:13px;background:#8E1B1B;color:#fff;font-size:20px}.ef-uploader-title h3{margin:0;color:#17202a;font-size:13px}.ef-uploader-title p{margin:3px 0 0;color:#64748b;font-size:10.5px}
+    .ef-open-upload-btn{width:100%;border:1px solid #8E1B1B;border-radius:13px;background:#8E1B1B;color:#fff;padding:11px 14px;font:inherit;font-size:10px;font-weight:950;cursor:pointer}.ef-open-upload-btn:disabled{border-color:#cbd5e1;background:#e5e7eb;color:#64748b}.ef-uploader-fechado{padding-bottom:14px}.ef-uploader-fechado .ef-uploader-title{margin-bottom:10px}
     .ef-uploader iframe{display:block;width:100%;height:300px;border:0;background:transparent;transition:height .2s ease}
     .ef-escalas-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
     .ef-escala-card{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;min-width:0;border:1px solid rgba(55,66,71,.15);border-radius:18px;background:#fff;padding:14px;box-shadow:0 9px 22px rgba(15,23,42,.055)}
     .ef-escala-card.amanha{border-color:rgba(21,128,61,.32);background:linear-gradient(135deg,#f0fdf4,#fff)}
     .ef-escala-icon{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:#e9edf1;color:#374247;font-size:22px}.ef-escala-card.amanha .ef-escala-icon{background:#dcfce7;color:#166534}
     .ef-escala-info{min-width:0}.ef-escala-info strong{display:block;color:#17202a;font-size:13px}.ef-escala-info small{display:block;margin-top:3px;color:#64748b;font-size:9.5px;line-height:1.35;overflow-wrap:anywhere}.ef-escala-info .ef-amanha-label{display:inline-flex;margin-top:5px;border-radius:999px;background:#166534;color:#fff;padding:3px 7px;font-size:8px;font-weight:950;letter-spacing:.2px}
-    .ef-view-btn{border:0;border-radius:12px;background:#8E1B1B;color:#fff;padding:10px 12px;font:inherit;font-size:9.5px;font-weight:950;cursor:pointer;white-space:nowrap}.ef-view-btn:disabled{background:#cbd5e1;color:#64748b;cursor:not-allowed}
+    .ef-card-actions{display:flex;flex-direction:column;gap:6px;align-items:stretch}.ef-view-btn,.ef-delete-btn{border-radius:12px;padding:10px 12px;font:inherit;font-size:9.5px;font-weight:950;cursor:pointer;white-space:nowrap}.ef-view-btn{border:0;background:#8E1B1B;color:#fff}.ef-delete-btn{border:1px solid #C62828;background:#fff;color:#C62828}.ef-view-btn:disabled,.ef-delete-btn:disabled{border-color:#cbd5e1;background:#e5e7eb;color:#64748b;cursor:not-allowed}
     .ef-empty{border:1px dashed #cbd5e1;border-radius:18px;background:#f8fafc;color:#64748b;padding:24px;text-align:center;font-size:12px;line-height:1.5}
     .ef-table-wrap{overflow:visible;border:1px solid rgba(55,66,71,.16);border-radius:18px;background:#fff;box-shadow:0 10px 24px rgba(15,23,42,.055)}
     .ef-table{width:100%;border-collapse:separate;border-spacing:0;min-width:760px;color:#17202a;table-layout:fixed}.ef-table col.ef-col-pm{width:40%}.ef-table col.ef-col-saldo{width:15%}.ef-table th{position:sticky;top:72px;z-index:18;background:#374247;color:#fff;padding:10px 8px;font-size:8.5px;font-weight:950;letter-spacing:.15px;text-align:center;box-shadow:0 2px 0 rgba(255,255,255,.12),0 5px 12px rgba(15,23,42,.16)}.ef-table th:first-child{border-top-left-radius:17px;text-align:left}.ef-table th:last-child{border-top-right-radius:17px}.ef-table td{border-bottom:1px solid #e5e7eb;padding:10px 8px;font-size:11px;text-align:center}.ef-table tbody tr:last-child td{border-bottom:0}.ef-table td:first-child{text-align:left}.ef-table .ef-pm strong{display:block;color:#17202a;font-size:11.5px}.ef-table .ef-pm small{display:block;margin-top:2px;color:#64748b;font-size:9.5px}.ef-table .ef-num{font-size:15px;font-weight:950}.ef-num-zero{color:#6B7280}.ef-num-normal{color:#000000}.ef-num-atencao{color:#F59E0B}.ef-num-folga{color:#1B5E20}.ef-num-folga-alta{color:#8E1B1B}.ef-table .ef-grupo td{background:#e9edf1;color:#374247;font-size:9px;font-weight:950;letter-spacing:.3px;text-align:left}
     .ef-scope-note{margin:0 0 12px;border-left:5px solid #8E1B1B;border-radius:12px;background:#f8fafc;color:#475569;padding:10px 12px;font-size:10.5px;line-height:1.45}
     .ef-pdf-modal{position:fixed;inset:0;z-index:10050;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.82);padding:18px}.ef-pdf-dialog{display:flex;flex-direction:column;width:min(1180px,96vw);height:min(900px,94vh);overflow:hidden;border:1px solid rgba(255,255,255,.2);border-radius:20px;background:#fff;box-shadow:0 28px 80px rgba(0,0,0,.5)}.ef-pdf-head{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#374247;color:#fff;padding:11px 14px}.ef-pdf-head strong{min-width:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ef-pdf-actions{display:flex;gap:8px}.ef-pdf-actions button{border:1px solid rgba(255,255,255,.35);border-radius:10px;background:#fff;color:#374247;padding:7px 10px;font:inherit;font-size:9px;font-weight:950;cursor:pointer}.ef-pdf-pages{flex:1;overflow:auto;background:#cbd5e1;padding:12px;overscroll-behavior:contain}.ef-pdf-page{width:min(100%,1050px);margin:0 auto 12px;border-radius:4px;background:#fff;box-shadow:0 4px 18px rgba(15,23,42,.24);overflow:hidden}.ef-pdf-page:last-child{margin-bottom:0}.ef-pdf-page-label{background:#374247;color:#fff;padding:5px 8px;font-size:8px;font-weight:900;text-align:center}.ef-pdf-page canvas{display:block;width:100%;height:auto;background:#fff}.ef-pdf-loading{display:grid;place-items:center;min-height:100%;color:#374247;font-size:12px;font-weight:900;text-align:center;padding:24px}.ef-pdf-frame{width:100%;height:100%;border:0;background:#d1d5db}
     @media(max-width:980px){.ef-menu-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-    @media(max-width:760px){.ef-escalas-list{grid-template-columns:1fr}.ef-section-head{align-items:flex-start;flex-direction:column}.ef-uploader iframe{height:390px}.ef-escala-card{grid-template-columns:auto minmax(0,1fr)}.ef-view-btn{grid-column:1/-1;width:100%}.ef-pdf-modal{padding:5px}.ef-pdf-dialog{width:100%;height:98vh;border-radius:14px}.ef-pdf-head{align-items:center;flex-direction:row}.ef-pdf-actions{flex:0 0 auto}.ef-pdf-pages{padding:6px}.ef-menu-grid .menu-card{height:126px;min-height:126px}.ef-status-line{top:12px;right:12px;max-width:calc(100% - 56px)}.ef-pill{max-width:100%;padding:3px 5px;font-size:6.8px;line-height:1.1;white-space:normal}.ef-table-wrap{width:100%;overflow:visible}.ef-table{min-width:0;width:100%;table-layout:fixed}.ef-table col.ef-col-pm{width:36%}.ef-table col.ef-col-saldo{width:16%}.ef-table th{top:72px;padding:7px 2px;font-size:6.5px;line-height:1.08;letter-spacing:0;white-space:normal;overflow-wrap:anywhere}.ef-table th:first-child{padding-left:4px}.ef-table td{padding:8px 2px;font-size:8.5px;line-height:1.12;overflow-wrap:anywhere}.ef-table td:first-child{padding-left:4px}.ef-table .ef-pm strong{font-size:9px;line-height:1.16}.ef-table .ef-pm small{margin-top:2px;font-size:7.5px}.ef-table .ef-num{font-size:12px}.ef-table .ef-grupo td{padding:7px 5px;font-size:8px}.ef-scope-note{font-size:9.5px}}
+    @media(max-width:760px){.ef-escalas-list{grid-template-columns:1fr}.ef-section-head{align-items:flex-start;flex-direction:column}.ef-uploader iframe{height:390px}.ef-escala-card{grid-template-columns:auto minmax(0,1fr)}.ef-card-actions{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) auto}.ef-view-btn{width:100%}.ef-delete-btn{min-width:92px}.ef-pdf-modal{padding:5px}.ef-pdf-dialog{width:100%;height:98vh;border-radius:14px}.ef-pdf-head{align-items:center;flex-direction:row}.ef-pdf-actions{flex:0 0 auto}.ef-pdf-pages{padding:6px}.ef-menu-grid .menu-card{height:126px;min-height:126px}.ef-status-line{top:12px;right:12px;max-width:calc(100% - 56px)}.ef-pill{max-width:100%;padding:3px 5px;font-size:6.8px;line-height:1.1;white-space:normal}.ef-table-wrap{width:100%;overflow:visible}.ef-table{min-width:0;width:100%;table-layout:fixed}.ef-table col.ef-col-pm{width:36%}.ef-table col.ef-col-saldo{width:16%}.ef-table th{top:72px;padding:7px 2px;font-size:6.5px;line-height:1.08;letter-spacing:0;white-space:normal;overflow-wrap:anywhere}.ef-table th:first-child{padding-left:4px}.ef-table td{padding:8px 2px;font-size:8.5px;line-height:1.12;overflow-wrap:anywhere}.ef-table td:first-child{padding-left:4px}.ef-table .ef-pm strong{font-size:9px;line-height:1.16}.ef-table .ef-pm small{margin-top:2px;font-size:7.5px}.ef-table .ef-num{font-size:12px}.ef-table .ef-grupo td{padding:7px 5px;font-size:8px}.ef-scope-note{font-size:9.5px}}
 
     /* ============================================================
      * ROTINAS ADMINISTRATIVAS
@@ -6596,7 +6599,10 @@ Banco de dados: Google Sheets.
       apiCache: {},
       pdfRenderToken: 0,
       pdfLoader: null,
-      sessaoGeracao: 0
+      sessaoGeracao: 0,
+      semanaMobileFrequencia: 0,
+      semanaMobileFolgas: 0,
+      aquecimentoLoginIniciado: false
     };
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -6607,11 +6613,24 @@ Banco de dados: Google Sheets.
       document.getElementById('loginRE').addEventListener('keydown', function(ev) {
         if (ev.key === 'Enter') fazerLogin();
       });
+      document.getElementById('loginRE').addEventListener('focus', aquecerConexaoLoginFt, { once: true });
 
       document.getElementById('loginSenha').addEventListener('keydown', function(ev) {
         if (ev.key === 'Enter') fazerLogin();
       });
+      document.getElementById('loginSenha').addEventListener('focus', aquecerConexaoLoginFt, { once: true });
     });
+
+
+    function aquecerConexaoLoginFt() {
+      if (APP.aquecimentoLoginIniciado || APP.usuario) return;
+      APP.aquecimentoLoginIniciado = true;
+      /* O policial normalmente leva alguns segundos para preencher RE e senha.
+         A ponte começa nesse intervalo e não bloqueia a tela nem a digitação. */
+      setTimeout(function() {
+        if (!APP.usuario) iniciarPonteApiFt();
+      }, 120);
+    }
 
 
     function fazerLogin() {
@@ -7783,6 +7802,7 @@ Banco de dados: Google Sheets.
         competencia: alvo
       }).then(function(resp) {
         if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao carregar o Controle de Frequência.');
+        if (!APP.dadosControleFrequencia || APP.dadosControleFrequencia.competencia !== resp.dados.competencia) APP.semanaMobileFrequencia = 0;
         APP.dadosControleFrequencia = resp.dados;
         renderizarControleFrequencia();
       }).catch(function(err) {
@@ -7797,6 +7817,7 @@ Banco de dados: Google Sheets.
       const d = APP.dadosControleFrequencia;
       if (!box || !d) return;
       const fechado = d.auditoria && d.auditoria.fechamentoCmt && d.auditoria.fechamentoCmt.status === 'APROVADO';
+      const faixaDias = obterFaixaDiasTabelaMobile('frequencia', d);
       box.innerHTML = `
         <div class="freq-months" aria-label="Meses do Controle de Frequência">
           ${(d.meses || []).map(function(mes) {
@@ -7822,8 +7843,9 @@ Banco de dados: Google Sheets.
         </details>
 
         <div id="freqAuditArea">${montarAuditoriaFrequencia(d)}</div>
-        <div class="freq-note">Os lançamentos são salvos individualmente. ${fechado ? '<strong>Este mês está encerrado pelo Cmt de Cia.</strong>' : 'Role a tabela horizontalmente para acessar todos os dias e os totais.'}</div>
-        ${montarTabelaFrequencia(d, fechado)}
+        <div class="freq-note">Os lançamentos são salvos individualmente. ${fechado ? '<strong>Este mês está encerrado pelo Cmt de Cia.</strong>' : (faixaDias.mobile ? 'Use os períodos abaixo para acessar os dias; os totais continuam mensais.' : 'Role a tabela horizontalmente para acessar todos os dias e os totais.')}</div>
+        ${montarNavegacaoSemanasTabelaMobile('frequencia', d, faixaDias)}
+        ${montarTabelaFrequencia(d, fechado, faixaDias)}
       `;
     }
 
@@ -7838,6 +7860,56 @@ Banco de dados: Google Sheets.
       const nomes = ['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'];
       const mes = Number(partes[1] || 0);
       return (nomes[mes - 1] || competencia) + '/' + String(partes[0] || '').slice(-2);
+    }
+
+
+    function dispositivoMobileTabelaFt() {
+      return !!(window.matchMedia && window.matchMedia('(max-width: 760px)').matches);
+    }
+
+
+    function obterFaixaDiasTabelaMobile(tipo, dados) {
+      const diasNoMes = Number(dados && dados.diasNoMes || 31);
+      if (!dispositivoMobileTabelaFt()) return { mobile: false, semana: 0, inicio: 1, fim: diasNoMes };
+      const chave = tipo === 'folgas' ? 'semanaMobileFolgas' : 'semanaMobileFrequencia';
+      const diasPorPeriodo = window.matchMedia('(max-width: 480px)').matches ? 3 : 7;
+      const totalSemanas = Math.ceil(diasNoMes / diasPorPeriodo);
+      let semana = Number(APP[chave] || 0);
+      if (semana < 1 || semana > totalSemanas) {
+        const hoje = new Date();
+        const competenciaHoje = hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0');
+        semana = dados.competencia === competenciaHoje ? Math.ceil(hoje.getDate() / diasPorPeriodo) : 1;
+        semana = Math.max(1, Math.min(totalSemanas, semana));
+        APP[chave] = semana;
+      }
+      return { mobile: true, semana: semana, diasPorPeriodo: diasPorPeriodo, inicio: ((semana - 1) * diasPorPeriodo) + 1, fim: Math.min(semana * diasPorPeriodo, diasNoMes) };
+    }
+
+
+    function montarNavegacaoSemanasTabelaMobile(tipo, dados, faixa) {
+      const diasNoMes = Number(dados && dados.diasNoMes || 31);
+      const diasPorPeriodo = Number(faixa && faixa.diasPorPeriodo || 7);
+      const totalSemanas = Math.ceil(diasNoMes / diasPorPeriodo);
+      return '<div class="freq-mobile-weeks" aria-label="Selecionar período de dias">' +
+        Array.from({ length: totalSemanas }, function(_, indice) {
+          const semana = indice + 1;
+          const inicio = (indice * diasPorPeriodo) + 1;
+          const fim = Math.min((indice + 1) * diasPorPeriodo, diasNoMes);
+          return '<button type="button" class="freq-mobile-week-btn ' + (faixa.mobile && faixa.semana === semana ? 'ativo' : '') + '" onclick="mudarSemanaTabelaMobile(\'' + tipo + '\',' + semana + ')">DIAS ' + inicio + '–' + fim + '</button>';
+        }).join('') + '</div><div class="freq-mobile-hint">No celular, somente ' + diasPorPeriodo + ' dia(s) são montados por vez para tornar a página mais rápida. Os totais permanecem mensais.</div>';
+    }
+
+
+    function mudarSemanaTabelaMobile(tipo, semana) {
+      if (tipo === 'folgas') {
+        APP.semanaMobileFolgas = Number(semana || 1);
+        renderizarControleFolgas();
+      } else {
+        APP.semanaMobileFrequencia = Number(semana || 1);
+        renderizarControleFrequencia();
+      }
+      const tabela = document.querySelector('.freq-table-wrap');
+      if (tabela) tabela.scrollLeft = 0;
     }
 
 
@@ -7892,8 +7964,11 @@ Banco de dados: Google Sheets.
     }
 
 
-    function montarTabelaFrequencia(d, fechado) {
+    function montarTabelaFrequencia(d, fechado, faixaDias) {
       const diasNoMes = Number(d.diasNoMes || 31);
+      const inicioDia = Math.max(1, Number(faixaDias && faixaDias.inicio || 1));
+      const fimDia = Math.min(diasNoMes, Number(faixaDias && faixaDias.fim || diasNoMes));
+      const quantidadeDias = Math.max(0, fimDia - inicioDia + 1);
       const opcoes = d.opcoes || [];
       const efetivo = d.efetivo || [];
       const lancamentos = d.lancamentos || {};
@@ -7902,15 +7977,15 @@ Banco de dados: Google Sheets.
       ['ADM','1º PEL','2º PEL'].forEach(function(grupo) {
         const lista = efetivo.filter(function(pm) { return pm.pelotao === grupo; });
         if (!lista.length) return;
-        corpo += '<tr class="freq-group"><td colspan="' + (diasNoMes + 3) + '">' + escapar(grupo) + '</td></tr>';
+        corpo += '<tr class="freq-group"><td colspan="' + (quantidadeDias + 3) + '">' + escapar(grupo) + '</td></tr>';
         lista.forEach(function(pm) {
           const chave = normalizarReClienteFrequencia(pm.re);
           const reg = lancamentos[chave] || { dias: [], diarias: 0, diasTrabalhados: 0 };
           corpo += '<tr data-freq-re="' + escaparAttr(pm.re || '') + '">' +
             '<td class="freq-pm"><strong>' + escapar([pm.postoGrad, pm.nomeGuerra].filter(Boolean).join(' ')) + '</strong><small>RE ' + escapar(pm.re || '') + '</small></td>' +
-            Array.from({length:diasNoMes}, function(_, indice) {
-              const dia = indice + 1;
-              const atual = String((reg.dias || [])[indice] || '');
+            Array.from({length:quantidadeDias}, function(_, indice) {
+              const dia = inicioDia + indice;
+              const atual = String((reg.dias || [])[dia - 1] || '');
               const classeVisual = classesCelulaFrequencia(grupo, atual);
               return '<td class="freq-day"><div class="freq-select-wrap ' + classeVisual + (podeEditar ? '' : ' freq-bloqueado') + '"><span class="freq-select-display" aria-hidden="true">' + escapar(atual) + '</span><select class="freq-native-select ' + classeVisual + '" aria-label="Dia ' + dia + ' de ' + escapar(pm.nomeGuerra || '') + '" data-grupo="' + escaparAttr(grupo) + '" data-re="' + escaparAttr(pm.re || '') + '" data-dia="' + dia + '" data-valor-anterior="' + escaparAttr(atual) + '" onchange="salvarCelulaFrequencia(this)" ' + (podeEditar ? '' : 'disabled') + '>' +
                 '<option value=""></option>' + opcoes.map(function(op) { return '<option value="' + escaparAttr(op) + '" ' + (atual === String(op) ? 'selected' : '') + '>' + escapar(op) + '</option>'; }).join('') +
@@ -7922,7 +7997,7 @@ Banco de dados: Google Sheets.
       });
 
       return '<div class="freq-table-wrap"><table class="freq-table"><thead><tr><th class="freq-pm"><strong>POLICIAL</strong><small>POSTO/GRAD • RE • NOME</small></th>' +
-        Array.from({length:diasNoMes}, function(_, i) { return '<th class="freq-day">' + (i + 1) + '<small>' + escapar(rotuloDiaSemanaFrequencia(d.competencia, i + 1)) + '</small></th>'; }).join('') +
+        Array.from({length:quantidadeDias}, function(_, i) { const dia = inicioDia + i; return '<th class="freq-day">' + dia + '<small>' + escapar(rotuloDiaSemanaFrequencia(d.competencia, dia)) + '</small></th>'; }).join('') +
         '<th class="freq-total diarias">DIÁRIAS</th><th class="freq-total trabalhados">DIAS TRAB.</th></tr></thead><tbody>' + corpo + '</tbody></table></div>';
     }
 
@@ -8117,6 +8192,7 @@ Banco de dados: Google Sheets.
         competencia: alvo
       }).then(function(resp) {
         if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao carregar o Controle de Folgas.');
+        if (!APP.dadosControleFolgas || APP.dadosControleFolgas.competencia !== resp.dados.competencia) APP.semanaMobileFolgas = 0;
         APP.dadosControleFolgas = resp.dados;
         renderizarControleFolgas();
       }).catch(function(err) {
@@ -8137,6 +8213,7 @@ Banco de dados: Google Sheets.
       const box = document.getElementById('folgasConteudo');
       const d = APP.dadosControleFolgas;
       if (!box || !d) return;
+      const faixaDias = obterFaixaDiasTabelaMobile('folgas', d);
       box.innerHTML = `
         <div class="freq-months" aria-label="Meses do Controle de Folgas">
           ${(d.meses || []).map(function(mes) {
@@ -8168,13 +8245,17 @@ Banco de dados: Google Sheets.
           <div><strong>ZERAM O CICLO</strong>DS, CM, LTS, LSV, CEP e OUT zeram os dias, sem eliminar folgas adquiridas.</div>
         </div>
         <div class="freq-note">Os lançamentos são salvos individualmente. FOLGAS mostra o saldo disponível e DIAS TRAB. mostra o progresso atual do ciclo, de 0 a 13.</div>
-        ${montarTabelaControleFolgas(d)}
+        ${montarNavegacaoSemanasTabelaMobile('folgas', d, faixaDias)}
+        ${montarTabelaControleFolgas(d, faixaDias)}
       `;
     }
 
 
-    function montarTabelaControleFolgas(d) {
+    function montarTabelaControleFolgas(d, faixaDias) {
       const diasNoMes = Number(d.diasNoMes || 31);
+      const inicioDia = Math.max(1, Number(faixaDias && faixaDias.inicio || 1));
+      const fimDia = Math.min(diasNoMes, Number(faixaDias && faixaDias.fim || diasNoMes));
+      const quantidadeDias = Math.max(0, fimDia - inicioDia + 1);
       const efetivo = d.efetivo || [];
       const lancamentos = d.lancamentos || {};
       const saldos = d.saldos || {};
@@ -8185,18 +8266,18 @@ Banco de dados: Google Sheets.
       ['ADM', '1º PEL', '2º PEL'].forEach(function(grupo) {
         const lista = efetivo.filter(function(pm) { return pm.pelotao === grupo; });
         if (!lista.length) return;
-        corpo += '<tr class="freq-group"><td colspan="' + (diasNoMes + 3) + '">' + escapar(grupo) + '</td></tr>';
+        corpo += '<tr class="freq-group"><td colspan="' + (quantidadeDias + 3) + '">' + escapar(grupo) + '</td></tr>';
         lista.forEach(function(pm) {
           const chave = normalizarReClienteFrequencia(pm.re);
           const reg = lancamentos[chave] || { dias: [] };
           const saldo = saldos[chave] || { folgas: 0, diasTrabalhados: 0 };
           corpo += '<tr data-folga-re="' + escaparAttr(pm.re || '') + '">' +
             '<td class="freq-pm"><strong>' + escapar([pm.postoGrad, pm.nomeGuerra].filter(Boolean).join(' ')) + '</strong><small>RE ' + escapar(pm.re || '') + '</small></td>' +
-            Array.from({ length: diasNoMes }, function(_, indice) {
-              const dia = indice + 1;
+            Array.from({ length: quantidadeDias }, function(_, indice) {
+              const dia = inicioDia + indice;
               const dataISO = d.competencia + '-' + String(dia).padStart(2, '0');
               const anteriorImplantacao = dataISO < String(d.implantacaoISO || '2026-08-12');
-              const atual = String((reg.dias || [])[indice] || '');
+              const atual = String((reg.dias || [])[dia - 1] || '');
               const classes = classesCelulaControleFolgas(atual, true);
               const bloqueado = !podeEditar || anteriorImplantacao;
               return '<td class="freq-day ' + (anteriorImplantacao ? 'folga-dia-inativo' : '') + '"><div class="freq-select-wrap ' + classes + (bloqueado ? ' freq-bloqueado' : '') + '"><span class="freq-select-display" aria-hidden="true">' + escapar(atual) + '</span><select class="freq-native-select ' + classes + '" aria-label="Dia ' + dia + ' de ' + escapar(pm.nomeGuerra || '') + '" data-grupo="' + escaparAttr(grupo) + '" data-re="' + escaparAttr(pm.re || '') + '" data-dia="' + dia + '" data-valor-anterior="' + escaparAttr(atual) + '" onchange="salvarCelulaControleFolgas(this)" ' + (bloqueado ? 'disabled' : '') + '>' +
@@ -8209,7 +8290,7 @@ Banco de dados: Google Sheets.
       });
 
       return '<div class="freq-table-wrap"><table class="freq-table folga-table"><thead><tr><th class="freq-pm"><strong>POLICIAL</strong><small>POSTO/GRAD • RE • NOME</small></th>' +
-        Array.from({ length: diasNoMes }, function(_, i) { return '<th class="freq-day">' + (i + 1) + '<small>' + escapar(rotuloDiaSemanaFrequencia(d.competencia, i + 1)) + '</small></th>'; }).join('') +
+        Array.from({ length: quantidadeDias }, function(_, i) { const dia = inicioDia + i; return '<th class="freq-day">' + dia + '<small>' + escapar(rotuloDiaSemanaFrequencia(d.competencia, dia)) + '</small></th>'; }).join('') +
         '<th class="freq-total diarias">FOLGAS</th><th class="freq-total trabalhados">DIAS TRAB.</th></tr></thead><tbody>' + corpo + '</tbody></table></div>';
     }
 
@@ -8319,20 +8400,38 @@ Banco de dados: Google Sheets.
     }
 
 
-    function carregarDadosEscalasFolgas(telaDestino) {
+    function carregarDadosEscalasFolgas(telaDestino, forcar) {
       const box = document.getElementById('escalasFolgasConteudo');
+      const secao = telaDestino === 'escalas' ? 'escalas' : (telaDestino === 'folgas' ? 'folgas' : 'menu');
+      const dadosAtuais = APP.dadosEscalasFolgas || {};
+      const chaveCarregada = secao === 'escalas' ? 'carregadoEscalas' : (secao === 'folgas' ? 'carregadoFolgas' : 'carregadoMenu');
+      if (!forcar && dadosAtuais[chaveCarregada]) {
+        if (secao === 'escalas') abrirEscalasCiaFt();
+        else if (secao === 'folgas') abrirFolgasPendentes();
+        else renderizarMenuEscalasFolgas();
+        return Promise.resolve(dadosAtuais);
+      }
       if (box) box.innerHTML = '<div class="resenha-loading">Atualizando informações...</div>';
       return chamarApi('dados_escalas_folgas', {
         login: APP.credenciais.login,
-        senha: APP.credenciais.senha
+        senha: APP.credenciais.senha,
+        secao: secao
+      }, {
+        semCache: !!forcar
       }).then(function(resp) {
         if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao carregar Escalas e Folgas.');
-        APP.dadosEscalasFolgas = resp.dados;
+        const anteriores = APP.dadosEscalasFolgas || {};
+        const novos = resp.dados || {};
+        APP.dadosEscalasFolgas = Object.assign({}, anteriores, novos, {
+          capacidades: Object.assign({}, anteriores.capacidades || {}, novos.capacidades || {})
+        });
         if (telaDestino === 'escalas') abrirEscalasCiaFt();
         else if (telaDestino === 'folgas') abrirFolgasPendentes();
         else renderizarMenuEscalasFolgas();
+        return APP.dadosEscalasFolgas;
       }).catch(function(err) {
         if (box) box.innerHTML = '<div class="adm-alerta">' + escapar(err.message || String(err)) + '</div>';
+        return null;
       });
     }
 
@@ -8341,8 +8440,8 @@ Banco de dados: Google Sheets.
       const box = document.getElementById('escalasFolgasConteudo');
       const dados = APP.dadosEscalasFolgas || {};
       if (!box) return;
-      const escalaAmanha = (dados.escalas || []).find(function(item) { return !!item.ehAmanha; });
-      const totalFolgas = (dados.folgasPendentes || []).length;
+      const escalaAmanha = !!dados.temEscalaAmanha || (dados.escalas || []).some(function(item) { return !!item.ehAmanha; });
+      const totalFolgas = Number(dados.totalFolgasVisiveis != null ? dados.totalFolgasVisiveis : (dados.folgasPendentes || []).length);
       box.innerHTML = `
         <div class="menu-grid ef-menu-grid">
           <div class="menu-card" data-modulo="ESCALAS_CIA_FT" onclick="abrirEscalasCiaFt()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirEscalasCiaFt();}">
@@ -8365,32 +8464,87 @@ Banco de dados: Google Sheets.
       const box = document.getElementById('escalasFolgasConteudo');
       const dados = APP.dadosEscalasFolgas || {};
       if (!box) return;
+      if (!dados.carregadoEscalas) {
+        carregarDadosEscalasFolgas('escalas').catch(function() {});
+        return;
+      }
       const escalas = (dados.escalas || []).slice().sort(function(a, b) {
         return Number(!!b.ehAmanha) - Number(!!a.ehAmanha) || String(b.dataServicoISO || '').localeCompare(String(a.dataServicoISO || ''));
       });
       const podeUpload = !!(dados.capacidades && dados.capacidades.podeUpload);
       const uploadToken = String(dados.capacidades && dados.capacidades.uploadToken || '');
       const uploader = podeUpload ? `
-        <div class="ef-uploader">
-          <div class="ef-uploader-title"><span>⬆</span><div><h3>PUBLICAR ESCALAS CIA FT</h3><p>Envie no mesmo lote as escalas de sábado, domingo, segunda-feira, feriados ou outras datas necessárias.</p></div></div>
-          <iframe id="efUploaderFrame" title="Enviar PDFs das Escalas Cia FT" src="${escaparAttr(API_URL + '?action=upload_escala_cia_ft_form&token=' + encodeURIComponent(uploadToken) + '&_cache=' + Date.now())}"></iframe>
+        <div class="ef-uploader ef-uploader-fechado">
+          <div class="ef-uploader-title"><span>⬆</span><div><h3>PUBLICAR ESCALAS CIA FT</h3><p>O formulário é carregado somente quando necessário, evitando outra conexão durante a consulta.</p></div></div>
+          <button type="button" class="ef-open-upload-btn" onclick="abrirUploaderEscalaCiaFt(this)">PUBLICAR NOVA ESCALA</button>
+          <div id="efUploaderConteudo" data-upload-token="${escaparAttr(uploadToken)}"></div>
         </div>` : '';
       box.innerHTML = `
         <div class="ef-section-head"><div><h2>Escalas Cia FT</h2><p>Escalas de serviço publicadas em PDF. A escala do dia seguinte aparece em destaque.</p></div><button type="button" onclick="renderizarMenuEscalasFolgas()">VOLTAR ÀS OPÇÕES</button></div>
         ${uploader}
         <div class="ef-escalas-list">
-          ${escalas.length ? escalas.map(montarCardEscalaCiaFt).join('') : '<div class="ef-empty" style="grid-column:1/-1"><strong>Nenhuma escala publicada.</strong><br>A escala ficará disponível aqui após o envio do PDF.</div>'}
+          ${escalas.length ? escalas.map(function(item) { return montarCardEscalaCiaFt(item, !!(dados.capacidades && dados.capacidades.podeExcluir)); }).join('') : '<div class="ef-empty" style="grid-column:1/-1"><strong>Nenhuma escala publicada.</strong><br>A escala ficará disponível aqui após o envio do PDF.</div>'}
         </div>`;
     }
 
 
-    function montarCardEscalaCiaFt(item) {
+    function montarCardEscalaCiaFt(item, podeExcluir) {
       const classe = item.ehAmanha ? ' amanha' : '';
       const meta = [item.nomeArquivo, formatarTamanhoArquivoEscalaCiaFt(item.tamanhoBytes), item.enviadoPor ? 'Enviado por ' + item.enviadoPor : '', item.dataHoraUpload ? 'em ' + item.dataHoraUpload : ''].filter(Boolean).join(' • ');
       return '<article class="ef-escala-card' + classe + '">' +
         '<span class="ef-escala-icon" aria-hidden="true">▣</span>' +
         '<div class="ef-escala-info"><strong>Escala de ' + escapar(item.dataServicoBR || '') + '</strong><small>' + escapar(meta) + '</small>' + (item.ehAmanha ? '<span class="ef-amanha-label">ESCALA DE AMANHÃ</span>' : '') + '</div>' +
-        '<button type="button" class="ef-view-btn" onclick="visualizarEscalaCiaFt(\'' + escaparAttr(item.id || '') + '\',this)">VISUALIZAR PDF</button></article>';
+        '<div class="ef-card-actions"><button type="button" class="ef-view-btn" onclick="visualizarEscalaCiaFt(\'' + escaparAttr(item.id || '') + '\',this)">VISUALIZAR PDF</button>' +
+        (podeExcluir ? '<button type="button" class="ef-delete-btn" onclick="confirmarExclusaoEscalaCiaFt(\'' + escaparAttr(item.id || '') + '\',\'' + escaparAttr(item.dataServicoBR || '') + '\',this)">EXCLUIR</button>' : '') +
+        '</div></article>';
+    }
+
+
+    function abrirUploaderEscalaCiaFt(botao) {
+      const conteudo = document.getElementById('efUploaderConteudo');
+      if (!conteudo || conteudo.querySelector('iframe')) return;
+      const token = String(conteudo.getAttribute('data-upload-token') || '');
+      if (!token) {
+        mostrarToastFt('Autorização expirada', 'Atualize a página Escalas Cia FT para publicar um novo arquivo.', 'erro');
+        return;
+      }
+      const pai = conteudo.closest('.ef-uploader');
+      if (pai) pai.classList.remove('ef-uploader-fechado');
+      if (botao) { botao.disabled = true; botao.textContent = 'ABRINDO FORMULÁRIO...'; }
+      conteudo.innerHTML = '<iframe id="efUploaderFrame" title="Enviar PDFs das Escalas Cia FT" src="' + escaparAttr(API_URL + '?action=upload_escala_cia_ft_form&token=' + encodeURIComponent(token) + '&_cache=' + Date.now()) + '"></iframe>';
+    }
+
+
+    function confirmarExclusaoEscalaCiaFt(idEscala, dataServicoBR, botao) {
+      confirmarToastFt('EXCLUIR ESCALA', 'Confirma a exclusão da escala de ' + String(dataServicoBR || '') + '? O PDF será enviado à lixeira do Drive.', {
+        confirmar: 'EXCLUIR ESCALA',
+        cancelar: 'CANCELAR'
+      }).then(function(confirmado) {
+        if (!confirmado) return;
+        excluirEscalaCiaFt(idEscala, botao);
+      });
+    }
+
+
+    function excluirEscalaCiaFt(idEscala, botao) {
+      const textoAnterior = botao ? botao.textContent : '';
+      if (botao) { botao.disabled = true; botao.textContent = 'EXCLUINDO...'; }
+      chamarApi('excluir_escala_cia_ft', {
+        login: APP.credenciais.login,
+        senha: APP.credenciais.senha,
+        idEscala: idEscala
+      }).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao excluir a escala.');
+        if (APP.dadosEscalasFolgas && Array.isArray(APP.dadosEscalasFolgas.escalas)) {
+          APP.dadosEscalasFolgas.escalas = APP.dadosEscalasFolgas.escalas.filter(function(item) { return String(item.id || '') !== String(idEscala || ''); });
+          APP.dadosEscalasFolgas.temEscalaAmanha = APP.dadosEscalasFolgas.escalas.some(function(item) { return !!item.ehAmanha; });
+        }
+        mostrarToastFt('Escala excluída', resp.dados && resp.dados.mensagem || 'A escala foi removida do aplicativo.');
+        return carregarDadosEscalasFolgas('escalas', true);
+      }).catch(function(err) {
+        mostrarToastFt('Escala não excluída', err.message || String(err), 'erro');
+        if (botao && document.body.contains(botao)) { botao.disabled = false; botao.textContent = textoAnterior || 'EXCLUIR'; }
+      });
     }
 
 
@@ -8418,7 +8572,7 @@ Banco de dados: Google Sheets.
       if (event.data.type === 'FT_ESCALA_CIA_LOTE_ENVIADO') {
         const quantidade = Array.isArray(event.data.resultados) ? event.data.resultados.length : 0;
         mostrarToastFt('Escalas Cia FT publicadas', quantidade + ' escala(s) enviada(s) com sucesso.');
-        carregarDadosEscalasFolgas('escalas');
+        carregarDadosEscalasFolgas('escalas', true);
       }
     }
 
@@ -8427,6 +8581,10 @@ Banco de dados: Google Sheets.
       const box = document.getElementById('escalasFolgasConteudo');
       const dados = APP.dadosEscalasFolgas || {};
       if (!box) return;
+      if (!dados.carregadoFolgas) {
+        carregarDadosEscalasFolgas('folgas').catch(function() {});
+        return;
+      }
       const lista = dados.folgasPendentes || [];
       const escopo = String(dados.capacidades && dados.capacidades.escopo || 'PROPRIO').toUpperCase();
       let corpo = '';
@@ -8563,7 +8721,10 @@ Banco de dados: Google Sheets.
           const larguraDisponivel = Math.max(280, Math.min(1050, paginas.clientWidth - 24));
           const escalaCss = larguraDisponivel / base.width;
           const viewport = pagina.getViewport({ scale: escalaCss });
-          const densidade = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+          /* Em celulares, limitar a densidade evita dois canvases gigantes na
+             memória sem comprometer a leitura na largura da tela. */
+          const limiteDensidade = dispositivoMobileTabelaFt() ? 1.35 : 2;
+          const densidade = Math.min(limiteDensidade, Math.max(1, window.devicePixelRatio || 1));
           const bloco = document.createElement('section');
           bloco.className = 'ef-pdf-page';
           bloco.innerHTML = '<div class="ef-pdf-page-label">PÁGINA ' + numeroPagina + ' DE ' + pdf.numPages + '</div>';
@@ -12342,6 +12503,8 @@ Banco de dados: Google Sheets.
       APP.dadosFolgasPendentes = null;
       APP.historicoViaturaV126 = null;
       APP.minhaEscalaV126 = null;
+      APP.semanaMobileFrequencia = 0;
+      APP.semanaMobileFolgas = 0;
       APP.apiCache = {};
       APP.apiChamadasPendentes = {};
 
