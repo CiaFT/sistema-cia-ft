@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.2.10.3
+SISTEMA CIA FT — PORTAL GITHUB V1.2.10.4
 Arquivo: index.html
 ============================================================
 
-VERSÃO V1.2.10.3 — PERFORMANCE DE LOGIN, CARREGAMENTOS E PDF VIA DRIVE
+VERSÃO V1.2.10.4 — CORREÇÃO CRÍTICA DE LOGIN, PERFORMANCE E PDF VIA DRIVE
 - Preserva a última versão encerrada do Controle de Frequência.
 - Preserva a implantação completa de Viaturas V1.2.6.
 - Corrige a leitura e a identificação funcional em Resenhas Enviadas.
@@ -20,7 +20,7 @@ VERSÃO V1.2.10.3 — PERFORMANCE DE LOGIN, CARREGAMENTOS E PDF VIA DRIVE
 - Inclui a estrutura inicial do módulo COP para análise, rótulo e auditoria de vídeos.
 
 Front-end externo hospedado no GitHub Pages.
-Backend/API: Apps Script API_FT.gs V1.2.10.3.
+Backend/API: Apps Script API_FT.gs V1.2.10.4.
 Banco de dados: Google Sheets.
 
 ============================================================
@@ -29,7 +29,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Portal Força Tática • V1.2.10.3</title>
+  <title>Portal Força Tática • V1.2.10.4</title>
 
   <style>
     :root {
@@ -6535,7 +6535,7 @@ Banco de dados: Google Sheets.
       <div id="loginAlerta" class="alerta"></div>
 
       <div class="footer">
-        Portal Força Tática • V1.2.10.3
+        Portal Força Tática • V1.2.10.4
       </div>
     </main>
   </section>
@@ -12309,7 +12309,7 @@ Banco de dados: Google Sheets.
       frame.setAttribute('aria-hidden', 'true');
       frame.tabIndex = -1;
       frame.style.cssText = 'position:fixed;width:1px;height:1px;left:-9999px;bottom:0;border:0;opacity:0;pointer-events:none';
-      frame.src = API_URL + '?action=api_bridge_ft&_cache=12103';
+      frame.src = API_URL + '?action=api_bridge_ft&_cache=12104';
       document.body.appendChild(frame);
     }
 
