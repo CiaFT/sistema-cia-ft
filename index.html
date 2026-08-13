@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.2.10.4
+SISTEMA CIA FT — PORTAL GITHUB V1.2.11
 Arquivo: index.html
 ============================================================
 
-VERSÃO V1.2.10.4 — CORREÇÃO CRÍTICA DE LOGIN, PERFORMANCE E PDF VIA DRIVE
+VERSÃO V1.2.11 — AUDITORIA, ESTABILIDADE E PERFORMANCE
 - Preserva a última versão encerrada do Controle de Frequência.
 - Preserva a implantação completa de Viaturas V1.2.6.
 - Corrige a leitura e a identificação funcional em Resenhas Enviadas.
@@ -20,7 +20,7 @@ VERSÃO V1.2.10.4 — CORREÇÃO CRÍTICA DE LOGIN, PERFORMANCE E PDF VIA DRIVE
 - Inclui a estrutura inicial do módulo COP para análise, rótulo e auditoria de vídeos.
 
 Front-end externo hospedado no GitHub Pages.
-Backend/API: Apps Script API_FT.gs V1.2.10.4.
+Backend/API: Apps Script API_FT.gs V1.2.11.
 Banco de dados: Google Sheets.
 
 ============================================================
@@ -29,7 +29,9 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Portal Força Tática • V1.2.10.4</title>
+  <title>Portal Força Tática • V1.2.11</title>
+  <link rel="preconnect" href="https://script.google.com">
+  <link rel="dns-prefetch" href="https://script.googleusercontent.com">
 
   <style>
     :root {
@@ -6514,7 +6516,7 @@ Banco de dados: Google Sheets.
     <main class="login-card">
       <div class="logo">
         <img
-          src="https://drive.google.com/thumbnail?id=1P64M5G2qLW5yhazJUMvhTAIl3rEDD9Br&sz=w1000"
+          src="https://drive.google.com/thumbnail?id=1P64M5G2qLW5yhazJUMvhTAIl3rEDD9Br&sz=w600"
           alt="Portal Força Tática"
           onerror="this.outerHTML='<div style=&quot;color:#ffe600;font-size:64px&quot;>⚔️</div>'"
         >
@@ -6535,7 +6537,7 @@ Banco de dados: Google Sheets.
       <div id="loginAlerta" class="alerta"></div>
 
       <div class="footer">
-        Portal Força Tática • V1.2.10.4
+        Portal Força Tática • V1.2.11
       </div>
     </main>
   </section>
@@ -6549,6 +6551,7 @@ Banco de dados: Google Sheets.
             <img
               src="https://drive.google.com/thumbnail?id=1HsuKSfmhLwhnU6g1i4tqYd4gkOshqd89&sz=w600&v=137"
               alt="Símbolo FT"
+              loading="lazy"
               onerror="this.parentElement.innerHTML='⚔️'"
             >
           </div>
@@ -6569,7 +6572,6 @@ Banco de dados: Google Sheets.
   </section>
 
 
-  <script src="./pdf.min.js?v=1210"></script>
   <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbx93RwTCtmiZ45_Tke0CqH6ArL4kTbQFW54_pnXRq69IYfE8_5JSjvECzBLoGaiMroGZQ/exec';
 
@@ -6592,7 +6594,9 @@ Banco de dados: Google Sheets.
       apiBridgeSequencia: 0,
       apiChamadasPendentes: {},
       apiCache: {},
-      pdfRenderToken: 0
+      pdfRenderToken: 0,
+      pdfLoader: null,
+      sessaoGeracao: 0
     };
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -6600,7 +6604,6 @@ Banco de dados: Google Sheets.
         tratarMensagemUploaderEscalaCiaFt(event);
         tratarMensagemPonteApiFt(event);
       });
-      if (window.pdfjsLib) window.pdfjsLib.GlobalWorkerOptions.workerSrc = './pdf.worker.min.js?v=1210';
       document.getElementById('loginRE').addEventListener('keydown', function(ev) {
         if (ev.key === 'Enter') fazerLogin();
       });
@@ -6638,15 +6641,16 @@ Banco de dados: Google Sheets.
           APP.credenciais = { login: login, senha: senha };
           APP.sessaoApi = resp.dados.sessaoToken || null;
           APP.sessaoExpiraEm = Number(resp.dados.sessaoExpiraEm || 0);
+          APP.sessaoGeracao = Number(APP.sessaoGeracao || 0) + 1;
 
           document.getElementById('loginScreen').classList.add('hidden');
           document.getElementById('appScreen').classList.remove('hidden');
           window.scrollTo(0, 0);
 
           abrirHome();
-          /* A ponte é preparada somente após o login. Antes, ela concorria com a
-             autenticação por uma segunda execução simultânea do Apps Script. */
-          setTimeout(iniciarPonteApiFt, 500);
+          /* A ponte começa logo após a resposta do login: não concorre com a
+             autenticação e já fica pronta para o primeiro acesso a uma página. */
+          setTimeout(iniciarPonteApiFt, 100);
         })
         .catch(function(err) {
           setBotaoLogin(false);
@@ -6689,7 +6693,7 @@ Banco de dados: Google Sheets.
 
     function montarCardPolicial(u) {
       const foto = u.foto
-        ? '<img src="' + escapar(resolverFotoApp(u.foto, 'w1000')) + '" onerror="this.parentElement.innerHTML=\'👤\'">'
+        ? '<img src="' + escapar(resolverFotoApp(u.foto, 'w600')) + '" onerror="this.parentElement.innerHTML=\'👤\'">'
         : '👤';
 
       const classeHierarquia = classeVisualHierarquia(u.postoGrad);
@@ -6800,7 +6804,7 @@ Banco de dados: Google Sheets.
       if (!u) return abrirHome();
 
       const foto = u.foto
-        ? '<img src="' + escapar(resolverFotoApp(u.foto, 'w1000')) + '" onerror="this.parentElement.innerHTML=\'👤\'">'
+        ? '<img src="' + escapar(resolverFotoApp(u.foto, 'w600')) + '" onerror="this.parentElement.innerHTML=\'👤\'">'
         : '👤';
 
       const classeHierarquia = classeVisualHierarquia(u.postoGrad);
@@ -8469,11 +8473,14 @@ Banco de dados: Google Sheets.
       if (!idEscala) return;
       const textoAnterior = botao ? botao.textContent : '';
       if (botao) { botao.disabled = true; botao.textContent = 'ABRINDO...'; }
-      chamarApi('baixar_escala_cia_ft', {
+      const carregarLeitor = carregarPdfJsFt().catch(function() { return null; });
+      const carregarArquivo = chamarApi('baixar_escala_cia_ft', {
         login: APP.credenciais.login,
         senha: APP.credenciais.senha,
         idEscala: idEscala
-      }).then(function(resp) {
+      });
+      Promise.all([carregarArquivo, carregarLeitor]).then(function(resultados) {
+        const resp = resultados[0];
         if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao abrir a escala.');
         return exibirPdfEscalaCiaFt(resp.dados.base64, resp.dados.nomeArquivo, resp.dados.mimeType);
       }).catch(function(err) {
@@ -8481,6 +8488,40 @@ Banco de dados: Google Sheets.
       }).finally(function() {
         if (botao && document.body.contains(botao)) { botao.disabled = false; botao.textContent = textoAnterior || 'VISUALIZAR PDF'; }
       });
+    }
+
+
+    function carregarPdfJsFt() {
+      if (window.pdfjsLib) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = './pdf.worker.min.js?v=1211';
+        return Promise.resolve(window.pdfjsLib);
+      }
+      if (APP.pdfLoader) return APP.pdfLoader;
+
+      APP.pdfLoader = new Promise(function(resolve, reject) {
+        const existente = document.getElementById('ftPdfJsLoader');
+        if (existente) existente.remove();
+        const script = document.createElement('script');
+        script.id = 'ftPdfJsLoader';
+        script.src = './pdf.min.js?v=1211';
+        script.async = true;
+        script.onload = function() {
+          if (!window.pdfjsLib) {
+            reject(new Error('O leitor de PDF foi carregado sem inicializar.'));
+            return;
+          }
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = './pdf.worker.min.js?v=1211';
+          resolve(window.pdfjsLib);
+        };
+        script.onerror = function() {
+          reject(new Error('Não foi possível carregar o leitor de PDF.'));
+        };
+        document.head.appendChild(script);
+      }).catch(function(erro) {
+        APP.pdfLoader = null;
+        throw erro;
+      });
+      return APP.pdfLoader;
     }
 
 
@@ -8500,7 +8541,9 @@ Banco de dados: Google Sheets.
       document.body.appendChild(modal);
 
       const paginas = document.getElementById('efPdfPages');
-      if (!window.pdfjsLib) {
+      try {
+        await carregarPdfJsFt();
+      } catch (erroLeitor) {
         const url = URL.createObjectURL(new Blob([bytes], { type: mimeType || 'application/pdf' }));
         APP.urlPdfEscalaCiaFt = url;
         paginas.innerHTML = '<iframe class="ef-pdf-frame" src="' + escaparAttr(url + '#toolbar=0&navpanes=0') + '" title="PDF da Escala Cia FT"></iframe>';
@@ -12279,6 +12322,7 @@ Banco de dados: Google Sheets.
 
     function sair() {
       fecharVisualizadorPdfEscalaCiaFt();
+      APP.sessaoGeracao = Number(APP.sessaoGeracao || 0) + 1;
       APP.usuario = null;
       APP.menus = [];
       APP.permissoes = {};
@@ -12290,7 +12334,14 @@ Banco de dados: Google Sheets.
       APP.dadosEscalasAdm = null;
       APP.dadosConsultaEfetivo = null;
       APP.dadosViaturas = null;
+      APP.dadosControleFrequencia = null;
+      APP.dadosControleFolgas = null;
       APP.dadosEscalasFolgas = null;
+      APP.dadosRotinasAdministrativas = null;
+      APP.dadosVistoriaCop = null;
+      APP.dadosFolgasPendentes = null;
+      APP.historicoViaturaV126 = null;
+      APP.minhaEscalaV126 = null;
       APP.apiCache = {};
       APP.apiChamadasPendentes = {};
 
@@ -12309,8 +12360,23 @@ Banco de dados: Google Sheets.
       frame.setAttribute('aria-hidden', 'true');
       frame.tabIndex = -1;
       frame.style.cssText = 'position:fixed;width:1px;height:1px;left:-9999px;bottom:0;border:0;opacity:0;pointer-events:none';
-      frame.src = API_URL + '?action=api_bridge_ft&_cache=12104';
+      frame.src = API_URL + '?action=api_bridge_ft&_cache=1211';
       document.body.appendChild(frame);
+    }
+
+
+    function reiniciarPonteApiFt() {
+      APP.apiBridgePronta = false;
+      const frame = document.getElementById('ftApiBridge');
+      if (frame) frame.remove();
+      Object.keys(APP.apiBridgePendentes || {}).forEach(function(id) {
+        const pendente = APP.apiBridgePendentes[id];
+        if (!pendente) return;
+        clearTimeout(pendente.timeout);
+        pendente.reject(new Error('A conexão otimizada foi reiniciada.'));
+        delete APP.apiBridgePendentes[id];
+      });
+      if (APP.usuario) setTimeout(iniciarPonteApiFt, 1200);
     }
 
 
@@ -12332,7 +12398,7 @@ Banco de dados: Google Sheets.
     }
 
 
-    function chamadaPelaPonteApiFt(action, params) {
+    function chamadaPelaPonteApiFt(action, params, limiteMs) {
       return new Promise(function(resolve, reject) {
         const frame = document.getElementById('ftApiBridge');
         if (!APP.apiBridgePronta || !frame || !frame.contentWindow) {
@@ -12342,8 +12408,9 @@ Banco de dados: Google Sheets.
         const id = 'ft_req_' + Date.now() + '_' + (++APP.apiBridgeSequencia);
         const timeout = setTimeout(function() {
           delete APP.apiBridgePendentes[id];
+          reiniciarPonteApiFt();
           reject(new Error('Tempo esgotado na conexão otimizada com a API.'));
-        }, 45000);
+        }, Number(limiteMs || 20000));
         APP.apiBridgePendentes[id] = { resolve: resolve, reject: reject, timeout: timeout };
         frame.contentWindow.postMessage({ type: 'FT_API_REQUEST', id: id, action: action, params: params || {} }, '*');
       });
@@ -12364,7 +12431,7 @@ Banco de dados: Google Sheets.
     }
 
 
-    function chamadaJsonpFt(action, params) {
+    function chamadaJsonpFt(action, params, limiteMs) {
       return new Promise(function(resolve, reject) {
         const callbackName = 'ft_cb_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
         const query = new URLSearchParams();
@@ -12376,7 +12443,7 @@ Banco de dados: Google Sheets.
         const timeout = setTimeout(function() {
           cleanup();
           reject(new Error('Tempo esgotado ao chamar a API.'));
-        }, 45000);
+        }, Number(limiteMs || 30000));
         window[callbackName] = function(resp) {
           clearTimeout(timeout);
           cleanup();
@@ -12438,6 +12505,7 @@ Banco de dados: Google Sheets.
       opcoes = opcoes || {};
       const paramsOriginais = Object.assign({}, params);
       const ehLogin = normalizarTexto(action) === 'LOGIN';
+      const geracaoSessao = Number(APP.sessaoGeracao || 0);
       if (!ehLogin && APP.sessaoApi) {
         params = Object.assign({}, params);
         delete params.login;
@@ -12448,18 +12516,21 @@ Banco de dados: Google Sheets.
       const chave = chaveChamadaApi(action, params);
       const agora = Date.now();
       const acaoNormalizada = normalizarTexto(action).replace(/[^A-Z0-9]/g, '');
+      const operacaoPesada = acaoNormalizada.indexOf('GERARPDF') === 0 || acaoNormalizada.indexOf('BAIXAR') === 0;
+      const limitePonte = operacaoPesada ? 45000 : 20000;
+      const limiteJsonp = operacaoPesada ? 60000 : (ehLogin ? 25000 : 30000);
       const podeCache = !opcoes.semCache && somenteLeitura && !ehLogin && acaoNormalizada.indexOf('BAIXAR') !== 0 && acaoNormalizada.indexOf('GERARPDF') !== 0;
       const cache = APP.apiCache[chave];
       if (podeCache && cache && cache.expiraEm > agora) return Promise.resolve(cache.resp);
       if (somenteLeitura && APP.apiChamadasPendentes[chave]) return APP.apiChamadasPendentes[chave];
 
-      const maxTentativas = somenteLeitura ? 3 : 1;
+      const maxTentativas = !somenteLeitura ? 1 : (operacaoPesada || ehLogin ? 2 : 3);
       const executar = function(tentativa) {
         if (navigator.onLine === false) return Promise.reject(new Error('Sem conexão com a internet. Verifique a rede do aparelho.'));
         const prepararTransporte = !somenteLeitura && tentativa === 1 && !APP.apiBridgePronta ? aguardarPonteApiFt(700) : Promise.resolve(APP.apiBridgePronta);
         return prepararTransporte.then(function() {
           const usarPonte = APP.apiBridgePronta && tentativa === 1;
-          return usarPonte ? chamadaPelaPonteApiFt(action, params) : chamadaJsonpFt(action, params);
+          return usarPonte ? chamadaPelaPonteApiFt(action, params, limitePonte) : chamadaJsonpFt(action, params, limiteJsonp);
         }).catch(function(erro) {
           if (tentativa >= maxTentativas) throw erro;
           const espera = tentativa === 1 ? 700 : 1800;
@@ -12468,6 +12539,9 @@ Banco de dados: Google Sheets.
       };
 
       const promessa = executar(1).then(function(resp) {
+        if (!ehLogin && geracaoSessao !== Number(APP.sessaoGeracao || 0)) {
+          throw new Error('A sessão foi encerrada antes da conclusão desta consulta.');
+        }
         if (resp && !resp.ok && resp.codigo === 'SESSAO_EXPIRADA' && !ehLogin && !opcoes.semRenovar) {
           APP.apiCache = {};
           return renovarSessaoApiFt().then(function() {
