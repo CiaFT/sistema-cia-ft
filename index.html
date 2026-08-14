@@ -7497,7 +7497,7 @@ Banco de dados: Google Sheets.
 
 
     function montarTotaisDejemRocam(totais) {
-      return '<section class="dejem-panel"><div class="dejem-panel-head"><div><h3>Quantidade de escalas por policial</h3><p>Contagem do mês atual e do ano, em ordem crescente do total anual, para subsidiar a escolha manual.</p></div></div>' +
+      return '<section class="dejem-panel"><div class="dejem-panel-head"><div><h3>Quantidade de escalas por policial</h3><p>Ordem hierárquica do Cadastro Geral. Os totais contabilizam somente escalas confirmadas após o fechamento completo do ciclo.</p></div></div>' +
         '<div class="dejem-table-wrap"><table class="dejem-table"><thead><tr><th>POLICIAL</th><th>PEL</th><th>MÊS ATUAL</th><th>TOTAL DO ANO</th></tr></thead><tbody>' +
         (totais || []).map(function(item) { return '<tr><td>' + escapar([item.postoGrad,item.re,item.nomeGuerra].filter(Boolean).join(' ')) + '</td><td>' + escapar(item.pelotao || 'PEL NÃO INFORMADO') + '</td><td class="' + classeTotalDejemRocam(item.mesAtual) + '">' + Number(item.mesAtual || 0) + '</td><td class="' + classeTotalDejemRocam(item.totalAno) + '">' + Number(item.totalAno || 0) + '</td></tr>'; }).join('') +
         '</tbody></table></div></section>';
