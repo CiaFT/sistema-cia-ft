@@ -1003,6 +1003,24 @@ Banco de dados: Google Sheets.
       filter: drop-shadow(0 7px 9px rgba(15,23,42,.22));
     }
 
+    #appScreen .menu-icon.menu-icon-imagem {
+      width: 58px;
+      height: 58px;
+      margin-bottom: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0;
+    }
+
+    #appScreen .menu-icon.menu-icon-imagem img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      filter: drop-shadow(0 7px 9px rgba(15,23,42,.22));
+    }
+
     #appScreen .cop-intro {
       display: grid;
       grid-template-columns: 150px minmax(0, 1fr);
@@ -7138,9 +7156,18 @@ Banco de dados: Google Sheets.
 
     function montarMenuCard(menu) {
       const iconeMenu = menu.id === 'MEUS_DADOS' ? '🪪' : (menu.icone || '•');
-      const blocoIcone = normalizarModuloCliente(menu.id) === 'COP'
-        ? '<div class="menu-icon menu-icon-cop"><img src="./cop.png?v=1210" alt="Câmera operacional COP"></div>'
-        : '<div class="menu-icon">' + iconeMenu + '</div>';
+      const moduloMenu = normalizarModuloCliente(menu.id);
+      const imagensMenu = {
+        MEUS_DADOS: { arquivo: './icone-meus-dados.png?v=1211', alt: 'Meus Dados' },
+        PAINEL_ADMINISTRATIVO: { arquivo: './icone-painel-administrativo.png?v=1211', alt: 'Painel Administrativo' },
+        CONSULTA_EFETIVO: { arquivo: './icone-consulta-efetivo.png?v=1211', alt: 'Consulta Efetivo' }
+      };
+      const imagemMenu = imagensMenu[moduloMenu] || null;
+      const blocoIcone = imagemMenu
+        ? '<div class="menu-icon menu-icon-imagem"><img src="' + imagemMenu.arquivo + '" alt="' + imagemMenu.alt + '"></div>'
+        : moduloMenu === 'COP'
+          ? '<div class="menu-icon menu-icon-cop"><img src="./cop.png?v=1210" alt="Câmera operacional COP"></div>'
+          : '<div class="menu-icon">' + iconeMenu + '</div>';
 
       return `
         <div class="menu-card" data-modulo="${escaparAttr(menu.id)}" onclick="abrirModulo('${escaparAttr(menu.id)}')">
