@@ -20,6 +20,7 @@ VERSÃO V1.2.11 — AUDITORIA, ESTABILIDADE E PERFORMANCE
 - Inclui a estrutura inicial do módulo COP para análise, rótulo e auditoria de vídeos.
 - Espelha o efetivo diretamente do CADASTRO GERAL em todas as funções.
 - Exibe a relação final da DEJEM com escalados e excedentes até sexta-feira às 23h59.
+- Amplia a foto no card aberto pela Consulta do Efetivo, com ajuste responsivo.
 
 Front-end externo hospedado no GitHub Pages.
 Backend/API: Apps Script API_FT.gs V1.2.11.
@@ -31,7 +32,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="cia-ft-build" content="FT-V1211-20260820-EFETIVO-DEJEM-R2">
+  <meta name="cia-ft-build" content="FT-V1211-20260820-FOTO-CONSULTA-R3">
   <title>Portal Força Tática • V1.2.11</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
@@ -3284,6 +3285,27 @@ Banco de dados: Google Sheets.
       font-size: 12.5px;
     }
 
+    .consulta-modal-identidade {
+      flex: 1 1 180px;
+      min-width: 0;
+    }
+
+    .consulta-modal-header .consulta-foto-modal {
+      width: 132px;
+      height: 156px;
+      min-width: 132px;
+      flex: 0 0 132px;
+      border-width: 3px;
+      border-radius: 20px;
+      box-shadow: 0 12px 28px rgba(15,23,42,.18);
+      object-fit: cover;
+      object-position: center;
+    }
+
+    .consulta-modal-header .consulta-foto-modal.sem-foto {
+      font-size: 32px;
+    }
+
     .consulta-modal-body {
       padding: 16px;
     }
@@ -3317,7 +3339,21 @@ Banco de dados: Google Sheets.
       }
 
       .consulta-modal-header {
-        align-items: flex-start;
+        display: grid;
+        grid-template-columns: 100px minmax(0, 1fr);
+        align-items: center;
+        gap: 12px;
+      }
+
+      .consulta-modal-header .consulta-foto-modal {
+        width: 100px;
+        height: 118px;
+        min-width: 100px;
+        border-radius: 17px;
+      }
+
+      .consulta-modal-header .consulta-foto-modal.sem-foto {
+        font-size: 26px;
       }
 
       .consulta-modal-grid {
@@ -3465,6 +3501,21 @@ Banco de dados: Google Sheets.
       margin-left: auto;
       flex-wrap: wrap;
       justify-content: flex-end;
+    }
+
+    @media (max-width: 560px) {
+      .consulta-modal-actions {
+        grid-column: 1 / -1;
+        width: 100%;
+        margin-left: 0;
+        justify-content: stretch;
+      }
+
+      .consulta-modal-actions .consulta-edit-btn,
+      .consulta-modal-actions .consulta-modal-close {
+        flex: 1 1 auto;
+        margin-left: 0;
+      }
     }
 
     .consulta-edit-btn {
@@ -11388,39 +11439,44 @@ Banco de dados: Google Sheets.
       return aplicarCacheFotoApp(raw);
     }
 
-    function resolverFotoConsulta(valor) {
+    function resolverFotoConsulta(valor, tamanho) {
       const raw = String(valor || '').trim();
       if (!raw) return '';
+      const sz = tamanho || 'w240';
 
       // ID puro do Google Drive
       if (/^[a-zA-Z0-9_-]{20,}$/.test(raw) && !raw.includes('/') && !raw.includes('?')) {
-        return resolverFotoApp(raw, 'w240');
+        return resolverFotoApp(raw, sz);
       }
 
       // URL já em formato thumbnail
       if (raw.includes('drive.google.com/thumbnail')) {
-        return resolverFotoApp(raw, 'w240');
+        const thumbnail = /([?&])sz=[^&]*/.test(raw)
+          ? raw.replace(/([?&])sz=[^&]*/g, '$1sz=' + encodeURIComponent(sz))
+          : raw + (raw.includes('?') ? '&' : '?') + 'sz=' + encodeURIComponent(sz);
+        return aplicarCacheFotoApp(thumbnail);
       }
 
       // URL /file/d/ID/view
       let m = raw.match(/\/d\/([a-zA-Z0-9_-]+)/);
       if (m && m[1]) {
-        return aplicarCacheFotoApp('https://drive.google.com/thumbnail?id=' + encodeURIComponent(m[1]) + '&sz=w240');
+        return aplicarCacheFotoApp('https://drive.google.com/thumbnail?id=' + encodeURIComponent(m[1]) + '&sz=' + encodeURIComponent(sz));
       }
 
       // URL open?id=ID ou uc?id=ID
       m = raw.match(/[?&]id=([a-zA-Z0-9_-]+)/);
       if (m && m[1]) {
-        return aplicarCacheFotoApp('https://drive.google.com/thumbnail?id=' + encodeURIComponent(m[1]) + '&sz=w240');
+        return aplicarCacheFotoApp('https://drive.google.com/thumbnail?id=' + encodeURIComponent(m[1]) + '&sz=' + encodeURIComponent(sz));
       }
 
-      return resolverFotoApp(raw, 'w240');
+      return resolverFotoApp(raw, sz);
     }
 
 
     function fallbackFotoConsulta(el, classeHierarquia) {
       if (!el) return;
-      el.outerHTML = '<div class="consulta-foto sem-foto ' + (classeHierarquia || '') + '">FT</div>';
+      const classeModal = el.classList && el.classList.contains('consulta-foto-modal') ? ' consulta-foto-modal' : '';
+      el.outerHTML = '<div class="consulta-foto sem-foto ' + (classeHierarquia || '') + classeModal + '">FT</div>';
     }
 
 
@@ -11506,10 +11562,10 @@ Banco de dados: Google Sheets.
 
       const nome = [alvo.postoGrad, alvo.nomeGuerra].filter(Boolean).join(' ');
       const classeHierarquia = classeHierarquiaConsulta(alvo.postoGrad);
-      const fotoUrl = resolverFotoConsulta(alvo.foto);
+      const fotoUrl = resolverFotoConsulta(alvo.foto, 'w480');
       const foto = fotoUrl
-        ? `<img class="consulta-foto ${classeHierarquia}" src="${escaparAttr(fotoUrl)}" alt="Foto de ${escaparAttr(nome)}" loading="lazy" onerror="fallbackFotoConsulta(this, '${classeHierarquia}')">`
-        : `<div class="consulta-foto sem-foto ${classeHierarquia}">FT</div>`;
+        ? `<img class="consulta-foto consulta-foto-modal ${classeHierarquia}" src="${escaparAttr(fotoUrl)}" alt="Foto de ${escaparAttr(nome)}" loading="lazy" onerror="fallbackFotoConsulta(this, '${classeHierarquia}')">`
+        : `<div class="consulta-foto consulta-foto-modal sem-foto ${classeHierarquia}">FT</div>`;
 
       const podeEditar = usuarioPodeEditarConsultaEfetivo();
       const reKey = escaparAttr(alvoLogin);
@@ -11527,7 +11583,7 @@ Banco de dados: Google Sheets.
         <div class="consulta-modal" role="dialog" aria-modal="true" data-re-login="${reKey}">
           <div class="consulta-modal-header">
             ${foto}
-            <div>
+            <div class="consulta-modal-identidade">
               <h2>${escapar(nome || alvo.nomeCompleto || '-')}</h2>
               <p>Card do policial — Consulta do Efetivo</p>
             </div>
