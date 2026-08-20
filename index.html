@@ -18,6 +18,8 @@ VERSÃO V1.2.11 — AUDITORIA, ESTABILIDADE E PERFORMANCE
 - Renova a sessão automaticamente e preserva todas as permissões por perfil.
 - Reduz leituras repetidas de cadastro, permissões, abas e preparação de Viaturas.
 - Inclui a estrutura inicial do módulo COP para análise, rótulo e auditoria de vídeos.
+- Espelha o efetivo diretamente do CADASTRO GERAL em todas as funções.
+- Exibe a relação final da DEJEM com escalados e excedentes até sexta-feira às 23h59.
 
 Front-end externo hospedado no GitHub Pages.
 Backend/API: Apps Script API_FT.gs V1.2.11.
@@ -29,7 +31,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="cia-ft-build" content="FT-V1211-20260814-ICONES-MARCA-DAGUA-R1">
+  <meta name="cia-ft-build" content="FT-V1211-20260820-EFETIVO-DEJEM-R2">
   <title>Portal Força Tática • V1.2.11</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
@@ -6536,8 +6538,9 @@ Banco de dados: Google Sheets.
     .dejem-days{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.dejem-day{border:1px solid rgba(55,66,71,.16);border-radius:20px;background:#fff;color:#17202a;overflow:hidden;box-shadow:0 9px 22px rgba(15,23,42,.05)}.dejem-day-head{display:flex;justify-content:space-between;align-items:center;background:#374247;color:#fff;padding:12px 14px}.dejem-day-head strong{font-size:14px}.dejem-day-head span{font-size:11px;font-weight:850;color:#e2e8f0}.dejem-slots{display:grid;gap:10px;padding:12px}.dejem-slot{border:1px solid #dbe1e7;border-radius:15px;background:#f8fafc;padding:10px}.dejem-slot-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.dejem-slot-head strong{font-size:14px}.dejem-slot-head span{color:#64748b;font-size:9px;font-weight:900}.dejem-vagas{display:grid;gap:6px}.dejem-vaga{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:8px;align-items:center;min-height:42px;border:1px solid #e2e8f0;border-radius:11px;background:#fff;padding:6px 8px}.dejem-vaga.extra{border-color:#F59E0B;background:#FFFBEB}.dejem-vaga-num{display:grid;place-items:center;width:24px;height:24px;border-radius:8px;background:#e9edf1;color:#374247;font-size:9px;font-weight:950}.dejem-vaga.extra .dejem-vaga-num{background:#F59E0B;color:#fff}.dejem-pm{min-width:0}.dejem-pm strong{display:block;overflow:hidden;text-overflow:ellipsis;color:#17202a;font-size:10.5px;line-height:1.25}.dejem-pm small{color:#64748b;font-size:8px;font-weight:800}.dejem-empty{color:#94a3b8;font-size:10px;font-weight:800}.dejem-action{border:1px solid #1B5E20;border-radius:9px;background:#fff;color:#1B5E20;padding:6px 7px;font:inherit;font-size:8px;font-weight:950;cursor:pointer}.dejem-action.cancelar,.dejem-action.excluir{border-color:#C62828;color:#C62828}.dejem-action:disabled{opacity:.55;cursor:wait}
     .dejem-close{margin-top:16px;border:1px solid rgba(55,66,71,.16);border-radius:20px;background:#fff;color:#17202a;padding:16px}.dejem-close h3{margin:0 0 5px;font-size:15px}.dejem-close p{margin:0 0 11px;color:#64748b;font-size:11px;line-height:1.45}.dejem-close.excesso{border-color:#F59E0B;background:#FFFBEB}.dejem-close button{border:1px solid #8E1B1B;border-radius:12px;background:#8E1B1B;color:#fff;padding:10px 14px;font:inherit;font-size:10px;font-weight:950;cursor:pointer}.dejem-close button:disabled{border-color:#cbd5e1;background:#e5e7eb;color:#64748b;cursor:not-allowed}
     .dejem-panel{margin-top:18px;border:1px solid rgba(55,66,71,.16);border-radius:20px;background:#fff;color:#17202a;padding:16px;box-shadow:0 9px 22px rgba(15,23,42,.05)}.dejem-panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}.dejem-panel h3{margin:0 0 4px;font-size:15px}.dejem-panel p{margin:0;color:#64748b;font-size:10.5px;line-height:1.45}.dejem-copy{border:1px solid #374247;border-radius:11px;background:#fff;color:#374247;padding:8px 10px;font:inherit;font-size:9px;font-weight:950;cursor:pointer}.dejem-table-wrap{overflow:auto;border:1px solid #dbe1e7;border-radius:14px;max-height:48vh}.dejem-table{width:100%;border-collapse:collapse;min-width:520px;font-size:10px}.dejem-table th{position:sticky;top:0;z-index:2;background:#374247;color:#fff;padding:9px 8px;text-align:center}.dejem-table td{border-bottom:1px solid #e2e8f0;padding:8px;text-align:center;color:#17202a}.dejem-table td:first-child{text-align:left;font-weight:800}.dejem-table tbody tr:nth-child(even) td{background:#f8fafc}.dejem-total-zero{color:#6B7280!important}.dejem-total-low{color:#1B5E20!important;font-weight:950}.dejem-total-high{color:#8E1B1B!important;font-weight:950}
+    .dejem-final-list{display:grid;gap:10px}.dejem-final-slot{overflow:hidden;border:1px solid #dbe1e7;border-radius:15px;background:#f8fafc}.dejem-final-slot-head{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#374247;color:#fff;padding:10px 12px}.dejem-final-slot-head strong{font-size:12px}.dejem-final-slot-head span{font-size:11px;font-weight:950}.dejem-final-grupos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:10px}.dejem-final-grupo{border:1px solid #dbe1e7;border-radius:12px;background:#fff;padding:9px}.dejem-final-grupo.escalados{border-color:#A5D6A7;background:#F1F8E9}.dejem-final-grupo.excedentes{border-color:#FFCC80;background:#FFF8E1}.dejem-final-grupo h4{margin:0 0 7px;font-size:9px;font-weight:950;letter-spacing:.35px}.dejem-final-grupo.escalados h4{color:#1B5E20}.dejem-final-grupo.excedentes h4{color:#9A3412}.dejem-final-pm{padding:6px 0;border-top:1px solid rgba(100,116,139,.18)}.dejem-final-pm:first-of-type{border-top:0}.dejem-final-pm strong{display:block;color:#17202a;font-size:10px;line-height:1.3}.dejem-final-pm small{display:block;margin-top:2px;color:#64748b;font-size:8.5px;font-weight:850}.dejem-final-vazio{color:#64748b;font-size:9px;font-weight:800}.dejem-final-expira{display:inline-block;margin-top:5px;color:#8E1B1B!important;font-weight:900}
     @media(max-width:820px){.dejem-days{grid-template-columns:1fr}}
-    @media(max-width:560px){.dejem-status{grid-template-columns:1fr}.dejem-deadline{text-align:left}.dejem-day-head{padding:10px 11px}.dejem-slots{padding:9px}.dejem-vaga{grid-template-columns:25px minmax(0,1fr) auto;padding:5px 6px}.dejem-pm strong{font-size:9.5px}.dejem-action{padding:6px 5px}.dejem-panel{padding:12px}.dejem-panel-head{display:grid}.dejem-copy{width:100%}.dejem-table{min-width:0;font-size:8.5px;table-layout:fixed}.dejem-table th,.dejem-table td{padding:7px 4px;overflow-wrap:anywhere}.dejem-table th:first-child,.dejem-table td:first-child{width:44%}}
+    @media(max-width:560px){.dejem-status{grid-template-columns:1fr}.dejem-deadline{text-align:left}.dejem-day-head{padding:10px 11px}.dejem-slots{padding:9px}.dejem-vaga{grid-template-columns:25px minmax(0,1fr) auto;padding:5px 6px}.dejem-pm strong{font-size:9.5px}.dejem-action{padding:6px 5px}.dejem-panel{padding:12px}.dejem-panel-head{display:grid}.dejem-copy{width:100%}.dejem-table{min-width:0;font-size:8.5px;table-layout:fixed}.dejem-table th,.dejem-table td{padding:7px 4px;overflow-wrap:anywhere}.dejem-table th:first-child,.dejem-table td:first-child{width:44%}.dejem-final-grupos{grid-template-columns:1fr}.dejem-final-slot-head{align-items:flex-start;flex-direction:column;gap:3px}}
 </style>
 </head>
 
@@ -6621,6 +6624,7 @@ Banco de dados: Google Sheets.
       dadosRotinasAdministrativas: null,
       dadosVistoriaCop: null,
       dadosDejemRocam: null,
+      dejemExpiracaoTimer: null,
       apiBridgePronta: false,
       apiBridgePendentes: {},
       apiBridgeSequencia: 0,
@@ -7343,6 +7347,8 @@ Banco de dados: Google Sheets.
 
     function abrirDejemRocam() {
       window.scrollTo(0, 0);
+      if (APP.dejemExpiracaoTimer) clearTimeout(APP.dejemExpiracaoTimer);
+      APP.dejemExpiracaoTimer = null;
       APP.dadosDejemRocam = null;
       document.getElementById('appConteudo').innerHTML = `
         <div class="page-wrap">
@@ -7391,9 +7397,11 @@ Banco de dados: Google Sheets.
         </section>
         <div class="dejem-days">${(d.dias || []).map(function(dia) { return montarDiaDejemRocam(dia, d); }).join('')}</div>
         ${montarFechamentoDejemRocam(d)}
+        ${montarRelacaoFinalDejemRocam(d.relacaoFechamento)}
         ${montarResumoP3DejemRocam(d.ultimoFechamento)}
         ${montarTotaisDejemRocam(d.totais || [])}
       `;
+      agendarExpiracaoRelacaoDejemRocam();
     }
 
 
@@ -7527,6 +7535,57 @@ Banco de dados: Google Sheets.
       const area = document.createElement('textarea');
       area.value = texto; area.style.position = 'fixed'; area.style.left = '-9999px';
       document.body.appendChild(area); area.select(); document.execCommand('copy'); area.remove();
+    }
+
+
+    function montarRelacaoFinalDejemRocam(relacao) {
+      if (!relacao || !Array.isArray(relacao.linhas) || !relacao.linhas.length) return '';
+      return '<section class="dejem-panel"><div class="dejem-panel-head"><div><h3>Relação final — escalados e excedentes</h3><p>Distribuição consolidada após o fechamento, pronta para encaminhamento ao P3.</p><p class="dejem-final-expira">Disponível no App até ' + escapar(relacao.expiraEmBR || 'sexta-feira, 23h59') + '.</p></div><button type="button" class="dejem-copy" onclick="copiarRelacaoFinalDejemRocam()">COPIAR RELAÇÃO FINAL</button></div>' +
+        '<div class="dejem-final-list">' + relacao.linhas.map(function(linha) {
+          return '<article class="dejem-final-slot"><div class="dejem-final-slot-head"><strong>' + escapar([linha.diaSemana, linha.dataBR].filter(Boolean).join(' • ')) + '</strong><span>' + escapar(linha.horario || '') + 'h</span></div><div class="dejem-final-grupos">' +
+            montarGrupoRelacaoFinalDejemRocam('ESCALADOS', linha.escalados || [], 'escalados') +
+            montarGrupoRelacaoFinalDejemRocam('EXCEDENTES / NÃO ESCALADOS', linha.excedentes || [], 'excedentes') +
+          '</div></article>';
+        }).join('') + '</div></section>';
+    }
+
+
+    function montarGrupoRelacaoFinalDejemRocam(titulo, policiais, classe) {
+      const lista = Array.isArray(policiais) ? policiais : [];
+      return '<div class="dejem-final-grupo ' + classe + '"><h4>' + escapar(titulo) + '</h4>' +
+        (lista.length ? lista.map(function(pm) {
+          return '<div class="dejem-final-pm"><strong>' + escapar([pm.postoGrad, pm.re, pm.nomeGuerra].filter(Boolean).join(' ')) + '</strong><small>' + escapar(pm.pelotao || 'PEL NÃO INFORMADO') + '</small></div>';
+        }).join('') : '<div class="dejem-final-vazio">Nenhum policial.</div>') + '</div>';
+    }
+
+
+    function copiarRelacaoFinalDejemRocam() {
+      const texto = String(APP.dadosDejemRocam && APP.dadosDejemRocam.relacaoFechamento && APP.dadosDejemRocam.relacaoFechamento.texto || '');
+      if (!texto) return;
+      const concluir = function() { mostrarToastFt('Relação copiada', 'Escalados e excedentes estão prontos para encaminhamento ao P3.'); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(texto).then(concluir).catch(function() { copiarTextoDejemFallback(texto); concluir(); });
+      else { copiarTextoDejemFallback(texto); concluir(); }
+    }
+
+
+    function agendarExpiracaoRelacaoDejemRocam() {
+      if (APP.dejemExpiracaoTimer) clearTimeout(APP.dejemExpiracaoTimer);
+      APP.dejemExpiracaoTimer = null;
+      const relacao = APP.dadosDejemRocam && APP.dadosDejemRocam.relacaoFechamento;
+      if (!relacao || !relacao.expiraEmISO) return;
+      const expiraEm = Date.parse(relacao.expiraEmISO);
+      if (!Number.isFinite(expiraEm)) return;
+      const restante = expiraEm - Date.now();
+      if (restante <= 0) {
+        APP.dadosDejemRocam.relacaoFechamento = null;
+        renderizarDejemRocam();
+        return;
+      }
+      APP.dejemExpiracaoTimer = setTimeout(function() {
+        APP.dejemExpiracaoTimer = null;
+        if (APP.dadosDejemRocam) APP.dadosDejemRocam.relacaoFechamento = null;
+        renderizarDejemRocam();
+      }, Math.min(restante + 1000, 2147483000));
     }
 
 
