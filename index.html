@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.2.11
+SISTEMA CIA FT — PORTAL GITHUB V1.3
 Arquivo: index.html
 ============================================================
 
-VERSÃO V1.2.11 — AUDITORIA, ESTABILIDADE E PERFORMANCE
+VERSÃO V1.3 — CONTROLE DE FOLGAS, FREQUÊNCIA E VIATURAS
 - Preserva a última versão encerrada do Controle de Frequência.
 - Preserva a implantação completa de Viaturas V1.2.6.
 - Corrige a leitura e a identificação funcional em Resenhas Enviadas.
@@ -23,7 +23,7 @@ VERSÃO V1.2.11 — AUDITORIA, ESTABILIDADE E PERFORMANCE
 - Amplia a foto no card aberto pela Consulta do Efetivo, com ajuste responsivo.
 
 Front-end externo hospedado no GitHub Pages.
-Backend/API: Apps Script API_FT.gs V1.2.11.
+Backend/API: Apps Script API_FT.gs V1.3.
 Banco de dados: Google Sheets.
 
 ============================================================
@@ -32,8 +32,8 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="cia-ft-build" content="FT-V1211-20260820-FOTO-CONSULTA-R3">
-  <title>Portal Força Tática • V1.2.11</title>
+  <meta name="cia-ft-build" content="FT-V130-20260820-FOLGAS-VTR-FREQ-R1">
+  <title>Portal Força Tática • V1.3</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
 
@@ -5827,6 +5827,18 @@ Banco de dados: Google Sheets.
       color:#1B5E20;
       font-weight:950;
     }
+    .folga-table .freq-select-wrap.folga-fol-confirmado{
+      border-color:#81C784;
+      background:#A5D6A7;
+    }
+    .folga-table .freq-select-wrap.folga-fol-confirmado .freq-select-display{
+      color:#17351b;
+      font-weight:950;
+    }
+    .folga-table .freq-select-wrap.folga-adm-confirmado .freq-select-display{
+      color:#1565C0;
+      font-weight:950;
+    }
     .folga-table .freq-select-wrap.folga-reset-confirmado .freq-select-display{
       color:#C62828;
     }
@@ -5834,6 +5846,34 @@ Banco de dados: Google Sheets.
     @media(max-width:900px){.freq-audit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.freq-legend-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:760px){.freq-launch-card{padding:14px}.freq-close-grid{grid-template-columns:1fr}.freq-pdf-card{grid-template-columns:1fr}.freq-pdf-card button{width:100%;min-width:0}.freq-mobile-weeks{display:flex}.freq-mobile-hint{display:block}.freq-table-wrap{max-height:62vh;-webkit-overflow-scrolling:touch}.freq-table{min-width:650px}.freq-table .freq-pm{width:148px;min-width:148px;max-width:148px;padding-left:7px;padding-right:7px}.freq-table .freq-total{width:72px;min-width:72px}.freq-table .freq-total.diarias,.freq-table .freq-total.trabalhados{position:static}.freq-legend-grid{grid-template-columns:1fr}.freq-audit-grid{grid-template-columns:1fr 1fr}.freq-note{font-size:11px}.folga-rule-note{grid-template-columns:1fr}}
     @media(max-width:480px){.freq-table-wrap{overflow-x:hidden}.freq-table{width:100%;min-width:0;table-layout:fixed}.freq-table .freq-pm{width:110px;min-width:110px;max-width:110px;padding:4px 5px}.freq-table .freq-pm strong{font-size:9px;line-height:1.15}.freq-table .freq-pm small{font-size:8px}.freq-table .freq-day{width:34px;min-width:34px;max-width:34px;padding:2px}.freq-select-wrap{width:29px}.freq-table .freq-total{width:54px;min-width:54px;font-size:9px;padding:2px}.freq-group td{padding:7px!important}}
+
+    /* V1.3 — painel-resumo de viaturas */
+    .vtr130-resumo{
+      display:grid;
+      gap:10px;
+      padding:14px;
+      border:1px solid rgba(55,66,71,.15);
+      border-top:0;
+      background:linear-gradient(180deg,#f8fafc,#ffffff);
+    }
+    .vtr130-metric-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+    .vtr130-metric{
+      min-width:0;
+      border:1px solid rgba(55,66,71,.13);
+      border-radius:15px;
+      background:#fff;
+      padding:11px 9px;
+      text-align:center;
+      box-shadow:0 6px 16px rgba(15,23,42,.045);
+    }
+    .vtr130-metric small{display:block;color:#64748b;font-size:9px;font-weight:950;line-height:1.2;text-transform:uppercase}
+    .vtr130-metric strong{display:block;margin-top:4px;color:#17202a;font-size:23px;line-height:1;font-weight:1000}
+    .vtr130-metric.em-uso{border-color:rgba(2,132,199,.24);background:#f0f9ff}.vtr130-metric.em-uso strong{color:#0369a1}
+    .vtr130-metric.disponiveis{border-color:rgba(22,163,74,.24);background:#f0fdf4}.vtr130-metric.disponiveis strong{color:#15803d}
+    .vtr130-situacoes-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+    .vtr130-situacao{display:flex;align-items:center;justify-content:space-between;gap:7px;border-radius:10px;background:#eef2f6;padding:7px 9px;color:#475569;font-size:9px;font-weight:850}
+    .vtr130-situacao strong{color:#17202a;font-size:11px}
+    @media(max-width:760px){.vtr130-resumo{padding:10px}.vtr130-metric{padding:10px 6px}.vtr130-metric strong{font-size:20px}.vtr130-situacoes-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     /* ============================================================
      * VIATURAS — V1.2.6
      * Card reorganizado, controle de utilização e histórico.
@@ -6622,7 +6662,7 @@ Banco de dados: Google Sheets.
       <div id="loginAlerta" class="alerta"></div>
 
       <div class="footer">
-        Portal Força Tática • V1.2.11
+        Portal Força Tática • V1.3
       </div>
     </main>
   </section>
@@ -8213,6 +8253,7 @@ Banco de dados: Google Sheets.
             ${itemLegendaFrequencia('TS', 'Licença para tratamento de saúde')}
             ${itemLegendaFrequencia('DS/DR', 'Dispensa de serviço/recompensa')}
             ${itemLegendaFrequencia('N', 'Núpcias')}
+            ${itemLegendaFrequencia('CEP', 'Cursos e Estágios')}
             ${itemLegendaFrequencia('A', 'Outro tipo de afastamento')}
           </div>
         </details>
@@ -8600,6 +8641,8 @@ Banco de dados: Google Sheets.
           <summary>LEGENDA DOS LANÇAMENTOS</summary>
           <div class="freq-legend-grid">
             ${itemLegendaFrequencia('EO', 'Escala Ordinária')}
+            ${itemLegendaFrequencia('FOL', 'Folga')}
+            ${itemLegendaFrequencia('ADM', 'Escala Administrativa')}
             ${itemLegendaFrequencia('FF', 'Folga Flagrante')}
             ${itemLegendaFrequencia('FM', 'Folga Mensal')}
             ${itemLegendaFrequencia('DS', 'Dispensa de Serviço')}
@@ -8616,7 +8659,7 @@ Banco de dados: Google Sheets.
 
         <div class="folga-rule-note">
           <div><strong>GERAÇÃO DE FOLGA</strong>A cada 14 lançamentos EO, o sistema soma uma FM ao saldo e reinicia o ciclo.</div>
-          <div><strong>MANTÊM O CICLO</strong>Campo vazio, FF, FM, FER, LP e EAP não somam e não zeram os dias.</div>
+          <div><strong>MANTÊM O CICLO</strong>Campo vazio, FOL, ADM, FF, FM, FER, LP e EAP não somam e não zeram os dias.</div>
           <div><strong>ZERAM O CICLO</strong>DS, CM, LTS, LSV, CEP e OUT zeram os dias, sem eliminar folgas adquiridas.</div>
         </div>
         <div class="freq-note">Os lançamentos são salvos individualmente. FOLGAS mostra o saldo disponível e DIAS TRAB. mostra o progresso atual do ciclo, de 0 a 13.</div>
@@ -8675,6 +8718,8 @@ Banco de dados: Google Sheets.
       const classes = [];
       if (codigo) classes.push('freq-preenchido');
       if (confirmado && codigo === 'EO') classes.push('folga-eo-confirmado');
+      if (confirmado && codigo === 'FOL') classes.push('folga-fol-confirmado');
+      if (confirmado && codigo === 'ADM') classes.push('folga-adm-confirmado');
       if (confirmado && ['DS', 'CM', 'LTS', 'LSV', 'CEP', 'OUT'].indexOf(codigo) !== -1) {
         classes.push('folga-reset-confirmado');
       }
@@ -8686,7 +8731,7 @@ Banco de dados: Google Sheets.
       if (!select) return;
       const wrap = select.closest('.freq-select-wrap');
       const display = wrap ? wrap.querySelector('.freq-select-display') : null;
-      const classesControladas = ['freq-preenchido', 'folga-eo-confirmado', 'folga-reset-confirmado'];
+      const classesControladas = ['freq-preenchido', 'folga-eo-confirmado', 'folga-fol-confirmado', 'folga-adm-confirmado', 'folga-reset-confirmado'];
       const classesAtuais = classesCelulaControleFolgas(select.value, !!confirmado).split(' ').filter(Boolean);
       classesControladas.forEach(function(classe) {
         select.classList.remove(classe);
@@ -8702,6 +8747,48 @@ Banco de dados: Google Sheets.
 
     function salvarCelulaControleFolgas(select) {
       if (!select || select.disabled) return;
+      const valorNovo = String(select.value || '').toUpperCase();
+      const valorAnterior = String(select.getAttribute('data-valor-anterior') || '').toUpperCase();
+      if (valorNovo === 'FM' && valorAnterior !== 'FM') {
+        atualizarVisualCelulaControleFolgas(select, false);
+        select.disabled = true;
+        confirmarLancamentoFmControleFolgas_(select).then(function(confirmado) {
+          if (!confirmado) {
+            select.value = valorAnterior;
+            atualizarVisualCelulaControleFolgas(select, true);
+            select.disabled = false;
+            return;
+          }
+          select.disabled = false;
+          persistirCelulaControleFolgas_(select);
+        });
+        return;
+      }
+      persistirCelulaControleFolgas_(select);
+    }
+
+
+    function confirmarLancamentoFmControleFolgas_(select) {
+      const re = normalizarReClienteFrequencia(select && select.getAttribute('data-re'));
+      const saldo = APP.dadosControleFolgas && APP.dadosControleFolgas.saldos && APP.dadosControleFolgas.saldos[re] || {};
+      const creditos = Array.isArray(saldo.creditosDisponiveis) ? saldo.creditosDisponiveis : [];
+      if (!creditos.length) {
+        mostrarToastFt('FM não disponível', 'O policial não possui período de folga mensal disponível para gozo.');
+        return Promise.resolve(false);
+      }
+      const periodos = creditos.map(function(item) { return item.periodo || ''; }).filter(Boolean);
+      const primeiro = periodos[0] || '';
+      const texto = 'PERÍODOS DISPONÍVEIS:\n' + periodos.map(function(periodo) { return '• ' + periodo; }).join('\n') +
+        '\n\nO sistema utilizará primeiro o período mais antigo: ' + primeiro + '.';
+      return confirmarToastFt('CONFIRMAR FOLGA MENSAL', texto, {
+        confirmar: 'CONFIRMAR FM',
+        cancelar: 'VOLTAR'
+      });
+    }
+
+
+    function persistirCelulaControleFolgas_(select) {
+      if (!select) return;
       const wrap = select.closest('.freq-select-wrap');
       atualizarVisualCelulaControleFolgas(select, false);
       select.disabled = true;
@@ -8735,7 +8822,8 @@ Banco de dados: Google Sheets.
         }
         APP.dadosControleFolgas.saldos[chave] = Object.assign({}, APP.dadosControleFolgas.saldos[chave] || {}, {
           folgas: Number(dados.folgas || 0),
-          diasTrabalhados: Number(dados.diasTrabalhados || 0)
+          diasTrabalhados: Number(dados.diasTrabalhados || 0),
+          creditosDisponiveis: Array.isArray(dados.creditosDisponiveis) ? dados.creditosDisponiveis : []
         });
         mostrarToastFt('Controle de Folgas atualizado', dados.mensagem || 'Lançamento salvo.');
         setTimeout(function() {
@@ -13635,20 +13723,44 @@ Banco de dados: Google Sheets.
       return Number.isFinite(numero) && String(valor).trim() !== '' ? numero.toLocaleString('pt-BR') + ' km' : '-';
     }
 
+    function viaturaDisponivelParaUsoV130(v) {
+      const situacao = normalizarTexto((v && v.situacao) || '');
+      const statusApp = normalizarTexto((v && v.statusApp) || '');
+      return statusApp === 'ATIVA' && ['OPERANDO', 'RESERVA'].indexOf(situacao) !== -1 && !(v && v.utilizacaoAtual);
+    }
+
+    function resumoViaturasV130(itens) {
+      const base = resumoViaturasV125(itens || []);
+      base.total = (itens || []).length;
+      base.emUso = (itens || []).filter(function(v) { return !!v.utilizacaoAtual; }).length;
+      base.disponiveis = (itens || []).filter(viaturaDisponivelParaUsoV130).length;
+      return base;
+    }
+
     montarBlocoViaturas = function(titulo, subtitulo, imagem, lista) {
       const itens = Array.isArray(lista) ? lista : [];
-      const c = resumoViaturasV125(itens);
+      const c = resumoViaturasV130(itens);
       return `<div class="viatura-bloco">
         <div class="viatura-banner">
           <img src="${escaparAttr(imagem)}" alt="${escaparAttr(titulo)}" loading="lazy" onerror="this.style.display='none'">
           <div class="viatura-banner-texto">
             <h2>${escapar(titulo)}</h2>
-            <p><strong>TOTAL VTR</strong> ${itens.length}</p>
-            <div class="viatura-resumo-status">
-              <span>OPERANDO: ${c.operando}</span><span>RESERVA: ${c.reserva}</span>
-              <span>BAIXADA: ${c.baixada}</span><span>DESCARGA: ${c.descarga}</span>
-              <span>SINDICÂNCIA: ${c.sindicancia}</span><span>OUTROS: ${c.outros}</span>
-            </div>
+            <p>${escapar(subtitulo || 'Controle operacional de viaturas')}</p>
+          </div>
+        </div>
+        <div class="vtr130-resumo" aria-label="Resumo ${escaparAttr(titulo)}">
+          <div class="vtr130-metric-grid">
+            <div class="vtr130-metric"><small>Total de viaturas</small><strong>${c.total}</strong></div>
+            <div class="vtr130-metric em-uso"><small>Viaturas em uso</small><strong>${c.emUso}</strong></div>
+            <div class="vtr130-metric disponiveis"><small>Viaturas disponíveis</small><strong>${c.disponiveis}</strong></div>
+          </div>
+          <div class="vtr130-situacoes-grid">
+            <span class="vtr130-situacao">OPERANDO <strong>${c.operando}</strong></span>
+            <span class="vtr130-situacao">RESERVA <strong>${c.reserva}</strong></span>
+            <span class="vtr130-situacao">BAIXADA <strong>${c.baixada}</strong></span>
+            <span class="vtr130-situacao">DESCARGA <strong>${c.descarga}</strong></span>
+            <span class="vtr130-situacao">SINDICÂNCIA <strong>${c.sindicancia}</strong></span>
+            <span class="vtr130-situacao">OUTROS <strong>${c.outros}</strong></span>
           </div>
         </div>
         <div class="viatura-lista">
@@ -13689,8 +13801,7 @@ Banco de dados: Google Sheets.
     function viaturaBloqueadaParaIniciarUtilizacaoV126(v) {
       const situacao = normalizarTexto((v && v.situacao) || '');
       const statusApp = normalizarTexto((v && v.statusApp) || '');
-      return ['SINDICANCIA', 'DESCARGA'].indexOf(situacao) !== -1 ||
-        ['SINDICANCIA', 'DESCARGA'].indexOf(statusApp) !== -1;
+      return statusApp !== 'ATIVA' || ['OPERANDO', 'RESERVA'].indexOf(situacao) === -1;
     }
 
     function montarResumoViaturaV126(v) {
@@ -13720,7 +13831,7 @@ Banco de dados: Google Sheets.
             <div class="vtr126-info-card"><small>Último encerramento</small><strong>${escapar(ultimo.dataFim || v.ultimaAtualizacao || '-')}</strong></div>
             <div class="vtr126-info-card"><small>Último motorista</small><strong>${escapar(ultimo.motorista || v.atualizadoPor || '-')}</strong></div>
           </div>
-          <div class="vtr126-use-blocked"><strong>INÍCIO DE UTILIZAÇÃO BLOQUEADO</strong>Viaturas em SINDICÂNCIA ou DESCARGA não podem receber novo lançamento de KM inicial. O campo será liberado quando a situação da viatura for alterada.</div>
+          <div class="vtr126-use-blocked"><strong>INÍCIO DE UTILIZAÇÃO BLOQUEADO</strong>Somente viaturas ATIVAS em situação OPERANDO ou RESERVA podem receber novo lançamento de KM inicial.</div>
         </section>`;
       }
 
@@ -13879,7 +13990,7 @@ Banco de dados: Google Sheets.
     function iniciarUtilizacaoViaturaV126(prefixo, referenciaTexto) {
       const viatura = localizarViaturaV126(prefixo);
       if (viaturaBloqueadaParaIniciarUtilizacaoV126(viatura)) {
-        mostrarToastFt('Utilização não permitida', 'Viaturas em SINDICÂNCIA ou DESCARGA não podem iniciar utilização.');
+        mostrarToastFt('Utilização não permitida', 'Somente viaturas ATIVAS em situação OPERANDO ou RESERVA podem iniciar utilização.');
         return;
       }
       const kmEl = document.getElementById('vtr126KmInicial');
