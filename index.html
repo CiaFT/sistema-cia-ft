@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.3
+SISTEMA CIA FT — PORTAL GITHUB V1.3.1
 Arquivo: index.html
 ============================================================
 
-VERSÃO V1.3 — CONTROLE DE FOLGAS, FREQUÊNCIA E VIATURAS
+VERSÃO V1.3.1 — RESENHAS, AUTORIZAÇÃO P/4 E QUADRO MENSAL DA COP
 - Preserva a última versão encerrada do Controle de Frequência.
 - Preserva a implantação completa de Viaturas V1.2.6.
 - Corrige a leitura e a identificação funcional em Resenhas Enviadas.
@@ -21,9 +21,12 @@ VERSÃO V1.3 — CONTROLE DE FOLGAS, FREQUÊNCIA E VIATURAS
 - Espelha o efetivo diretamente do CADASTRO GERAL em todas as funções.
 - Exibe a relação final da DEJEM com escalados e excedentes até sexta-feira às 23h59.
 - Amplia a foto no card aberto pela Consulta do Efetivo, com ajuste responsivo.
+- Permite excluir Resenhas apenas do painel, preservando registro e auditoria na planilha.
+- Restringe a gestão de Viaturas ao Gestor, Enc Adm e Aux Adm individualmente designado como P/4.
+- Exibe o quantitativo mensal de vídeos da COP por militar e reserva PDF/Impressão ao efetivo ADM.
 
 Front-end externo hospedado no GitHub Pages.
-Backend/API: Apps Script API_FT.gs V1.3.
+Backend/API: Apps Script API_FT.gs V1.3.1.
 Banco de dados: Google Sheets.
 
 ============================================================
@@ -32,8 +35,8 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="cia-ft-build" content="FT-V130-20260820-FOLGAS-VTR-FREQ-R1">
-  <title>Portal Força Tática • V1.3</title>
+  <meta name="cia-ft-build" content="FT-V131-20260821-RESENHAS-P4-COP-R1">
+  <title>Portal Força Tática • V1.3.1</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
 
@@ -4300,6 +4303,23 @@ Banco de dados: Google Sheets.
       white-space: nowrap;
     }
 
+    .resenha-view-header-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+    .resenha-view-delete {
+      border: 1px solid #B91C1C;
+      border-radius: 999px;
+      background: #fff;
+      color: #B91C1C;
+      padding: 7px 10px;
+      font: inherit;
+      font-size: 9px;
+      font-weight: 1000;
+      letter-spacing: .2px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .resenha-view-delete:hover { background: #FEF2F2; }
+    .resenha-view-delete:disabled { opacity: .55; cursor: wait; }
+
     .resenha-view-empty {
       border: 1px dashed rgba(55,66,71,.25);
       background: #f8fafc;
@@ -4499,6 +4519,9 @@ Banco de dados: Google Sheets.
       .resenha-view-badge {
         margin-top: 10px;
       }
+
+      .resenha-view-header-actions { justify-content: flex-start; margin-top: 10px; }
+      .resenha-view-header-actions .resenha-view-badge { margin-top: 0; }
     }
 
 
@@ -6604,6 +6627,16 @@ Banco de dados: Google Sheets.
     .cop-table td:nth-child(3) { overflow-wrap: anywhere; }
     .cop-total-row { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 10px; color: #475569; font-size: 11px; font-weight: 900; }
     .cop-total-row strong { min-width: 52px; border-radius: 10px; background: #374247; color: #fff; padding: 8px 12px; text-align: center; font-size: 15px; }
+    .cop-resumo-mensal { margin: 0 0 14px; border: 1px solid #dbe1e7; border-radius: 17px; background: linear-gradient(145deg,#fff,#f8fafc); padding: 14px; box-shadow: 0 10px 26px rgba(23,32,42,.06); }
+    .cop-resumo-mensal-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+    .cop-resumo-mensal-head h3 { margin: 0 0 3px; color: #17202a; font-size: 14px; }
+    .cop-resumo-mensal-head p { margin: 0; color: #64748b; font-size: 10px; line-height: 1.4; }
+    .cop-resumo-mensal-total { border-radius: 11px; background: #374247; color: #fff; padding: 8px 11px; font-size: 10px; font-weight: 950; white-space: nowrap; }
+    .cop-resumo-mensal-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+    .cop-resumo-mensal-item { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 10px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; padding: 10px 11px; }
+    .cop-resumo-mensal-item span { min-width: 0; color: #17202a; font-size: 11px; font-weight: 850; overflow-wrap: anywhere; }
+    .cop-resumo-mensal-item strong { display: grid; place-items: center; min-width: 34px; min-height: 30px; border-radius: 9px; background: #E8EEF5; color: #374247; font-size: 14px; font-weight: 1000; }
+    .cop-resumo-mensal-vazio { border: 1px dashed #cbd5e1; border-radius: 12px; color: #64748b; padding: 12px; font-size: 11px; text-align: center; }
     .cop-readonly-note { border-left: 4px solid #D4AF37; border-radius: 11px; background: #fffbeb; color: #713f12; margin: 14px 0; padding: 11px 13px; font-size: 11px; font-weight: 750; }
     .cop-edit-backdrop { position: fixed; inset: 0; z-index: 10050; display: grid; place-items: center; padding: 16px; background: rgba(15,23,42,.66); backdrop-filter: blur(4px); }
     .cop-edit-dialog { width: min(520px,100%); border-radius: 20px; background: #fff; box-shadow: 0 28px 80px rgba(0,0,0,.3); overflow: hidden; }
@@ -6621,6 +6654,8 @@ Banco de dados: Google Sheets.
       .cop-toolbar-actions .btn-page { width: 100%; padding-left: 8px; padding-right: 8px; font-size: 9px; }
       .cop-table-wrap { max-height: 58vh; }
       .cop-table { min-width: 610px; }
+      .cop-resumo-mensal-head { align-items: flex-start; flex-direction: column; }
+      .cop-resumo-mensal-grid { grid-template-columns: 1fr; }
     }
 
     /* DEJEM ROCAM — inscrições semanais */
@@ -6662,7 +6697,7 @@ Banco de dados: Google Sheets.
       <div id="loginAlerta" class="alerta"></div>
 
       <div class="footer">
-        Portal Força Tática • V1.3
+        Portal Força Tática • V1.3.1
       </div>
     </main>
   </section>
@@ -7698,16 +7733,33 @@ Banco de dados: Google Sheets.
 
     function capacidadesVistoriaCopCliente() {
       const perfil = normalizarTexto((APP.usuario && APP.usuario.perfilAcesso) || '').replace(/\s+/g, '_');
-      const gestor = ['GESTOR','GESTOR_TEC_FT','GESTOR_TECNICO_FT','ACESSO_TOTAL'].indexOf(perfil) !== -1;
+      const gestor = ['GESTOR','GESTOR_TEC_FT','GESTOR_TECNICO_FT','GESTOR_FT','ADM_GERAL','ADMINISTRADOR_GERAL','ACESSO_TOTAL'].indexOf(perfil) !== -1;
       const cmtEquipe = ['CMT_EQUIPE','CMT_EQUIPE_FT','COMANDANTE_EQUIPE','COMANDANTE_DE_EQUIPE'].indexOf(perfil) !== -1;
       const auxAdm = ['AUX_ADM_FT','AUX_ADM','AUXILIAR_ADM_FT','AUXILIAR_ADMINISTRATIVO'].indexOf(perfil) !== -1;
       const encAdm = ['ENC_ADM_FT','ENC_ADM','ENCARREGADO_ADM_FT','ENCARREGADO_ADMINISTRATIVO'].indexOf(perfil) !== -1;
       const cmtCia = ['CMT_CIA_FT','CMT_CIA','COMANDANTE_CIA_FT','COMANDANTE_DE_CIA'].indexOf(perfil) !== -1;
+      const efetivoAdm = gestor || auxAdm || encAdm || cmtCia;
       return {
         podeVisualizar: gestor || cmtEquipe || auxAdm || encAdm || cmtCia,
         podeInserir: gestor || cmtEquipe || encAdm || cmtCia,
-        podeCorrigir: gestor || encAdm || cmtCia
+        podeCorrigir: gestor || encAdm || cmtCia,
+        podeGerarPdf: efetivoAdm,
+        podeImprimir: efetivoAdm
       };
+    }
+
+
+    function montarResumoMensalVistoriaCopCliente(dados) {
+      const itens = Array.isArray(dados && dados.resumoMensal) ? dados.resumoMensal : [];
+      return `<section class="cop-resumo-mensal" aria-label="Quantitativo mensal por militar responsável">
+        <div class="cop-resumo-mensal-head">
+          <div><h3>Quantitativo mensal por militar responsável</h3><p>Quantidade de vídeos auditados no mês selecionado.</p></div>
+          <span class="cop-resumo-mensal-total">TOTAL ${escapar(dados && dados.totalVideos || 0)}</span>
+        </div>
+        ${itens.length ? `<div class="cop-resumo-mensal-grid">${itens.map(function(item) {
+          return `<div class="cop-resumo-mensal-item"><span>${escapar(item.militarResponsavel || '-')}</span><strong>${escapar(item.quantidadeVideos || 0)}</strong></div>`;
+        }).join('')}</div>` : '<div class="cop-resumo-mensal-vazio">Nenhum vídeo auditado neste mês.</div>'}
+      </section>`;
     }
 
 
@@ -7767,6 +7819,8 @@ Banco de dados: Google Sheets.
             ${cap.podeImprimir ? '<button type="button" class="btn-page" onclick="gerarPdfVistoriaCop(this,true)">IMPRIMIR</button>' : ''}
           </div>
         </div>
+
+        ${montarResumoMensalVistoriaCopCliente(d)}
 
         ${podeLancarNesteMes ? `<div class="modal-card cop-form-card">
           <div class="cop-form-grid">
@@ -12187,7 +12241,7 @@ Banco de dados: Google Sheets.
     }
 
     function usuarioPodeEditarSituacaoViatura() {
-      return usuarioTemPermissaoCliente('VIATURAS', 'editar');
+      return usuarioPodeGerenciarViaturasCliente_();
     }
 
     function optionsViaturaSituacao(lista, valorAtual) {
@@ -12200,12 +12254,11 @@ Banco de dados: Google Sheets.
     }
 
     function usuarioPodeAtualizarViatura() {
-      return usuarioTemPermissaoCliente('VIATURAS', 'editar') ||
-             usuarioTemPermissaoCliente('VIATURAS', 'inserir');
+      return usuarioPodeGerenciarViaturasCliente_();
     }
 
     function usuarioPodeEditarResponsavelViatura() {
-      return usuarioTemPermissaoCliente('VIATURAS', 'editar');
+      return usuarioPodeGerenciarViaturasCliente_();
     }
 
     function optionsResponsavelViatura(lista, valorAtual) {
@@ -12466,11 +12519,25 @@ Banco de dados: Google Sheets.
         });
     }
 
+    function funcaoUsuarioEhP4Cliente_() {
+      const funcao = normalizarTexto((APP.usuario && APP.usuario.funcao) || '').trim();
+      return /(^|[^A-Z0-9])P\s*(?:\/|\-)?\s*4([^A-Z0-9]|$)/.test(funcao);
+    }
+
+    function usuarioPodeGerenciarViaturasCliente_() {
+      const capacidades = APP.dadosViaturas && APP.dadosViaturas.capacidadesViaturas;
+      if (capacidades && typeof capacidades.podeGerenciar === 'boolean') return capacidades.podeGerenciar;
+      const perfil = normalizarTexto((APP.usuario && APP.usuario.perfilAcesso) || '').replace(/[\s-]+/g, '_');
+      const gestor = ['GESTOR','GESTOR_TEC_FT','GESTOR_TECNICO_FT','ACESSO_TOTAL'].indexOf(perfil) !== -1;
+      const encAdm = ['ENC_ADM_FT','ENC_ADM','ENCARREGADO_ADM_FT','ENCARREGADO_ADMINISTRATIVO'].indexOf(perfil) !== -1;
+      const auxAdm = ['AUX_ADM_FT','AUX_ADM','AUXILIAR_ADM_FT','AUXILIAR_ADMINISTRATIVO'].indexOf(perfil) !== -1;
+      return gestor || encAdm || (auxAdm && funcaoUsuarioEhP4Cliente_());
+    }
+
     function usuarioPodeInserirViatura() {
-      const permissao = obterPermissaoCliente('VIATURAS') || {};
-      const perfil = normalizarTexto(APP.usuario && APP.usuario.perfilAcesso);
-      const perfilAutorizado = ['GESTOR', 'GESTOR_TEC_FT', 'ENC_ADM_FT', 'AUX_ADM_FT'].indexOf(perfil) !== -1;
-      return perfilAutorizado && !!(permissao.acessoTotal || permissao.inserir);
+      const capacidades = APP.dadosViaturas && APP.dadosViaturas.capacidadesViaturas;
+      if (capacidades && typeof capacidades.podeAdicionar === 'boolean') return capacidades.podeAdicionar;
+      return usuarioPodeGerenciarViaturasCliente_();
     }
 
     function abrirFormularioNovaViatura(modalidadeInicial) {
@@ -12733,6 +12800,7 @@ Banco de dados: Google Sheets.
       const complementos = Array.isArray(resenha.complementos) ? resenha.complementos : [];
       const titulo = cabecalho.titulo || cabecalho.pelotao || cabecalho.PELOTAO || ('Resenha ' + (idx + 1));
       const subtitulo = cabecalho.responsavel || cabecalho.escalante || cabecalho.enviadoPor || cabecalho.RESPONSAVEL || '';
+      const podeExcluir = !!cabecalho.podeExcluir;
 
       return `
         <div class="resenha-view-card">
@@ -12741,11 +12809,14 @@ Banco de dados: Google Sheets.
               <h3>${escapar(titulo)}</h3>
               <p>${escapar(subtitulo || 'Dados consolidados da resenha enviada.')}</p>
             </div>
-            <span class="resenha-view-badge">${escapar(cabecalho.status || cabecalho.STATUS || 'ENVIADA')}</span>
+            <div class="resenha-view-header-actions">
+              <span class="resenha-view-badge">${escapar(cabecalho.status || cabecalho.STATUS || 'ENVIADA')}</span>
+              ${podeExcluir ? `<button type="button" class="resenha-view-delete" onclick="excluirResenhaEnviadaPainel('${escaparAttr(cabecalho.id || '')}', this)">EXCLUIR DO PAINEL</button>` : ''}
+            </div>
           </div>
           <div class="resenha-view-body">
             <div class="resenha-view-grid">
-              ${renderizarCamposObjetoResenha(cabecalho, ['id','titulo','status','observacoes']).join('') || '<div class="resenha-view-empty">Cabeçalho sem campos detalhados.</div>'}
+              ${renderizarCamposObjetoResenha(cabecalho, ['id','titulo','status','observacoes','podeExcluir']).join('') || '<div class="resenha-view-empty">Cabeçalho sem campos detalhados.</div>'}
             </div>
 
             ${renderizarBlocoForcaTaticaResenha(itens)}
@@ -12811,6 +12882,33 @@ Banco de dados: Google Sheets.
         return carregarResenhasEnviadas(dataISO);
       }).then(renderizarResenhasEnviadas).catch(function(erro) {
         mostrarToastFt('Erro na análise', erro.message || String(erro));
+      });
+    }
+
+
+    function excluirResenhaEnviadaPainel(id, botao) {
+      if (!id) return;
+      confirmarToastFt(
+        'EXCLUIR RESENHA DO PAINEL',
+        'Confirma a retirada desta resenha da relação exibida no App?\n\nO registro completo e a auditoria continuarão preservados na planilha.',
+        { confirmar: 'EXCLUIR DO PAINEL', cancelar: 'MANTER RESENHA' }
+      ).then(function(confirmado) {
+        if (!confirmado) return;
+        const dataAtual = document.querySelector('.resenha-view-nav input[type="date"]');
+        const dataISO = dataAtual ? dataAtual.value : dataISOHoje();
+        if (botao) { botao.disabled = true; botao.textContent = 'EXCLUINDO...'; }
+        chamarApi('excluir_resenha_escala', {
+          login: APP.credenciais.login,
+          senha: APP.credenciais.senha,
+          id: id
+        }, { semCache: true }).then(function(resp) {
+          if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao excluir a resenha do painel.');
+          mostrarToastFt('Resenha excluída do painel', resp.dados && resp.dados.mensagem ? resp.dados.mensagem : 'O histórico foi preservado.', 'sucesso');
+          return carregarResenhasEnviadas(dataISO);
+        }).then(renderizarResenhasEnviadas).catch(function(erro) {
+          mostrarToastFt('Resenha não excluída', erro.message || String(erro), 'erro');
+          if (botao && document.body.contains(botao)) { botao.disabled = false; botao.textContent = 'EXCLUIR DO PAINEL'; }
+        });
       });
     }
 
@@ -13604,7 +13702,7 @@ Banco de dados: Google Sheets.
       });
     }
 
-    function usuarioPodeGerenciarViaturaV125(){const p=normalizarTexto((APP.usuario&&APP.usuario.perfilAcesso)||'');return ['GESTOR_TEC_FT','ENC_ADM_FT','AUX_ADM_FT'].indexOf(p)!==-1;}
+    function usuarioPodeGerenciarViaturaV125(){return usuarioPodeGerenciarViaturasCliente_();}
     function classeStatusViaturaV125(s){const n=normalizarTexto(s||'');if(n==='OPERANDO')return'verde';if(['BAIXADA','BAIXADA PEL','SINDICANCIA','SINDICÂNCIA'].includes(n))return'amarelo';if(n==='PROJETO BASICO'||n==='PROJETO BÁSICO')return'azul';if(n==='DESCARGA')return'vermelho';return'cinza';}
     function resumoViaturasV125(itens){const c={operando:0,reserva:0,baixada:0,descarga:0,sindicancia:0,outros:0};itens.forEach(function(v){const s=normalizarTexto(v.situacao||'');if(s==='OPERANDO')c.operando++;else if(s==='RESERVA')c.reserva++;else if(['BAIXADA','BAIXADA PEL','PROJETO BASICO','PROJETO BÁSICO'].includes(s))c.baixada++;else if(s==='DESCARGA')c.descarga++;else if(['SINDICANCIA','SINDICÂNCIA'].includes(s))c.sindicancia++;else if(['OUTROS','OP VERAO','OP VERÃO'].includes(s))c.outros++;});return c;}
     function montarBlocoViaturas(titulo,subtitulo,imagem,lista){const itens=Array.isArray(lista)?lista:[],c=resumoViaturasV125(itens);return `<div class="viatura-bloco"><div class="viatura-banner"><img src="${escaparAttr(imagem)}" alt="${escaparAttr(titulo)}" loading="lazy" onerror="this.style.display='none'"><div class="viatura-banner-texto"><h2>${escapar(titulo)}</h2><p><strong>TOTAL VTR</strong> ${itens.length}</p><div class="viatura-resumo-status"><span>OPERANDO: ${c.operando}</span><span>RESERVA: ${c.reserva}</span><span>BAIXADA: ${c.baixada}</span><span>DESCARGA: ${c.descarga}</span><span>SINDICÂNCIA: ${c.sindicancia}</span><span>OUTROS: ${c.outros}</span></div></div></div><div class="viatura-lista">${itens.length?itens.map(function(v){return `<button class="viatura-prefixo-btn" type="button" onclick="abrirFichaViatura('${escaparAttr(v.prefixo||'')}')"><span style="display:flex;align-items:center;gap:10px"><i class="status-dot ${classeStatusViaturaV125(v.situacao)}"></i>${escapar(v.prefixo||'-')}</span><small>Ficha completa</small></button>`}).join(''):'<div class="viatura-empty">Nenhuma viatura cadastrada neste bloco.</div>'}</div></div>`;}
@@ -13706,10 +13804,7 @@ Banco de dados: Google Sheets.
     }
 
     function usuarioPodeAdministrarViaturaV126() {
-      const permissao = obterPermissaoCliente('VIATURAS') || {};
-      const perfil = normalizarTexto((APP.usuario && APP.usuario.perfilAcesso) || '');
-      return !!(permissao.acessoTotal || permissao.editar) ||
-        ['GESTOR_TEC_FT', 'ENC_ADM_FT', 'AUX_ADM_FT'].indexOf(perfil) !== -1;
+      return usuarioPodeGerenciarViaturasCliente_();
     }
 
     function usuarioEhMotoristaUsoV126(uso) {
