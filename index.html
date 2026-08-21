@@ -41,7 +41,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="cia-ft-build" content="FT-V132-20260821-REVISTA-ARMARIO-R1">
+  <meta name="cia-ft-build" content="FT-V132-20260821-REVISTA-ARMARIO-R2">
   <title>Portal Força Tática • V1.3.2</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
@@ -9838,15 +9838,31 @@ Banco de dados: Google Sheets.
     function abrirUploaderEscalaCiaFt(botao) {
       const conteudo = document.getElementById('efUploaderConteudo');
       if (!conteudo || conteudo.querySelector('iframe')) return;
-      const token = String(conteudo.getAttribute('data-upload-token') || '');
-      if (!token) {
-        mostrarToastFt('Autorização expirada', 'Atualize a página Escalas Cia FT para publicar um novo arquivo.', 'erro');
-        return;
-      }
       const pai = conteudo.closest('.ef-uploader');
       if (pai) pai.classList.remove('ef-uploader-fechado');
-      if (botao) { botao.disabled = true; botao.textContent = 'ABRINDO FORMULÁRIO...'; }
-      conteudo.innerHTML = '<iframe id="efUploaderFrame" title="Enviar PDFs das Escalas Cia FT" src="' + escaparAttr(API_URL + '?action=upload_escala_cia_ft_form&token=' + encodeURIComponent(token) + '&_cache=' + Date.now()) + '"></iframe>';
+      if (botao) { botao.disabled = true; botao.textContent = 'RENOVANDO AUTORIZAÇÃO...'; }
+      conteudo.innerHTML = '<div class="resenha-loading">Preparando um formulário seguro para o envio...</div>';
+
+      /* O token é renovado somente no clique. Assim, uma página que permaneceu
+         aberta por muito tempo nunca tenta enviar com autorização expirada. */
+      chamarApi('dados_escalas_folgas', { secao: 'escalas' }, { semCache: true }).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Não foi possível autorizar o envio.');
+        const anteriores = APP.dadosEscalasFolgas || {};
+        const novos = resp.dados || {};
+        APP.dadosEscalasFolgas = Object.assign({}, anteriores, novos, {
+          capacidades: Object.assign({}, anteriores.capacidades || {}, novos.capacidades || {})
+        });
+        const token = String(novos.capacidades && novos.capacidades.uploadToken || '');
+        if (!token) throw new Error('Seu perfil não recebeu autorização para publicar a escala.');
+        conteudo.setAttribute('data-upload-token', token);
+        conteudo.innerHTML = '<iframe id="efUploaderFrame" title="Enviar PDFs das Escalas Cia FT" src="' + escaparAttr(API_URL + '?action=upload_escala_cia_ft_form&token=' + encodeURIComponent(token) + '&_cache=' + Date.now()) + '"></iframe>';
+        if (botao) botao.textContent = 'FORMULÁRIO ABERTO';
+      }).catch(function(erro) {
+        conteudo.innerHTML = '<div class="adm-alerta">' + escapar(erro.message || String(erro)) + '</div>';
+        if (pai) pai.classList.add('ef-uploader-fechado');
+        if (botao) { botao.disabled = false; botao.textContent = 'TENTAR ABRIR NOVAMENTE'; }
+        mostrarToastFt('Upload indisponível', erro.message || String(erro), 'erro');
+      });
     }
 
 
