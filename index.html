@@ -5,7 +5,7 @@ SISTEMA CIA FT — PORTAL GITHUB V1.3.2
 Arquivo: index.html
 ============================================================
 
-VERSÃO V1.3.2 — ICC, CIÊNCIA DIGITAL E LISTA OFICIAL
+VERSÃO V1.3.2 — ICC E REVISTA DE ARMÁRIO
 - Preserva a última versão encerrada do Controle de Frequência.
 - Preserva a implantação completa de Viaturas V1.2.6.
 - Corrige a leitura e a identificação funcional em Resenhas Enviadas.
@@ -28,6 +28,8 @@ VERSÃO V1.3.2 — ICC, CIÊNCIA DIGITAL E LISTA OFICIAL
 - Acrescenta ICC e REVISTA DE ARMÁRIO ao agrupador ROTINAS OPERACIONAIS.
 - Torna ROTINAS OPERACIONAIS visível a todo o efetivo e preserva a COP somente para perfis autorizados.
 - Implanta a publicação da ICC, visualização protegida, assinatura individual e geração da lista oficial em PDF.
+- Implanta a Revista de Armário mensal, vistoria digital, testemunhas e PDF oficial.
+- Inclui Nº do armário no cadastro e na edição do policial, vinculado à coluna AQ.
 
 Front-end externo hospedado no GitHub Pages.
 Backend/API: Apps Script API_FT.gs V1.3.2.
@@ -39,7 +41,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="cia-ft-build" content="FT-V132-20260821-ICC-R1">
+  <meta name="cia-ft-build" content="FT-V132-20260821-REVISTA-ARMARIO-R1">
   <title>Portal Força Tática • V1.3.2</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
@@ -6689,6 +6691,22 @@ Banco de dados: Google Sheets.
     .icc-modal-overlay{position:fixed;inset:0;z-index:10080;display:grid;place-items:center;padding:16px;background:rgba(15,23,42,.72);backdrop-filter:blur(4px)}.icc-modal-dialog{width:min(520px,100%);overflow:hidden;border-radius:20px;background:#fff;box-shadow:0 28px 90px rgba(0,0,0,.34)}.icc-modal-head{background:#374247;color:#fff;padding:16px 18px}.icc-modal-head h2{margin:0 0 4px;font-size:17px}.icc-modal-head p{margin:0;color:#dbe1e7;font-size:10px}.icc-modal-body{display:grid;gap:11px;padding:17px}.icc-modal-body textarea{width:100%;min-height:110px;border:1px solid #cbd5e1;border-radius:12px;padding:10px;font:inherit;font-size:12px;resize:vertical}.icc-modal-actions{display:flex;justify-content:flex-end;gap:8px}
     @media(max-width:980px){.icc-meta-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.icc-meta-grid .icc-btn{width:100%}.icc-documento-body{grid-template-columns:1fr}.icc-thumb-wrap{min-height:260px}}
     @media(max-width:620px){.icc-section-head,.icc-lista-toolbar{align-items:stretch;flex-direction:column}.icc-meta-grid{grid-template-columns:1fr}.icc-uploader-title{align-items:stretch;flex-direction:column}.icc-uploader-title .icc-btn{width:100%}.icc-uploader iframe{height:480px}.icc-documento-body{padding:11px}.icc-thumb-wrap{min-height:220px}.icc-meta-cards{grid-template-columns:1fr}.icc-doc-actions{grid-template-columns:1fr}.icc-form-oficial{margin:9px}.icc-table{min-width:690px}.icc-modal-actions{display:grid;grid-template-columns:1fr}.icc-modal-actions .icc-btn{width:100%}}
+
+    /* REVISTA DE ARMÁRIO — V1.3.2 */
+    #appScreen .menu-card[data-modulo="REVISTA_ARMARIO"] .menu-icon-imagem img{transform:scale(1.06)}
+    .ra-loading{border:1px solid #dbe1e7;border-radius:18px;background:#fff;color:#475569;padding:22px;text-align:center;font-size:12px;font-weight:850}
+    .ra-painel{margin-bottom:16px;border:1px solid rgba(55,66,71,.16);border-radius:20px;background:#fff;color:#17202a;box-shadow:0 10px 28px rgba(15,23,42,.06);overflow:hidden}
+    .ra-toolbar{display:grid;grid-template-columns:minmax(160px,.55fr) minmax(0,1.45fr) auto;gap:12px;align-items:end;padding:15px}
+    .ra-campo{display:grid;gap:5px;min-width:0}.ra-campo label{color:#475569;font-size:9px;font-weight:950;letter-spacing:.3px;text-transform:uppercase}.ra-campo input,.ra-campo select{width:100%;min-height:43px;border:1px solid #cbd5e1;border-radius:11px;background:#fff;color:#17202a;padding:8px 10px;font:inherit;font-size:11px;font-weight:800}.ra-campo input[readonly]{background:#f1f5f9;color:#475569}
+    .ra-status{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.ra-status-item{border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;padding:9px 10px}.ra-status-item small{display:block;color:#64748b;font-size:7.8px;font-weight:950;letter-spacing:.25px;text-transform:uppercase}.ra-status-item strong{display:block;margin-top:4px;color:#17202a;font-size:10px;line-height:1.35;overflow-wrap:anywhere}.ra-status-item.ok{border-color:#A5D6A7;background:#F1F8E9}.ra-status-item.ok strong{color:#1B5E20}
+    .ra-actions{display:flex;gap:8px;justify-content:flex-end}.ra-btn{min-height:43px;border:1px solid #8E1B1B;border-radius:11px;background:#8E1B1B;color:#fff;padding:9px 13px;font:inherit;font-size:9px;font-weight:950;cursor:pointer;white-space:nowrap}.ra-btn.secundario{border-color:#374247;background:#fff;color:#374247}.ra-btn.perigo{border-color:#991b1b;background:#fff;color:#991b1b}.ra-btn:disabled{border-color:#cbd5e1;background:#e2e8f0;color:#64748b;cursor:wait}
+    .ra-aviso{margin:0 15px 15px;border-left:4px solid #D4AF37;border-radius:10px;background:#fffbeb;color:#713f12;padding:10px 12px;font-size:10px;font-weight:800;line-height:1.45}.ra-aviso.bloqueio{border-left-color:#8E1B1B;background:#FDECEC;color:#8E1B1B}
+    .ra-form-oficial{margin:14px;overflow:hidden;border:2px solid #111;background:#fff;color:#000}.ra-form-topo{display:grid;place-items:center;min-height:31px;border-bottom:1px solid #111;background:#bdbdbd;padding:5px 8px;text-align:center;font-size:15px;font-weight:950}.ra-form-subtopo{display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,.34fr);border-bottom:1px solid #111;background:#bdbdbd}.ra-form-subtopo strong{display:grid;place-items:center;min-height:31px;padding:5px 8px;font-size:15px}.ra-form-subtopo strong+strong{border-left:1px solid #111;color:#1565C0}
+    .ra-table-wrap{width:100%;overflow:auto}.ra-table{width:100%;min-width:1050px;border-collapse:collapse;table-layout:fixed}.ra-table col:nth-child(1){width:9%}.ra-table col:nth-child(2){width:11%}.ra-table col:nth-child(3){width:10%}.ra-table col:nth-child(4){width:24%}.ra-table col:nth-child(5){width:15%}.ra-table col:nth-child(6){width:14%}.ra-table col:nth-child(7){width:17%}.ra-table th,.ra-table td{border:1px solid #111;padding:6px 7px;text-align:center;vertical-align:middle}.ra-table th{background:#eee;color:#000;font-size:9px;font-weight:950}.ra-table td{height:42px;background:#fff;color:#1565C0;font-size:9px;font-weight:800;overflow-wrap:anywhere}.ra-table td.ra-sem-dado{color:#94a3b8}.ra-check{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:30px;border:1px solid #1B5E20;border-radius:8px;background:#E8F5E9;color:#1B5E20;padding:6px 8px;font:inherit;font-size:7.5px;font-weight:950;cursor:pointer}.ra-check input{width:15px;height:15px;margin:0;accent-color:#1B5E20}.ra-vistoriado{display:grid;gap:3px;justify-items:center;color:#1B5E20}.ra-vistoriado strong{font-size:8px}.ra-vistoriado small{font-size:6.8px;font-weight:850}.ra-corrigir{border:0;background:transparent;color:#991b1b;padding:2px;font:inherit;font-size:6.8px;font-weight:950;text-decoration:underline;cursor:pointer}
+    .ra-mobile-list{display:none;gap:9px;padding:11px}.ra-mobile-card{border:1px solid #dbe1e7;border-radius:14px;background:#fff;overflow:hidden}.ra-mobile-head{display:grid;grid-template-columns:auto minmax(0,1fr);gap:9px;align-items:center;background:#f8fafc;padding:10px}.ra-mobile-armario{display:grid;place-items:center;min-width:42px;min-height:42px;border-radius:10px;background:#374247;color:#fff;font-size:12px;font-weight:950}.ra-mobile-identidade strong{display:block;color:#17202a;font-size:10.5px}.ra-mobile-identidade small{display:block;margin-top:2px;color:#64748b;font-size:8px;font-weight:850}.ra-mobile-dados{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:9px}.ra-mobile-dado{border:1px solid #e2e8f0;border-radius:9px;padding:7px}.ra-mobile-dado small{display:block;color:#64748b;font-size:7px;font-weight:950;text-transform:uppercase}.ra-mobile-dado strong{display:block;margin-top:3px;color:#1565C0;font-size:9px;overflow-wrap:anywhere}.ra-mobile-acao{padding:0 9px 9px}.ra-mobile-acao .ra-check{width:100%}
+    .ra-assinaturas{display:grid;grid-template-columns:.9fr 1fr 1fr;margin:0 14px 14px;border:2px solid #111;background:#fff;color:#000}.ra-assinatura-bloco{min-width:0;text-align:center}.ra-assinatura-bloco+.ra-assinatura-bloco{border-left:1px solid #111}.ra-assinatura-titulo{border-bottom:1px solid #111;padding:6px;font-size:9px;font-weight:950}.ra-assinatura-conteudo{display:grid;gap:5px;min-height:90px;align-content:center;padding:8px}.ra-assinatura-conteudo strong{color:#1565C0;font-size:8px;overflow-wrap:anywhere}.ra-assinatura-conteudo small{color:#1565C0;font-size:7px;font-weight:850;overflow-wrap:anywhere}.ra-assinar-testemunha{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid #1B5E20;border-radius:9px;background:#E8F5E9;color:#1B5E20;padding:8px 10px;font:inherit;font-size:8px;font-weight:950;cursor:pointer}.ra-assinar-testemunha input{width:16px;height:16px;margin:0;accent-color:#1B5E20}.ra-pendente{color:#94a3b8!important;font-size:8px!important}.ra-resumo-rodape{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 15px 15px;color:#64748b;font-size:9px;font-weight:850}.ra-resumo-rodape strong{color:#17202a}
+    @media(max-width:940px){.ra-toolbar{grid-template-columns:1fr}.ra-actions{justify-content:stretch}.ra-actions .ra-btn{width:100%}.ra-status{grid-template-columns:1fr 1fr}.ra-table-wrap{display:none}.ra-mobile-list{display:grid}.ra-form-oficial{margin:10px}.ra-assinaturas{margin:0 10px 10px}}
+    @media(max-width:620px){.ra-toolbar{padding:11px}.ra-status{grid-template-columns:1fr}.ra-form-topo{font-size:12px}.ra-form-subtopo{grid-template-columns:1fr}.ra-form-subtopo strong{font-size:12px}.ra-form-subtopo strong+strong{border-top:1px solid #111;border-left:0}.ra-assinaturas{grid-template-columns:1fr}.ra-assinatura-bloco+.ra-assinatura-bloco{border-top:1px solid #111;border-left:0}.ra-resumo-rodape{align-items:flex-start;flex-direction:column}.ra-mobile-dados{grid-template-columns:1fr}}
 </style>
 </head>
 
@@ -6774,6 +6792,7 @@ Banco de dados: Google Sheets.
       dadosIcc: null,
       pdfIccCache: null,
       iccMiniaturaToken: 0,
+      dadosRevistaArmario: null,
       dadosDejemRocam: null,
       dejemExpiracaoTimer: null,
       apiBridgePronta: false,
@@ -7446,14 +7465,7 @@ Banco de dados: Google Sheets.
       }
 
       if (normalizarModuloCliente(id) === 'REVISTA_ARMARIO') {
-        if (!usuarioPodeAcessarRotinasOperacionaisCliente()) {
-          abrirAcessoNegado('Revista de Armário');
-          return;
-        }
-        abrirRotinaOperacionalPreparada(
-          'Revista de Armário',
-          'Área destinada aos registros e controles de revistas de armário.'
-        );
+        abrirRevistaArmario();
         return;
       }
 
@@ -7952,6 +7964,284 @@ Banco de dados: Google Sheets.
         if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao gerar o PDF.');
         baixarArquivoBase64Frequencia(resp.dados.base64, resp.dados.mimeType || 'application/pdf', resp.dados.nomeArquivo || 'Lista_Presenca_ICC.pdf');
         mostrarToastFt('PDF gerado', resp.dados.mensagem || 'Lista oficial baixada.', 'sucesso');
+      }).catch(function(erro) {
+        mostrarToastFt('PDF não gerado', erro.message || String(erro), 'erro');
+      }).finally(function() {
+        if (botao && document.body.contains(botao)) { botao.disabled = false; botao.textContent = texto || 'GERAR PDF'; }
+      });
+    }
+
+
+    /* ============================================================
+     * REVISTA DE ARMÁRIO — V1.3.2
+     * ============================================================ */
+
+    function abrirRevistaArmario(grupo) {
+      if (!usuarioPodeAcessarRotinasOperacionaisCliente()) {
+        abrirAcessoNegado('Revista de Armário');
+        return;
+      }
+      window.scrollTo(0, 0);
+      APP.dadosRevistaArmario = null;
+      document.getElementById('appConteudo').innerHTML = `
+        <div class="page-wrap">
+          <div class="page-header">
+            <div class="page-header-row">
+              <div>
+                <div class="page-kicker">Rotinas Operacionais</div>
+                <h1>Revista de Armário</h1>
+                <p>Registro mensal das vistorias, assinatura do responsável e testemunhas.</p>
+              </div>
+              <div class="page-actions"><button class="btn-page" onclick="abrirRotinasOperacionais()">VOLTAR</button></div>
+            </div>
+          </div>
+          <div id="revistaArmarioConteudo"><div class="ra-loading">Carregando o formulário mensal e o efetivo...</div></div>
+        </div>`;
+      carregarDadosRevistaArmario(grupo || '').catch(function(erro) {
+        const box = document.getElementById('revistaArmarioConteudo');
+        if (box) box.innerHTML = '<div class="ra-loading">Não foi possível carregar a Revista de Armário.<br><small>' + escapar(erro.message || String(erro)) + '</small></div>';
+      });
+    }
+
+
+    function carregarDadosRevistaArmario(grupo) {
+      return chamarApi('dados_revista_armario', { grupo: grupo || '' }, { semCache: true }).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao carregar a Revista de Armário.');
+        APP.dadosRevistaArmario = resp.dados || {};
+        renderizarRevistaArmario();
+        return APP.dadosRevistaArmario;
+      });
+    }
+
+
+    function renderizarRevistaArmario() {
+      const dados = APP.dadosRevistaArmario || {};
+      const capacidades = dados.capacidades || {};
+      const ciclo = dados.ciclo || null;
+      const grupos = Array.isArray(dados.gruposDisponiveis) ? dados.gruposDisponiveis : [dados.grupo || ''];
+      const seletorGrupo = capacidades.podeSelecionarGrupo
+        ? '<select id="raGrupoSelect" onchange="alterarGrupoRevistaArmario(this.value)">' + grupos.map(function(grupo) { return '<option value="' + escaparAttr(grupo) + '"' + (grupo === dados.grupo ? ' selected' : '') + '>' + escapar(grupo) + '</option>'; }).join('') + '</select>'
+        : '<input value="' + escaparAttr(dados.grupo || '') + '" readonly>';
+      const vistoriador = ciclo ? ciclo.identificacaoVistoriador : 'Será definido na primeira vistoria';
+      const situacao = ciclo ? 'EM ANDAMENTO' : 'AGUARDANDO INÍCIO';
+      const botaoPdf = capacidades.podeGerarPdf ? '<button class="ra-btn secundario" type="button" onclick="gerarPdfRevistaArmario(this)">GERAR PDF</button>' : '';
+      const aviso = capacidades.bloqueioVistoria
+        ? '<div class="ra-aviso bloqueio">' + escapar(capacidades.bloqueioVistoria) + '</div>'
+        : '<div class="ra-aviso">A primeira vistoria do mês vincula este formulário a um único Oficial, SubTen ou Sgt responsável.</div>';
+
+      const box = document.getElementById('revistaArmarioConteudo');
+      if (!box) return;
+      box.innerHTML = `<section class="ra-painel">
+        <div class="ra-toolbar">
+          <div class="ra-campo"><label>Pelotão / grupo</label>${seletorGrupo}</div>
+          <div class="ra-status">
+            <div class="ra-status-item"><small>Referência</small><strong>${escapar(dados.referenciaRotulo || '')}</strong></div>
+            <div class="ra-status-item ${ciclo ? 'ok' : ''}"><small>Situação</small><strong>${escapar(situacao)}</strong></div>
+            <div class="ra-status-item ${ciclo ? 'ok' : ''}"><small>Vistoriador responsável</small><strong>${escapar(vistoriador)}</strong></div>
+          </div>
+          <div class="ra-actions">${botaoPdf}</div>
+        </div>
+        ${aviso}
+        ${montarFormularioRevistaArmario(dados)}
+        <div class="ra-resumo-rodape"><span><strong>${Number(dados.quantidadeVistoriados || 0)}</strong> de <strong>${Number(dados.quantidadeEfetivo || 0)}</strong> armários vistoriados</span><span>Os registros seguem a ordem oficial do Cadastro Geral.</span></div>
+      </section>`;
+    }
+
+
+    function montarFormularioRevistaArmario(dados) {
+      const originais = Array.isArray(dados.linhas) ? dados.linhas : [];
+      const tabela = originais.slice();
+      while (tabela.length < 21) tabela.push(null);
+      return `<div class="ra-form-oficial">
+        <div class="ra-form-topo">Força Tática - ${escapar(dados.grupo || '')}</div>
+        <div class="ra-form-subtopo"><strong>REVISTA DE ARMÁRIO</strong><strong>${escapar(dados.referenciaRotulo || '')}</strong></div>
+        <div class="ra-table-wrap"><table class="ra-table"><colgroup><col><col><col><col><col><col><col></colgroup><thead><tr><th>Nº ARMÁRIO</th><th>GRADUAÇÃO</th><th>RE</th><th>NOME</th><th>ALOJAMENTO</th><th>DATA DA REVISTA</th><th>VISTORIADOR</th></tr></thead><tbody>${tabela.map(function(item) { return montarLinhaRevistaArmario(item, dados); }).join('')}</tbody></table></div>
+        <div class="ra-mobile-list">${originais.map(function(item) { return montarCardMovelRevistaArmario(item, dados); }).join('') || '<div class="ra-loading">Nenhum praça localizado neste grupo.</div>'}</div>
+      </div>
+      ${montarAssinaturasRevistaArmario(dados)}`;
+    }
+
+
+    function acaoLinhaRevistaArmario(item, dados, modoMovel) {
+      if (!item) return '';
+      const capacidades = dados.capacidades || {};
+      const nomeCodificado = encodeURIComponent([item.postoGrad, item.re, item.nomeCompleto].filter(Boolean).join(' '));
+      const reCodificado = encodeURIComponent(String(item.re || ''));
+      if (item.vistoriado) {
+        return '<div class="ra-vistoriado"><strong>' + escapar(item.dataRevista || '') + '</strong><small>REGISTRADA</small>' +
+          (capacidades.podeCorrigir ? '<button class="ra-corrigir" type="button" onclick="abrirCorrecaoRevistaArmario(decodeURIComponent(\'' + reCodificado + '\'),decodeURIComponent(\'' + nomeCodificado + '\'),\'ANULAR\')">ANULAR COM JUSTIFICATIVA</button>' : '') + '</div>';
+      }
+      if (capacidades.podeVistoriar) {
+        return '<label class="ra-check"><input type="checkbox" onchange="vistoriarArmario(this,decodeURIComponent(\'' + reCodificado + '\'),decodeURIComponent(\'' + nomeCodificado + '\'))"> ' + (modoMovel ? 'REGISTRAR VISTORIA' : 'VISTORIAR') + '</label>';
+      }
+      if (capacidades.podeCorrigir && dados.ciclo) {
+        return '<button class="ra-check" type="button" onclick="abrirCorrecaoRevistaArmario(decodeURIComponent(\'' + reCodificado + '\'),decodeURIComponent(\'' + nomeCodificado + '\'),\'REGISTRAR\')">REGISTRAR CORREÇÃO</button>';
+      }
+      return '<span class="ra-pendente">PENDENTE</span>';
+    }
+
+
+    function montarLinhaRevistaArmario(item, dados) {
+      if (!item) return '<tr><td class="ra-sem-dado">&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>';
+      return '<tr><td>' + escapar(item.numeroArmario || '') + '</td><td>' + escapar(item.postoGrad || '') + '</td><td>' + escapar(item.re || '') + '</td><td>' + escapar(item.nomeCompleto || '') + (item.registroHistorico ? '<br><small>REGISTRO HISTÓRICO</small>' : '') + '</td><td>' + escapar(item.alojamento || '') + '</td><td>' + acaoLinhaRevistaArmario(item, dados, false) + '</td><td>' + escapar(item.vistoriador || '') + '</td></tr>';
+    }
+
+
+    function montarCardMovelRevistaArmario(item, dados) {
+      return `<article class="ra-mobile-card">
+        <div class="ra-mobile-head"><div class="ra-mobile-armario">${escapar(item.numeroArmario || '-')}</div><div class="ra-mobile-identidade"><strong>${escapar([item.postoGrad,item.re,item.nomeCompleto].filter(Boolean).join(' '))}</strong><small>${escapar(item.alojamento || '')}</small></div></div>
+        <div class="ra-mobile-dados"><div class="ra-mobile-dado"><small>Data da revista</small><strong>${escapar(item.dataRevista || 'Pendente')}</strong></div><div class="ra-mobile-dado"><small>Vistoriador</small><strong>${escapar(item.vistoriador || 'Pendente')}</strong></div></div>
+        <div class="ra-mobile-acao">${acaoLinhaRevistaArmario(item, dados, true)}</div>
+      </article>`;
+    }
+
+
+    function montarAssinaturasRevistaArmario(dados) {
+      const ciclo = dados.ciclo || null;
+      return `<div class="ra-assinaturas">
+        ${montarBlocoAssinaturaRevistaArmario('Oficial ou Subten/Sgt Vistoriador', ciclo ? { idOperacao: ciclo.idAssinaturaVistoriador, identificacao: ciclo.identificacaoVistoriador } : null, 0, dados)}
+        ${montarBlocoAssinaturaRevistaArmario('Testemunha 1', ciclo && ciclo.testemunha1, 1, dados)}
+        ${montarBlocoAssinaturaRevistaArmario('Testemunha 2', ciclo && ciclo.testemunha2, 2, dados)}
+      </div>`;
+    }
+
+
+    function montarBlocoAssinaturaRevistaArmario(titulo, assinatura, vaga, dados) {
+      const capacidades = dados.capacidades || {};
+      let conteudo = '<small class="ra-pendente">PENDENTE</small>';
+      if (assinatura && assinatura.idOperacao) {
+        conteudo = '<strong>ASSINADO DIGITALMENTE</strong><small>ID: ' + escapar(assinatura.idOperacao) + '</small><small>' + escapar(assinatura.identificacao || '') + '</small>' +
+          (vaga && capacidades.podeCorrigir ? '<button class="ra-corrigir" type="button" onclick="abrirAnulacaoTestemunhaRevistaArmario(' + vaga + ')">ANULAR COM JUSTIFICATIVA</button>' : '');
+      } else if (vaga && capacidades.podeAssinarTestemunha && dados.ciclo) {
+        conteudo = '<label class="ra-assinar-testemunha"><input type="checkbox" onchange="assinarTestemunhaRevistaArmario(this,' + vaga + ')"> ASSINAR COMO TESTEMUNHA ' + vaga + '</label>';
+      } else if (!vaga && !dados.ciclo) {
+        conteudo = '<small class="ra-pendente">A PRIMEIRA VISTORIA GERARÁ A ASSINATURA</small>';
+      }
+      return '<div class="ra-assinatura-bloco"><div class="ra-assinatura-titulo">' + escapar(titulo) + '</div><div class="ra-assinatura-conteudo">' + conteudo + '</div></div>';
+    }
+
+
+    function alterarGrupoRevistaArmario(grupo) {
+      const box = document.getElementById('revistaArmarioConteudo');
+      if (box) box.innerHTML = '<div class="ra-loading">Carregando o formulário de ' + escapar(grupo || '') + '...</div>';
+      APP.dadosRevistaArmario = null;
+      carregarDadosRevistaArmario(grupo).catch(function(erro) {
+        if (box) box.innerHTML = '<div class="ra-loading">Não foi possível carregar o grupo.<br><small>' + escapar(erro.message || String(erro)) + '</small></div>';
+      });
+    }
+
+
+    function vistoriarArmario(checkbox, reAlvo, identificacao) {
+      if (!checkbox || !checkbox.checked) return;
+      const dados = APP.dadosRevistaArmario || {};
+      confirmarToastFt('REGISTRAR VISTORIA', 'Confirma a vistoria do armário pertencente a ' + String(identificacao || reAlvo) + '? A data de hoje e sua identificação serão registradas.', { confirmar: 'CONFIRMAR VISTORIA', cancelar: 'CANCELAR' }).then(function(confirmado) {
+        if (!confirmado) { checkbox.checked = false; return; }
+        checkbox.disabled = true;
+        return chamarApi('vistoriar_armario', { grupo: dados.grupo || '', reAlvo: reAlvo }, { semCache: true }).then(function(resp) {
+          if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao registrar a vistoria.');
+          mostrarToastFt('Vistoria registrada', resp.dados.mensagem || 'Armário vistoriado.', 'sucesso');
+          return carregarDadosRevistaArmario(dados.grupo || '');
+        }).catch(function(erro) {
+          checkbox.checked = false;
+          checkbox.disabled = false;
+          mostrarToastFt('Vistoria não registrada', erro.message || String(erro), 'erro');
+        });
+      });
+    }
+
+
+    function abrirCorrecaoRevistaArmario(reAlvo, identificacao, operacao) {
+      fecharModalRevistaArmario();
+      const modal = document.createElement('div');
+      modal.id = 'raCorrecaoModal';
+      modal.className = 'icc-modal-overlay';
+      modal.innerHTML = '<div class="icc-modal-dialog" role="dialog" aria-modal="true"><div class="icc-modal-head"><h2>Correção da Revista de Armário</h2><p>' + escapar(identificacao || reAlvo) + '</p></div><div class="icc-modal-body"><div class="icc-campo"><label>Justificativa obrigatória</label><textarea id="raMotivoCorrecao" maxlength="300" placeholder="Descreva o motivo da correção administrativa."></textarea></div><div class="icc-modal-actions"><button class="icc-btn secundario" type="button" onclick="fecharModalRevistaArmario()">CANCELAR</button><button id="raConfirmarCorrecaoBtn" class="icc-btn ' + (operacao === 'ANULAR' ? 'perigo' : '') + '" type="button" onclick="confirmarCorrecaoRevistaArmario(\'' + escaparAttr(reAlvo || '') + '\',\'' + escaparAttr(operacao || '') + '\',this)">' + (operacao === 'ANULAR' ? 'ANULAR MARCAÇÃO' : 'REGISTRAR CORREÇÃO') + '</button></div></div></div>';
+      modal.addEventListener('click', function(evento) { if (evento.target === modal) fecharModalRevistaArmario(); });
+      document.body.appendChild(modal);
+      setTimeout(function() { const campo = document.getElementById('raMotivoCorrecao'); if (campo) campo.focus(); }, 30);
+    }
+
+
+    function confirmarCorrecaoRevistaArmario(reAlvo, operacao, botao) {
+      const campo = document.getElementById('raMotivoCorrecao');
+      const motivo = String(campo && campo.value || '').trim();
+      if (motivo.length < 5) { mostrarToastFt('Justificativa necessária', 'Informe ao menos 5 caracteres.', 'atencao'); if (campo) campo.focus(); return; }
+      const grupo = APP.dadosRevistaArmario && APP.dadosRevistaArmario.grupo || '';
+      if (botao) { botao.disabled = true; botao.textContent = 'SALVANDO...'; }
+      chamarApi('corrigir_vistoria_armario', { grupo: grupo, reAlvo: reAlvo, operacao: operacao, motivo: motivo }, { semCache: true }).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao registrar a correção.');
+        fecharModalRevistaArmario();
+        mostrarToastFt('Correção registrada', resp.dados.mensagem || 'Histórico preservado.', 'sucesso');
+        return carregarDadosRevistaArmario(grupo);
+      }).catch(function(erro) {
+        mostrarToastFt('Correção não registrada', erro.message || String(erro), 'erro');
+        if (botao && document.body.contains(botao)) { botao.disabled = false; botao.textContent = operacao === 'ANULAR' ? 'ANULAR MARCAÇÃO' : 'REGISTRAR CORREÇÃO'; }
+      });
+    }
+
+
+    function assinarTestemunhaRevistaArmario(checkbox, vaga) {
+      if (!checkbox || !checkbox.checked) return;
+      const dados = APP.dadosRevistaArmario || {};
+      confirmarToastFt('ASSINAR COMO TESTEMUNHA ' + vaga, 'Confirma sua assinatura digital como Testemunha ' + vaga + ' da Revista de Armário de ' + String(dados.grupo || '') + '?', { confirmar: 'ASSINAR DIGITALMENTE', cancelar: 'CANCELAR' }).then(function(confirmado) {
+        if (!confirmado) { checkbox.checked = false; return; }
+        checkbox.disabled = true;
+        return chamarApi('assinar_testemunha_revista_armario', { grupo: dados.grupo || '', vaga: vaga }, { semCache: true }).then(function(resp) {
+          if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao registrar a assinatura.');
+          mostrarToastFt('Testemunha registrada', (resp.dados.mensagem || 'Assinatura registrada.') + ' ID: ' + String(resp.dados.idOperacao || ''), 'sucesso');
+          return carregarDadosRevistaArmario(dados.grupo || '');
+        }).catch(function(erro) {
+          checkbox.checked = false;
+          checkbox.disabled = false;
+          mostrarToastFt('Assinatura não registrada', erro.message || String(erro), 'erro');
+        });
+      });
+    }
+
+
+    function abrirAnulacaoTestemunhaRevistaArmario(vaga) {
+      fecharModalRevistaArmario();
+      const modal = document.createElement('div');
+      modal.id = 'raCorrecaoModal';
+      modal.className = 'icc-modal-overlay';
+      modal.innerHTML = '<div class="icc-modal-dialog" role="dialog" aria-modal="true"><div class="icc-modal-head"><h2>Anular Testemunha ' + Number(vaga || 0) + '</h2><p>O registro original permanecerá preservado para auditoria.</p></div><div class="icc-modal-body"><div class="icc-campo"><label>Justificativa obrigatória</label><textarea id="raMotivoCorrecao" maxlength="300" placeholder="Descreva o motivo da anulação."></textarea></div><div class="icc-modal-actions"><button class="icc-btn secundario" type="button" onclick="fecharModalRevistaArmario()">CANCELAR</button><button id="raConfirmarCorrecaoBtn" class="icc-btn perigo" type="button" onclick="confirmarAnulacaoTestemunhaRevistaArmario(' + Number(vaga || 0) + ',this)">ANULAR ASSINATURA</button></div></div></div>';
+      modal.addEventListener('click', function(evento) { if (evento.target === modal) fecharModalRevistaArmario(); });
+      document.body.appendChild(modal);
+    }
+
+
+    function confirmarAnulacaoTestemunhaRevistaArmario(vaga, botao) {
+      const campo = document.getElementById('raMotivoCorrecao');
+      const motivo = String(campo && campo.value || '').trim();
+      if (motivo.length < 5) { mostrarToastFt('Justificativa necessária', 'Informe ao menos 5 caracteres.', 'atencao'); if (campo) campo.focus(); return; }
+      const grupo = APP.dadosRevistaArmario && APP.dadosRevistaArmario.grupo || '';
+      if (botao) { botao.disabled = true; botao.textContent = 'ANULANDO...'; }
+      chamarApi('anular_assinatura_revista_armario', { grupo: grupo, vaga: vaga, motivo: motivo }, { semCache: true }).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao anular a assinatura.');
+        fecharModalRevistaArmario();
+        mostrarToastFt('Assinatura anulada', resp.dados.mensagem || 'Histórico preservado.', 'sucesso');
+        return carregarDadosRevistaArmario(grupo);
+      }).catch(function(erro) {
+        mostrarToastFt('Anulação não realizada', erro.message || String(erro), 'erro');
+        if (botao && document.body.contains(botao)) { botao.disabled = false; botao.textContent = 'ANULAR ASSINATURA'; }
+      });
+    }
+
+
+    function fecharModalRevistaArmario() {
+      const modal = document.getElementById('raCorrecaoModal');
+      if (modal) modal.remove();
+    }
+
+
+    function gerarPdfRevistaArmario(botao) {
+      const dados = APP.dadosRevistaArmario || {};
+      const texto = botao ? botao.textContent : '';
+      if (botao) { botao.disabled = true; botao.textContent = 'GERANDO PDF...'; }
+      chamarApi('gerar_pdf_revista_armario', { grupo: dados.grupo || '' }, { semCache: true }).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao gerar o PDF.');
+        baixarArquivoBase64Frequencia(resp.dados.base64, resp.dados.mimeType || 'application/pdf', resp.dados.nomeArquivo || 'Revista_Armario.pdf');
+        mostrarToastFt('PDF gerado', resp.dados.mensagem || 'Formulário oficial baixado.', 'sucesso');
       }).catch(function(erro) {
         mostrarToastFt('PDF não gerado', erro.message || String(erro), 'erro');
       }).finally(function() {
@@ -12297,6 +12587,7 @@ Banco de dados: Google Sheets.
           ${consultaDetail('Pelotão', pm.pelotao)}
           ${consultaDetail('Modalidade', pm.modalidade)}
           ${consultaDetail('Função', pm.funcao)}
+          ${consultaDetail('Nº do armário', pm.numeroArmario)}
           ${consultaDetail('Telefone', pm.telefone)}
           ${consultaDetail('E-mail', pm.email)}
           ${consultaDetail('CPF', pm.cpf)}
@@ -12352,6 +12643,7 @@ Banco de dados: Google Sheets.
               ${consultaSelect('Modalidade', 'modalidade', pm.modalidade, ((APP.dadosConsultaEfetivo && APP.dadosConsultaEfetivo.configListas) || {}).modalidades || [])}
               ${consultaSelect('Função', 'funcao', pm.funcao, ((APP.dadosConsultaEfetivo && APP.dadosConsultaEfetivo.configListas) || {}).funcoes || [])}
               ${consultaSelect('Status', 'status', pm.status, ((APP.dadosConsultaEfetivo && APP.dadosConsultaEfetivo.configListas) || {}).status || [])}
+              ${consultaInputTipo('Nº do armário', 'numeroArmario', pm.numeroArmario, 'text', 'Ex.: 35', 'maxlength="20"')}
               ${consultaInputTipo('Telefone', 'telefone', pm.telefone, 'tel', '11-999999999', 'maxlength="12" inputmode="numeric" oninput="mascararTelefoneConsulta(this)"')}
               ${consultaInputTipo('E-mail', 'email', pm.email, 'email', 'email@dominio.com', '')}
               ${consultaInputTipo('CPF', 'cpf', pm.cpf, 'text', '000.000.000-00', 'maxlength="14" inputmode="numeric" oninput="mascararCpfConsulta(this)"')}
@@ -12920,6 +13212,7 @@ Banco de dados: Google Sheets.
                   ${consultaSelect('Modalidade', 'modalidade', '', cfg.modalidades || [])}
                   ${consultaSelect('Função', 'funcao', '', cfg.funcoes || [])}
                   ${consultaSelect('Status', 'status', '', cfg.status || [])}
+                  ${consultaInputTipo('Nº do armário', 'numeroArmario', '', 'text', 'Ex.: 35', 'maxlength="20"')}
                   ${consultaInputTipo('Telefone', 'telefone', '', 'tel', '11-999999999', 'maxlength="12" inputmode="numeric" oninput="mascararTelefoneConsulta(this)"')}
                   ${consultaInputTipo('E-mail', 'email', '', 'email', 'email@dominio.com', '')}
                   ${consultaInputTipo('CPF', 'cpf', '', 'text', '000.000.000-00', 'maxlength="14" inputmode="numeric" oninput="mascararCpfConsulta(this); atualizarSenhaCpfNovoPolicial()"')}
