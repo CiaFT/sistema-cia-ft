@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.3.1
+SISTEMA CIA FT — PORTAL GITHUB V1.3.2
 Arquivo: index.html
 ============================================================
 
-VERSÃO V1.3.1 — RESENHAS, AUTORIZAÇÃO P/4 E QUADRO MENSAL DA COP
+VERSÃO V1.3.2 — ICC, CIÊNCIA DIGITAL E LISTA OFICIAL
 - Preserva a última versão encerrada do Controle de Frequência.
 - Preserva a implantação completa de Viaturas V1.2.6.
 - Corrige a leitura e a identificação funcional em Resenhas Enviadas.
@@ -26,9 +26,11 @@ VERSÃO V1.3.1 — RESENHAS, AUTORIZAÇÃO P/4 E QUADRO MENSAL DA COP
 - Exibe o quantitativo mensal de vídeos da COP por militar e reserva PDF/Impressão ao efetivo ADM.
 - Cria o agrupador ROTINAS OPERACIONAIS no Menu Principal e move a COP para essa área.
 - Acrescenta ICC e REVISTA DE ARMÁRIO ao agrupador ROTINAS OPERACIONAIS.
+- Torna ROTINAS OPERACIONAIS visível a todo o efetivo e preserva a COP somente para perfis autorizados.
+- Implanta a publicação da ICC, visualização protegida, assinatura individual e geração da lista oficial em PDF.
 
 Front-end externo hospedado no GitHub Pages.
-Backend/API: Apps Script API_FT.gs V1.3.1.
+Backend/API: Apps Script API_FT.gs V1.3.2.
 Banco de dados: Google Sheets.
 
 ============================================================
@@ -37,8 +39,8 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="cia-ft-build" content="FT-V131-20260821-ROTINAS-OPERACIONAIS-R3">
-  <title>Portal Força Tática • V1.3.1</title>
+  <meta name="cia-ft-build" content="FT-V132-20260821-ICC-R1">
+  <title>Portal Força Tática • V1.3.2</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
 
@@ -6669,6 +6671,24 @@ Banco de dados: Google Sheets.
     .dejem-final-list{display:grid;gap:10px}.dejem-final-slot{overflow:hidden;border:1px solid #dbe1e7;border-radius:15px;background:#f8fafc}.dejem-final-slot-head{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#374247;color:#fff;padding:10px 12px}.dejem-final-slot-head strong{font-size:12px}.dejem-final-slot-head span{font-size:11px;font-weight:950}.dejem-final-grupos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:10px}.dejem-final-grupo{border:1px solid #dbe1e7;border-radius:12px;background:#fff;padding:9px}.dejem-final-grupo.escalados{border-color:#A5D6A7;background:#F1F8E9}.dejem-final-grupo.excedentes{border-color:#FFCC80;background:#FFF8E1}.dejem-final-grupo h4{margin:0 0 7px;font-size:9px;font-weight:950;letter-spacing:.35px}.dejem-final-grupo.escalados h4{color:#1B5E20}.dejem-final-grupo.excedentes h4{color:#9A3412}.dejem-final-pm{padding:6px 0;border-top:1px solid rgba(100,116,139,.18)}.dejem-final-pm:first-of-type{border-top:0}.dejem-final-pm strong{display:block;color:#17202a;font-size:10px;line-height:1.3}.dejem-final-pm small{display:block;margin-top:2px;color:#64748b;font-size:8.5px;font-weight:850}.dejem-final-vazio{color:#64748b;font-size:9px;font-weight:800}.dejem-final-expira{display:inline-block;margin-top:5px;color:#8E1B1B!important;font-weight:900}
     @media(max-width:820px){.dejem-days{grid-template-columns:1fr}}
     @media(max-width:560px){.dejem-status{grid-template-columns:1fr}.dejem-deadline{text-align:left}.dejem-day-head{padding:10px 11px}.dejem-slots{padding:9px}.dejem-vaga{grid-template-columns:25px minmax(0,1fr) auto;padding:5px 6px}.dejem-pm strong{font-size:9.5px}.dejem-action{padding:6px 5px}.dejem-panel{padding:12px}.dejem-panel-head{display:grid}.dejem-copy{width:100%}.dejem-table{min-width:0;font-size:8.5px;table-layout:fixed}.dejem-table th,.dejem-table td{padding:7px 4px;overflow-wrap:anywhere}.dejem-table th:first-child,.dejem-table td:first-child{width:44%}.dejem-final-grupos{grid-template-columns:1fr}.dejem-final-slot-head{align-items:flex-start;flex-direction:column;gap:3px}}
+
+    /* ICC — V1.3.2 */
+    #appScreen .menu-card[data-modulo="ICC"] .menu-icon-imagem img{transform:scale(1.02)}
+    .icc-loading{border:1px solid #dbe1e7;border-radius:18px;background:#fff;color:#475569;padding:22px;text-align:center;font-size:12px;font-weight:850}
+    .icc-admin-panel,.icc-documento,.icc-lista{margin-bottom:16px;border:1px solid rgba(55,66,71,.16);border-radius:20px;background:#fff;color:#17202a;box-shadow:0 10px 28px rgba(15,23,42,.06);overflow:hidden}
+    .icc-section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border-bottom:1px solid #e2e8f0;background:#f8fafc;padding:14px 16px}
+    .icc-section-head h2,.icc-section-head h3{margin:0 0 4px;font-size:16px}.icc-section-head p{margin:0;color:#64748b;font-size:10.5px;line-height:1.45}
+    .icc-admin-body{display:grid;gap:14px;padding:15px}.icc-meta-grid{display:grid;grid-template-columns:minmax(100px,.45fr) minmax(100px,.45fr) minmax(160px,.7fr) minmax(220px,1.5fr) auto;gap:10px;align-items:end}
+    .icc-campo{display:grid;gap:5px;min-width:0}.icc-campo label{color:#475569;font-size:9px;font-weight:950;letter-spacing:.25px;text-transform:uppercase}.icc-campo input,.icc-campo select,.icc-campo textarea{width:100%;min-height:42px;border:1px solid #cbd5e1;border-radius:11px;background:#fff;color:#17202a;padding:8px 10px;font:inherit;font-size:11px;font-weight:750}.icc-campo textarea{min-height:70px;resize:vertical}.icc-campo input:focus,.icc-campo select:focus,.icc-campo textarea:focus{outline:3px solid rgba(142,27,27,.13);border-color:#8E1B1B}
+    .icc-btn{min-height:42px;border:1px solid #8E1B1B;border-radius:11px;background:#8E1B1B;color:#fff;padding:9px 13px;font:inherit;font-size:9.5px;font-weight:950;cursor:pointer}.icc-btn.secundario{border-color:#374247;background:#fff;color:#374247}.icc-btn.perigo{border-color:#991b1b;background:#fff;color:#991b1b}.icc-btn:disabled{border-color:#cbd5e1;background:#e2e8f0;color:#64748b;cursor:wait}
+    .icc-uploader{border:1px dashed #94a3b8;border-radius:15px;background:#f8fafc;padding:11px}.icc-uploader-fechado #iccUploaderConteudo{display:none}.icc-uploader iframe{display:block;width:100%;height:360px;border:0;background:transparent}.icc-uploader-title{display:flex;align-items:center;justify-content:space-between;gap:12px}.icc-uploader-title strong{display:block;font-size:12px}.icc-uploader-title small{display:block;margin-top:3px;color:#64748b;font-size:9px;font-weight:750}
+    .icc-documento-body{display:grid;grid-template-columns:minmax(250px,.78fr) minmax(0,1.22fr);gap:16px;padding:16px}.icc-preview-col{display:grid;align-content:start;gap:9px}.icc-thumb-wrap{position:relative;display:grid;place-items:center;min-height:315px;overflow:hidden;border:1px solid #cbd5e1;border-radius:15px;background:#e2e8f0;padding:10px}.icc-thumb-wrap canvas{display:block;max-width:100%;max-height:430px;background:#fff;box-shadow:0 8px 24px rgba(15,23,42,.2)}.icc-thumb-loading{display:grid;place-items:center;min-height:260px;color:#475569;font-size:10px;font-weight:900;text-align:center}.icc-thumb-watermark{position:absolute;left:50%;top:50%;display:grid;gap:6px;transform:translate(-50%,-50%) rotate(-30deg);color:rgba(142,27,27,.18);font-weight:1000;text-align:center;pointer-events:none;white-space:nowrap}.icc-thumb-watermark strong{font-size:22px}.icc-thumb-watermark span{font-size:15px}
+    .icc-doc-info{display:grid;align-content:start;gap:11px}.icc-doc-title{border-left:5px solid #8E1B1B;padding:4px 0 4px 12px}.icc-doc-title h2{margin:0 0 4px;font-size:20px}.icc-doc-title p{margin:0;color:#64748b;font-size:11px;line-height:1.45}.icc-meta-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.icc-meta-card{border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;padding:10px}.icc-meta-card small{display:block;color:#64748b;font-size:8px;font-weight:950;letter-spacing:.25px;text-transform:uppercase}.icc-meta-card strong{display:block;margin-top:4px;color:#17202a;font-size:11px;overflow-wrap:anywhere}.icc-prazo{border-radius:12px;background:#E8F5E9;color:#1B5E20;padding:10px 12px;font-size:10px;font-weight:900}.icc-prazo.fechado{background:#FDECEC;color:#8E1B1B}.icc-doc-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.icc-doc-actions .icc-btn{width:100%}
+    .icc-vazio{border:1px dashed #cbd5e1;border-radius:16px;background:#f8fafc;color:#64748b;padding:24px;text-align:center;font-size:11px;line-height:1.5}.icc-vazio strong{display:block;margin-bottom:5px;color:#17202a;font-size:14px}
+    .icc-lista-toolbar{display:flex;align-items:end;justify-content:space-between;gap:12px;padding:13px 16px;border-bottom:1px solid #e2e8f0}.icc-lista-toolbar .icc-campo{min-width:180px}.icc-lista-resumo{display:flex;gap:7px;flex-wrap:wrap}.icc-badge{border-radius:999px;background:#eef2f6;color:#475569;padding:7px 10px;font-size:8.5px;font-weight:950}.icc-badge.ok{background:#E8F5E9;color:#1B5E20}.icc-form-oficial{margin:14px;overflow:hidden;border:2px solid #111;background:#fff;color:#000}.icc-form-linha{border-bottom:1px solid #111;padding:5px 8px;text-align:center;font-size:11px;font-weight:900}.icc-form-linha:last-child{border-bottom:0}.icc-form-titulo{font-size:13px}.icc-form-tema{overflow-wrap:anywhere}.icc-table-wrap{width:100%;overflow:auto}.icc-table{width:100%;min-width:760px;border-collapse:collapse;table-layout:fixed}.icc-table col:nth-child(1){width:17%}.icc-table col:nth-child(2){width:15%}.icc-table col:nth-child(3){width:41%}.icc-table col:nth-child(4){width:27%}.icc-table th,.icc-table td{border:1px solid #111;padding:6px 7px;text-align:center;vertical-align:middle}.icc-table th{background:#fff;color:#000;font-size:10px;font-weight:950}.icc-table td{height:43px;background:#fff;color:#000;font-size:9px;font-weight:750}.icc-table td:nth-child(3){overflow-wrap:anywhere}.icc-assinatura{display:grid;gap:3px;justify-items:center}.icc-assinatura strong{color:#1B5E20;font-size:7.5px}.icc-assinatura small{max-width:100%;color:#374151;font-size:6.7px;font-weight:900;overflow-wrap:anywhere}.icc-assinar-check{display:inline-flex;align-items:center;gap:7px;border:1px solid #1B5E20;border-radius:9px;background:#E8F5E9;color:#1B5E20;padding:7px 9px;font-size:8px;font-weight:950;cursor:pointer}.icc-assinar-check input{width:17px;height:17px;margin:0;accent-color:#1B5E20}.icc-anular{border:0;background:transparent;color:#991b1b;padding:3px;font:inherit;font-size:6.8px;font-weight:950;text-decoration:underline;cursor:pointer}.icc-pendente{color:#94a3b8;font-size:8px;font-weight:850}.icc-transferido{display:block;margin-top:3px;color:#9A3412;font-size:6.8px;font-weight:900}
+    .icc-modal-overlay{position:fixed;inset:0;z-index:10080;display:grid;place-items:center;padding:16px;background:rgba(15,23,42,.72);backdrop-filter:blur(4px)}.icc-modal-dialog{width:min(520px,100%);overflow:hidden;border-radius:20px;background:#fff;box-shadow:0 28px 90px rgba(0,0,0,.34)}.icc-modal-head{background:#374247;color:#fff;padding:16px 18px}.icc-modal-head h2{margin:0 0 4px;font-size:17px}.icc-modal-head p{margin:0;color:#dbe1e7;font-size:10px}.icc-modal-body{display:grid;gap:11px;padding:17px}.icc-modal-body textarea{width:100%;min-height:110px;border:1px solid #cbd5e1;border-radius:12px;padding:10px;font:inherit;font-size:12px;resize:vertical}.icc-modal-actions{display:flex;justify-content:flex-end;gap:8px}
+    @media(max-width:980px){.icc-meta-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.icc-meta-grid .icc-btn{width:100%}.icc-documento-body{grid-template-columns:1fr}.icc-thumb-wrap{min-height:260px}}
+    @media(max-width:620px){.icc-section-head,.icc-lista-toolbar{align-items:stretch;flex-direction:column}.icc-meta-grid{grid-template-columns:1fr}.icc-uploader-title{align-items:stretch;flex-direction:column}.icc-uploader-title .icc-btn{width:100%}.icc-uploader iframe{height:480px}.icc-documento-body{padding:11px}.icc-thumb-wrap{min-height:220px}.icc-meta-cards{grid-template-columns:1fr}.icc-doc-actions{grid-template-columns:1fr}.icc-form-oficial{margin:9px}.icc-table{min-width:690px}.icc-modal-actions{display:grid;grid-template-columns:1fr}.icc-modal-actions .icc-btn{width:100%}}
 </style>
 </head>
 
@@ -6699,7 +6719,7 @@ Banco de dados: Google Sheets.
       <div id="loginAlerta" class="alerta"></div>
 
       <div class="footer">
-        Portal Força Tática • V1.3.1
+        Portal Força Tática • V1.3.2
       </div>
     </main>
   </section>
@@ -6751,6 +6771,9 @@ Banco de dados: Google Sheets.
       urlPdfEscalaCiaFt: null,
       dadosRotinasAdministrativas: null,
       dadosVistoriaCop: null,
+      dadosIcc: null,
+      pdfIccCache: null,
+      iccMiniaturaToken: 0,
       dadosDejemRocam: null,
       dejemExpiracaoTimer: null,
       apiBridgePronta: false,
@@ -6767,6 +6790,7 @@ Banco de dados: Google Sheets.
       pdfResizeTimerEscalaCiaFt: null,
       pdfResizeHandlerEscalaCiaFt: null,
       pdfVisualViewportHandlerEscalaCiaFt: null,
+      pdfMarcaTituloEscalaCiaFt: 'ESCALA VIA APP FT',
       sessaoGeracao: 0,
       semanaMobileFrequencia: 0,
       semanaMobileFolgas: 0,
@@ -6776,6 +6800,7 @@ Banco de dados: Google Sheets.
     document.addEventListener('DOMContentLoaded', function() {
       window.addEventListener('message', function(event) {
         tratarMensagemUploaderEscalaCiaFt(event);
+        tratarMensagemUploaderIcc(event);
         tratarMensagemPonteApiFt(event);
       });
       document.getElementById('loginRE').addEventListener('keydown', function(ev) {
@@ -7280,20 +7305,30 @@ Banco de dados: Google Sheets.
       /*
        * V1.2.4 — Regra crítica:
        * Os módulos liberados continuam vindo da API e da PERMISSOES_FT.
-       * ROTINAS_OPERACIONAIS é apenas um agrupador visual da COP: ele só
-       * aparece quando o usuário já possui acesso ao módulo COP.
+       * ROTINAS_OPERACIONAIS é um agrupador universal. A permissão da COP
+       * continua sendo aplicada somente ao card e às rotas da própria COP.
        */
       const menus = Array.isArray(APP.menus) ? APP.menus.slice() : [];
       const indiceCop = menus.findIndex(function(menu) {
         return normalizarModuloCliente(menu && menu.id) === 'COP';
       });
+      const indiceRotinas = menus.findIndex(function(menu) {
+        return normalizarModuloCliente(menu && menu.id) === 'ROTINAS_OPERACIONAIS';
+      });
+      const cardRotinas = {
+        id: 'ROTINAS_OPERACIONAIS',
+        titulo: 'ROTINAS OPERACIONAIS',
+        icone: '',
+        descricao: 'Acesso às rotinas, controles e sistemas operacionais da Companhia.'
+      };
       if (indiceCop !== -1) {
-        menus.splice(indiceCop, 1, {
-          id: 'ROTINAS_OPERACIONAIS',
-          titulo: 'ROTINAS OPERACIONAIS',
-          icone: '',
-          descricao: 'Acesso às rotinas, controles e sistemas operacionais da Companhia.'
+        if (indiceRotinas === -1) menus.splice(indiceCop, 1, cardRotinas);
+        else menus.splice(indiceCop, 1);
+      } else if (indiceRotinas === -1) {
+        const indicePainel = menus.findIndex(function(menu) {
+          return normalizarModuloCliente(menu && menu.id) === 'PAINEL_ADMINISTRATIVO';
         });
+        menus.splice(indicePainel >= 0 ? indicePainel + 1 : menus.length, 0, cardRotinas);
       }
       return menus;
     }
@@ -7313,7 +7348,7 @@ Banco de dados: Google Sheets.
         VIATURAS: { arquivo: './icone-viaturas.png?v=1211-ft1408r1', alt: 'Viaturas' },
         DEJEM_ROCAM: { arquivo: './icone-dejem-rocam.png?v=1211-ft1408r1', alt: 'DEJEM ROCAM' },
         ROTINAS_OPERACIONAIS: { arquivo: './icone-rotinas-operacionais.png?v=131-rotinas-r2', alt: 'Rotinas Operacionais' },
-        ICC: { arquivo: './icone-icc.png?v=131-rotinas-r3', alt: 'ICC' },
+        ICC: { arquivo: './icone-icc.png?v=132-icc-r1', alt: 'ICC' },
         REVISTA_ARMARIO: { arquivo: './icone-revista-armario.png?v=131-rotinas-r3', alt: 'Revista de Armário' }
       };
       const imagemMenu = imagensMenu[moduloMenu] || null;
@@ -7401,23 +7436,12 @@ Banco de dados: Google Sheets.
       }
 
       if (normalizarModuloCliente(id) === 'ROTINAS_OPERACIONAIS') {
-        if (!usuarioPodeAcessarRotinasOperacionaisCliente()) {
-          abrirAcessoNegado('Rotinas Operacionais');
-          return;
-        }
         abrirRotinasOperacionais();
         return;
       }
 
       if (normalizarModuloCliente(id) === 'ICC') {
-        if (!usuarioPodeAcessarRotinasOperacionaisCliente()) {
-          abrirAcessoNegado('ICC');
-          return;
-        }
-        abrirRotinaOperacionalPreparada(
-          'ICC',
-          'Área destinada aos registros e controles de ICC.'
-        );
+        abrirIcc();
         return;
       }
 
@@ -7483,33 +7507,33 @@ Banco de dados: Google Sheets.
 
 
     function usuarioPodeAcessarRotinasOperacionaisCliente() {
-      return usuarioTemPermissaoCliente('COP', 'visualizar');
+      return !!APP.usuario;
     }
 
 
     function abrirRotinasOperacionais() {
       window.scrollTo(0, 0);
       const modulos = [];
-      if (usuarioPodeAcessarRotinasOperacionaisCliente()) {
+      if (usuarioTemPermissaoCliente('COP', 'visualizar')) {
         modulos.push({
           id: 'COP',
           titulo: 'COP',
           icone: '',
           descricao: 'Portal COP, análise e auditoria mensal dos vídeos das câmeras operacionais.'
         });
-        modulos.push({
-          id: 'ICC',
-          titulo: 'ICC',
-          icone: '',
-          descricao: 'Acesso às rotinas, registros e controles de ICC.'
-        });
-        modulos.push({
-          id: 'REVISTA_ARMARIO',
-          titulo: 'REVISTA DE ARMÁRIO',
-          icone: '',
-          descricao: 'Acesso às rotinas, registros e controles de revistas de armário.'
-        });
       }
+      modulos.push({
+        id: 'ICC',
+        titulo: 'ICC',
+        icone: '',
+        descricao: 'Consulta da ICC atual, ciência digital e lista oficial de presença.'
+      });
+      modulos.push({
+        id: 'REVISTA_ARMARIO',
+        titulo: 'REVISTA DE ARMÁRIO',
+        icone: '',
+        descricao: 'Acesso às rotinas, registros e controles de revistas de armário.'
+      });
 
       document.getElementById('appConteudo').innerHTML = `
         <div class="page-wrap">
@@ -7551,6 +7575,388 @@ Banco de dados: Google Sheets.
             <p>Este campo está disponível no menu e receberá as funções específicas na próxima etapa de implantação.</p>
           </div>
         </div>`;
+    }
+
+
+    function abrirIcc(grupo) {
+      window.scrollTo(0, 0);
+      APP.dadosIcc = null;
+      APP.pdfIccCache = null;
+      APP.iccMiniaturaToken = Number(APP.iccMiniaturaToken || 0) + 1;
+      document.getElementById('appConteudo').innerHTML = `
+        <div class="page-wrap">
+          <div class="page-header">
+            <div class="page-header-row">
+              <div>
+                <div class="page-kicker">Rotinas Operacionais</div>
+                <h1>ICC</h1>
+                <p>Consulta da ICC atual, ciência digital individual e geração da lista oficial de presença.</p>
+              </div>
+              <div class="page-actions"><button class="btn-page" onclick="abrirRotinasOperacionais()">VOLTAR</button></div>
+            </div>
+          </div>
+          <div id="iccConteudo"><div class="icc-loading">Carregando a ICC atual e a lista do efetivo...</div></div>
+        </div>`;
+      carregarDadosIcc(grupo || '').catch(function(erro) {
+        const box = document.getElementById('iccConteudo');
+        if (box) box.innerHTML = '<div class="icc-vazio"><strong>Não foi possível carregar a ICC</strong>' + escapar(erro.message || String(erro)) + '</div>';
+      });
+    }
+
+
+    function carregarDadosIcc(grupo) {
+      return chamarApi('dados_icc', { grupo: grupo || '' }, { semCache: true }).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao carregar os dados da ICC.');
+        APP.dadosIcc = resp.dados || {};
+        renderizarIcc();
+        return APP.dadosIcc;
+      });
+    }
+
+
+    function renderizarIcc() {
+      const box = document.getElementById('iccConteudo');
+      const dados = APP.dadosIcc || {};
+      if (!box) return;
+      const documento = dados.documento || null;
+      const capacidades = dados.capacidades || {};
+      box.innerHTML = [
+        capacidades.podeAdministrar ? montarPainelAdministrativoIcc(dados) : '',
+        documento ? montarDocumentoAtualIcc(dados) : '<div class="icc-vazio"><strong>Nenhuma ICC publicada</strong>O documento aparecerá aqui após a publicação realizada por Aux Adm ou Enc Adm.</div>',
+        documento ? montarListaPresencaIcc(dados) : ''
+      ].join('');
+      if (documento) carregarMiniaturaIcc(documento.id);
+    }
+
+
+    function montarPainelAdministrativoIcc(dados) {
+      const documento = dados.documento || {};
+      const capacidades = dados.capacidades || {};
+      const token = String(capacidades.uploadToken || '');
+      const formularioCorrecao = documento.id ? `
+        <div class="icc-meta-grid">
+          <div class="icc-campo"><label>Número da ICC</label><input id="iccMetaNumero" maxlength="30" value="${escaparAttr(documento.numero || '')}"></div>
+          <div class="icc-campo"><label>Ano</label><input id="iccMetaAno" inputmode="numeric" maxlength="4" value="${escaparAttr(documento.ano || '')}"></div>
+          <div class="icc-campo"><label>Limite para assinatura</label><input id="iccMetaDataLimite" type="date" value="${escaparAttr(documento.dataLimiteISO || '')}"></div>
+          <div class="icc-campo"><label>Tema</label><textarea id="iccMetaTema" maxlength="300">${escapar(documento.tema || '')}</textarea></div>
+          <button id="iccSalvarMetaBtn" class="icc-btn secundario" type="button" onclick="salvarMetadadosIcc(this)">SALVAR CORREÇÕES</button>
+        </div>` : '';
+      return `<section class="icc-admin-panel">
+        <div class="icc-section-head"><div><h2>Administração da ICC</h2><p>Publicação e correções exclusivas para Aux Adm e Enc Adm.</p></div></div>
+        <div class="icc-admin-body">
+          ${formularioCorrecao}
+          <div class="icc-uploader icc-uploader-fechado">
+            <div class="icc-uploader-title"><div><strong>PUBLICAR NOVA ICC</strong><small>A publicação substitui o documento atual e abre uma lista de assinaturas independente.</small></div><button type="button" class="icc-btn" onclick="abrirUploaderIcc(this)">ABRIR FORMULÁRIO DE PUBLICAÇÃO</button></div>
+            <div id="iccUploaderConteudo" data-upload-token="${escaparAttr(token)}"></div>
+          </div>
+        </div>
+      </section>`;
+    }
+
+
+    function montarDocumentoAtualIcc(dados) {
+      const documento = dados.documento || {};
+      const capacidades = dados.capacidades || {};
+      const assinada = !!dados.assinaturaUsuario;
+      const rotuloLista = assinada ? 'VER LISTA ASSINADA' : 'ASSINAR LISTA DE PRESENÇA';
+      const prazoClasse = capacidades.prazoAberto ? '' : ' fechado';
+      const prazoTexto = capacidades.prazoAberto
+        ? 'Assinaturas disponíveis até 23h59 de ' + String(documento.dataLimiteBR || '')
+        : 'Prazo encerrado em ' + String(documento.dataLimiteBR || '');
+      return `<section class="icc-documento">
+        <div class="icc-section-head"><div><h2>ICC atual</h2><p>Documento oficial publicado para ciência do efetivo.</p></div></div>
+        <div class="icc-documento-body">
+          <div class="icc-preview-col">
+            <div id="iccThumbWrap" class="icc-thumb-wrap"><div class="icc-thumb-loading">Preparando a miniatura protegida do PDF...</div></div>
+            <div class="icc-doc-actions"><button class="icc-btn secundario" type="button" onclick="visualizarIccAtual(this)">VISUALIZAR PDF</button><button class="icc-btn" type="button" onclick="irParaListaIcc()">${rotuloLista}</button></div>
+          </div>
+          <div class="icc-doc-info">
+            <div class="icc-doc-title"><h2>ICC ${escapar(documento.numero || '')} de ${escapar(documento.ano || '')}</h2><p>${escapar(documento.tema || '')}</p></div>
+            <div class="icc-meta-cards">
+              <div class="icc-meta-card"><small>Data-limite</small><strong>${escapar(documento.dataLimiteBR || '-')} • 23h59</strong></div>
+              <div class="icc-meta-card"><small>Arquivo</small><strong>${escapar(documento.nomeArquivo || 'ICC.pdf')}</strong></div>
+              <div class="icc-meta-card"><small>Publicação</small><strong>${escapar(documento.dataHoraUpload || '-')}</strong></div>
+              <div class="icc-meta-card"><small>Publicado por</small><strong>${escapar(documento.enviadoPor || '-')}</strong></div>
+            </div>
+            <div class="icc-prazo${prazoClasse}">${escapar(prazoTexto)}</div>
+            ${assinada ? '<div class="icc-prazo">Sua ciência está registrada.<br>ID: ' + escapar(dados.assinaturaUsuario.idOperacao || '') + '</div>' : ''}
+          </div>
+        </div>
+      </section>`;
+    }
+
+
+    function montarListaPresencaIcc(dados) {
+      const documento = dados.documento || {};
+      const capacidades = dados.capacidades || {};
+      const grupos = Array.isArray(dados.gruposDisponiveis) ? dados.gruposDisponiveis : [dados.grupo || 'ADM'];
+      const seletor = capacidades.podeSelecionarGrupo ? `<div class="icc-campo"><label>Pelotão / grupo</label><select id="iccGrupoSelect" onchange="alterarGrupoIcc(this.value)">${grupos.map(function(grupo) { return '<option value="' + escaparAttr(grupo) + '"' + (grupo === dados.grupo ? ' selected' : '') + '>' + escapar(grupo) + '</option>'; }).join('')}</select></div>` : '<div class="icc-campo"><label>Pelotão / grupo</label><input value="' + escaparAttr(dados.grupo || '') + '" readonly></div>';
+      const botoesAdm = capacidades.podeGerarPdf ? '<button id="iccGerarPdfBtn" class="icc-btn secundario" type="button" onclick="gerarPdfListaIcc(this)">GERAR PDF DE ' + escapar(dados.grupo || '') + '</button>' : '';
+      const linhasOriginais = Array.isArray(dados.linhas) ? dados.linhas : [];
+      const linhas = linhasOriginais.slice();
+      while (linhas.length < 39) linhas.push(null);
+      return `<section id="iccListaPresenca" class="icc-lista">
+        <div class="icc-section-head"><div><h2>Lista de presença</h2><p>O check registra exclusivamente a ciência do policial autenticado.</p></div></div>
+        <div class="icc-lista-toolbar">${seletor}<div class="icc-lista-resumo"><span class="icc-badge ok">${Number(dados.quantidadeAssinados || 0)} ASSINADO(S)</span><span class="icc-badge">${Number(dados.quantidadeEfetivo || 0)} POLICIAL(IS)</span>${botoesAdm}</div></div>
+        <div class="icc-form-oficial">
+          <div class="icc-form-linha">COMANDO DE POLICIAMENTO DE ÁREA METROPOLITANA DOIS</div>
+          <div class="icc-form-linha">GABINETE DE TREINAMENTO</div>
+          <div class="icc-form-linha">46º BPM/M - FORÇA TÁTICA</div>
+          <div class="icc-form-linha icc-form-titulo">ICC ${escapar(documento.numero || '')} de ${escapar(documento.ano || '')} - ATÉ ${escapar(documento.dataLimiteBR || '')}.</div>
+          <div class="icc-form-linha icc-form-tema">TEMA: ${escapar(documento.tema || '')}</div>
+          <div class="icc-form-linha icc-form-titulo">LISTA DE PRESENÇA</div>
+          <div class="icc-form-linha icc-form-titulo">FORÇA TÁTICA - ${escapar(dados.grupo || '')}</div>
+          <div class="icc-table-wrap"><table class="icc-table"><colgroup><col><col><col><col></colgroup><thead><tr><th>POSTO/GRADUAÇÃO</th><th>RE</th><th>NOME</th><th>ASSINATURA</th></tr></thead><tbody>${linhas.map(function(item) { return montarLinhaPresencaIcc(item, dados); }).join('')}</tbody></table></div>
+        </div>
+      </section>`;
+    }
+
+
+    function montarLinhaPresencaIcc(item, dados) {
+      if (!item) return '<tr><td>&nbsp;</td><td></td><td></td><td></td></tr>';
+      const capacidades = dados.capacidades || {};
+      let assinatura = '<span class="icc-pendente">PENDENTE</span>';
+      if (item.assinado) {
+        const operacaoCodificada = encodeURIComponent(String(item.idOperacao || ''));
+        const policialCodificado = encodeURIComponent([item.postoGrad,item.re,item.nomeCompleto].filter(Boolean).join(' '));
+        assinatura = '<div class="icc-assinatura"><strong>ASSINADO DIGITALMENTE</strong><small>ID: ' + escapar(item.idOperacao || '') + '</small><small>' + escapar(item.dataHoraAssinatura || '') + '</small>' + (item.podeAnular ? '<button type="button" class="icc-anular" onclick="abrirAnulacaoAssinaturaIcc(decodeURIComponent(\'' + operacaoCodificada + '\'),decodeURIComponent(\'' + policialCodificado + '\'))">ANULAR COM JUSTIFICATIVA</button>' : '') + '</div>';
+      } else if (item.ehUsuarioLogado && capacidades.podeAssinar) {
+        assinatura = '<label class="icc-assinar-check"><input type="checkbox" onchange="assinarIcc(this)"> CONFIRMAR CIÊNCIA</label>';
+      } else if (!capacidades.prazoAberto) {
+        assinatura = '<span class="icc-pendente">PRAZO ENCERRADO</span>';
+      }
+      return '<tr><td>' + escapar(item.postoGrad || '') + '</td><td>' + escapar(item.re || '') + '</td><td>' + escapar(item.nomeCompleto || '') + (item.pertenceEfetivoAtual === false ? '<span class="icc-transferido">ASSINATURA HISTÓRICA PRESERVADA</span>' : '') + '</td><td>' + assinatura + '</td></tr>';
+    }
+
+
+    function abrirUploaderIcc(botao) {
+      const conteudo = document.getElementById('iccUploaderConteudo');
+      if (!conteudo || conteudo.querySelector('iframe')) return;
+      const token = String(conteudo.getAttribute('data-upload-token') || '');
+      if (!token) {
+        mostrarToastFt('Autorização expirada', 'Feche e reabra a página ICC para publicar o documento.', 'erro');
+        return;
+      }
+      const pai = conteudo.closest('.icc-uploader');
+      if (pai) pai.classList.remove('icc-uploader-fechado');
+      if (botao) { botao.disabled = true; botao.textContent = 'ABRINDO FORMULÁRIO...'; }
+      conteudo.innerHTML = '<iframe id="iccUploaderFrame" title="Publicar PDF da ICC" src="' + escaparAttr(API_URL + '?action=upload_icc_form&token=' + encodeURIComponent(token) + '&_cache=' + Date.now()) + '"></iframe>';
+    }
+
+
+    function tratarMensagemUploaderIcc(event) {
+      const frame = document.getElementById('iccUploaderFrame');
+      if (!frame || event.source !== frame.contentWindow || !event.data) return;
+      if (event.data.type === 'FT_ICC_ALTURA') {
+        frame.style.height = Math.max(330, Math.min(760, Number(event.data.altura || 420))) + 'px';
+        return;
+      }
+      if (event.data.type === 'FT_ICC_PUBLICADA') {
+        mostrarToastFt('ICC publicada', event.data.dados && event.data.dados.mensagem || 'A nova ICC foi publicada.', 'sucesso');
+        APP.pdfIccCache = null;
+        carregarDadosIcc((APP.dadosIcc && APP.dadosIcc.grupo) || '');
+      }
+    }
+
+
+    function salvarMetadadosIcc(botao) {
+      const dados = APP.dadosIcc || {};
+      const documento = dados.documento || {};
+      if (!documento.id) return;
+      const numero = document.getElementById('iccMetaNumero');
+      const ano = document.getElementById('iccMetaAno');
+      const limite = document.getElementById('iccMetaDataLimite');
+      const tema = document.getElementById('iccMetaTema');
+      if (!numero || !ano || !limite || !tema) return;
+      if (botao) { botao.disabled = true; botao.textContent = 'SALVANDO...'; }
+      chamarApi('atualizar_icc', {
+        idIcc: documento.id,
+        numeroIcc: numero.value,
+        anoIcc: ano.value,
+        dataLimite: limite.value,
+        tema: tema.value
+      }, { semCache: true }).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao salvar as correções.');
+        mostrarToastFt('ICC atualizada', resp.dados.mensagem || 'Dados corrigidos.', 'sucesso');
+        return carregarDadosIcc(dados.grupo || '');
+      }).catch(function(erro) {
+        mostrarToastFt('Correção não salva', erro.message || String(erro), 'erro');
+        if (botao && document.body.contains(botao)) { botao.disabled = false; botao.textContent = 'SALVAR CORREÇÕES'; }
+      });
+    }
+
+
+    function alterarGrupoIcc(grupo) {
+      const box = document.getElementById('iccConteudo');
+      if (box) box.innerHTML = '<div class="icc-loading">Carregando a lista de ' + escapar(grupo || '') + '...</div>';
+      carregarDadosIcc(grupo).catch(function(erro) {
+        if (box) box.innerHTML = '<div class="icc-vazio"><strong>Lista não carregada</strong>' + escapar(erro.message || String(erro)) + '</div>';
+      });
+    }
+
+
+    function irParaListaIcc() {
+      const lista = document.getElementById('iccListaPresenca');
+      if (lista) lista.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+
+    function bytesBase64ParaUint8ArrayFt(base64) {
+      const texto = String(base64 || '').replace(/\s/g, '');
+      if (!texto) throw new Error('O documento PDF retornou vazio.');
+      const binario = window.atob(texto);
+      const bytes = new Uint8Array(binario.length);
+      for (let indice = 0; indice < binario.length; indice++) bytes[indice] = binario.charCodeAt(indice);
+      return bytes;
+    }
+
+
+    function obterPdfIccAtual() {
+      const dados = APP.dadosIcc || {};
+      const documento = dados.documento || {};
+      if (!documento.id) return Promise.reject(new Error('Não há ICC ativa.'));
+      if (APP.pdfIccCache && APP.pdfIccCache.id === documento.id && APP.pdfIccCache.base64) return Promise.resolve(APP.pdfIccCache);
+      return chamarApi('baixar_pdf_icc', { idIcc: documento.id }, { semCache: true }).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao abrir o PDF da ICC.');
+        APP.pdfIccCache = {
+          id: documento.id,
+          base64: resp.dados.base64,
+          nomeArquivo: resp.dados.nomeArquivo || documento.nomeArquivo || 'ICC.pdf',
+          mimeType: resp.dados.mimeType || 'application/pdf'
+        };
+        return APP.pdfIccCache;
+      });
+    }
+
+
+    async function carregarMiniaturaIcc(idDocumento) {
+      const token = ++APP.iccMiniaturaToken;
+      const wrap = document.getElementById('iccThumbWrap');
+      if (!wrap) return;
+      try {
+        const arquivo = await obterPdfIccAtual();
+        if (token !== APP.iccMiniaturaToken || !document.getElementById('iccThumbWrap') || arquivo.id !== idDocumento) return;
+        await carregarPdfJsFt();
+        const tarefa = window.pdfjsLib.getDocument({ data: bytesBase64ParaUint8ArrayFt(arquivo.base64) });
+        const pdf = await tarefa.promise;
+        try {
+          const pagina = await pdf.getPage(1);
+          if (token !== APP.iccMiniaturaToken) return;
+          const base = pagina.getViewport({ scale: 1 });
+          const largura = Math.max(230, Math.min(520, wrap.clientWidth - 22));
+          const viewport = pagina.getViewport({ scale: largura / base.width });
+          const densidade = Math.max(1, Math.min(2, Number(window.devicePixelRatio || 1)));
+          const canvas = document.createElement('canvas');
+          const contexto = canvas.getContext('2d', { alpha: false });
+          canvas.width = Math.max(1, Math.floor(viewport.width * densidade));
+          canvas.height = Math.max(1, Math.floor(viewport.height * densidade));
+          canvas.style.width = Math.ceil(viewport.width) + 'px';
+          canvas.style.height = Math.ceil(viewport.height) + 'px';
+          await pagina.render({ canvasContext: contexto, viewport: viewport, transform: densidade === 1 ? null : [densidade,0,0,densidade,0,0] }).promise;
+          aplicarMarcaDaguaPdfEscalaCiaFt(canvas, contexto, 'ICC VIA APP FT');
+          if (token !== APP.iccMiniaturaToken || !document.getElementById('iccThumbWrap')) return;
+          wrap.replaceChildren(canvas);
+        } finally {
+          if (pdf && typeof pdf.destroy === 'function') pdf.destroy();
+        }
+      } catch (erro) {
+        if (token !== APP.iccMiniaturaToken || !wrap) return;
+        wrap.innerHTML = '<div class="icc-thumb-loading">Miniatura indisponível.<br><small>Use o botão VISUALIZAR PDF.</small></div><div class="icc-thumb-watermark"><strong>ICC VIA APP FT</strong><span>RE ' + escapar((APP.usuario && APP.usuario.re) || '') + '</span></div>';
+      }
+    }
+
+
+    function visualizarIccAtual(botao) {
+      const texto = botao ? botao.textContent : '';
+      if (botao) { botao.disabled = true; botao.textContent = 'ABRINDO...'; }
+      obterPdfIccAtual().then(function(arquivo) {
+        return exibirPdfEscalaCiaFt(arquivo.base64, arquivo.nomeArquivo, arquivo.mimeType, 'ICC VIA APP FT');
+      }).catch(function(erro) {
+        mostrarToastFt('ICC não aberta', erro.message || String(erro), 'erro');
+      }).finally(function() {
+        if (botao && document.body.contains(botao)) { botao.disabled = false; botao.textContent = texto || 'VISUALIZAR PDF'; }
+      });
+    }
+
+
+    function assinarIcc(checkbox) {
+      if (!checkbox || !checkbox.checked) return;
+      const dados = APP.dadosIcc || {};
+      const documento = dados.documento || {};
+      confirmarToastFt('ASSINAR LISTA DA ICC', 'Confirma sua ciência individual da ICC ' + String(documento.numero || '') + '/' + String(documento.ano || '') + '? A operação será identificada e auditada.', {
+        confirmar: 'ASSINAR DIGITALMENTE',
+        cancelar: 'CANCELAR'
+      }).then(function(confirmado) {
+        if (!confirmado) { checkbox.checked = false; return; }
+        checkbox.disabled = true;
+        return chamarApi('assinar_icc', { idIcc: documento.id }, { semCache: true }).then(function(resp) {
+          if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao registrar a assinatura.');
+          mostrarToastFt('Ciência registrada', (resp.dados.mensagem || 'Lista assinada.') + ' ID: ' + String(resp.dados.idOperacao || ''), 'sucesso');
+          return carregarDadosIcc(dados.grupo || '');
+        }).catch(function(erro) {
+          checkbox.checked = false;
+          checkbox.disabled = false;
+          mostrarToastFt('Assinatura não registrada', erro.message || String(erro), 'erro');
+        });
+      });
+    }
+
+
+    function abrirAnulacaoAssinaturaIcc(idOperacao, policial) {
+      fecharAnulacaoAssinaturaIcc();
+      const modal = document.createElement('div');
+      modal.id = 'iccAnulacaoModal';
+      modal.className = 'icc-modal-overlay';
+      modal.innerHTML = '<div class="icc-modal-dialog" role="dialog" aria-modal="true" aria-label="Anular assinatura da ICC"><div class="icc-modal-head"><h2>Anular assinatura</h2><p>' + escapar(policial || '') + '<br>ID ' + escapar(idOperacao || '') + '</p></div><div class="icc-modal-body"><div class="icc-campo"><label>Justificativa obrigatória</label><textarea id="iccMotivoAnulacao" maxlength="300" placeholder="Descreva o motivo da anulação administrativa."></textarea></div><div class="icc-modal-actions"><button type="button" class="icc-btn secundario" onclick="fecharAnulacaoAssinaturaIcc()">CANCELAR</button><button id="iccConfirmarAnulacaoBtn" type="button" class="icc-btn perigo" onclick="confirmarAnulacaoAssinaturaIcc(\'' + escaparAttr(idOperacao || '') + '\',this)">ANULAR ASSINATURA</button></div></div></div>';
+      modal.addEventListener('click', function(evento) { if (evento.target === modal) fecharAnulacaoAssinaturaIcc(); });
+      document.body.appendChild(modal);
+      setTimeout(function() { const campo = document.getElementById('iccMotivoAnulacao'); if (campo) campo.focus(); }, 30);
+    }
+
+
+    function fecharAnulacaoAssinaturaIcc() {
+      const modal = document.getElementById('iccAnulacaoModal');
+      if (modal) modal.remove();
+    }
+
+
+    function confirmarAnulacaoAssinaturaIcc(idOperacao, botao) {
+      const campo = document.getElementById('iccMotivoAnulacao');
+      const motivo = String(campo && campo.value || '').trim();
+      if (motivo.length < 5) {
+        mostrarToastFt('Justificativa necessária', 'Informe ao menos 5 caracteres para preservar a auditoria.', 'atencao');
+        if (campo) campo.focus();
+        return;
+      }
+      const grupo = APP.dadosIcc && APP.dadosIcc.grupo || '';
+      if (botao) { botao.disabled = true; botao.textContent = 'ANULANDO...'; }
+      chamarApi('anular_assinatura_icc', { idOperacao: idOperacao, motivo: motivo }, { semCache: true }).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao anular a assinatura.');
+        fecharAnulacaoAssinaturaIcc();
+        mostrarToastFt('Assinatura anulada', resp.dados.mensagem || 'Registro preservado para auditoria.', 'sucesso');
+        return carregarDadosIcc(grupo);
+      }).catch(function(erro) {
+        mostrarToastFt('Anulação não realizada', erro.message || String(erro), 'erro');
+        if (botao && document.body.contains(botao)) { botao.disabled = false; botao.textContent = 'ANULAR ASSINATURA'; }
+      });
+    }
+
+
+    function gerarPdfListaIcc(botao) {
+      const dados = APP.dadosIcc || {};
+      const documento = dados.documento || {};
+      if (!documento.id) return;
+      const texto = botao ? botao.textContent : '';
+      if (botao) { botao.disabled = true; botao.textContent = 'GERANDO PDF...'; }
+      chamarApi('gerar_pdf_lista_icc', { idIcc: documento.id, grupo: dados.grupo || '' }, { semCache: true }).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao gerar o PDF.');
+        baixarArquivoBase64Frequencia(resp.dados.base64, resp.dados.mimeType || 'application/pdf', resp.dados.nomeArquivo || 'Lista_Presenca_ICC.pdf');
+        mostrarToastFt('PDF gerado', resp.dados.mensagem || 'Lista oficial baixada.', 'sucesso');
+      }).catch(function(erro) {
+        mostrarToastFt('PDF não gerado', erro.message || String(erro), 'erro');
+      }).finally(function() {
+        if (botao && document.body.contains(botao)) { botao.disabled = false; botao.textContent = texto || 'GERAR PDF'; }
+      });
     }
 
 
@@ -9355,7 +9761,7 @@ Banco de dados: Google Sheets.
     }
 
 
-    function aplicarMarcaDaguaPdfEscalaCiaFt(canvas, contexto) {
+    function aplicarMarcaDaguaPdfEscalaCiaFt(canvas, contexto, tituloMarca) {
       if (!canvas || !contexto) return;
       const reBruto = String((APP.usuario && (APP.usuario.re || APP.usuario.login)) || (APP.credenciais && APP.credenciais.login) || '').trim();
       const reUsuario = reBruto.replace(/^RE\s*/i, '').trim() || 'NÃO IDENTIFICADO';
@@ -9367,6 +9773,7 @@ Banco de dados: Google Sheets.
       const fonteRe = Math.max(17, Math.round(largura * .046));
       const distanciaLinhas = Math.max(32, Math.round(largura * .085));
       const larguraMaxima = largura * .82;
+      const titulo = String(tituloMarca || APP.pdfMarcaTituloEscalaCiaFt || 'ESCALA VIA APP FT').trim().toUpperCase();
       contexto.save();
       if (typeof contexto.resetTransform === 'function') contexto.resetTransform();
       else contexto.setTransform(1, 0, 0, 1, 0, 0);
@@ -9376,7 +9783,7 @@ Banco de dados: Google Sheets.
       contexto.textBaseline = 'middle';
       contexto.fillStyle = 'rgba(142, 27, 27, .17)';
       contexto.font = '900 ' + fonteTitulo + 'px Arial, sans-serif';
-      contexto.fillText('ESCALA VIA APP FT', 0, -distanciaLinhas / 2, larguraMaxima);
+      contexto.fillText(titulo, 0, -distanciaLinhas / 2, larguraMaxima);
       contexto.font = '900 ' + fonteRe + 'px Arial, sans-serif';
       contexto.fillText('RE ' + reUsuario, 0, distanciaLinhas / 2, larguraMaxima);
       contexto.restore();
@@ -9483,8 +9890,9 @@ Banco de dados: Google Sheets.
     }
 
 
-    async function exibirPdfEscalaCiaFt(base64, nomeArquivo, mimeType) {
+    async function exibirPdfEscalaCiaFt(base64, nomeArquivo, mimeType, tituloMarca) {
       fecharVisualizadorPdfEscalaCiaFt();
+      APP.pdfMarcaTituloEscalaCiaFt = String(tituloMarca || 'ESCALA VIA APP FT').trim().toUpperCase();
       const texto = String(base64 || '').replace(/\s/g, '');
       if (!texto) throw new Error('O PDF retornado está vazio.');
       const binario = window.atob(texto);
@@ -9510,7 +9918,7 @@ Banco de dados: Google Sheets.
         const reUsuario = reBruto.replace(/^RE\s*/i, '').trim() || 'NÃO IDENTIFICADO';
         APP.urlPdfEscalaCiaFt = url;
         document.querySelectorAll('.ef-pdf-zoom-control').forEach(function(botao) { botao.disabled = true; });
-        paginas.innerHTML = '<div class="ef-pdf-frame-wrap"><iframe class="ef-pdf-frame" src="' + escaparAttr(url + '#toolbar=0&navpanes=0') + '" title="PDF da Escala Cia FT"></iframe><div class="ef-pdf-frame-watermark" aria-hidden="true"><strong>ESCALA VIA APP FT</strong><span>RE ' + escapar(reUsuario) + '</span></div></div>';
+        paginas.innerHTML = '<div class="ef-pdf-frame-wrap"><iframe class="ef-pdf-frame" src="' + escaparAttr(url + '#toolbar=0&navpanes=0') + '" title="Documento PDF do Portal FT"></iframe><div class="ef-pdf-frame-watermark" aria-hidden="true"><strong>' + escapar(APP.pdfMarcaTituloEscalaCiaFt) + '</strong><span>RE ' + escapar(reUsuario) + '</span></div></div>';
         return;
       }
 
@@ -9565,6 +9973,7 @@ Banco de dados: Google Sheets.
         try { APP.pdfDocumentoEscalaCiaFt.destroy(); } catch (ignorado) {}
       }
       APP.pdfDocumentoEscalaCiaFt = null;
+      APP.pdfMarcaTituloEscalaCiaFt = 'ESCALA VIA APP FT';
       APP.pdfZoomEscalaCiaFt = 1;
       const modal = document.getElementById('efPdfModal');
       if (modal) modal.remove();
@@ -13367,6 +13776,9 @@ Banco de dados: Google Sheets.
       APP.dadosEscalasFolgas = null;
       APP.dadosRotinasAdministrativas = null;
       APP.dadosVistoriaCop = null;
+      APP.dadosIcc = null;
+      APP.pdfIccCache = null;
+      APP.iccMiniaturaToken = Number(APP.iccMiniaturaToken || 0) + 1;
       APP.dadosDejemRocam = null;
       APP.dadosFolgasPendentes = null;
       APP.historicoViaturaV126 = null;
@@ -13391,7 +13803,7 @@ Banco de dados: Google Sheets.
       frame.setAttribute('aria-hidden', 'true');
       frame.tabIndex = -1;
       frame.style.cssText = 'position:fixed;width:1px;height:1px;left:-9999px;bottom:0;border:0;opacity:0;pointer-events:none';
-      frame.src = API_URL + '?action=api_bridge_ft&_cache=1211';
+      frame.src = API_URL + '?action=api_bridge_ft&_cache=132';
       document.body.appendChild(frame);
     }
 
