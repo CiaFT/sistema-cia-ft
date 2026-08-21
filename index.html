@@ -24,6 +24,7 @@ VERSÃO V1.3.1 — RESENHAS, AUTORIZAÇÃO P/4 E QUADRO MENSAL DA COP
 - Permite excluir Resenhas apenas do painel, preservando registro e auditoria na planilha.
 - Restringe a gestão de Viaturas ao Gestor, Enc Adm e Aux Adm individualmente designado como P/4.
 - Exibe o quantitativo mensal de vídeos da COP por militar e reserva PDF/Impressão ao efetivo ADM.
+- Cria o agrupador ROTINAS OPERACIONAIS no Menu Principal e move a COP para essa área.
 
 Front-end externo hospedado no GitHub Pages.
 Backend/API: Apps Script API_FT.gs V1.3.1.
@@ -35,7 +36,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="cia-ft-build" content="FT-V131-20260821-RESENHAS-P4-COP-R1">
+  <meta name="cia-ft-build" content="FT-V131-20260821-ROTINAS-OPERACIONAIS-R2">
   <title>Portal Força Tática • V1.3.1</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
@@ -7277,11 +7278,23 @@ Banco de dados: Google Sheets.
     function montarMenusHome() {
       /*
        * V1.2.4 — Regra crítica:
-       * A Home não cria botão de módulo por conta própria.
-       * Os módulos exibidos vêm exclusivamente da API,
-       * que monta a lista a partir da aba PERMISSOES_FT.
+       * Os módulos liberados continuam vindo da API e da PERMISSOES_FT.
+       * ROTINAS_OPERACIONAIS é apenas um agrupador visual da COP: ele só
+       * aparece quando o usuário já possui acesso ao módulo COP.
        */
-      return Array.isArray(APP.menus) ? APP.menus.slice() : [];
+      const menus = Array.isArray(APP.menus) ? APP.menus.slice() : [];
+      const indiceCop = menus.findIndex(function(menu) {
+        return normalizarModuloCliente(menu && menu.id) === 'COP';
+      });
+      if (indiceCop !== -1) {
+        menus.splice(indiceCop, 1, {
+          id: 'ROTINAS_OPERACIONAIS',
+          titulo: 'ROTINAS OPERACIONAIS',
+          icone: '',
+          descricao: 'Acesso às rotinas, controles e sistemas operacionais da Companhia.'
+        });
+      }
+      return menus;
     }
 
 
@@ -7297,7 +7310,8 @@ Banco de dados: Google Sheets.
         ESCALAS_E_FOLGAS: { arquivo: './icone-escalas-e-folgas.png?v=1211-ft1408r1', alt: 'Escalas e Folgas' },
         DEPOIMENTOS_AUDIENCIAS: { arquivo: './icone-depoimentos-audiencias.png?v=1211-ft1408r1', alt: 'Depoimentos e Audiências' },
         VIATURAS: { arquivo: './icone-viaturas.png?v=1211-ft1408r1', alt: 'Viaturas' },
-        DEJEM_ROCAM: { arquivo: './icone-dejem-rocam.png?v=1211-ft1408r1', alt: 'DEJEM ROCAM' }
+        DEJEM_ROCAM: { arquivo: './icone-dejem-rocam.png?v=1211-ft1408r1', alt: 'DEJEM ROCAM' },
+        ROTINAS_OPERACIONAIS: { arquivo: './icone-rotinas-operacionais.png?v=131-rotinas-r2', alt: 'Rotinas Operacionais' }
       };
       const imagemMenu = imagensMenu[moduloMenu] || null;
       const blocoIcone = imagemMenu
@@ -7383,6 +7397,15 @@ Banco de dados: Google Sheets.
         return;
       }
 
+      if (normalizarModuloCliente(id) === 'ROTINAS_OPERACIONAIS') {
+        if (!usuarioTemPermissaoCliente('COP', 'visualizar')) {
+          abrirAcessoNegado('Rotinas Operacionais');
+          return;
+        }
+        abrirRotinasOperacionais();
+        return;
+      }
+
       if (normalizarModuloCliente(id) === 'COP') {
         if (!usuarioTemPermissaoCliente('COP', 'visualizar')) {
           abrirAcessoNegado('COP');
@@ -7432,6 +7455,38 @@ Banco de dados: Google Sheets.
     }
 
 
+    function abrirRotinasOperacionais() {
+      window.scrollTo(0, 0);
+      const modulos = [];
+      if (usuarioTemPermissaoCliente('COP', 'visualizar')) {
+        modulos.push({
+          id: 'COP',
+          titulo: 'COP',
+          icone: '',
+          descricao: 'Portal COP, análise e auditoria mensal dos vídeos das câmeras operacionais.'
+        });
+      }
+
+      document.getElementById('appConteudo').innerHTML = `
+        <div class="page-wrap">
+          <div class="page-header">
+            <div class="page-header-row">
+              <div>
+                <div class="page-kicker">Menu Principal</div>
+                <h1>Rotinas Operacionais</h1>
+                <p>Rotinas, controles e sistemas destinados às atividades operacionais da Companhia.</p>
+              </div>
+              <div class="page-actions"><button class="btn-page" onclick="abrirHome()">VOLTAR</button></div>
+            </div>
+          </div>
+
+          <div class="menu-grid">
+            ${modulos.map(montarMenuCard).join('') || '<div class="modal-card">Nenhuma rotina operacional liberada para seu perfil.</div>'}
+          </div>
+        </div>`;
+    }
+
+
     function abrirCop() {
       window.scrollTo(0, 0);
       const podeVistoria = capacidadesVistoriaCopCliente().podeVisualizar;
@@ -7444,7 +7499,7 @@ Banco de dados: Google Sheets.
                 <h1>COP</h1>
                 <p>Análise, rótulo e auditoria de vídeos.</p>
               </div>
-              <div class="page-actions"><button class="btn-page" onclick="abrirHome()">VOLTAR</button></div>
+              <div class="page-actions"><button class="btn-page" onclick="abrirRotinasOperacionais()">VOLTAR</button></div>
             </div>
           </div>
 
