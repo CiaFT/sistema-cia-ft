@@ -25,6 +25,7 @@ VERSÃO V1.3.1 — RESENHAS, AUTORIZAÇÃO P/4 E QUADRO MENSAL DA COP
 - Restringe a gestão de Viaturas ao Gestor, Enc Adm e Aux Adm individualmente designado como P/4.
 - Exibe o quantitativo mensal de vídeos da COP por militar e reserva PDF/Impressão ao efetivo ADM.
 - Cria o agrupador ROTINAS OPERACIONAIS no Menu Principal e move a COP para essa área.
+- Acrescenta ICC e REVISTA DE ARMÁRIO ao agrupador ROTINAS OPERACIONAIS.
 
 Front-end externo hospedado no GitHub Pages.
 Backend/API: Apps Script API_FT.gs V1.3.1.
@@ -36,7 +37,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="cia-ft-build" content="FT-V131-20260821-ROTINAS-OPERACIONAIS-R2">
+  <meta name="cia-ft-build" content="FT-V131-20260821-ROTINAS-OPERACIONAIS-R3">
   <title>Portal Força Tática • V1.3.1</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
@@ -7311,7 +7312,9 @@ Banco de dados: Google Sheets.
         DEPOIMENTOS_AUDIENCIAS: { arquivo: './icone-depoimentos-audiencias.png?v=1211-ft1408r1', alt: 'Depoimentos e Audiências' },
         VIATURAS: { arquivo: './icone-viaturas.png?v=1211-ft1408r1', alt: 'Viaturas' },
         DEJEM_ROCAM: { arquivo: './icone-dejem-rocam.png?v=1211-ft1408r1', alt: 'DEJEM ROCAM' },
-        ROTINAS_OPERACIONAIS: { arquivo: './icone-rotinas-operacionais.png?v=131-rotinas-r2', alt: 'Rotinas Operacionais' }
+        ROTINAS_OPERACIONAIS: { arquivo: './icone-rotinas-operacionais.png?v=131-rotinas-r2', alt: 'Rotinas Operacionais' },
+        ICC: { arquivo: './icone-icc.png?v=131-rotinas-r3', alt: 'ICC' },
+        REVISTA_ARMARIO: { arquivo: './icone-revista-armario.png?v=131-rotinas-r3', alt: 'Revista de Armário' }
       };
       const imagemMenu = imagensMenu[moduloMenu] || null;
       const blocoIcone = imagemMenu
@@ -7398,11 +7401,35 @@ Banco de dados: Google Sheets.
       }
 
       if (normalizarModuloCliente(id) === 'ROTINAS_OPERACIONAIS') {
-        if (!usuarioTemPermissaoCliente('COP', 'visualizar')) {
+        if (!usuarioPodeAcessarRotinasOperacionaisCliente()) {
           abrirAcessoNegado('Rotinas Operacionais');
           return;
         }
         abrirRotinasOperacionais();
+        return;
+      }
+
+      if (normalizarModuloCliente(id) === 'ICC') {
+        if (!usuarioPodeAcessarRotinasOperacionaisCliente()) {
+          abrirAcessoNegado('ICC');
+          return;
+        }
+        abrirRotinaOperacionalPreparada(
+          'ICC',
+          'Área destinada aos registros e controles de ICC.'
+        );
+        return;
+      }
+
+      if (normalizarModuloCliente(id) === 'REVISTA_ARMARIO') {
+        if (!usuarioPodeAcessarRotinasOperacionaisCliente()) {
+          abrirAcessoNegado('Revista de Armário');
+          return;
+        }
+        abrirRotinaOperacionalPreparada(
+          'Revista de Armário',
+          'Área destinada aos registros e controles de revistas de armário.'
+        );
         return;
       }
 
@@ -7455,15 +7482,32 @@ Banco de dados: Google Sheets.
     }
 
 
+    function usuarioPodeAcessarRotinasOperacionaisCliente() {
+      return usuarioTemPermissaoCliente('COP', 'visualizar');
+    }
+
+
     function abrirRotinasOperacionais() {
       window.scrollTo(0, 0);
       const modulos = [];
-      if (usuarioTemPermissaoCliente('COP', 'visualizar')) {
+      if (usuarioPodeAcessarRotinasOperacionaisCliente()) {
         modulos.push({
           id: 'COP',
           titulo: 'COP',
           icone: '',
           descricao: 'Portal COP, análise e auditoria mensal dos vídeos das câmeras operacionais.'
+        });
+        modulos.push({
+          id: 'ICC',
+          titulo: 'ICC',
+          icone: '',
+          descricao: 'Acesso às rotinas, registros e controles de ICC.'
+        });
+        modulos.push({
+          id: 'REVISTA_ARMARIO',
+          titulo: 'REVISTA DE ARMÁRIO',
+          icone: '',
+          descricao: 'Acesso às rotinas, registros e controles de revistas de armário.'
         });
       }
 
@@ -7482,6 +7526,29 @@ Banco de dados: Google Sheets.
 
           <div class="menu-grid">
             ${modulos.map(montarMenuCard).join('') || '<div class="modal-card">Nenhuma rotina operacional liberada para seu perfil.</div>'}
+          </div>
+        </div>`;
+    }
+
+
+    function abrirRotinaOperacionalPreparada(titulo, descricao) {
+      window.scrollTo(0, 0);
+      document.getElementById('appConteudo').innerHTML = `
+        <div class="page-wrap">
+          <div class="page-header">
+            <div class="page-header-row">
+              <div>
+                <div class="page-kicker">Rotinas Operacionais</div>
+                <h1>${escapar(titulo)}</h1>
+                <p>${escapar(descricao)}</p>
+              </div>
+              <div class="page-actions"><button class="btn-page" onclick="abrirRotinasOperacionais()">VOLTAR</button></div>
+            </div>
+          </div>
+
+          <div class="modal-card">
+            <h2>Estrutura preparada</h2>
+            <p>Este campo está disponível no menu e receberá as funções específicas na próxima etapa de implantação.</p>
           </div>
         </div>`;
     }
