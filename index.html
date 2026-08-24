@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.4
+SISTEMA CIA FT — PORTAL GITHUB V1.3.2
 Arquivo: index.html
 ============================================================
 
-VERSÃO V1.4 — QUADRO OPERACIONAL DO DIA
+VERSÃO V1.3.2 — ICC E REVISTA DE ARMÁRIO
 - Preserva a última versão encerrada do Controle de Frequência.
 - Preserva a implantação completa de Viaturas V1.2.6.
 - Corrige a leitura e a identificação funcional em Resenhas Enviadas.
@@ -35,7 +35,7 @@ VERSÃO V1.4 — QUADRO OPERACIONAL DO DIA
 - Otimiza sessão, monitor de avisos e retentativas para reduzir carga e tempos de espera.
 
 Front-end externo hospedado no GitHub Pages.
-Backend/API: Apps Script API_FT.gs V1.4.
+Backend/API: Apps Script API_FT.gs V1.3.2.
 Banco de dados: Google Sheets.
 
 ============================================================
@@ -44,8 +44,8 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="cia-ft-build" content="FT-V140-20260824-QUADRO-OPERACIONAL-R1">
-  <title>Portal Força Tática • V1.4</title>
+  <meta name="cia-ft-build" content="FT-V132-20260824-EFETIVO-PRACAS-R9">
+  <title>Portal Força Tática • V1.3.2</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
 
@@ -6736,22 +6736,6 @@ Banco de dados: Google Sheets.
     @media(max-width:940px){.ra-toolbar{grid-template-columns:1fr}.ra-actions{justify-content:stretch}.ra-actions .ra-btn{width:100%}.ra-status{grid-template-columns:1fr 1fr}.ra-table-wrap{display:none}.ra-mobile-list{display:grid}.ra-form-oficial{margin:10px}.ra-assinaturas{margin:0 10px 10px}}
     @media(max-width:620px){.ra-toolbar{padding:11px}.ra-status{grid-template-columns:1fr}.ra-form-topo{font-size:12px}.ra-form-subtopo{grid-template-columns:1fr}.ra-form-subtopo strong{font-size:12px}.ra-form-subtopo strong+strong{border-top:1px solid #111;border-left:0}.ra-assinaturas{grid-template-columns:1fr}.ra-assinatura-bloco+.ra-assinatura-bloco{border-top:1px solid #111;border-left:0}.ra-resumo-rodape{align-items:flex-start;flex-direction:column}.ra-mobile-dados{grid-template-columns:1fr}}
 
-    /* QUADRO OPERACIONAL DO DIA — V1.4 */
-    #appScreen .menu-card[data-modulo="QUADRO_OPERACIONAL"] .menu-icon-imagem img{transform:scale(1.03)}
-    .qop-loading{display:grid;place-items:center;min-height:180px;border:1px solid #dbe1e7;border-radius:20px;background:#fff;color:#475569;padding:24px;text-align:center;font-size:12px;font-weight:850}
-    .qop-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px;border:1px solid rgba(55,66,71,.16);border-radius:20px;background:#fff;padding:14px 16px;box-shadow:0 9px 24px rgba(15,23,42,.05)}
-    .qop-toolbar h2{margin:0 0 4px;color:#17202a;font-size:17px}.qop-toolbar p{margin:0;color:#64748b;font-size:10.5px;line-height:1.45}.qop-toolbar-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.qop-btn{min-height:40px;border:1px solid #374247;border-radius:11px;background:#fff;color:#374247;padding:8px 12px;font:inherit;font-size:9px;font-weight:950;cursor:pointer}.qop-btn.primario{border-color:#8E1B1B;background:#8E1B1B;color:#fff}.qop-btn:disabled{border-color:#cbd5e1;background:#e2e8f0;color:#64748b;cursor:wait}
-    .qop-meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}.qop-meta span{border-radius:999px;background:#eef2f6;color:#475569;padding:5px 8px;font-size:7.8px;font-weight:900}.qop-meta span.alterado{background:#FFF3E0;color:#9A3412}
-    .qop-resumo{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px;margin-bottom:16px}.qop-resumo-card{position:relative;overflow:hidden;border:1px solid #dbe1e7;border-radius:16px;background:#fff;padding:12px;box-shadow:0 7px 18px rgba(15,23,42,.04)}.qop-resumo-card:before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:#64748b}.qop-resumo-card.servico:before{background:#1B5E20}.qop-resumo-card.folga:before{background:#2E7D32}.qop-resumo-card.ferias:before{background:#1565C0}.qop-resumo-card.afastado:before{background:#8E1B1B}.qop-resumo-card.curso:before{background:#6A1B9A}.qop-resumo-card small{display:block;color:#64748b;font-size:7.6px;font-weight:950;letter-spacing:.25px;text-transform:uppercase}.qop-resumo-card strong{display:block;margin-top:4px;color:#17202a;font-size:22px;line-height:1}
-    .qop-section{margin-bottom:16px}.qop-section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin:0 2px 9px}.qop-section-head h2{margin:0;color:#17202a;font-size:18px}.qop-section-head p{margin:3px 0 0;color:#64748b;font-size:10px}.qop-section-head span{border-radius:999px;background:#374247;color:#fff;padding:6px 9px;font-size:8px;font-weight:950}
-    .qop-equipes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.qop-equipe{overflow:hidden;border:1px solid rgba(55,66,71,.18);border-radius:20px;background:#fff;box-shadow:0 10px 25px rgba(15,23,42,.06)}.qop-equipe-head{display:grid;grid-template-columns:54px minmax(0,1fr) auto;gap:11px;align-items:center;background:#374247;color:#fff;padding:11px 13px}.qop-equipe-icone{display:grid;place-items:center;width:54px;height:48px;border-radius:12px;background:rgba(255,255,255,.94);overflow:hidden}.qop-equipe-icone img{display:block;max-width:48px;max-height:44px;object-fit:contain}.qop-equipe-head h3{margin:0 0 3px;font-size:12.5px;line-height:1.25}.qop-equipe-head p{margin:0;color:#dbe1e7;font-size:8.5px;font-weight:750;line-height:1.35}.qop-equipe-vtr{text-align:right}.qop-equipe-vtr strong{display:block;font-size:11px}.qop-equipe-vtr small{display:block;margin-top:2px;color:#dbe1e7;font-size:7.5px;font-weight:850}.qop-policiais{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:10px}
-    .qop-pm{position:relative;display:grid;grid-template-columns:58px minmax(0,1fr);gap:10px;align-items:center;min-height:82px;border:1px solid #e2e8f0;border-radius:14px;background:#f8fafc;padding:9px}.qop-pm.alterado{border-color:#FFB74D;background:#FFF8E1}.qop-pm-foto{display:grid;place-items:center;width:58px;height:64px;overflow:hidden;border:2px solid #374247;border-radius:13px;background:#e9edf1;color:#374247;font-size:14px;font-weight:1000}.qop-pm-foto img{width:100%;height:100%;object-fit:cover}.qop-pm-info{min-width:0}.qop-pm-info strong{display:block;overflow:hidden;text-overflow:ellipsis;color:#17202a;font-size:10px;line-height:1.3;white-space:nowrap}.qop-pm-info small{display:block;margin-top:2px;color:#64748b;font-size:7.7px;font-weight:850;line-height:1.25}.qop-pm-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}.qop-tag{border-radius:999px;background:#e2e8f0;color:#374247;padding:4px 6px;font-size:6.8px;font-weight:950}.qop-tag.funcao{background:#E3F2FD;color:#1565C0}.qop-tag.alt{background:#FFE0B2;color:#9A3412}.qop-edit-mini{position:absolute;top:5px;right:5px;border:1px solid #8E1B1B;border-radius:8px;background:#fff;color:#8E1B1B;padding:4px 5px;font:inherit;font-size:6.5px;font-weight:950;cursor:pointer}
-    .qop-status-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}.qop-status-col{overflow:hidden;border:1px solid #dbe1e7;border-radius:18px;background:#fff}.qop-status-head{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#f1f5f9;padding:11px 12px}.qop-status-head h3{margin:0;color:#17202a;font-size:12px}.qop-status-head span{display:grid;place-items:center;min-width:25px;height:25px;border-radius:999px;background:#374247;color:#fff;font-size:8px;font-weight:950}.qop-status-lista{display:grid;gap:0;padding:3px 11px 8px}.qop-status-pm{position:relative;display:grid;grid-template-columns:39px minmax(0,1fr) auto;gap:8px;align-items:center;border-top:1px solid #e2e8f0;padding:8px 0}.qop-status-pm:first-child{border-top:0}.qop-status-foto{display:grid;place-items:center;width:39px;height:43px;overflow:hidden;border:1.5px solid #64748b;border-radius:10px;background:#e9edf1;color:#475569;font-size:9px;font-weight:1000}.qop-status-foto img{width:100%;height:100%;object-fit:cover}.qop-status-identidade{min-width:0}.qop-status-identidade strong{display:block;overflow:hidden;text-overflow:ellipsis;color:#17202a;font-size:9px;white-space:nowrap}.qop-status-identidade small{display:block;margin-top:2px;color:#64748b;font-size:7px;font-weight:800}.qop-status-badge{border-radius:999px;padding:5px 7px;font-size:6.8px;font-weight:950;white-space:nowrap}.qop-status-badge.folga{background:#E8F5E9;color:#1B5E20}.qop-status-badge.ferias{background:#E3F2FD;color:#1565C0}.qop-status-badge.afastado{background:#FDECEC;color:#8E1B1B}.qop-status-badge.curso{background:#F3E5F5;color:#6A1B9A}.qop-status-badge.outros{background:#eef2f6;color:#475569}.qop-status-pm .qop-status-foto,.qop-status-pm .qop-status-identidade{grid-row:1/3}.qop-status-pm .qop-edit-mini{position:static;grid-column:3;grid-row:2;justify-self:end}.qop-vazio{border:1px dashed #cbd5e1;border-radius:16px;background:#f8fafc;color:#64748b;padding:22px;text-align:center;font-size:10.5px;line-height:1.45}.qop-vazio strong{display:block;margin-bottom:4px;color:#17202a;font-size:13px}
-    .qop-historico{margin-top:16px;border:1px solid #dbe1e7;border-radius:18px;background:#fff;overflow:hidden}.qop-historico summary{cursor:pointer;background:#f8fafc;color:#374247;padding:12px 14px;font-size:10px;font-weight:950}.qop-historico-lista{display:grid;gap:0;padding:3px 13px 10px}.qop-historico-item{border-top:1px solid #e2e8f0;padding:9px 0}.qop-historico-item:first-child{border-top:0}.qop-historico-item strong{display:block;color:#17202a;font-size:9px}.qop-historico-item small{display:block;margin-top:2px;color:#64748b;font-size:7.5px;line-height:1.35}
-    .qop-modal{position:fixed;inset:0;z-index:10120;display:grid;place-items:center;padding:14px;background:rgba(15,23,42,.75);backdrop-filter:blur(4px)}.qop-modal-dialog{width:min(680px,100%);max-height:92vh;overflow:auto;border-radius:20px;background:#fff;box-shadow:0 28px 90px rgba(0,0,0,.36)}.qop-modal-head{background:#374247;color:#fff;padding:15px 17px}.qop-modal-head h2{margin:0 0 3px;font-size:16px}.qop-modal-head p{margin:0;color:#dbe1e7;font-size:9px}.qop-modal-body{display:grid;gap:12px;padding:16px}.qop-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.qop-field{display:grid;gap:5px;min-width:0}.qop-field.full{grid-column:1/-1}.qop-field label{color:#475569;font-size:8px;font-weight:950;letter-spacing:.25px;text-transform:uppercase}.qop-field input,.qop-field select,.qop-field textarea{width:100%;min-height:42px;border:1px solid #cbd5e1;border-radius:11px;background:#fff;color:#17202a;padding:8px 9px;font:inherit;font-size:10.5px;font-weight:750}.qop-field textarea{min-height:90px;resize:vertical}.qop-modal-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}.qop-modal-note{border-left:4px solid #D4AF37;border-radius:10px;background:#fffbeb;color:#713f12;padding:9px 11px;font-size:9px;font-weight:800;line-height:1.4}
-    @media(max-width:1050px){.qop-resumo{grid-template-columns:repeat(3,minmax(0,1fr))}.qop-equipes{grid-template-columns:1fr}.qop-status-grid{grid-template-columns:1fr 1fr}}
-    @media(max-width:680px){.qop-toolbar{align-items:stretch;flex-direction:column}.qop-toolbar-actions{display:grid;grid-template-columns:1fr 1fr}.qop-toolbar-actions .qop-btn{width:100%}.qop-resumo{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.qop-resumo-card{padding:10px}.qop-resumo-card strong{font-size:19px}.qop-equipe-head{grid-template-columns:47px minmax(0,1fr);padding:9px}.qop-equipe-icone{width:47px;height:43px}.qop-equipe-icone img{max-width:41px;max-height:38px}.qop-equipe-vtr{grid-column:1/-1;display:flex;gap:8px;align-items:center;text-align:left}.qop-policiais{grid-template-columns:1fr;padding:8px}.qop-pm{grid-template-columns:52px minmax(0,1fr);min-height:75px;padding:8px}.qop-pm-foto{width:52px;height:58px}.qop-status-grid{grid-template-columns:1fr}.qop-form-grid{grid-template-columns:1fr}.qop-field.full{grid-column:auto}.qop-modal-actions{display:grid;grid-template-columns:1fr}.qop-modal-actions .qop-btn{width:100%}.qop-section-head{align-items:flex-start;flex-direction:column}}
-
     /* IDENTIDADE HEXIS — V1.3.2 */
     #loginScreen .login-stack{
       width:100%;
@@ -6818,7 +6802,7 @@ Banco de dados: Google Sheets.
         <div id="loginAlerta" class="alerta"></div>
 
         <div class="footer">
-          Portal Força Tática • V1.4
+          Portal Força Tática • V1.3.2
         </div>
       </main>
 
@@ -6878,8 +6862,6 @@ Banco de dados: Google Sheets.
       dadosControleFrequencia: null,
       dadosControleFolgas: null,
       dadosEscalasFolgas: null,
-      dadosQuadroOperacional: null,
-      quadroOperacionalTimer: null,
       urlPdfEscalaCiaFt: null,
       dadosRotinasAdministrativas: null,
       dadosVistoriaCop: null,
@@ -6994,7 +6976,6 @@ Banco de dados: Google Sheets.
 
 
     function abrirHome() {
-      pararAtualizacaoQuadroOperacional();
       window.scrollTo(0, 0);
       const u = APP.usuario;
 
@@ -7462,7 +7443,6 @@ Banco de dados: Google Sheets.
       const moduloMenu = normalizarModuloCliente(menu.id);
       const imagensMenu = {
         MEUS_DADOS: { arquivo: './icone-meus-dados.png?v=1211-ft1408r1', alt: 'Meus Dados' },
-        QUADRO_OPERACIONAL: { arquivo: './icone-viaturas.png?v=140-quadro-r1', alt: 'Quadro Operacional' },
         PAINEL_ADMINISTRATIVO: { arquivo: './icone-painel-administrativo.png?v=1211-ft1408r1', alt: 'Painel Administrativo' },
         CONSULTA_EFETIVO: { arquivo: './icone-consulta-efetivo.png?v=1211-ft1408r1', alt: 'Consulta Efetivo' },
         RESENHA_DE_ESCALAS: { arquivo: './icone-resenha-de-escalas.png?v=1211-ft1408r1', alt: 'Resenha de Escalas' },
@@ -7497,15 +7477,6 @@ Banco de dados: Google Sheets.
 
       if (id === 'MEUS_DADOS') {
         abrirMeusDados();
-        return;
-      }
-
-      if (normalizarModuloCliente(id) === 'QUADRO_OPERACIONAL') {
-        if (!usuarioTemPermissaoCliente('QUADRO_OPERACIONAL', 'visualizar')) {
-          abrirAcessoNegado('Quadro Operacional');
-          return;
-        }
-        abrirQuadroOperacional();
         return;
       }
 
@@ -7629,395 +7600,6 @@ Banco de dados: Google Sheets.
           </div>
         </div>
       `;
-    }
-
-
-    /* ============================================================
-     * QUADRO OPERACIONAL DO DIA — V1.4
-     * ============================================================ */
-
-    function pararAtualizacaoQuadroOperacional() {
-      if (APP.quadroOperacionalTimer) clearInterval(APP.quadroOperacionalTimer);
-      APP.quadroOperacionalTimer = null;
-    }
-
-
-    function iniciarAtualizacaoQuadroOperacional() {
-      pararAtualizacaoQuadroOperacional();
-      APP.quadroOperacionalTimer = setInterval(function() {
-        if (document.hidden || !document.getElementById('quadroOperacionalConteudo')) return;
-        carregarQuadroOperacional(true);
-      }, 120000);
-    }
-
-
-    function abrirQuadroOperacional() {
-      window.scrollTo(0, 0);
-      APP.dadosQuadroOperacional = null;
-      document.getElementById('appConteudo').innerHTML = `
-        <div class="page-wrap">
-          <div class="page-header">
-            <div class="page-header-row">
-              <div>
-                <div class="page-kicker">Escala operacional do dia</div>
-                <h1>Quadro Operacional</h1>
-                <p>Efetivo, equipes, viaturas, folgas e afastamentos da data atual.</p>
-              </div>
-              <div class="page-actions"><button class="btn-page" onclick="abrirHome()">VOLTAR</button></div>
-            </div>
-          </div>
-          <div id="quadroOperacionalConteudo" class="qop-loading">Carregando o Quadro Operacional...</div>
-        </div>`;
-      carregarQuadroOperacional(false);
-      iniciarAtualizacaoQuadroOperacional();
-    }
-
-
-    function carregarQuadroOperacional(silencioso) {
-      const alvo = document.getElementById('quadroOperacionalConteudo');
-      if (!alvo) return Promise.resolve();
-      if (!silencioso) alvo.innerHTML = 'Carregando o Quadro Operacional...';
-      return chamarApi('dados_quadro_operacional', {}, { semCache: true })
-        .then(function(resp) {
-          if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao carregar o Quadro Operacional.');
-          if (!document.getElementById('quadroOperacionalConteudo')) return;
-          const anterior = APP.dadosQuadroOperacional;
-          APP.dadosQuadroOperacional = resp.dados || {};
-          renderizarQuadroOperacional();
-          if (silencioso && anterior && anterior.ultimaAtualizacao && anterior.ultimaAtualizacao !== APP.dadosQuadroOperacional.ultimaAtualizacao) {
-            mostrarToastFt('Quadro atualizado', 'Uma alteração operacional mais recente foi carregada.');
-          }
-        })
-        .catch(function(erro) {
-          if (silencioso) return;
-          const atual = document.getElementById('quadroOperacionalConteudo');
-          if (atual) atual.innerHTML = `<div class="qop-vazio"><strong>Não foi possível carregar</strong>${escapar(erro.message || String(erro))}</div>`;
-        });
-    }
-
-
-    function renderizarQuadroOperacional() {
-      const alvo = document.getElementById('quadroOperacionalConteudo');
-      if (!alvo) return;
-      const dados = APP.dadosQuadroOperacional || {};
-      const registros = Array.isArray(dados.registros) ? dados.registros : [];
-      const resumo = dados.resumo || {};
-      const capacidades = dados.capacidades || {};
-      const importacao = dados.importacao || null;
-      const escala = dados.escalaPublicada || null;
-      const servico = registros.filter(function(item) { return qopEhEmServico(item.situacao); });
-      const folgas = registros.filter(function(item) { return normalizarTexto(item.situacao) === 'FOLGA'; });
-      const ferias = registros.filter(function(item) { return normalizarTexto(item.situacao) === 'FERIAS'; });
-      const afastados = registros.filter(function(item) {
-        return ['AFASTADO', 'DISPENSA', 'CURSO', 'RETIRADO', 'SUBSTITUIDO'].indexOf(normalizarTexto(item.situacao)) !== -1;
-      });
-      const outros = registros.filter(function(item) {
-        return !qopEhEmServico(item.situacao) && normalizarTexto(item.situacao) !== 'FOLGA' &&
-          normalizarTexto(item.situacao) !== 'FERIAS' &&
-          ['AFASTADO', 'DISPENSA', 'CURSO', 'RETIRADO', 'SUBSTITUIDO'].indexOf(normalizarTexto(item.situacao)) === -1;
-      });
-      const metaImportacao = importacao
-        ? `<span>Fonte: ${escapar(importacao.abaFonte || 'planilha diária')}</span><span>Importação: ${escapar(importacao.dataHora || '-')}</span>`
-        : '<span>Importação ainda não realizada</span>';
-      const metaAlteracao = dados.ultimaAtualizacao ? `<span class="alterado">Atualizado: ${escapar(dados.ultimaAtualizacao)}</span>` : '';
-      alvo.className = '';
-      alvo.innerHTML = `
-        <div class="qop-toolbar">
-          <div>
-            <h2>${escapar(dados.dataServicoBR || '')}</h2>
-            <p>${escapar(escala ? 'PDF oficial publicado e preservado como referência.' : 'Nenhum PDF ativo foi localizado para a data atual.')}</p>
-            <div class="qop-meta">${metaImportacao}${metaAlteracao}</div>
-          </div>
-          <div class="qop-toolbar-actions">
-            <button class="qop-btn" type="button" onclick="carregarQuadroOperacional(false)">ATUALIZAR</button>
-            ${capacidades.podeReimportar ? '<button id="qopBtnReimportar" class="qop-btn primario" type="button" onclick="reimportarQuadroOperacional()">REIMPORTAR ESCALA</button>' : ''}
-          </div>
-        </div>
-        ${montarResumoQuadroOperacional(resumo)}
-        ${registros.length ? `
-          <section class="qop-section">
-            <div class="qop-section-head"><div><h2>Em serviço hoje</h2><p>Equipes e atividades conforme a escala e as alterações do dia.</p></div><span>${servico.length}</span></div>
-            ${montarEquipesQuadroOperacional(servico, capacidades.podeEditar)}
-          </section>
-          <section class="qop-section">
-            <div class="qop-section-head"><div><h2>Demais situações</h2><p>Folgas, férias, afastamentos e registros ainda não classificados.</p></div></div>
-            <div class="qop-status-grid">
-              ${montarColunaStatusQuadroOperacional('Folgas', folgas, capacidades.podeEditar, 'folga')}
-              ${montarColunaStatusQuadroOperacional('Férias', ferias, capacidades.podeEditar, 'ferias')}
-              ${montarColunaStatusQuadroOperacional('Afastamentos / outros', afastados.concat(outros), capacidades.podeEditar, 'afastado')}
-            </div>
-          </section>
-          ${capacidades.podeEditar ? montarHistoricoQuadroOperacional(dados.eventosRecentes || []) : ''}
-        ` : montarVazioQuadroOperacional(dados)}
-      `;
-    }
-
-
-    function montarResumoQuadroOperacional(resumo) {
-      const itens = [
-        ['Total', resumo.total || 0, ''],
-        ['Em serviço', resumo.servico || 0, 'servico'],
-        ['Folga', resumo.folga || 0, 'folga'],
-        ['Férias', resumo.ferias || 0, 'ferias'],
-        ['Afastados', resumo.afastado || 0, 'afastado'],
-        ['Cursos', resumo.curso || 0, 'curso']
-      ];
-      return `<div class="qop-resumo">${itens.map(function(item) {
-        return `<div class="qop-resumo-card ${item[2]}"><small>${escapar(item[0])}</small><strong>${Number(item[1] || 0)}</strong></div>`;
-      }).join('')}</div>`;
-    }
-
-
-    function qopEhEmServico(situacao) {
-      return ['SERVICO', 'ADMINISTRACAO', 'A DISPOSICAO'].indexOf(normalizarTexto(situacao || '')) !== -1;
-    }
-
-
-    function agruparEquipesQuadroOperacional(registros) {
-      const grupos = {};
-      (registros || []).forEach(function(item) {
-        const atividade = item.tipoAtividade || 'SERVIÇO DA CIA FT';
-        const equipe = item.equipe || item.pelotao || 'EQUIPE';
-        const viatura = item.viatura || '';
-        const horario = [item.horarioInicio, item.horarioFim].filter(Boolean).join('–');
-        const chave = [atividade, equipe, viatura, horario].map(normalizarTexto).join('|');
-        if (!grupos[chave]) grupos[chave] = { atividade: atividade, equipe: equipe, viatura: viatura, tipoViatura: item.tipoViatura || '', horario: horario, policiais: [] };
-        grupos[chave].policiais.push(item);
-      });
-      return Object.keys(grupos).map(function(chave) { return grupos[chave]; });
-    }
-
-
-    function montarEquipesQuadroOperacional(registros, podeEditar) {
-      if (!registros.length) return '<div class="qop-vazio"><strong>Nenhum policial classificado em serviço</strong>A escala pode ser reimportada ou corrigida por um perfil autorizado.</div>';
-      return `<div class="qop-equipes">${agruparEquipesQuadroOperacional(registros).map(function(grupo) {
-        const rocam = normalizarTexto([grupo.tipoViatura, grupo.atividade, grupo.equipe].join(' ')).indexOf('ROCAM') !== -1;
-        const icone = rocam ? './icone-dejem-rocam.png?v=140-qop-rocam' : './icone-viaturas.png?v=140-qop-tatico';
-        return `<article class="qop-equipe">
-          <header class="qop-equipe-head">
-            <div class="qop-equipe-icone"><img src="${icone}" alt="${rocam ? 'ROCAM' : 'Viatura'}"></div>
-            <div><h3>${escapar(grupo.equipe || grupo.atividade)}</h3><p>${escapar(grupo.atividade || '')}</p></div>
-            <div class="qop-equipe-vtr"><strong>${escapar(grupo.viatura || 'SEM VTR')}</strong><small>${escapar(grupo.horario || 'Horário não informado')}</small></div>
-          </header>
-          <div class="qop-policiais">${grupo.policiais.map(function(pm) { return montarCardPmQuadroOperacional(pm, podeEditar); }).join('')}</div>
-        </article>`;
-      }).join('')}</div>`;
-    }
-
-
-    function fotoPmQuadroOperacional(pm, classe) {
-      const url = pm && pm.foto ? resolverFotoApp(pm.foto, 'w240') : '';
-      return url
-        ? `<div class="${classe}"><img src="${escaparAttr(url)}" alt="Foto de ${escaparAttr(pm.nomeGuerra || '')}" loading="lazy" onerror="this.parentElement.textContent='FT'"></div>`
-        : `<div class="${classe}">FT</div>`;
-    }
-
-
-    function montarCardPmQuadroOperacional(pm, podeEditar) {
-      const alterado = normalizarTexto(pm.origem) === 'ALTERACAO_DIA';
-      return `<div class="qop-pm ${alterado ? 'alterado' : ''}">
-        ${fotoPmQuadroOperacional(pm, 'qop-pm-foto')}
-        <div class="qop-pm-info">
-          <strong>${escapar([pm.postoGrad, pm.nomeGuerra].filter(Boolean).join(' '))}</strong>
-          <small>RE ${escapar(pm.re || '')} • ${escapar(pm.pelotao || '-')}</small>
-          <div class="qop-pm-tags">
-            ${pm.funcao ? `<span class="qop-tag funcao">${escapar(pm.funcao)}</span>` : ''}
-            ${pm.modalidade ? `<span class="qop-tag">${escapar(pm.modalidade)}</span>` : ''}
-            ${alterado ? '<span class="qop-tag alt">ALTERADO</span>' : ''}
-          </div>
-        </div>
-        ${podeEditar ? `<button class="qop-edit-mini" type="button" onclick="abrirEdicaoQuadroOperacional('${escaparAttr(pm.id)}')">EDITAR</button>` : ''}
-      </div>`;
-    }
-
-
-    function classeStatusQuadroOperacional(situacao) {
-      const s = normalizarTexto(situacao || '');
-      if (s === 'FOLGA') return 'folga';
-      if (s === 'FERIAS') return 'ferias';
-      if (s === 'CURSO') return 'curso';
-      if (s === 'AFASTADO' || s === 'DISPENSA' || s === 'RETIRADO' || s === 'SUBSTITUIDO') return 'afastado';
-      return 'outros';
-    }
-
-
-    function montarColunaStatusQuadroOperacional(titulo, lista, podeEditar, classe) {
-      return `<article class="qop-status-col">
-        <header class="qop-status-head"><h3>${escapar(titulo)}</h3><span>${lista.length}</span></header>
-        <div class="qop-status-lista">${lista.length ? lista.map(function(pm) {
-          return `<div class="qop-status-pm">
-            ${fotoPmQuadroOperacional(pm, 'qop-status-foto')}
-            <div class="qop-status-identidade"><strong>${escapar([pm.postoGrad, pm.nomeGuerra].filter(Boolean).join(' '))}</strong><small>RE ${escapar(pm.re || '')} • ${escapar(pm.pelotao || '-')}</small></div>
-            <span class="qop-status-badge ${classeStatusQuadroOperacional(pm.situacao)}">${escapar(pm.situacao || '-')}</span>
-            ${podeEditar ? `<button class="qop-edit-mini" type="button" onclick="abrirEdicaoQuadroOperacional('${escaparAttr(pm.id)}')">EDITAR</button>` : ''}
-          </div>`;
-        }).join('') : '<div class="qop-vazio">Nenhum registro.</div>'}</div>
-      </article>`;
-    }
-
-
-    function montarVazioQuadroOperacional(dados) {
-      const capacidades = dados.capacidades || {};
-      const temEscala = !!dados.escalaPublicada;
-      return `<div class="qop-vazio">
-        <strong>Quadro Operacional ainda não importado</strong>
-        ${temEscala ? 'O PDF de hoje está publicado. Um Enc Adm ou Cmt Cia FT pode usar REIMPORTAR ESCALA para gerar o dashboard.' : 'O dashboard será criado automaticamente quando o PDF da escala correspondente for publicado.'}
-        ${capacidades.podeReimportar ? '<div style="margin-top:12px"><button class="qop-btn primario" type="button" onclick="reimportarQuadroOperacional()">REIMPORTAR ESCALA</button></div>' : ''}
-      </div>`;
-    }
-
-
-    function montarHistoricoQuadroOperacional(eventos) {
-      if (!eventos.length) return '';
-      return `<details class="qop-historico"><summary>HISTÓRICO RECENTE DE ALTERAÇÕES (${eventos.length})</summary><div class="qop-historico-lista">${eventos.map(function(item) {
-        return `<div class="qop-historico-item"><strong>${escapar(item.tipo || 'ALTERAÇÃO')} • ${escapar(item.dataHora || '')}</strong><small>${escapar(item.responsavel || '')}${item.justificativa ? ' — ' + escapar(item.justificativa) : ''}</small></div>`;
-      }).join('')}</div></details>`;
-    }
-
-
-    function reimportarQuadroOperacional() {
-      if (!APP.dadosQuadroOperacional || !(APP.dadosQuadroOperacional.capacidades || {}).podeReimportar) return;
-      if (!window.confirm('Reimportar a escala de hoje? A nova importação substituirá a fotografia atual, preservando todo o histórico anterior.')) return;
-      const btn = document.getElementById('qopBtnReimportar');
-      if (btn) { btn.disabled = true; btn.textContent = 'IMPORTANDO...'; }
-      chamarApi('reimportar_quadro_operacional', {}, { semCache: true })
-        .then(function(resp) {
-          if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao reimportar.');
-          mostrarToastFt('Quadro atualizado', resp.dados && resp.dados.mensagem ? resp.dados.mensagem : 'Escala reimportada.');
-          return carregarQuadroOperacional(false);
-        })
-        .catch(function(erro) { mostrarToastFt('Reimportação não concluída', erro.message || String(erro)); })
-        .finally(function() { if (btn) { btn.disabled = false; btn.textContent = 'REIMPORTAR ESCALA'; } });
-    }
-
-
-    function localizarRegistroQuadroOperacionalCliente(id) {
-      return ((APP.dadosQuadroOperacional && APP.dadosQuadroOperacional.registros) || []).find(function(item) { return String(item.id) === String(id); }) || null;
-    }
-
-
-    function fecharModalQuadroOperacional() {
-      const modal = document.getElementById('qopModal');
-      if (modal) modal.remove();
-    }
-
-
-    function abrirEdicaoQuadroOperacional(id) {
-      const pm = localizarRegistroQuadroOperacionalCliente(id);
-      if (!pm || !((APP.dadosQuadroOperacional || {}).capacidades || {}).podeEditar) return;
-      fecharModalQuadroOperacional();
-      const opcoesSituacao = ['SERVIÇO', 'FOLGA', 'FÉRIAS', 'AFASTADO', 'CURSO', 'DISPENSA', 'ADMINISTRAÇÃO', 'À DISPOSIÇÃO', 'RETIRADO', 'NÃO INFORMADO'];
-      const opcoesVtr = ['TÁTICO', 'ROCAM', 'ADMINISTRAÇÃO', 'OUTRO'];
-      document.body.insertAdjacentHTML('beforeend', `<div id="qopModal" class="qop-modal" onclick="if(event.target===this)fecharModalQuadroOperacional()">
-        <div class="qop-modal-dialog">
-          <header class="qop-modal-head"><h2>Alterar escala do dia</h2><p>${escapar([pm.postoGrad, pm.re, pm.nomeGuerra].filter(Boolean).join(' '))}</p></header>
-          <div class="qop-modal-body">
-            <div class="qop-modal-note">A alteração não modifica o PDF oficial. Todos os dados anteriores, o responsável e a justificativa permanecerão no histórico.</div>
-            <div class="qop-form-grid">
-              <div class="qop-field"><label>Situação</label><select id="qopSituacao">${opcoesSituacao.map(function(valor) { return `<option value="${escaparAttr(valor)}" ${normalizarTexto(valor) === normalizarTexto(pm.situacao) ? 'selected' : ''}>${escapar(valor)}</option>`; }).join('')}</select></div>
-              <div class="qop-field"><label>Tipo de viatura</label><select id="qopTipoViatura"><option value="">SEM CLASSIFICAÇÃO</option>${opcoesVtr.map(function(valor) { return `<option value="${escaparAttr(valor)}" ${normalizarTexto(valor) === normalizarTexto(pm.tipoViatura) ? 'selected' : ''}>${escapar(valor)}</option>`; }).join('')}</select></div>
-              <div class="qop-field full"><label>Atividade</label><input id="qopAtividade" maxlength="160" value="${escaparAttr(pm.tipoAtividade || '')}"></div>
-              <div class="qop-field"><label>Equipe</label><input id="qopEquipe" maxlength="120" value="${escaparAttr(pm.equipe || '')}"></div>
-              <div class="qop-field"><label>Viatura</label><input id="qopViatura" maxlength="80" value="${escaparAttr(pm.viatura || '')}"></div>
-              <div class="qop-field"><label>Função</label><input id="qopFuncao" maxlength="100" value="${escaparAttr(pm.funcao || '')}"></div>
-              <div class="qop-field"><label>Código</label><input id="qopCodigo" maxlength="20" value="${escaparAttr(pm.codigoSituacao || '')}"></div>
-              <div class="qop-field"><label>Início</label><input id="qopInicio" type="time" value="${escaparAttr(pm.horarioInicio || '')}"></div>
-              <div class="qop-field"><label>Término</label><input id="qopFim" type="time" value="${escaparAttr(pm.horarioFim || '')}"></div>
-              <div class="qop-field full"><label>Justificativa obrigatória</label><textarea id="qopJustificativa" maxlength="500" placeholder="Descreva a alteração emergencial realizada."></textarea></div>
-            </div>
-            <div class="qop-modal-actions">
-              ${qopEhEmServico(pm.situacao) ? `<button class="qop-btn" type="button" onclick="abrirSubstituicaoQuadroOperacional('${escaparAttr(pm.id)}')">SUBSTITUIR POLICIAL</button>` : ''}
-              <button class="qop-btn" type="button" onclick="fecharModalQuadroOperacional()">CANCELAR</button>
-              <button id="qopSalvar" class="qop-btn primario" type="button" onclick="salvarEdicaoQuadroOperacional('${escaparAttr(pm.id)}',${Number(pm.revisao || 1)})">SALVAR ALTERAÇÃO</button>
-            </div>
-          </div>
-        </div>
-      </div>`);
-    }
-
-
-    function salvarEdicaoQuadroOperacional(id, revisao) {
-      const valor = function(campo) { const el = document.getElementById(campo); return el ? String(el.value || '').trim() : ''; };
-      const justificativa = valor('qopJustificativa');
-      if (justificativa.length < 5) { mostrarToastFt('Justificativa obrigatória', 'Informe o motivo da alteração com pelo menos cinco caracteres.'); return; }
-      const btn = document.getElementById('qopSalvar');
-      if (btn) { btn.disabled = true; btn.textContent = 'SALVANDO...'; }
-      chamarApi('salvar_alteracao_quadro_operacional', {
-        idRegistro: id,
-        revisao: revisao,
-        situacao: valor('qopSituacao'),
-        codigoSituacao: valor('qopCodigo'),
-        tipoAtividade: valor('qopAtividade'),
-        equipe: valor('qopEquipe'),
-        viatura: valor('qopViatura'),
-        tipoViatura: valor('qopTipoViatura'),
-        funcao: valor('qopFuncao'),
-        horarioInicio: valor('qopInicio'),
-        horarioFim: valor('qopFim'),
-        justificativa: justificativa
-      }, { semCache: true }).then(function(resp) {
-        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao salvar a alteração.');
-        fecharModalQuadroOperacional();
-        mostrarToastFt('Alteração registrada', resp.dados && resp.dados.mensagem ? resp.dados.mensagem : 'Quadro atualizado.');
-        return carregarQuadroOperacional(false);
-      }).catch(function(erro) {
-        mostrarToastFt('Alteração não registrada', erro.message || String(erro));
-        if (btn) { btn.disabled = false; btn.textContent = 'SALVAR ALTERAÇÃO'; }
-      });
-    }
-
-
-    function abrirSubstituicaoQuadroOperacional(idSaida) {
-      const saida = localizarRegistroQuadroOperacionalCliente(idSaida);
-      if (!saida) return;
-      const candidatos = ((APP.dadosQuadroOperacional && APP.dadosQuadroOperacional.registros) || []).filter(function(item) {
-        return item.id !== saida.id && !qopEhEmServico(item.situacao) && normalizarTexto(item.situacao) !== 'SUBSTITUIDO';
-      });
-      fecharModalQuadroOperacional();
-      document.body.insertAdjacentHTML('beforeend', `<div id="qopModal" class="qop-modal" onclick="if(event.target===this)fecharModalQuadroOperacional()">
-        <div class="qop-modal-dialog">
-          <header class="qop-modal-head"><h2>Substituir policial</h2><p>Saída: ${escapar([saida.postoGrad, saida.re, saida.nomeGuerra].filter(Boolean).join(' '))}</p></header>
-          <div class="qop-modal-body">
-            <div class="qop-modal-note">O policial que sai será marcado como SUBSTITUÍDO e o policial que entra receberá a mesma equipe, viatura, função e horário.</div>
-            <div class="qop-field"><label>Policial que entrará na escala</label><select id="qopSubstituto"><option value="">SELECIONE</option>${candidatos.map(function(pm) {
-              return `<option value="${escaparAttr(pm.id)}" data-revisao="${Number(pm.revisao || 1)}">${escapar([pm.postoGrad, pm.re, pm.nomeGuerra, '— ' + pm.situacao].filter(Boolean).join(' '))}</option>`;
-            }).join('')}</select></div>
-            <div class="qop-field"><label>Justificativa obrigatória</label><textarea id="qopJustificativa" maxlength="500" placeholder="Ex.: substituição emergencial por indisposição durante o serviço."></textarea></div>
-            <div class="qop-modal-actions">
-              <button class="qop-btn" type="button" onclick="abrirEdicaoQuadroOperacional('${escaparAttr(saida.id)}')">VOLTAR</button>
-              <button id="qopConfirmarSubstituicao" class="qop-btn primario" type="button" onclick="confirmarSubstituicaoQuadroOperacional('${escaparAttr(saida.id)}',${Number(saida.revisao || 1)})">CONFIRMAR SUBSTITUIÇÃO</button>
-            </div>
-          </div>
-        </div>
-      </div>`);
-    }
-
-
-    function confirmarSubstituicaoQuadroOperacional(idSaida, revisaoSaida) {
-      const seletor = document.getElementById('qopSubstituto');
-      const justificativa = String((document.getElementById('qopJustificativa') || {}).value || '').trim();
-      const idEntrada = seletor ? seletor.value : '';
-      const selecionada = seletor && seletor.options[seletor.selectedIndex];
-      const revisaoEntrada = selecionada ? Number(selecionada.getAttribute('data-revisao') || 0) : 0;
-      if (!idEntrada) { mostrarToastFt('Seleção necessária', 'Selecione o policial que entrará na escala.'); return; }
-      if (justificativa.length < 5) { mostrarToastFt('Justificativa obrigatória', 'Informe o motivo da substituição.'); return; }
-      const btn = document.getElementById('qopConfirmarSubstituicao');
-      if (btn) { btn.disabled = true; btn.textContent = 'REGISTRANDO...'; }
-      chamarApi('substituir_policial_quadro_operacional', {
-        idRegistroSaida: idSaida,
-        idRegistroEntrada: idEntrada,
-        revisaoSaida: revisaoSaida,
-        revisaoEntrada: revisaoEntrada,
-        justificativa: justificativa
-      }, { semCache: true }).then(function(resp) {
-        if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao registrar a substituição.');
-        fecharModalQuadroOperacional();
-        mostrarToastFt('Substituição registrada', resp.dados && resp.dados.mensagem ? resp.dados.mensagem : 'Quadro atualizado.');
-        return carregarQuadroOperacional(false);
-      }).catch(function(erro) {
-        mostrarToastFt('Substituição não registrada', erro.message || String(erro));
-        if (btn) { btn.disabled = false; btn.textContent = 'CONFIRMAR SUBSTITUIÇÃO'; }
-      });
     }
 
 
@@ -12977,7 +12559,7 @@ Banco de dados: Google Sheets.
 
 
     function pesoHierarquiaConsultaCliente(pm) {
-      const p = normalizarTexto(pm.postoGrad || '').replace(/[º°ª]/g, '');
+      const p = normalizarPostoGradCliente(pm.postoGrad);
       const planilha = numeroConsultaCliente(pm.pesoHierarquico);
 
       if (p.includes('MAJ')) return 9000;
@@ -12998,7 +12580,7 @@ Banco de dados: Google Sheets.
 
 
     function postoUsaAlmanaqueConsultaCliente(postoGrad) {
-      const p = normalizarTexto(postoGrad || '').replace(/[º°ª]/g, '');
+      const p = normalizarPostoGradCliente(postoGrad);
       if (p.includes('CB') || p.includes('SD')) return false;
 
       return (
@@ -13026,6 +12608,15 @@ Banco de dados: Google Sheets.
 
     function normalizarLoginConsultaCliente(valor) {
       return String(valor || '').replace(/\D/g, '').substring(0, 6);
+    }
+
+
+    function normalizarPostoGradCliente(valor) {
+      return normalizarTexto(valor || '')
+        .replace(/[º°ª.]/g, '')
+        .replace(/\s+/g, ' ')
+        .replace(/\bSUB[\s-]*TEN\b/g, 'SUBTEN')
+        .trim();
     }
 
 
@@ -14474,7 +14065,7 @@ Banco de dados: Google Sheets.
 
     function postoGradConhecidoResenha(texto) {
       const original = String(texto || '').trim().replace(/\s+/g, ' ');
-      const norm = normalizarTexto(original).replace(/[º°ª.]/g, '').replace(/\s+/g, ' ');
+      const norm = normalizarPostoGradCliente(original);
       const postos = [
         { n: '1 TEN', r: '1º TEN' },
         { n: '2 TEN', r: '2º TEN' },
@@ -14734,7 +14325,6 @@ Banco de dados: Google Sheets.
 
     function sair() {
       fecharVisualizadorPdfEscalaCiaFt();
-      pararAtualizacaoQuadroOperacional();
       pararMonitorAvisosObrigatorios();
       APP.sessaoGeracao = Number(APP.sessaoGeracao || 0) + 1;
       APP.usuario = null;
@@ -14751,7 +14341,6 @@ Banco de dados: Google Sheets.
       APP.dadosControleFrequencia = null;
       APP.dadosControleFolgas = null;
       APP.dadosEscalasFolgas = null;
-      APP.dadosQuadroOperacional = null;
       APP.dadosRotinasAdministrativas = null;
       APP.dadosVistoriaCop = null;
       APP.dadosIcc = null;
