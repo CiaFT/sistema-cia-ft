@@ -44,7 +44,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="cia-ft-build" content="FT-V132-20260824-EFETIVO-PRACAS-R9">
+  <meta name="cia-ft-build" content="FT-V132-20260824-ESTABILIDADE-PERFORMANCE-R10">
   <title>Portal Força Tática • V1.3.2</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
@@ -6876,6 +6876,7 @@ Banco de dados: Google Sheets.
       apiBridgeSequencia: 0,
       apiChamadasPendentes: {},
       apiCache: {},
+      apiFilaEscrita: Promise.resolve(),
       pdfRenderToken: 0,
       pdfLoader: null,
       pdfDocumentoEscalaCiaFt: null,
@@ -14476,7 +14477,9 @@ Banco de dados: Google Sheets.
 
     function acaoApiSomenteLeitura(action) {
       const acao = normalizarTexto(action || '').replace(/[^A-Z0-9]/g, '');
-      return acao === 'LOGIN' || acao === 'PING' || acao.indexOf('DADOS') === 0 || acao.indexOf('CONSULT') === 0 || acao.indexOf('HISTORICO') === 0 || acao.indexOf('BAIXAR') === 0 || acao.indexOf('GERARPDF') === 0;
+      /* Gerar PDF consome CPU/Drive e pode criar arquivo. Nunca deve ser
+         repetido automaticamente após um timeout de transporte. */
+      return acao === 'LOGIN' || acao === 'PING' || acao.indexOf('DADOS') === 0 || acao.indexOf('CONSULT') === 0 || acao.indexOf('HISTORICO') === 0 || acao.indexOf('BAIXAR') === 0;
     }
 
 
@@ -14523,6 +14526,18 @@ Banco de dados: Google Sheets.
         params.sessao = APP.sessaoApi;
       }
       const somenteLeitura = acaoApiSomenteLeitura(action);
+      /* Frequência, Folgas e demais módulos podem disparar alterações em
+         sequência. O navegador agora envia uma gravação por vez, evitando
+         que o próprio aparelho concorra consigo pela trava global do Sheets. */
+      if (!somenteLeitura && !opcoes.filaExecutando) {
+        const filaAnterior = APP.apiFilaEscrita || Promise.resolve();
+        const opcoesNaFila = Object.assign({}, opcoes, { filaExecutando: true });
+        const filaAtual = filaAnterior.catch(function() { return null; }).then(function() {
+          return chamarApi(action, paramsOriginais, opcoesNaFila);
+        });
+        APP.apiFilaEscrita = filaAtual.catch(function() { return null; });
+        return filaAtual;
+      }
       const chave = chaveChamadaApi(action, params);
       const agora = Date.now();
       const acaoNormalizada = normalizarTexto(action).replace(/[^A-Z0-9]/g, '');
@@ -14559,7 +14574,7 @@ Banco de dados: Google Sheets.
         if (resp && !resp.ok && resp.codigo === 'SESSAO_EXPIRADA' && !ehLogin && !opcoes.semRenovar) {
           APP.apiCache = {};
           return renovarSessaoApiFt().then(function() {
-            return chamarApi(action, paramsOriginais, { semRenovar: true, semCache: opcoes.semCache });
+            return chamarApi(action, paramsOriginais, { semRenovar: true, semCache: opcoes.semCache, filaExecutando: opcoes.filaExecutando });
           });
         }
         if (podeCache && resp && resp.ok) APP.apiCache[chave] = { resp: resp, expiraEm: Date.now() + 90000 };
