@@ -30,6 +30,7 @@ VERSÃO V1.3.2 — ICC E REVISTA DE ARMÁRIO
 - Implanta a publicação da ICC, visualização protegida, assinatura individual e geração da lista oficial em PDF.
 - Implanta a Revista de Armário mensal, vistoria digital, testemunhas e PDF oficial.
 - Inclui Nº do armário no cadastro e na edição do policial, vinculado à coluna AQ.
+- Integra a identidade HEXIS abaixo do login e no rodapé de todas as páginas internas.
 
 Front-end externo hospedado no GitHub Pages.
 Backend/API: Apps Script API_FT.gs V1.3.2.
@@ -41,7 +42,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="cia-ft-build" content="FT-V132-20260821-REVISTA-ARMARIO-R2">
+  <meta name="cia-ft-build" content="FT-V132-20260824-HEXIS-R5">
   <title>Portal Força Tática • V1.3.2</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
@@ -6707,39 +6708,81 @@ Banco de dados: Google Sheets.
     .ra-assinaturas{display:grid;grid-template-columns:.9fr 1fr 1fr;margin:0 14px 14px;border:2px solid #111;background:#fff;color:#000}.ra-assinatura-bloco{min-width:0;text-align:center}.ra-assinatura-bloco+.ra-assinatura-bloco{border-left:1px solid #111}.ra-assinatura-titulo{border-bottom:1px solid #111;padding:6px;font-size:9px;font-weight:950}.ra-assinatura-conteudo{display:grid;gap:5px;min-height:90px;align-content:center;padding:8px}.ra-assinatura-conteudo strong{color:#1565C0;font-size:8px;overflow-wrap:anywhere}.ra-assinatura-conteudo small{color:#1565C0;font-size:7px;font-weight:850;overflow-wrap:anywhere}.ra-assinar-testemunha{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid #1B5E20;border-radius:9px;background:#E8F5E9;color:#1B5E20;padding:8px 10px;font:inherit;font-size:8px;font-weight:950;cursor:pointer}.ra-assinar-testemunha input{width:16px;height:16px;margin:0;accent-color:#1B5E20}.ra-pendente{color:#94a3b8!important;font-size:8px!important}.ra-resumo-rodape{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 15px 15px;color:#64748b;font-size:9px;font-weight:850}.ra-resumo-rodape strong{color:#17202a}
     @media(max-width:940px){.ra-toolbar{grid-template-columns:1fr}.ra-actions{justify-content:stretch}.ra-actions .ra-btn{width:100%}.ra-status{grid-template-columns:1fr 1fr}.ra-table-wrap{display:none}.ra-mobile-list{display:grid}.ra-form-oficial{margin:10px}.ra-assinaturas{margin:0 10px 10px}}
     @media(max-width:620px){.ra-toolbar{padding:11px}.ra-status{grid-template-columns:1fr}.ra-form-topo{font-size:12px}.ra-form-subtopo{grid-template-columns:1fr}.ra-form-subtopo strong{font-size:12px}.ra-form-subtopo strong+strong{border-top:1px solid #111;border-left:0}.ra-assinaturas{grid-template-columns:1fr}.ra-assinatura-bloco+.ra-assinatura-bloco{border-top:1px solid #111;border-left:0}.ra-resumo-rodape{align-items:flex-start;flex-direction:column}.ra-mobile-dados{grid-template-columns:1fr}}
+
+    /* IDENTIDADE HEXIS — V1.3.2 */
+    #loginScreen .login-stack{
+      width:100%;
+      max-width:430px;
+      display:grid;
+      justify-items:center;
+    }
+    #loginScreen .hexis-brand-login{
+      width:75%;
+      max-width:322px;
+      margin:14px auto 0;
+    }
+    .hexis-brand img{
+      width:100%;
+      height:auto;
+      object-fit:contain;
+      display:block;
+    }
+    #appScreen .hexis-footer{
+      width:100%;
+      max-width:1120px;
+      margin:28px auto 0;
+      padding:20px 0 calc(6px + env(safe-area-inset-bottom));
+      border-top:1px solid rgba(55,66,71,.20);
+      display:flex;
+      justify-content:center;
+      align-items:center;
+    }
+    #appScreen .hexis-brand-app{
+      width:min(75%, 322px);
+    }
+    @media(max-width:560px){
+      #loginScreen .hexis-brand-login{margin-top:12px}
+      #appScreen .hexis-footer{margin-top:22px;padding-top:17px}
+    }
 </style>
 </head>
 
 <body>
 
   <section id="loginScreen" class="login-screen">
-    <main class="login-card">
-      <div class="logo">
-        <img
-          src="https://drive.google.com/thumbnail?id=1P64M5G2qLW5yhazJUMvhTAIl3rEDD9Br&sz=w600"
-          alt="Portal Força Tática"
-          onerror="this.outerHTML='<div style=&quot;color:#ffe600;font-size:64px&quot;>⚔️</div>'"
-        >
+    <div class="login-stack">
+      <main class="login-card">
+        <div class="logo">
+          <img
+            src="https://drive.google.com/thumbnail?id=1P64M5G2qLW5yhazJUMvhTAIl3rEDD9Br&sz=w600"
+            alt="Portal Força Tática"
+            onerror="this.outerHTML='<div style=&quot;color:#ffe600;font-size:64px&quot;>⚔️</div>'"
+          >
+        </div>
+
+        <div class="field">
+          <label for="loginRE">RE sem dígito</label>
+          <input id="loginRE" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Ex.: 120566" oninput="this.value=this.value.replace(/\\D/g,'')">
+        </div>
+
+        <div class="field">
+          <label for="loginSenha">Senha</label>
+          <input id="loginSenha" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="current-password" placeholder="Digite sua senha" oninput="this.value=this.value.replace(/\\D/g,'')">
+        </div>
+
+        <button id="btnLogin" class="btn" onclick="fazerLogin()">ENTRAR</button>
+
+        <div id="loginAlerta" class="alerta"></div>
+
+        <div class="footer">
+          Portal Força Tática • V1.3.2
+        </div>
+      </main>
+
+      <div class="hexis-brand hexis-brand-login">
+        <img src="logo-hexis.png?v=132-hexis-r1" alt="HEXIS Sistemas &amp; Soluções">
       </div>
-
-      <div class="field">
-        <label for="loginRE">RE sem dígito</label>
-        <input id="loginRE" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Ex.: 120566" oninput="this.value=this.value.replace(/\\D/g,'')">
-      </div>
-
-      <div class="field">
-        <label for="loginSenha">Senha</label>
-        <input id="loginSenha" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="current-password" placeholder="Digite sua senha" oninput="this.value=this.value.replace(/\\D/g,'')">
-      </div>
-
-      <button id="btnLogin" class="btn" onclick="fazerLogin()">ENTRAR</button>
-
-      <div id="loginAlerta" class="alerta"></div>
-
-      <div class="footer">
-        Portal Força Tática • V1.3.2
-      </div>
-    </main>
+    </div>
   </section>
 
 
@@ -6769,6 +6812,12 @@ Banco de dados: Google Sheets.
     </div>
 
     <div id="appConteudo"></div>
+
+    <footer class="hexis-footer">
+      <div class="hexis-brand hexis-brand-app">
+        <img src="logo-hexis.png?v=132-hexis-r1" alt="HEXIS Sistemas &amp; Soluções" loading="lazy">
+      </div>
+    </footer>
   </section>
 
 
