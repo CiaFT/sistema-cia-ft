@@ -36,6 +36,9 @@ VERSÃO V1.3.2 — ICC E REVISTA DE ARMÁRIO
 - Instrumenta tempo total, tempo de servidor, transporte, cache, payload e erros sem registrar dados pessoais.
 - Inclui diagnóstico local de desempenho no Painel Administrativo.
 - Adia o monitor de avisos até o navegador ficar ocioso, evitando concorrência com a primeira página aberta.
+- Reconstrói automaticamente a ponte de transporte quando o carregamento ou o handshake falhar.
+- Inicia a ponte antes do login e aguarda sua estabilização antes de consultas concorrentes.
+- Registra estado, tentativas e falhas da ponte no diagnóstico técnico da R13.
 
 Front-end externo hospedado no GitHub Pages.
 Backend/API: Apps Script API_FT.gs V1.3.2.
@@ -47,7 +50,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="cia-ft-build" content="FT-V132-20260824-INSTRUMENTACAO-CARGA-R12">
+  <meta name="cia-ft-build" content="FT-V132-20260824-PONTE-TRANSPORTE-R13">
   <title>Portal Força Tática • V1.3.2</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
@@ -6882,6 +6885,18 @@ Banco de dados: Google Sheets.
       apiBridgePronta: false,
       apiBridgePendentes: {},
       apiBridgeSequencia: 0,
+      apiBridgeEstado: 'INICIAL',
+      apiBridgeTentativas: 0,
+      apiBridgeMaxTentativas: 3,
+      apiBridgeWatchdogTimer: null,
+      apiBridgeRetryTimer: null,
+      apiBridgePingTimer: null,
+      apiBridgeCriadaEm: 0,
+      apiBridgeProntaEm: 0,
+      apiBridgeUltimoErro: '',
+      apiBridgeNonce: '',
+      apiBridgeGeracao: 0,
+      apiBridgeEsgotada: false,
       apiChamadasPendentes: {},
       apiCache: {},
       apiFilaEscrita: Promise.resolve(),
@@ -6915,6 +6930,9 @@ Banco de dados: Google Sheets.
         tratarMensagemUploaderIcc(event);
         tratarMensagemPonteApiFt(event);
       });
+      /* R13: a ponte começa junto com a página e usa o tempo de digitação do
+         login para concluir o carregamento e o handshake. */
+      setTimeout(function() { iniciarPonteApiFt(false); }, 30);
       document.getElementById('loginRE').addEventListener('keydown', function(ev) {
         if (ev.key === 'Enter') fazerLogin();
       });
@@ -6926,7 +6944,10 @@ Banco de dados: Google Sheets.
       document.getElementById('loginSenha').addEventListener('focus', aquecerConexaoLoginFt, { once: true });
 
       document.addEventListener('visibilitychange', function() {
-        if (!document.hidden && APP.usuario) setTimeout(verificarAvisosObrigatorios, 600);
+        if (document.hidden || !APP.usuario) return;
+        aguardarPonteApiFt(2500).then(function() {
+          if (!document.hidden && APP.usuario) setTimeout(verificarAvisosObrigatorios, 600);
+        });
       });
     });
 
@@ -6934,11 +6955,7 @@ Banco de dados: Google Sheets.
     function aquecerConexaoLoginFt() {
       if (APP.aquecimentoLoginIniciado || APP.usuario) return;
       APP.aquecimentoLoginIniciado = true;
-      /* O policial normalmente leva alguns segundos para preencher RE e senha.
-         A ponte começa nesse intervalo e não bloqueia a tela nem a digitação. */
-      setTimeout(function() {
-        if (!APP.usuario) iniciarPonteApiFt();
-      }, 120);
+      if (!APP.apiBridgePronta) iniciarPonteApiFt(false);
     }
 
 
@@ -6976,9 +6993,7 @@ Banco de dados: Google Sheets.
           window.scrollTo(0, 0);
 
           abrirHome();
-          /* A ponte começa logo após a resposta do login: não concorre com a
-             autenticação e já fica pronta para o primeiro acesso a uma página. */
-          setTimeout(iniciarPonteApiFt, 100);
+          if (!APP.apiBridgePronta) iniciarPonteApiFt(false);
           /* O monitor obrigatório inicia depois da primeira interação com o
              menu, evitando concorrer com a abertura inicial de um módulo. */
           agendarInicioMonitorAvisosObrigatorios();
@@ -8917,12 +8932,14 @@ Banco de dados: Google Sheets.
       const linhas = (relatorio.resumo || []).map(function(item) {
         return '<tr><td>' + escapar(item.action) + '</td><td>' + item.chamadas + '</td><td>' + item.p50TotalMs + ' ms</td><td>' + item.p95TotalMs + ' ms</td><td>' + item.mediaServidorMs + ' ms</td><td>' + item.cacheHits + '</td><td>' + item.erros + '</td></tr>';
       }).join('');
+      const chamadasPonte = (relatorio.metricas || []).filter(function(item) { return item.transporte === 'PONTE'; }).length;
+      const chamadasJsonp = (relatorio.metricas || []).filter(function(item) { return item.transporte === 'JSONP'; }).length;
       document.getElementById('appConteudo').innerHTML = `
         <div class="page-wrap">
           <div class="page-header">
             <div class="page-header-row">
               <div>
-                <div class="page-kicker">Instrumentação R12</div>
+                <div class="page-kicker">Instrumentação e transporte R13</div>
                 <h1>Desempenho do App</h1>
                 <p>As medições permanecem somente neste navegador e não geram gravações adicionais no Google Sheets.</p>
               </div>
@@ -8931,6 +8948,11 @@ Banco de dados: Google Sheets.
           </div>
           <div class="modal-card">
             <div class="section-title"><div><h2>Resumo da sessão</h2><p>${relatorio.metricas.length} chamada(s) registrada(s). P95 representa o tempo das chamadas mais lentas.</p></div></div>
+            <div class="adm-alerta" style="margin-bottom:16px">
+              <strong>Ponte:</strong> ${escapar(relatorio.ponte.estado)} · ${relatorio.ponte.pronta ? 'PRONTA' : 'NÃO PRONTA'} · tentativa(s): ${relatorio.ponte.tentativas}/${relatorio.ponte.maxTentativas}<br>
+              <strong>Transportes nesta sessão:</strong> PONTE ${chamadasPonte} · JSONP ${chamadasJsonp}
+              ${relatorio.ponte.ultimoErro ? '<br><strong>Última falha:</strong> ' + escapar(relatorio.ponte.ultimoErro) : ''}
+            </div>
             <div class="perf-table-wrap">
               <table class="perf-table">
                 <thead><tr><th>AÇÃO</th><th>CHAMADAS</th><th>P50 TOTAL</th><th>P95 TOTAL</th><th>MÉDIA SERVIDOR</th><th>CACHE</th><th>ERROS</th></tr></thead>
@@ -11560,11 +11582,26 @@ Banco de dados: Google Sheets.
       APP.monitorAvisosInicioTimer = setTimeout(function() {
         APP.monitorAvisosInicioTimer = null;
         if (!APP.usuario) return;
-        if (typeof window.requestIdleCallback === 'function') {
-          window.requestIdleCallback(iniciarMonitorAvisosObrigatorios, { timeout: 1500 });
-        } else {
-          iniciarMonitorAvisosObrigatorios();
-        }
+        aguardarPonteApiFt(7000).then(function(pronta) {
+          if (!APP.usuario) return;
+          const iniciarQuandoOcioso = function() {
+            if (typeof window.requestIdleCallback === 'function') {
+              window.requestIdleCallback(iniciarMonitorAvisosObrigatorios, { timeout: 1500 });
+            } else {
+              iniciarMonitorAvisosObrigatorios();
+            }
+          };
+          if (pronta) {
+            iniciarQuandoOcioso();
+            return;
+          }
+          /* Se as três tentativas da ponte se esgotarem, o monitor ainda
+             funciona por JSONP, mas somente depois do caminho crítico. */
+          APP.monitorAvisosInicioTimer = setTimeout(function() {
+            APP.monitorAvisosInicioTimer = null;
+            if (APP.usuario) iniciarQuandoOcioso();
+          }, 10000);
+        });
       }, 4000);
     }
 
@@ -14433,21 +14470,111 @@ Banco de dados: Google Sheets.
     }
 
 
-    function iniciarPonteApiFt() {
-      if (document.getElementById('ftApiBridge')) return;
+    function limparTimersPonteApiFt() {
+      if (APP.apiBridgeWatchdogTimer) clearTimeout(APP.apiBridgeWatchdogTimer);
+      if (APP.apiBridgeRetryTimer) clearTimeout(APP.apiBridgeRetryTimer);
+      if (APP.apiBridgePingTimer) clearInterval(APP.apiBridgePingTimer);
+      APP.apiBridgeWatchdogTimer = null;
+      APP.apiBridgeRetryTimer = null;
+      APP.apiBridgePingTimer = null;
+    }
+
+
+    function enviarPingPonteApiFt() {
+      const frame = document.getElementById('ftApiBridge');
+      if (!frame || !frame.contentWindow || APP.apiBridgePronta) return false;
+      try {
+        frame.contentWindow.postMessage({
+          type: 'FT_API_BRIDGE_PING',
+          nonce: APP.apiBridgeNonce,
+          geracao: Number(APP.apiBridgeGeracao || 0)
+        }, '*');
+        return true;
+      } catch (erro) {
+        APP.apiBridgeUltimoErro = String(erro && erro.message ? erro.message : erro).slice(0, 180);
+        return false;
+      }
+    }
+
+
+    function agendarNovaTentativaPonteApiFt(motivo, geracao) {
+      if (geracao && geracao !== Number(APP.apiBridgeGeracao || 0)) return;
+      APP.apiBridgePronta = false;
+      APP.apiBridgeUltimoErro = String(motivo || 'A ponte não confirmou disponibilidade.').slice(0, 180);
+      APP.apiBridgeEstado = 'FALHA';
+      limparTimersPonteApiFt();
+      const frame = document.getElementById('ftApiBridge');
+      if (frame) frame.remove();
+      if (Number(APP.apiBridgeTentativas || 0) >= Number(APP.apiBridgeMaxTentativas || 3)) {
+        APP.apiBridgeEsgotada = true;
+        APP.apiBridgeEstado = 'CONTINGENCIA_JSONP';
+        return;
+      }
+      const atraso = [350, 900, 1800][Math.max(0, Number(APP.apiBridgeTentativas || 1) - 1)] || 1800;
+      APP.apiBridgeEstado = 'REAGENDADA';
+      APP.apiBridgeRetryTimer = setTimeout(function() {
+        APP.apiBridgeRetryTimer = null;
+        iniciarPonteApiFt(true);
+      }, atraso);
+    }
+
+
+    function iniciarPonteApiFt(forcar) {
+      const existente = document.getElementById('ftApiBridge');
+      if (APP.apiBridgePronta && existente && !forcar) return true;
+      if (existente && !forcar) {
+        enviarPingPonteApiFt();
+        return false;
+      }
+      if (Number(APP.apiBridgeTentativas || 0) >= Number(APP.apiBridgeMaxTentativas || 3) && !forcar) {
+        APP.apiBridgeEsgotada = true;
+        APP.apiBridgeEstado = 'CONTINGENCIA_JSONP';
+        return false;
+      }
+      limparTimersPonteApiFt();
+      if (existente) existente.remove();
+      APP.apiBridgePronta = false;
+      APP.apiBridgeEsgotada = false;
+      APP.apiBridgeTentativas = Number(APP.apiBridgeTentativas || 0) + 1;
+      APP.apiBridgeGeracao = Number(APP.apiBridgeGeracao || 0) + 1;
+      APP.apiBridgeCriadaEm = Date.now();
+      APP.apiBridgeProntaEm = 0;
+      APP.apiBridgeNonce = 'ft_bridge_' + Date.now() + '_' + APP.apiBridgeGeracao;
+      APP.apiBridgeEstado = 'CARREGANDO';
+      const geracao = APP.apiBridgeGeracao;
       const frame = document.createElement('iframe');
       frame.id = 'ftApiBridge';
       frame.title = 'Conexão segura com a API do Portal';
       frame.setAttribute('aria-hidden', 'true');
       frame.tabIndex = -1;
       frame.style.cssText = 'position:fixed;width:1px;height:1px;left:-9999px;bottom:0;border:0;opacity:0;pointer-events:none';
-      frame.src = API_URL + '?action=api_bridge_ft&_cache=13212';
+      frame.onload = function() {
+        if (geracao !== Number(APP.apiBridgeGeracao || 0) || APP.apiBridgePronta) return;
+        APP.apiBridgeEstado = 'AGUARDANDO_HANDSHAKE';
+        enviarPingPonteApiFt();
+      };
+      frame.onerror = function() {
+        agendarNovaTentativaPonteApiFt('Falha ao carregar a página interna da ponte.', geracao);
+      };
+      frame.src = API_URL + '?action=api_bridge_ft&_cache=13213_' + Date.now() + '_' + APP.apiBridgeTentativas;
       document.body.appendChild(frame);
+      APP.apiBridgePingTimer = setInterval(function() {
+        if (geracao !== Number(APP.apiBridgeGeracao || 0) || APP.apiBridgePronta) return;
+        enviarPingPonteApiFt();
+      }, 400);
+      APP.apiBridgeWatchdogTimer = setTimeout(function() {
+        if (!APP.apiBridgePronta) agendarNovaTentativaPonteApiFt('Tempo esgotado no handshake da ponte.', geracao);
+      }, 6000);
+      return false;
     }
 
 
-    function reiniciarPonteApiFt() {
+    function reiniciarPonteApiFt(motivo) {
       APP.apiBridgePronta = false;
+      APP.apiBridgeEsgotada = false;
+      APP.apiBridgeTentativas = 0;
+      APP.apiBridgeUltimoErro = String(motivo || 'A conexão otimizada foi reiniciada.').slice(0, 180);
+      limparTimersPonteApiFt();
       const frame = document.getElementById('ftApiBridge');
       if (frame) frame.remove();
       Object.keys(APP.apiBridgePendentes || {}).forEach(function(id) {
@@ -14457,7 +14584,11 @@ Banco de dados: Google Sheets.
         pendente.reject(new Error('A conexão otimizada foi reiniciada.'));
         delete APP.apiBridgePendentes[id];
       });
-      if (APP.usuario) setTimeout(iniciarPonteApiFt, 1200);
+      APP.apiBridgeEstado = 'REINICIANDO';
+      APP.apiBridgeRetryTimer = setTimeout(function() {
+        APP.apiBridgeRetryTimer = null;
+        iniciarPonteApiFt(true);
+      }, 350);
     }
 
 
@@ -14466,7 +14597,12 @@ Banco de dados: Google Sheets.
       if (!frame || event.source !== frame.contentWindow || !event.data) return;
       const msg = event.data;
       if (msg.type === 'FT_API_BRIDGE_READY') {
+        limparTimersPonteApiFt();
         APP.apiBridgePronta = true;
+        APP.apiBridgeEsgotada = false;
+        APP.apiBridgeEstado = 'PRONTA';
+        APP.apiBridgeProntaEm = Date.now();
+        APP.apiBridgeUltimoErro = '';
         return;
       }
       if (msg.type !== 'FT_API_RESPONSE' || !msg.id) return;
@@ -14494,7 +14630,7 @@ Banco de dados: Google Sheets.
         const id = 'ft_req_' + Date.now() + '_' + (++APP.apiBridgeSequencia);
         const timeout = setTimeout(function() {
           delete APP.apiBridgePendentes[id];
-          reiniciarPonteApiFt();
+          reiniciarPonteApiFt('Uma chamada pela ponte excedeu o tempo limite.');
           reject(new Error('Tempo esgotado na conexão otimizada com a API.'));
         }, Number(limiteMs || 20000));
         APP.apiBridgePendentes[id] = { resolve: resolve, reject: reject, timeout: timeout };
@@ -14512,11 +14648,13 @@ Banco de dados: Google Sheets.
 
     function aguardarPonteApiFt(limiteMs) {
       if (APP.apiBridgePronta) return Promise.resolve(true);
+      if (!document.getElementById('ftApiBridge') && !APP.apiBridgeRetryTimer && !APP.apiBridgeEsgotada) iniciarPonteApiFt(false);
       const inicio = Date.now();
       return new Promise(function(resolve) {
         const verificar = function() {
           if (APP.apiBridgePronta) return resolve(true);
-          if (Date.now() - inicio >= limiteMs) return resolve(false);
+          if (APP.apiBridgeEsgotada || Date.now() - inicio >= Number(limiteMs || 0)) return resolve(false);
+          enviarPingPonteApiFt();
           setTimeout(verificar, 100);
         };
         verificar();
@@ -14568,7 +14706,7 @@ Banco de dados: Google Sheets.
 
     function restaurarMetricasPerformanceFt() {
       try {
-        const salvas = JSON.parse(sessionStorage.getItem('FT_METRICAS_R12') || '[]');
+        const salvas = JSON.parse(sessionStorage.getItem('FT_METRICAS_R13') || '[]');
         APP.metricasPerformance = Array.isArray(salvas) ? salvas.slice(-120) : [];
       } catch (ignorado) {
         APP.metricasPerformance = [];
@@ -14586,11 +14724,14 @@ Banco de dados: Google Sheets.
         cacheServidor: String(meta.cache || 'SEM_DADO'),
         transporte: String(origemForcada || (resp && resp.__transporteFt) || 'INDEFINIDO'),
         payloadChars: Math.max(0, Number(meta.payloadChars || 0)),
+        ponteEstado: String(APP.apiBridgeEstado || 'INDEFINIDO'),
+        ponteTentativas: Number(APP.apiBridgeTentativas || 0),
+        ponteUltimoErro: String(APP.apiBridgeUltimoErro || '').slice(0, 180),
         ok: !!(resp && resp.ok) && !erro,
         erro: erro ? String(erro.message || erro).slice(0, 180) : ''
       };
       APP.metricasPerformance = (APP.metricasPerformance || []).concat([metrica]).slice(-120);
-      try { sessionStorage.setItem('FT_METRICAS_R12', JSON.stringify(APP.metricasPerformance)); } catch (ignorado) {}
+      try { sessionStorage.setItem('FT_METRICAS_R13', JSON.stringify(APP.metricasPerformance)); } catch (ignorado) {}
       return metrica;
     }
 
@@ -14628,7 +14769,7 @@ Banco de dados: Google Sheets.
         };
       }).sort(function(a, b) { return b.p95TotalMs - a.p95TotalMs; });
       return {
-        build: 'FT-V132-20260824-INSTRUMENTACAO-CARGA-R12',
+        build: 'FT-V132-20260824-PONTE-TRANSPORTE-R13',
         geradoEm: new Date().toISOString(),
         navegador: navigator.userAgent,
         conexao: navigator.connection ? {
@@ -14637,6 +14778,16 @@ Banco de dados: Google Sheets.
           downlink: Number(navigator.connection.downlink || 0),
           economiaDados: !!navigator.connection.saveData
         } : null,
+        ponte: {
+          estado: String(APP.apiBridgeEstado || 'INDEFINIDO'),
+          pronta: !!APP.apiBridgePronta,
+          tentativas: Number(APP.apiBridgeTentativas || 0),
+          maxTentativas: Number(APP.apiBridgeMaxTentativas || 3),
+          criadaEm: APP.apiBridgeCriadaEm ? new Date(APP.apiBridgeCriadaEm).toISOString() : '',
+          prontaEm: APP.apiBridgeProntaEm ? new Date(APP.apiBridgeProntaEm).toISOString() : '',
+          ultimoErro: String(APP.apiBridgeUltimoErro || ''),
+          contingenciaJsonp: !!APP.apiBridgeEsgotada
+        },
         resumo: resumo,
         metricas: metricas
       };
@@ -14649,7 +14800,7 @@ Banco de dados: Google Sheets.
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'Diagnostico_Performance_App_Cia_FT_R12_' + new Date().toISOString().slice(0, 10) + '.json';
+      link.download = 'Diagnostico_Performance_App_Cia_FT_R13_' + new Date().toISOString().slice(0, 10) + '.json';
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -14659,7 +14810,7 @@ Banco de dados: Google Sheets.
 
     function limparMetricasPerformanceFt() {
       APP.metricasPerformance = [];
-      try { sessionStorage.removeItem('FT_METRICAS_R12'); } catch (ignorado) {}
+      try { sessionStorage.removeItem('FT_METRICAS_R13'); } catch (ignorado) {}
       abrirDiagnosticoPerformanceFt();
     }
 
@@ -14739,13 +14890,14 @@ Banco de dados: Google Sheets.
         requestId: 'web_' + Date.now() + '_' + (++APP.performanceSequencia)
       });
 
-      /* R11: uma chamada que já foi entregue ao Apps Script nunca é reenviada
+      /* R13: uma chamada que já foi entregue ao Apps Script nunca é reenviada
          após timeout. A contingência JSONP só é usada quando a ponte falha
          antes do postMessage, situação em que sabemos que nada foi executado. */
       const maxTentativas = 2;
       const executar = function(tentativa) {
         if (navigator.onLine === false) return Promise.reject(new Error('Sem conexão com a internet. Verifique a rede do aparelho.'));
-        const prepararTransporte = !somenteLeitura && tentativa === 1 && !APP.apiBridgePronta ? aguardarPonteApiFt(700) : Promise.resolve(APP.apiBridgePronta);
+        const esperaPonte = ehLogin ? 5000 : (operacaoEscrita ? 3000 : (operacaoPesada ? 1200 : 2000));
+        const prepararTransporte = tentativa === 1 && !APP.apiBridgePronta ? aguardarPonteApiFt(esperaPonte) : Promise.resolve(APP.apiBridgePronta);
         return prepararTransporte.then(function() {
           const usarPonte = APP.apiBridgePronta && tentativa === 1;
           return usarPonte ? chamadaPelaPonteApiFt(action, paramsTransporte, limitePonte) : chamadaJsonpFt(action, paramsTransporte, limiteJsonp);
