@@ -32,6 +32,7 @@ VERSÃO V1.3.2 — ICC E REVISTA DE ARMÁRIO
 - Inclui Nº do armário no cadastro e na edição do policial, vinculado à coluna AQ.
 - Integra a identidade HEXIS abaixo do login e no rodapé de todas as páginas internas.
 - Inclui avisos semanais obrigatórios de Resenhas, com ciência individual por RE.
+- Otimiza sessão, monitor de avisos e retentativas para reduzir carga e tempos de espera.
 
 Front-end externo hospedado no GitHub Pages.
 Backend/API: Apps Script API_FT.gs V1.3.2.
@@ -43,7 +44,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="cia-ft-build" content="FT-V132-20260824-AVISO-RESENHAS-R6">
+  <meta name="cia-ft-build" content="FT-V132-20260824-OTIMIZACAO-API-R7">
   <title>Portal Força Tática • V1.3.2</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
@@ -11503,12 +11504,11 @@ Banco de dados: Google Sheets.
       pararMonitorAvisosObrigatorios();
       if (!APP.usuario) return;
       verificarAvisosObrigatorios();
-      APP.avisoObrigatorioTimer = setInterval(verificarAvisosObrigatorios, 60000);
     }
 
 
     function pararMonitorAvisosObrigatorios() {
-      if (APP.avisoObrigatorioTimer) clearInterval(APP.avisoObrigatorioTimer);
+      if (APP.avisoObrigatorioTimer) clearTimeout(APP.avisoObrigatorioTimer);
       APP.avisoObrigatorioTimer = null;
       APP.avisoObrigatorioConsulta = false;
       APP.avisoObrigatorioAtualId = '';
@@ -11521,10 +11521,48 @@ Banco de dados: Google Sheets.
     }
 
 
+    function atrasoProximaConsultaAvisosObrigatorios() {
+      const agora = new Date();
+      const diaSemana = agora.getDay();
+      const segundosHoje = agora.getHours() * 3600 + agora.getMinutes() * 60 + agora.getSeconds();
+      const alvos = [
+        { dia: 0, segundos: 17 * 3600 },
+        { dia: 1, segundos: 9 * 3600 }
+      ];
+      let menorAtraso = 300000;
+
+      alvos.forEach(function(alvo) {
+        let diasAte = (alvo.dia - diaSemana + 7) % 7;
+        let diferencaSegundos = diasAte * 86400 + alvo.segundos - segundosHoje;
+        if (diferencaSegundos <= 0) diferencaSegundos += 7 * 86400;
+        menorAtraso = Math.min(menorAtraso, Math.max(1000, diferencaSegundos * 1000 + 500));
+
+        /* Nos dois minutos posteriores ao horário, confere a cada 15 segundos.
+           Compensa relógio do aparelho adiantado e eventual atraso do navegador,
+           sem manter consultas por minuto durante o restante da semana. */
+        if (diaSemana === alvo.dia && segundosHoje >= alvo.segundos && segundosHoje < alvo.segundos + 120) {
+          menorAtraso = Math.min(menorAtraso, 15000);
+        }
+      });
+      return menorAtraso;
+    }
+
+
+    function agendarProximaConsultaAvisosObrigatorios() {
+      if (APP.avisoObrigatorioTimer) clearTimeout(APP.avisoObrigatorioTimer);
+      APP.avisoObrigatorioTimer = null;
+      if (!APP.usuario || APP.avisoObrigatorioAtualId) return;
+      APP.avisoObrigatorioTimer = setTimeout(verificarAvisosObrigatorios, atrasoProximaConsultaAvisosObrigatorios());
+    }
+
+
     function verificarAvisosObrigatorios() {
-      if (!APP.usuario || APP.avisoObrigatorioConsulta || APP.avisoObrigatorioAtualId) return;
+      if (!APP.usuario || APP.avisoObrigatorioAtualId) return Promise.resolve(null);
+      if (APP.avisoObrigatorioConsulta) return Promise.resolve(null);
+      if (APP.avisoObrigatorioTimer) clearTimeout(APP.avisoObrigatorioTimer);
+      APP.avisoObrigatorioTimer = null;
       APP.avisoObrigatorioConsulta = true;
-      chamarApi('dados_avisos_obrigatorios', {}, { semCache: true })
+      return chamarApi('dados_avisos_obrigatorios', {}, { semCache: true })
         .then(function(resp) {
           if (!APP.usuario || !resp || !resp.ok || !resp.dados || !resp.dados.aviso) return;
           exibirAvisoObrigatorio(resp.dados.aviso);
@@ -11533,7 +11571,10 @@ Banco de dados: Google Sheets.
           /* A consulta será repetida automaticamente; erros transitórios não
              podem encerrar nem substituir um aviso obrigatório já exibido. */
         })
-        .finally(function() { APP.avisoObrigatorioConsulta = false; });
+        .finally(function() {
+          APP.avisoObrigatorioConsulta = false;
+          agendarProximaConsultaAvisosObrigatorios();
+        });
     }
 
 
@@ -14477,14 +14518,18 @@ Banco de dados: Google Sheets.
       const agora = Date.now();
       const acaoNormalizada = normalizarTexto(action).replace(/[^A-Z0-9]/g, '');
       const operacaoPesada = acaoNormalizada.indexOf('GERARPDF') === 0 || acaoNormalizada.indexOf('BAIXAR') === 0;
-      const limitePonte = operacaoPesada ? 45000 : 20000;
-      const limiteJsonp = operacaoPesada ? 60000 : (ehLogin ? 25000 : 30000);
+      const operacaoEscrita = !somenteLeitura;
+      const limitePonte = operacaoPesada ? 45000 : (operacaoEscrita ? 35000 : 20000);
+      const limiteJsonp = operacaoPesada ? 60000 : (operacaoEscrita ? 40000 : (ehLogin ? 25000 : 30000));
       const podeCache = !opcoes.semCache && somenteLeitura && !ehLogin && acaoNormalizada.indexOf('BAIXAR') !== 0 && acaoNormalizada.indexOf('GERARPDF') !== 0;
       const cache = APP.apiCache[chave];
       if (podeCache && cache && cache.expiraEm > agora) return Promise.resolve(cache.resp);
       if (somenteLeitura && APP.apiChamadasPendentes[chave]) return APP.apiChamadasPendentes[chave];
 
-      const maxTentativas = !somenteLeitura ? 1 : (operacaoPesada || ehLogin ? 2 : 3);
+      /* Duas rotas de transporte já oferecem contingência suficiente: ponte
+         privada e JSONP. Uma terceira execução repetia consultas potencialmente
+         pesadas e podia prolongar a espera total por mais de um minuto. */
+      const maxTentativas = !somenteLeitura ? 1 : 2;
       const executar = function(tentativa) {
         if (navigator.onLine === false) return Promise.reject(new Error('Sem conexão com a internet. Verifique a rede do aparelho.'));
         const prepararTransporte = !somenteLeitura && tentativa === 1 && !APP.apiBridgePronta ? aguardarPonteApiFt(700) : Promise.resolve(APP.apiBridgePronta);
