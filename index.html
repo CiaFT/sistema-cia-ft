@@ -44,7 +44,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="cia-ft-build" content="FT-V132-20260824-ESTABILIDADE-PERFORMANCE-R10">
+  <meta name="cia-ft-build" content="FT-V132-20260824-DESEMPENHO-CRITICO-R11">
   <title>Portal Força Tática • V1.3.2</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
@@ -14413,7 +14413,9 @@ Banco de dados: Google Sheets.
       return new Promise(function(resolve, reject) {
         const frame = document.getElementById('ftApiBridge');
         if (!APP.apiBridgePronta || !frame || !frame.contentWindow) {
-          reject(new Error('A conexão otimizada com a API ainda não está disponível.'));
+          const erroSemEnvio = new Error('A conexão otimizada com a API ainda não está disponível.');
+          erroSemEnvio.reenvioSeguroFt = true;
+          reject(erroSemEnvio);
           return;
         }
         const id = 'ft_req_' + Date.now() + '_' + (++APP.apiBridgeSequencia);
@@ -14423,7 +14425,14 @@ Banco de dados: Google Sheets.
           reject(new Error('Tempo esgotado na conexão otimizada com a API.'));
         }, Number(limiteMs || 20000));
         APP.apiBridgePendentes[id] = { resolve: resolve, reject: reject, timeout: timeout };
-        frame.contentWindow.postMessage({ type: 'FT_API_REQUEST', id: id, action: action, params: params || {} }, '*');
+        try {
+          frame.contentWindow.postMessage({ type: 'FT_API_REQUEST', id: id, action: action, params: params || {} }, '*');
+        } catch (erroPost) {
+          clearTimeout(timeout);
+          delete APP.apiBridgePendentes[id];
+          erroPost.reenvioSeguroFt = true;
+          reject(erroPost);
+        }
       });
     }
 
@@ -14543,17 +14552,17 @@ Banco de dados: Google Sheets.
       const acaoNormalizada = normalizarTexto(action).replace(/[^A-Z0-9]/g, '');
       const operacaoPesada = acaoNormalizada.indexOf('GERARPDF') === 0 || acaoNormalizada.indexOf('BAIXAR') === 0;
       const operacaoEscrita = !somenteLeitura;
-      const limitePonte = operacaoPesada ? 45000 : (operacaoEscrita ? 35000 : 20000);
-      const limiteJsonp = operacaoPesada ? 60000 : (operacaoEscrita ? 40000 : (ehLogin ? 25000 : 30000));
+      const limitePonte = operacaoPesada ? 60000 : (operacaoEscrita ? 45000 : 30000);
+      const limiteJsonp = operacaoPesada ? 60000 : (operacaoEscrita ? 45000 : (ehLogin ? 30000 : 35000));
       const podeCache = !opcoes.semCache && somenteLeitura && !ehLogin && acaoNormalizada.indexOf('BAIXAR') !== 0 && acaoNormalizada.indexOf('GERARPDF') !== 0;
       const cache = APP.apiCache[chave];
       if (podeCache && cache && cache.expiraEm > agora) return Promise.resolve(cache.resp);
       if (somenteLeitura && APP.apiChamadasPendentes[chave]) return APP.apiChamadasPendentes[chave];
 
-      /* Duas rotas de transporte já oferecem contingência suficiente: ponte
-         privada e JSONP. Uma terceira execução repetia consultas potencialmente
-         pesadas e podia prolongar a espera total por mais de um minuto. */
-      const maxTentativas = !somenteLeitura ? 1 : 2;
+      /* R11: uma chamada que já foi entregue ao Apps Script nunca é reenviada
+         após timeout. A contingência JSONP só é usada quando a ponte falha
+         antes do postMessage, situação em que sabemos que nada foi executado. */
+      const maxTentativas = 2;
       const executar = function(tentativa) {
         if (navigator.onLine === false) return Promise.reject(new Error('Sem conexão com a internet. Verifique a rede do aparelho.'));
         const prepararTransporte = !somenteLeitura && tentativa === 1 && !APP.apiBridgePronta ? aguardarPonteApiFt(700) : Promise.resolve(APP.apiBridgePronta);
@@ -14561,9 +14570,8 @@ Banco de dados: Google Sheets.
           const usarPonte = APP.apiBridgePronta && tentativa === 1;
           return usarPonte ? chamadaPelaPonteApiFt(action, params, limitePonte) : chamadaJsonpFt(action, params, limiteJsonp);
         }).catch(function(erro) {
-          if (tentativa >= maxTentativas) throw erro;
-          const espera = tentativa === 1 ? 700 : 1800;
-          return new Promise(function(resolve) { setTimeout(resolve, espera); }).then(function() { return executar(tentativa + 1); });
+          if (tentativa >= maxTentativas || !erro || erro.reenvioSeguroFt !== true) throw erro;
+          return executar(tentativa + 1);
         });
       };
 
