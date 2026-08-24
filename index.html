@@ -31,6 +31,7 @@ VERSÃO V1.3.2 — ICC E REVISTA DE ARMÁRIO
 - Implanta a Revista de Armário mensal, vistoria digital, testemunhas e PDF oficial.
 - Inclui Nº do armário no cadastro e na edição do policial, vinculado à coluna AQ.
 - Integra a identidade HEXIS abaixo do login e no rodapé de todas as páginas internas.
+- Inclui avisos semanais obrigatórios de Resenhas, com ciência individual por RE.
 
 Front-end externo hospedado no GitHub Pages.
 Backend/API: Apps Script API_FT.gs V1.3.2.
@@ -42,7 +43,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="cia-ft-build" content="FT-V132-20260824-HEXIS-R5">
+  <meta name="cia-ft-build" content="FT-V132-20260824-AVISO-RESENHAS-R6">
   <title>Portal Força Tática • V1.3.2</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
@@ -2571,12 +2572,37 @@ Banco de dados: Google Sheets.
     .toast-ft.persistente .toast-ft-progresso { display: none; }
     @keyframes toastFtTempo { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 
+    .toast-ft-obrigatorio-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 125000;
+      display: grid;
+      place-items: center;
+      padding: 16px;
+      pointer-events: none;
+    }
+    .toast-ft-obrigatorio-overlay .toast-ft {
+      width: min(430px, calc(100vw - 32px));
+      pointer-events: auto;
+      transform: translateY(18px) scale(.97);
+      box-shadow: 0 28px 80px rgba(15,23,42,.34), 0 6px 18px rgba(15,23,42,.14);
+    }
+    .toast-ft-obrigatorio-overlay .toast-ft.visivel { transform: translateY(0) scale(1); }
+    .toast-ft-obrigatorio-overlay .toast-ft.saindo { transform: translateY(15px) scale(.98); }
+    .toast-ft.sem-fechar { grid-template-columns: 42px minmax(0, 1fr); }
+    .toast-ft.sem-fechar .toast-ft-acoes { grid-column: 1 / -1; }
+    .toast-ft-obrigatorio-overlay .toast-ft-acao { flex: 1 1 100%; min-width: 0; }
+    .toast-ft-acao:disabled { cursor: wait; opacity: .72; }
+
     @media (max-width: 560px) {
       .toast-ft-region { top: 10px; right: 10px; width: calc(100vw - 20px); }
       .toast-ft { grid-template-columns: 38px minmax(0, 1fr) 27px; border-radius: 17px; padding: 12px 11px 14px 10px; }
       .toast-ft-icone { width: 36px; height: 36px; border-radius: 11px; font-size: 17px; }
       .toast-ft-acoes { grid-column: 1 / -1; }
       .toast-ft-acao { flex: 1 1 0; min-width: 0; }
+      .toast-ft-obrigatorio-overlay { padding: 10px; }
+      .toast-ft-obrigatorio-overlay .toast-ft { width: calc(100vw - 20px); }
+      .toast-ft.sem-fechar { grid-template-columns: 38px minmax(0, 1fr); }
     }
 
     @media (max-width: 980px) {
@@ -6862,7 +6888,11 @@ Banco de dados: Google Sheets.
       sessaoGeracao: 0,
       semanaMobileFrequencia: 0,
       semanaMobileFolgas: 0,
-      aquecimentoLoginIniciado: false
+      aquecimentoLoginIniciado: false,
+      avisoObrigatorioTimer: null,
+      avisoObrigatorioConsulta: false,
+      avisoObrigatorioAtualId: '',
+      avisoObrigatorioToast: null
     };
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -6880,6 +6910,10 @@ Banco de dados: Google Sheets.
         if (ev.key === 'Enter') fazerLogin();
       });
       document.getElementById('loginSenha').addEventListener('focus', aquecerConexaoLoginFt, { once: true });
+
+      document.addEventListener('visibilitychange', function() {
+        if (!document.hidden && APP.usuario) verificarAvisosObrigatorios();
+      });
     });
 
 
@@ -6931,6 +6965,7 @@ Banco de dados: Google Sheets.
           /* A ponte começa logo após a resposta do login: não concorre com a
              autenticação e já fica pronta para o primeiro acesso a uma página. */
           setTimeout(iniciarPonteApiFt, 100);
+          setTimeout(iniciarMonitorAvisosObrigatorios, 250);
         })
         .catch(function(err) {
           setBotaoLogin(false);
@@ -11283,6 +11318,20 @@ Banco de dados: Google Sheets.
     }
 
 
+    function obterRegiaoToastObrigatorioFt() {
+      let regiao = document.getElementById('toastFtObrigatorioOverlay');
+      if (regiao) return regiao;
+
+      regiao = document.createElement('div');
+      regiao.id = 'toastFtObrigatorioOverlay';
+      regiao.className = 'toast-ft-obrigatorio-overlay';
+      regiao.setAttribute('aria-live', 'assertive');
+      regiao.setAttribute('aria-atomic', 'true');
+      document.body.appendChild(regiao);
+      return regiao;
+    }
+
+
     function inferirTipoToastFt(titulo, tipoInformado) {
       const permitido = ['sucesso', 'erro', 'atencao', 'info', 'confirmacao'];
       const tipo = String(tipoInformado || '').toLowerCase();
@@ -11314,10 +11363,12 @@ Banco de dados: Google Sheets.
       const visual = visualTipoToastFt(tipo);
       const duracao = Math.max(2500, Number(config.duracao || 4800));
       const persistente = !!config.persistente;
-      const regiao = obterRegiaoToastFt();
+      const obrigatorio = !!config.obrigatorio;
+      const bloquearFechamento = !!config.bloquearFechamento;
+      const regiao = obrigatorio ? obterRegiaoToastObrigatorioFt() : obterRegiaoToastFt();
       const toastId = 'toastFt-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
 
-      while (regiao.children.length >= 5) {
+      while (!obrigatorio && regiao.children.length >= 5) {
         const descartavel = regiao.querySelector('.toast-ft:not(.persistente)') || regiao.firstElementChild;
         if (!descartavel) break;
         const fecharAntigo = descartavel.querySelector('.toast-ft-fechar');
@@ -11327,8 +11378,8 @@ Banco de dados: Google Sheets.
 
       const toast = document.createElement('section');
       toast.id = toastId;
-      toast.className = 'toast-ft ' + tipo + (persistente ? ' persistente' : '');
-      toast.setAttribute('role', tipo === 'erro' || tipo === 'confirmacao' ? 'alert' : 'status');
+      toast.className = 'toast-ft ' + tipo + (persistente ? ' persistente' : '') + (bloquearFechamento ? ' sem-fechar' : '');
+      toast.setAttribute('role', obrigatorio || tipo === 'erro' || tipo === 'confirmacao' ? 'alert' : 'status');
       toast.setAttribute('aria-labelledby', toastId + '-titulo');
       toast.setAttribute('aria-describedby', toastId + '-texto');
       toast.innerHTML =
@@ -11337,7 +11388,7 @@ Banco de dados: Google Sheets.
           '<strong class="toast-ft-titulo" id="' + toastId + '-titulo">' + escapar(config.titulo || visual.titulo) + '</strong>' +
           '<span class="toast-ft-texto" id="' + toastId + '-texto">' + escapar(config.texto || '') + '</span>' +
         '</div>' +
-        '<button class="toast-ft-fechar" type="button" aria-label="Fechar aviso">×</button>' +
+        (bloquearFechamento ? '' : '<button class="toast-ft-fechar" type="button" aria-label="Fechar aviso">×</button>') +
         (config.acoes && config.acoes.length ?
           '<div class="toast-ft-acoes">' + config.acoes.map(function(acao, indice) {
             return '<button class="toast-ft-acao ' + (acao.primaria ? 'primaria' : 'secundaria') + '" type="button" data-toast-acao="' + indice + '">' + escapar(acao.rotulo || 'OK') + '</button>';
@@ -11347,9 +11398,11 @@ Banco de dados: Google Sheets.
       regiao.appendChild(toast);
       let encerrado = false;
       let timer = null;
+      let processando = false;
 
-      function fechar(resultado) {
+      function fechar(resultado, forcar) {
         if (encerrado) return;
+        if (bloquearFechamento && !forcar) return;
         encerrado = true;
         if (timer) clearTimeout(timer);
         toast.classList.add('saindo');
@@ -11357,25 +11410,52 @@ Banco de dados: Google Sheets.
         if (typeof config.aoResponder === 'function') config.aoResponder(resultado);
         setTimeout(function() {
           if (toast.parentNode) toast.parentNode.removeChild(toast);
+          if (obrigatorio && regiao.parentNode && !regiao.children.length) regiao.parentNode.removeChild(regiao);
         }, 230);
       }
 
-      toast.querySelector('.toast-ft-fechar').addEventListener('click', function() { fechar(false); });
+      const botaoFechar = toast.querySelector('.toast-ft-fechar');
+      if (botaoFechar) botaoFechar.addEventListener('click', function() { fechar(false, false); });
       Array.prototype.forEach.call(toast.querySelectorAll('[data-toast-acao]'), function(botao) {
         botao.addEventListener('click', function() {
+          if (processando) return;
           const indice = Number(botao.getAttribute('data-toast-acao'));
           const acao = (config.acoes || [])[indice] || {};
-          fechar(!!acao.resultado);
+          const resultado = !!acao.resultado;
+          if (typeof config.aoAcionar !== 'function') {
+            fechar(resultado, resultado || !bloquearFechamento);
+            return;
+          }
+
+          processando = true;
+          const botoes = Array.prototype.slice.call(toast.querySelectorAll('.toast-ft-acao'));
+          botoes.forEach(function(item) { item.disabled = true; });
+          const rotuloOriginal = botao.textContent;
+          botao.textContent = config.rotuloProcessando || 'REGISTRANDO...';
+          Promise.resolve(config.aoAcionar(resultado, acao, toast)).then(function(confirmado) {
+            if (confirmado === false) {
+              processando = false;
+              botoes.forEach(function(item) { item.disabled = false; });
+              botao.textContent = rotuloOriginal;
+              return;
+            }
+            fechar(resultado, true);
+          }).catch(function(erro) {
+            processando = false;
+            botoes.forEach(function(item) { item.disabled = false; });
+            botao.textContent = rotuloOriginal;
+            if (typeof config.aoErro === 'function') config.aoErro(erro);
+          });
         });
       });
       toast.addEventListener('keydown', function(evento) {
-        if (evento.key === 'Escape') fechar(false);
+        if (evento.key === 'Escape' && !bloquearFechamento) fechar(false, false);
       });
 
       setTimeout(function() { toast.classList.add('visivel'); }, 10);
-      if (!persistente) timer = setTimeout(function() { fechar(null); }, duracao);
+      if (!persistente) timer = setTimeout(function() { fechar(null, true); }, duracao);
 
-      if (tipo === 'confirmacao') {
+      if (tipo === 'confirmacao' || obrigatorio) {
         toast.tabIndex = -1;
         setTimeout(function() {
           const principal = toast.querySelector('.toast-ft-acao.primaria');
@@ -11384,7 +11464,10 @@ Banco de dados: Google Sheets.
         }, 30);
       }
 
-      return { elemento: toast, fechar: fechar };
+      return {
+        elemento: toast,
+        fechar: function(resultado) { fechar(resultado, true); }
+      };
     }
 
 
@@ -11412,6 +11495,81 @@ Banco de dados: Google Sheets.
           ],
           aoResponder: resolve
         });
+      });
+    }
+
+
+    function iniciarMonitorAvisosObrigatorios() {
+      pararMonitorAvisosObrigatorios();
+      if (!APP.usuario) return;
+      verificarAvisosObrigatorios();
+      APP.avisoObrigatorioTimer = setInterval(verificarAvisosObrigatorios, 60000);
+    }
+
+
+    function pararMonitorAvisosObrigatorios() {
+      if (APP.avisoObrigatorioTimer) clearInterval(APP.avisoObrigatorioTimer);
+      APP.avisoObrigatorioTimer = null;
+      APP.avisoObrigatorioConsulta = false;
+      APP.avisoObrigatorioAtualId = '';
+      if (APP.avisoObrigatorioToast && typeof APP.avisoObrigatorioToast.fechar === 'function') {
+        APP.avisoObrigatorioToast.fechar(false);
+      }
+      APP.avisoObrigatorioToast = null;
+      const overlay = document.getElementById('toastFtObrigatorioOverlay');
+      if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    }
+
+
+    function verificarAvisosObrigatorios() {
+      if (!APP.usuario || APP.avisoObrigatorioConsulta || APP.avisoObrigatorioAtualId) return;
+      APP.avisoObrigatorioConsulta = true;
+      chamarApi('dados_avisos_obrigatorios', {}, { semCache: true })
+        .then(function(resp) {
+          if (!APP.usuario || !resp || !resp.ok || !resp.dados || !resp.dados.aviso) return;
+          exibirAvisoObrigatorio(resp.dados.aviso);
+        })
+        .catch(function() {
+          /* A consulta será repetida automaticamente; erros transitórios não
+             podem encerrar nem substituir um aviso obrigatório já exibido. */
+        })
+        .finally(function() { APP.avisoObrigatorioConsulta = false; });
+    }
+
+
+    function exibirAvisoObrigatorio(aviso) {
+      const idAviso = String(aviso && aviso.idAviso || '').trim();
+      if (!idAviso || APP.avisoObrigatorioAtualId === idAviso) return;
+
+      APP.avisoObrigatorioAtualId = idAviso;
+      APP.avisoObrigatorioToast = criarToastFt({
+        titulo: aviso.titulo || 'ATENÇÃO!',
+        texto: aviso.mensagem || 'Enviar resenhas de escalas da semana até às 11:00h de segunda-feira!',
+        tipo: 'atencao',
+        persistente: true,
+        obrigatorio: true,
+        bloquearFechamento: true,
+        rotuloProcessando: 'REGISTRANDO CIÊNCIA...',
+        acoes: [
+          { rotulo: 'CIENTE', resultado: true, primaria: true }
+        ],
+        aoAcionar: function() {
+          return chamarApi('registrar_ciencia_aviso', { idAviso: idAviso }, { semCache: true })
+            .then(function(resp) {
+              if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Não foi possível registrar a ciência.');
+              APP.avisoObrigatorioAtualId = '';
+              APP.avisoObrigatorioToast = null;
+              setTimeout(verificarAvisosObrigatorios, 450);
+              return true;
+            });
+        },
+        aoErro: function(erro) {
+          mostrarToastFt(
+            'Ciência não registrada',
+            erro && erro.message ? erro.message : 'Verifique sua conexão e clique novamente em CIENTE.',
+            'erro'
+          );
+        }
       });
     }
 
@@ -14117,6 +14275,7 @@ Banco de dados: Google Sheets.
 
     function sair() {
       fecharVisualizadorPdfEscalaCiaFt();
+      pararMonitorAvisosObrigatorios();
       APP.sessaoGeracao = Number(APP.sessaoGeracao || 0) + 1;
       APP.usuario = null;
       APP.menus = [];
