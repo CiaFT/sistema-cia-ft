@@ -33,6 +33,9 @@ VERSÃO V1.3.2 — ICC E REVISTA DE ARMÁRIO
 - Integra a identidade HEXIS abaixo do login e no rodapé de todas as páginas internas.
 - Inclui avisos semanais obrigatórios de Resenhas, com ciência individual por RE.
 - Otimiza sessão, monitor de avisos e retentativas para reduzir carga e tempos de espera.
+- Instrumenta tempo total, tempo de servidor, transporte, cache, payload e erros sem registrar dados pessoais.
+- Inclui diagnóstico local de desempenho no Painel Administrativo.
+- Adia o monitor de avisos até o navegador ficar ocioso, evitando concorrência com a primeira página aberta.
 
 Front-end externo hospedado no GitHub Pages.
 Backend/API: Apps Script API_FT.gs V1.3.2.
@@ -44,7 +47,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="cia-ft-build" content="FT-V132-20260824-DESEMPENHO-CRITICO-R11">
+  <meta name="cia-ft-build" content="FT-V132-20260824-INSTRUMENTACAO-CARGA-R12">
   <title>Portal Força Tática • V1.3.2</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
@@ -6771,6 +6774,11 @@ Banco de dados: Google Sheets.
       #loginScreen .hexis-brand-login{margin-top:12px}
       #appScreen .hexis-footer{margin-top:22px;padding-top:17px}
     }
+    .perf-table-wrap{width:100%;overflow:auto;border:1px solid rgba(255,255,255,.14);border-radius:14px}
+    .perf-table{width:100%;min-width:760px;border-collapse:collapse;color:#fff;font-size:10px}
+    .perf-table th{background:#374247;color:#fff;padding:10px 8px;text-align:center;font-weight:950;white-space:nowrap}
+    .perf-table td{border-top:1px solid rgba(255,255,255,.1);padding:9px 8px;text-align:center}
+    .perf-table td:first-child{text-align:left;font-weight:850}
 </style>
 </head>
 
@@ -6894,10 +6902,14 @@ Banco de dados: Google Sheets.
       avisoObrigatorioTimer: null,
       avisoObrigatorioConsulta: false,
       avisoObrigatorioAtualId: '',
-      avisoObrigatorioToast: null
+      avisoObrigatorioToast: null,
+      metricasPerformance: [],
+      performanceSequencia: 0,
+      monitorAvisosInicioTimer: null
     };
 
     document.addEventListener('DOMContentLoaded', function() {
+      restaurarMetricasPerformanceFt();
       window.addEventListener('message', function(event) {
         tratarMensagemUploaderEscalaCiaFt(event);
         tratarMensagemUploaderIcc(event);
@@ -6914,7 +6926,7 @@ Banco de dados: Google Sheets.
       document.getElementById('loginSenha').addEventListener('focus', aquecerConexaoLoginFt, { once: true });
 
       document.addEventListener('visibilitychange', function() {
-        if (!document.hidden && APP.usuario) verificarAvisosObrigatorios();
+        if (!document.hidden && APP.usuario) setTimeout(verificarAvisosObrigatorios, 600);
       });
     });
 
@@ -6967,7 +6979,9 @@ Banco de dados: Google Sheets.
           /* A ponte começa logo após a resposta do login: não concorre com a
              autenticação e já fica pronta para o primeiro acesso a uma página. */
           setTimeout(iniciarPonteApiFt, 100);
-          setTimeout(iniciarMonitorAvisosObrigatorios, 250);
+          /* O monitor obrigatório inicia depois da primeira interação com o
+             menu, evitando concorrer com a abertura inicial de um módulo. */
+          agendarInicioMonitorAvisosObrigatorios();
         })
         .catch(function(err) {
           setBotaoLogin(false);
@@ -8886,6 +8900,46 @@ Banco de dados: Google Sheets.
               <div class="menu-icon">🛡️</div>
               <h3>CONTROLE FOLGAS</h3>
               <p>Lançamento diário, ciclo de 14 serviços e acompanhamento dos saldos individuais de folgas.</p>
+            </div>
+            <div class="menu-card" data-modulo="DESEMPENHO_APP" onclick="abrirDiagnosticoPerformanceFt()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirDiagnosticoPerformanceFt();}">
+              <div class="menu-icon">⏱️</div>
+              <h3>DESEMPENHO DO APP</h3>
+              <p>Medições locais de login, consultas, cache e tempo de resposta da API nesta sessão.</p>
+            </div>
+          </div>
+        </div>`;
+    }
+
+
+    function abrirDiagnosticoPerformanceFt() {
+      window.scrollTo(0, 0);
+      const relatorio = obterRelatorioPerformanceFt();
+      const linhas = (relatorio.resumo || []).map(function(item) {
+        return '<tr><td>' + escapar(item.action) + '</td><td>' + item.chamadas + '</td><td>' + item.p50TotalMs + ' ms</td><td>' + item.p95TotalMs + ' ms</td><td>' + item.mediaServidorMs + ' ms</td><td>' + item.cacheHits + '</td><td>' + item.erros + '</td></tr>';
+      }).join('');
+      document.getElementById('appConteudo').innerHTML = `
+        <div class="page-wrap">
+          <div class="page-header">
+            <div class="page-header-row">
+              <div>
+                <div class="page-kicker">Instrumentação R12</div>
+                <h1>Desempenho do App</h1>
+                <p>As medições permanecem somente neste navegador e não geram gravações adicionais no Google Sheets.</p>
+              </div>
+              <div class="page-actions"><button class="btn-page" onclick="abrirPainelAdministrativo()">VOLTAR</button></div>
+            </div>
+          </div>
+          <div class="modal-card">
+            <div class="section-title"><div><h2>Resumo da sessão</h2><p>${relatorio.metricas.length} chamada(s) registrada(s). P95 representa o tempo das chamadas mais lentas.</p></div></div>
+            <div class="perf-table-wrap">
+              <table class="perf-table">
+                <thead><tr><th>AÇÃO</th><th>CHAMADAS</th><th>P50 TOTAL</th><th>P95 TOTAL</th><th>MÉDIA SERVIDOR</th><th>CACHE</th><th>ERROS</th></tr></thead>
+                <tbody>${linhas || '<tr><td colspan="7">Ainda não há medições nesta sessão. Use o aplicativo e retorne a esta página.</td></tr>'}</tbody>
+              </table>
+            </div>
+            <div class="page-actions" style="margin-top:16px">
+              <button class="btn-page" type="button" onclick="baixarRelatorioPerformanceFt()">BAIXAR DIAGNÓSTICO</button>
+              <button class="btn-page" type="button" onclick="limparMetricasPerformanceFt()">LIMPAR MEDIÇÕES</button>
             </div>
           </div>
         </div>`;
@@ -11501,6 +11555,20 @@ Banco de dados: Google Sheets.
     }
 
 
+    function agendarInicioMonitorAvisosObrigatorios() {
+      if (APP.monitorAvisosInicioTimer) clearTimeout(APP.monitorAvisosInicioTimer);
+      APP.monitorAvisosInicioTimer = setTimeout(function() {
+        APP.monitorAvisosInicioTimer = null;
+        if (!APP.usuario) return;
+        if (typeof window.requestIdleCallback === 'function') {
+          window.requestIdleCallback(iniciarMonitorAvisosObrigatorios, { timeout: 1500 });
+        } else {
+          iniciarMonitorAvisosObrigatorios();
+        }
+      }, 4000);
+    }
+
+
     function iniciarMonitorAvisosObrigatorios() {
       pararMonitorAvisosObrigatorios();
       if (!APP.usuario) return;
@@ -11509,6 +11577,8 @@ Banco de dados: Google Sheets.
 
 
     function pararMonitorAvisosObrigatorios() {
+      if (APP.monitorAvisosInicioTimer) clearTimeout(APP.monitorAvisosInicioTimer);
+      APP.monitorAvisosInicioTimer = null;
       if (APP.avisoObrigatorioTimer) clearTimeout(APP.avisoObrigatorioTimer);
       APP.avisoObrigatorioTimer = null;
       APP.avisoObrigatorioConsulta = false;
@@ -14371,7 +14441,7 @@ Banco de dados: Google Sheets.
       frame.setAttribute('aria-hidden', 'true');
       frame.tabIndex = -1;
       frame.style.cssText = 'position:fixed;width:1px;height:1px;left:-9999px;bottom:0;border:0;opacity:0;pointer-events:none';
-      frame.src = API_URL + '?action=api_bridge_ft&_cache=132';
+      frame.src = API_URL + '?action=api_bridge_ft&_cache=13212';
       document.body.appendChild(frame);
     }
 
@@ -14405,7 +14475,10 @@ Banco de dados: Google Sheets.
       delete APP.apiBridgePendentes[msg.id];
       clearTimeout(pendente.timeout);
       if (msg.erro) pendente.reject(new Error(msg.erro));
-      else pendente.resolve(msg.resp);
+      else {
+        if (msg.resp && typeof msg.resp === 'object') msg.resp.__transporteFt = 'PONTE';
+        pendente.resolve(msg.resp);
+      }
     }
 
 
@@ -14467,6 +14540,7 @@ Banco de dados: Google Sheets.
         window[callbackName] = function(resp) {
           clearTimeout(timeout);
           cleanup();
+          if (resp && typeof resp === 'object') resp.__transporteFt = 'JSONP';
           resolve(resp);
         };
         script.onerror = function() {
@@ -14489,6 +14563,104 @@ Banco de dados: Google Sheets.
       /* Gerar PDF consome CPU/Drive e pode criar arquivo. Nunca deve ser
          repetido automaticamente após um timeout de transporte. */
       return acao === 'LOGIN' || acao === 'PING' || acao.indexOf('DADOS') === 0 || acao.indexOf('CONSULT') === 0 || acao.indexOf('HISTORICO') === 0 || acao.indexOf('BAIXAR') === 0;
+    }
+
+
+    function restaurarMetricasPerformanceFt() {
+      try {
+        const salvas = JSON.parse(sessionStorage.getItem('FT_METRICAS_R12') || '[]');
+        APP.metricasPerformance = Array.isArray(salvas) ? salvas.slice(-120) : [];
+      } catch (ignorado) {
+        APP.metricasPerformance = [];
+      }
+    }
+
+
+    function registrarMetricaPerformanceFt(action, inicio, resp, erro, origemForcada) {
+      const meta = resp && resp.metaPerformance ? resp.metaPerformance : {};
+      const metrica = {
+        dataHora: new Date().toISOString(),
+        action: normalizarTexto(action || '').replace(/[^A-Z0-9]/g, ''),
+        totalMs: Math.max(0, Math.round(performance.now() - Number(inicio || performance.now()))),
+        serverMs: Math.max(0, Number(meta.serverMs || 0)),
+        cacheServidor: String(meta.cache || 'SEM_DADO'),
+        transporte: String(origemForcada || (resp && resp.__transporteFt) || 'INDEFINIDO'),
+        payloadChars: Math.max(0, Number(meta.payloadChars || 0)),
+        ok: !!(resp && resp.ok) && !erro,
+        erro: erro ? String(erro.message || erro).slice(0, 180) : ''
+      };
+      APP.metricasPerformance = (APP.metricasPerformance || []).concat([metrica]).slice(-120);
+      try { sessionStorage.setItem('FT_METRICAS_R12', JSON.stringify(APP.metricasPerformance)); } catch (ignorado) {}
+      return metrica;
+    }
+
+
+    function percentilPerformanceFt(valores, percentual) {
+      if (!valores.length) return 0;
+      const lista = valores.slice().sort(function(a, b) { return a - b; });
+      const indice = Math.min(lista.length - 1, Math.max(0, Math.ceil(percentual * lista.length) - 1));
+      return lista[indice];
+    }
+
+
+    function obterRelatorioPerformanceFt() {
+      const metricas = (APP.metricasPerformance || []).slice();
+      const grupos = {};
+      metricas.forEach(function(item) {
+        const chave = item.action || 'SEM_ACAO';
+        if (!grupos[chave]) grupos[chave] = [];
+        grupos[chave].push(item);
+      });
+      const resumo = Object.keys(grupos).map(function(action) {
+        const itens = grupos[action];
+        const tempos = itens.map(function(item) { return Number(item.totalMs || 0); });
+        const servidores = itens.map(function(item) { return Number(item.serverMs || 0); });
+        return {
+          action: action,
+          chamadas: itens.length,
+          mediaTotalMs: Math.round(tempos.reduce(function(a, b) { return a + b; }, 0) / itens.length),
+          p50TotalMs: percentilPerformanceFt(tempos, .50),
+          p95TotalMs: percentilPerformanceFt(tempos, .95),
+          maxTotalMs: Math.max.apply(Math, tempos),
+          mediaServidorMs: Math.round(servidores.reduce(function(a, b) { return a + b; }, 0) / itens.length),
+          erros: itens.filter(function(item) { return !item.ok; }).length,
+          cacheHits: itens.filter(function(item) { return item.cacheServidor === 'HIT' || item.transporte === 'CACHE_LOCAL'; }).length
+        };
+      }).sort(function(a, b) { return b.p95TotalMs - a.p95TotalMs; });
+      return {
+        build: 'FT-V132-20260824-INSTRUMENTACAO-CARGA-R12',
+        geradoEm: new Date().toISOString(),
+        navegador: navigator.userAgent,
+        conexao: navigator.connection ? {
+          tipoEfetivo: navigator.connection.effectiveType || '',
+          rtt: Number(navigator.connection.rtt || 0),
+          downlink: Number(navigator.connection.downlink || 0),
+          economiaDados: !!navigator.connection.saveData
+        } : null,
+        resumo: resumo,
+        metricas: metricas
+      };
+    }
+
+
+    function baixarRelatorioPerformanceFt() {
+      const relatorio = obterRelatorioPerformanceFt();
+      const blob = new Blob([JSON.stringify(relatorio, null, 2)], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'Diagnostico_Performance_App_Cia_FT_R12_' + new Date().toISOString().slice(0, 10) + '.json';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+    }
+
+
+    function limparMetricasPerformanceFt() {
+      APP.metricasPerformance = [];
+      try { sessionStorage.removeItem('FT_METRICAS_R12'); } catch (ignorado) {}
+      abrirDiagnosticoPerformanceFt();
     }
 
 
@@ -14525,6 +14697,7 @@ Banco de dados: Google Sheets.
     function chamarApi(action, params, opcoes) {
       params = params || {};
       opcoes = opcoes || {};
+      const inicioMetrica = performance.now();
       const paramsOriginais = Object.assign({}, params);
       const ehLogin = normalizarTexto(action) === 'LOGIN';
       const geracaoSessao = Number(APP.sessaoGeracao || 0);
@@ -14556,8 +14729,15 @@ Banco de dados: Google Sheets.
       const limiteJsonp = operacaoPesada ? 60000 : (operacaoEscrita ? 45000 : (ehLogin ? 30000 : 35000));
       const podeCache = !opcoes.semCache && somenteLeitura && !ehLogin && acaoNormalizada.indexOf('BAIXAR') !== 0 && acaoNormalizada.indexOf('GERARPDF') !== 0;
       const cache = APP.apiCache[chave];
-      if (podeCache && cache && cache.expiraEm > agora) return Promise.resolve(cache.resp);
+      if (podeCache && cache && cache.expiraEm > agora) {
+        registrarMetricaPerformanceFt(action, inicioMetrica, cache.resp, null, 'CACHE_LOCAL');
+        return Promise.resolve(cache.resp);
+      }
       if (somenteLeitura && APP.apiChamadasPendentes[chave]) return APP.apiChamadasPendentes[chave];
+
+      const paramsTransporte = Object.assign({}, params, {
+        requestId: 'web_' + Date.now() + '_' + (++APP.performanceSequencia)
+      });
 
       /* R11: uma chamada que já foi entregue ao Apps Script nunca é reenviada
          após timeout. A contingência JSONP só é usada quando a ponte falha
@@ -14568,14 +14748,17 @@ Banco de dados: Google Sheets.
         const prepararTransporte = !somenteLeitura && tentativa === 1 && !APP.apiBridgePronta ? aguardarPonteApiFt(700) : Promise.resolve(APP.apiBridgePronta);
         return prepararTransporte.then(function() {
           const usarPonte = APP.apiBridgePronta && tentativa === 1;
-          return usarPonte ? chamadaPelaPonteApiFt(action, params, limitePonte) : chamadaJsonpFt(action, params, limiteJsonp);
+          return usarPonte ? chamadaPelaPonteApiFt(action, paramsTransporte, limitePonte) : chamadaJsonpFt(action, paramsTransporte, limiteJsonp);
         }).catch(function(erro) {
           if (tentativa >= maxTentativas || !erro || erro.reenvioSeguroFt !== true) throw erro;
           return executar(tentativa + 1);
         });
       };
 
+      let metricaRegistrada = false;
       const promessa = executar(1).then(function(resp) {
+        registrarMetricaPerformanceFt(action, inicioMetrica, resp, null, '');
+        metricaRegistrada = true;
         if (!ehLogin && geracaoSessao !== Number(APP.sessaoGeracao || 0)) {
           throw new Error('A sessão foi encerrada antes da conclusão desta consulta.');
         }
@@ -14588,6 +14771,9 @@ Banco de dados: Google Sheets.
         if (podeCache && resp && resp.ok) APP.apiCache[chave] = { resp: resp, expiraEm: Date.now() + 90000 };
         if (!somenteLeitura && resp && resp.ok) APP.apiCache = {};
         return resp;
+      }).catch(function(erro) {
+        if (!metricaRegistrada) registrarMetricaPerformanceFt(action, inicioMetrica, null, erro, 'ERRO_TRANSPORTE');
+        throw erro;
       }).finally(function() {
         if (somenteLeitura) delete APP.apiChamadasPendentes[chave];
       });
