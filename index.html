@@ -33,6 +33,9 @@ VERSÃO V1.3.2 — ICC E REVISTA DE ARMÁRIO
 - Integra a identidade HEXIS abaixo do login e no rodapé de todas as páginas internas.
 - Inclui avisos semanais obrigatórios de Resenhas, com ciência individual por RE.
 - Otimiza sessão, monitor de avisos e retentativas para reduzir carga e tempos de espera.
+- Concede ao Cmt Cia FT acesso integral às funcionalidades implantadas.
+- Usa transporte nativo do Apps Script no caminho principal, sem JSONP ou iframe.
+- Mantém o GitHub Pages apenas como entrada e contingência controlada.
 
 Front-end externo hospedado no GitHub Pages.
 Backend/API: Apps Script API_FT.gs V1.3.2.
@@ -44,7 +47,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="cia-ft-build" content="FT-V132-20260824-OTIMIZACAO-API-R7">
+  <meta name="cia-ft-build" content="FT-V132-20260903-R14.5-HISTORICO-MENSAL">
   <title>Portal Força Tática • V1.3.2</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
@@ -6807,7 +6810,7 @@ Banco de dados: Google Sheets.
       </main>
 
       <div class="hexis-brand hexis-brand-login">
-        <img src="logo-hexis.png?v=132-hexis-r1" alt="HEXIS Sistemas &amp; Soluções">
+        <img src="https://ciaft.github.io/sistema-cia-ft/logo-hexis.png?v=132-hexis-r1" alt="HEXIS Sistemas &amp; Soluções">
       </div>
     </div>
   </section>
@@ -6842,7 +6845,7 @@ Banco de dados: Google Sheets.
 
     <footer class="hexis-footer">
       <div class="hexis-brand hexis-brand-app">
-        <img src="logo-hexis.png?v=132-hexis-r1" alt="HEXIS Sistemas &amp; Soluções" loading="lazy">
+        <img src="https://ciaft.github.io/sistema-cia-ft/logo-hexis.png?v=132-hexis-r1" alt="HEXIS Sistemas &amp; Soluções" loading="lazy">
       </div>
     </footer>
   </section>
@@ -6871,9 +6874,9 @@ Banco de dados: Google Sheets.
       dadosRevistaArmario: null,
       dadosDejemRocam: null,
       dejemExpiracaoTimer: null,
-      apiBridgePronta: false,
-      apiBridgePendentes: {},
-      apiBridgeSequencia: 0,
+      apiTransporteNativo: false,
+      apiFilaEscrita: Promise.resolve(),
+      apiRequestSequencia: 0,
       apiChamadasPendentes: {},
       apiCache: {},
       pdfRenderToken: 0,
@@ -6897,36 +6900,29 @@ Banco de dados: Google Sheets.
     };
 
     document.addEventListener('DOMContentLoaded', function() {
+      APP.apiTransporteNativo = transporteNativoDisponivelFt();
+      /* No GitHub Pages, o endereço histórico vira apenas porta de entrada.
+         ?modo=github preserva uma contingência manual para manutenção. */
+      if (!APP.apiTransporteNativo && /(^|\.)github\.io$/i.test(location.hostname) && !/[?&]modo=github(?:&|$)/i.test(location.search)) {
+        location.replace(API_URL + '?action=portal&_cache=' + Date.now());
+        return;
+      }
       window.addEventListener('message', function(event) {
         tratarMensagemUploaderEscalaCiaFt(event);
         tratarMensagemUploaderIcc(event);
-        tratarMensagemPonteApiFt(event);
       });
       document.getElementById('loginRE').addEventListener('keydown', function(ev) {
         if (ev.key === 'Enter') fazerLogin();
       });
-      document.getElementById('loginRE').addEventListener('focus', aquecerConexaoLoginFt, { once: true });
 
       document.getElementById('loginSenha').addEventListener('keydown', function(ev) {
         if (ev.key === 'Enter') fazerLogin();
       });
-      document.getElementById('loginSenha').addEventListener('focus', aquecerConexaoLoginFt, { once: true });
 
       document.addEventListener('visibilitychange', function() {
-        if (!document.hidden && APP.usuario) verificarAvisosObrigatorios();
+        if (!document.hidden && APP.usuario) setTimeout(verificarAvisosObrigatorios, 900);
       });
     });
-
-
-    function aquecerConexaoLoginFt() {
-      if (APP.aquecimentoLoginIniciado || APP.usuario) return;
-      APP.aquecimentoLoginIniciado = true;
-      /* O policial normalmente leva alguns segundos para preencher RE e senha.
-         A ponte começa nesse intervalo e não bloqueia a tela nem a digitação. */
-      setTimeout(function() {
-        if (!APP.usuario) iniciarPonteApiFt();
-      }, 120);
-    }
 
 
     function fazerLogin() {
@@ -6963,10 +6959,16 @@ Banco de dados: Google Sheets.
           window.scrollTo(0, 0);
 
           abrirHome();
-          /* A ponte começa logo após a resposta do login: não concorre com a
-             autenticação e já fica pronta para o primeiro acesso a uma página. */
-          setTimeout(iniciarPonteApiFt, 100);
-          setTimeout(iniciarMonitorAvisosObrigatorios, 250);
+          /* O aviso obrigatório sai do caminho crítico do login e da primeira
+             renderização. No transporte nativo não há ponte para aquecer. */
+          setTimeout(function() {
+            if (!APP.usuario) return;
+            if (typeof window.requestIdleCallback === 'function') {
+              window.requestIdleCallback(iniciarMonitorAvisosObrigatorios, { timeout: 1800 });
+            } else {
+              iniciarMonitorAvisosObrigatorios();
+            }
+          }, 5000);
         })
         .catch(function(err) {
           setBotaoLogin(false);
@@ -7442,24 +7444,24 @@ Banco de dados: Google Sheets.
       const iconeMenu = menu.id === 'MEUS_DADOS' ? '🪪' : (menu.icone || '•');
       const moduloMenu = normalizarModuloCliente(menu.id);
       const imagensMenu = {
-        MEUS_DADOS: { arquivo: './icone-meus-dados.png?v=1211-ft1408r1', alt: 'Meus Dados' },
-        PAINEL_ADMINISTRATIVO: { arquivo: './icone-painel-administrativo.png?v=1211-ft1408r1', alt: 'Painel Administrativo' },
-        CONSULTA_EFETIVO: { arquivo: './icone-consulta-efetivo.png?v=1211-ft1408r1', alt: 'Consulta Efetivo' },
-        RESENHA_DE_ESCALAS: { arquivo: './icone-resenha-de-escalas.png?v=1211-ft1408r1', alt: 'Resenha de Escalas' },
-        ESCALAS_ADM: { arquivo: './icone-escalas-adm.png?v=1211-ft1408r1', alt: 'Escalas ADM' },
-        ESCALAS_E_FOLGAS: { arquivo: './icone-escalas-e-folgas.png?v=1211-ft1408r1', alt: 'Escalas e Folgas' },
-        DEPOIMENTOS_AUDIENCIAS: { arquivo: './icone-depoimentos-audiencias.png?v=1211-ft1408r1', alt: 'Depoimentos e Audiências' },
-        VIATURAS: { arquivo: './icone-viaturas.png?v=1211-ft1408r1', alt: 'Viaturas' },
-        DEJEM_ROCAM: { arquivo: './icone-dejem-rocam.png?v=1211-ft1408r1', alt: 'DEJEM ROCAM' },
-        ROTINAS_OPERACIONAIS: { arquivo: './icone-rotinas-operacionais.png?v=131-rotinas-r2', alt: 'Rotinas Operacionais' },
-        ICC: { arquivo: './icone-icc.png?v=132-icc-r1', alt: 'ICC' },
-        REVISTA_ARMARIO: { arquivo: './icone-revista-armario.png?v=131-rotinas-r3', alt: 'Revista de Armário' }
+        MEUS_DADOS: { arquivo: 'https://ciaft.github.io/sistema-cia-ft/icone-meus-dados.png?v=1211-ft1408r1', alt: 'Meus Dados' },
+        PAINEL_ADMINISTRATIVO: { arquivo: 'https://ciaft.github.io/sistema-cia-ft/icone-painel-administrativo.png?v=1211-ft1408r1', alt: 'Painel Administrativo' },
+        CONSULTA_EFETIVO: { arquivo: 'https://ciaft.github.io/sistema-cia-ft/icone-consulta-efetivo.png?v=1211-ft1408r1', alt: 'Consulta Efetivo' },
+        RESENHA_DE_ESCALAS: { arquivo: 'https://ciaft.github.io/sistema-cia-ft/icone-resenha-de-escalas.png?v=1211-ft1408r1', alt: 'Resenha de Escalas' },
+        ESCALAS_ADM: { arquivo: 'https://ciaft.github.io/sistema-cia-ft/icone-escalas-adm.png?v=1211-ft1408r1', alt: 'Escalas ADM' },
+        ESCALAS_E_FOLGAS: { arquivo: 'https://ciaft.github.io/sistema-cia-ft/icone-escalas-e-folgas.png?v=1211-ft1408r1', alt: 'Escalas e Folgas' },
+        DEPOIMENTOS_AUDIENCIAS: { arquivo: 'https://ciaft.github.io/sistema-cia-ft/icone-depoimentos-audiencias.png?v=1211-ft1408r1', alt: 'Depoimentos e Audiências' },
+        VIATURAS: { arquivo: 'https://ciaft.github.io/sistema-cia-ft/icone-viaturas.png?v=1211-ft1408r1', alt: 'Viaturas' },
+        DEJEM_ROCAM: { arquivo: 'https://ciaft.github.io/sistema-cia-ft/icone-dejem-rocam.png?v=1211-ft1408r1', alt: 'DEJEM ROCAM' },
+        ROTINAS_OPERACIONAIS: { arquivo: 'https://ciaft.github.io/sistema-cia-ft/icone-rotinas-operacionais.png?v=131-rotinas-r2', alt: 'Rotinas Operacionais' },
+        ICC: { arquivo: 'https://ciaft.github.io/sistema-cia-ft/icone-icc.png?v=132-icc-r1', alt: 'ICC' },
+        REVISTA_ARMARIO: { arquivo: 'https://ciaft.github.io/sistema-cia-ft/icone-revista-armario.png?v=131-rotinas-r3', alt: 'Revista de Armário' }
       };
       const imagemMenu = imagensMenu[moduloMenu] || null;
       const blocoIcone = imagemMenu
         ? '<div class="menu-icon menu-icon-imagem"><img src="' + imagemMenu.arquivo + '" alt="' + imagemMenu.alt + '"></div>'
         : moduloMenu === 'COP'
-          ? '<div class="menu-icon menu-icon-cop"><img src="./cop.png?v=1210" alt="Câmera operacional COP"></div>'
+          ? '<div class="menu-icon menu-icon-cop"><img src="https://ciaft.github.io/sistema-cia-ft/cop.png?v=1210" alt="Câmera operacional COP"></div>'
           : '<div class="menu-icon">' + iconeMenu + '</div>';
 
       return `
@@ -7675,7 +7677,7 @@ Banco de dados: Google Sheets.
     }
 
 
-    function abrirIcc(grupo) {
+    function abrirIcc(grupo, competencia, idIcc) {
       window.scrollTo(0, 0);
       APP.dadosIcc = null;
       APP.pdfIccCache = null;
@@ -7687,22 +7689,22 @@ Banco de dados: Google Sheets.
               <div>
                 <div class="page-kicker">Rotinas Operacionais</div>
                 <h1>ICC</h1>
-                <p>Consulta da ICC atual, ciência digital individual e geração da lista oficial de presença.</p>
+                <p>Consulta mensal das ICC, ciência digital individual e geração da lista oficial de presença.</p>
               </div>
               <div class="page-actions"><button class="btn-page" onclick="abrirRotinasOperacionais()">VOLTAR</button></div>
             </div>
           </div>
-          <div id="iccConteudo"><div class="icc-loading">Carregando a ICC atual e a lista do efetivo...</div></div>
+          <div id="iccConteudo"><div class="icc-loading">Carregando as ICC e a lista do efetivo...</div></div>
         </div>`;
-      carregarDadosIcc(grupo || '').catch(function(erro) {
+      carregarDadosIcc(grupo || '', competencia || '', idIcc || '').catch(function(erro) {
         const box = document.getElementById('iccConteudo');
         if (box) box.innerHTML = '<div class="icc-vazio"><strong>Não foi possível carregar a ICC</strong>' + escapar(erro.message || String(erro)) + '</div>';
       });
     }
 
 
-    function carregarDadosIcc(grupo) {
-      return chamarApi('dados_icc', { grupo: grupo || '' }, { semCache: true }).then(function(resp) {
+    function carregarDadosIcc(grupo, competencia, idIcc) {
+      return chamarApi('dados_icc', { grupo: grupo || '', competencia: competencia || '', idIcc: idIcc || '' }, { semCache: true }).then(function(resp) {
         if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao carregar os dados da ICC.');
         APP.dadosIcc = resp.dados || {};
         renderizarIcc();
@@ -7717,9 +7719,25 @@ Banco de dados: Google Sheets.
       if (!box) return;
       const documento = dados.documento || null;
       const capacidades = dados.capacidades || {};
+      const meses = Array.isArray(dados.meses) ? dados.meses : [];
+      const documentosMes = Array.isArray(dados.documentosMes) ? dados.documentosMes : [];
+      const seletorMeses = `<div class="freq-months" aria-label="Meses da ICC">
+        ${meses.map(function(mes) {
+          return '<button type="button" class="freq-month-btn ' + (mes === dados.competencia ? 'ativo' : '') + '" onclick="abrirIcc(\'' + escaparAttr(dados.grupo || '') + '\',\'' + escaparAttr(mes) + '\',\'\')">' + escapar(rotuloCompetenciaFrequencia(mes)) + '</button>';
+        }).join('')}
+      </div>`;
+      const seletorDocumentos = documentosMes.length > 1 ? `<div class="freq-months" aria-label="ICC do mês selecionado">
+        ${documentosMes.map(function(item) {
+          const ativo = documento && item.id === documento.id;
+          const rotulo = 'ICC ' + String(item.numero || '') + '/' + String(item.ano || '') + (item.atual ? ' • ATUAL' : '');
+          return '<button type="button" class="freq-month-btn ' + (ativo ? 'ativo' : '') + '" onclick="abrirIcc(\'' + escaparAttr(dados.grupo || '') + '\',\'' + escaparAttr(dados.competencia || '') + '\',\'' + escaparAttr(item.id || '') + '\')">' + escapar(rotulo) + '</button>';
+        }).join('')}
+      </div>` : '';
       box.innerHTML = [
+        seletorMeses,
+        seletorDocumentos,
         capacidades.podeAdministrar ? montarPainelAdministrativoIcc(dados) : '',
-        documento ? montarDocumentoAtualIcc(dados) : '<div class="icc-vazio"><strong>Nenhuma ICC publicada</strong>O documento aparecerá aqui após a publicação realizada por Aux Adm ou Enc Adm.</div>',
+        documento ? montarDocumentoAtualIcc(dados) : '<div class="icc-vazio"><strong>Nenhuma ICC localizada neste mês</strong>Selecione outro mês ou publique uma nova ICC, se autorizado.</div>',
         documento ? montarListaPresencaIcc(dados) : ''
       ].join('');
       if (documento) carregarMiniaturaIcc(documento.id);
@@ -7730,14 +7748,14 @@ Banco de dados: Google Sheets.
       const documento = dados.documento || {};
       const capacidades = dados.capacidades || {};
       const token = String(capacidades.uploadToken || '');
-      const formularioCorrecao = documento.id ? `
+      const formularioCorrecao = documento.id && capacidades.podeEditarMetadados ? `
         <div class="icc-meta-grid">
           <div class="icc-campo"><label>Número da ICC</label><input id="iccMetaNumero" maxlength="30" value="${escaparAttr(documento.numero || '')}"></div>
           <div class="icc-campo"><label>Ano</label><input id="iccMetaAno" inputmode="numeric" maxlength="4" value="${escaparAttr(documento.ano || '')}"></div>
           <div class="icc-campo"><label>Limite para assinatura</label><input id="iccMetaDataLimite" type="date" value="${escaparAttr(documento.dataLimiteISO || '')}"></div>
           <div class="icc-campo"><label>Tema</label><textarea id="iccMetaTema" maxlength="300">${escapar(documento.tema || '')}</textarea></div>
           <button id="iccSalvarMetaBtn" class="icc-btn secundario" type="button" onclick="salvarMetadadosIcc(this)">SALVAR CORREÇÕES</button>
-        </div>` : '';
+        </div>` : (documento.id ? '<div class="ra-aviso bloqueio">Documento histórico disponível somente para consulta e geração de PDF.</div>' : '');
       return `<section class="icc-admin-panel">
         <div class="icc-section-head"><div><h2>Administração da ICC</h2><p>Publicação e correções exclusivas para Aux Adm e Enc Adm.</p></div></div>
         <div class="icc-admin-body">
@@ -7757,11 +7775,13 @@ Banco de dados: Google Sheets.
       const assinada = !!dados.assinaturaUsuario;
       const rotuloLista = assinada ? 'VER LISTA ASSINADA' : 'ASSINAR LISTA DE PRESENÇA';
       const prazoClasse = capacidades.prazoAberto ? '' : ' fechado';
-      const prazoTexto = capacidades.prazoAberto
+      const prazoTexto = capacidades.somenteConsulta
+        ? 'Documento histórico de ' + rotuloCompetenciaFrequencia(dados.competencia || documento.competencia || '')
+        : capacidades.prazoAberto
         ? 'Assinaturas disponíveis até 23h59 de ' + String(documento.dataLimiteBR || '')
         : 'Prazo encerrado em ' + String(documento.dataLimiteBR || '');
       return `<section class="icc-documento">
-        <div class="icc-section-head"><div><h2>ICC atual</h2><p>Documento oficial publicado para ciência do efetivo.</p></div></div>
+        <div class="icc-section-head"><div><h2>${documento.atual ? 'ICC atual' : 'ICC histórica'}</h2><p>${documento.atual ? 'Documento oficial publicado para ciência do efetivo.' : 'Documento preservado para consulta, auditoria e emissão da lista.'}</p></div></div>
         <div class="icc-documento-body">
           <div class="icc-preview-col">
             <div id="iccThumbWrap" class="icc-thumb-wrap"><div class="icc-thumb-loading">Preparando a miniatura protegida do PDF...</div></div>
@@ -7851,7 +7871,7 @@ Banco de dados: Google Sheets.
       if (event.data.type === 'FT_ICC_PUBLICADA') {
         mostrarToastFt('ICC publicada', event.data.dados && event.data.dados.mensagem || 'A nova ICC foi publicada.', 'sucesso');
         APP.pdfIccCache = null;
-        carregarDadosIcc((APP.dadosIcc && APP.dadosIcc.grupo) || '');
+        carregarDadosIcc((APP.dadosIcc && APP.dadosIcc.grupo) || '', '', '');
       }
     }
 
@@ -7875,7 +7895,7 @@ Banco de dados: Google Sheets.
       }, { semCache: true }).then(function(resp) {
         if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao salvar as correções.');
         mostrarToastFt('ICC atualizada', resp.dados.mensagem || 'Dados corrigidos.', 'sucesso');
-        return carregarDadosIcc(dados.grupo || '');
+        return carregarDadosIcc(dados.grupo || '', dados.competencia || '', documento.id || '');
       }).catch(function(erro) {
         mostrarToastFt('Correção não salva', erro.message || String(erro), 'erro');
         if (botao && document.body.contains(botao)) { botao.disabled = false; botao.textContent = 'SALVAR CORREÇÕES'; }
@@ -7886,7 +7906,8 @@ Banco de dados: Google Sheets.
     function alterarGrupoIcc(grupo) {
       const box = document.getElementById('iccConteudo');
       if (box) box.innerHTML = '<div class="icc-loading">Carregando a lista de ' + escapar(grupo || '') + '...</div>';
-      carregarDadosIcc(grupo).catch(function(erro) {
+      const dados = APP.dadosIcc || {};
+      carregarDadosIcc(grupo, dados.competencia || '', dados.documento && dados.documento.id || '').catch(function(erro) {
         if (box) box.innerHTML = '<div class="icc-vazio"><strong>Lista não carregada</strong>' + escapar(erro.message || String(erro)) + '</div>';
       });
     }
@@ -7989,7 +8010,7 @@ Banco de dados: Google Sheets.
         return chamarApi('assinar_icc', { idIcc: documento.id }, { semCache: true }).then(function(resp) {
           if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao registrar a assinatura.');
           mostrarToastFt('Ciência registrada', (resp.dados.mensagem || 'Lista assinada.') + ' ID: ' + String(resp.dados.idOperacao || ''), 'sucesso');
-          return carregarDadosIcc(dados.grupo || '');
+          return carregarDadosIcc(dados.grupo || '', dados.competencia || '', documento.id || '');
         }).catch(function(erro) {
           checkbox.checked = false;
           checkbox.disabled = false;
@@ -8031,7 +8052,8 @@ Banco de dados: Google Sheets.
         if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao anular a assinatura.');
         fecharAnulacaoAssinaturaIcc();
         mostrarToastFt('Assinatura anulada', resp.dados.mensagem || 'Registro preservado para auditoria.', 'sucesso');
-        return carregarDadosIcc(grupo);
+        const dadosAtuais = APP.dadosIcc || {};
+        return carregarDadosIcc(grupo, dadosAtuais.competencia || '', dadosAtuais.documento && dadosAtuais.documento.id || '');
       }).catch(function(erro) {
         mostrarToastFt('Anulação não realizada', erro.message || String(erro), 'erro');
         if (botao && document.body.contains(botao)) { botao.disabled = false; botao.textContent = 'ANULAR ASSINATURA'; }
@@ -8061,7 +8083,7 @@ Banco de dados: Google Sheets.
      * REVISTA DE ARMÁRIO — V1.3.2
      * ============================================================ */
 
-    function abrirRevistaArmario(grupo) {
+    function abrirRevistaArmario(grupo, competencia) {
       if (!usuarioPodeAcessarRotinasOperacionaisCliente()) {
         abrirAcessoNegado('Revista de Armário');
         return;
@@ -8082,15 +8104,15 @@ Banco de dados: Google Sheets.
           </div>
           <div id="revistaArmarioConteudo"><div class="ra-loading">Carregando o formulário mensal e o efetivo...</div></div>
         </div>`;
-      carregarDadosRevistaArmario(grupo || '').catch(function(erro) {
+      carregarDadosRevistaArmario(grupo || '', competencia || '').catch(function(erro) {
         const box = document.getElementById('revistaArmarioConteudo');
         if (box) box.innerHTML = '<div class="ra-loading">Não foi possível carregar a Revista de Armário.<br><small>' + escapar(erro.message || String(erro)) + '</small></div>';
       });
     }
 
 
-    function carregarDadosRevistaArmario(grupo) {
-      return chamarApi('dados_revista_armario', { grupo: grupo || '' }, { semCache: true }).then(function(resp) {
+    function carregarDadosRevistaArmario(grupo, competencia) {
+      return chamarApi('dados_revista_armario', { grupo: grupo || '', competencia: competencia || '' }, { semCache: true }).then(function(resp) {
         if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao carregar a Revista de Armário.');
         APP.dadosRevistaArmario = resp.dados || {};
         renderizarRevistaArmario();
@@ -8107,8 +8129,8 @@ Banco de dados: Google Sheets.
       const seletorGrupo = capacidades.podeSelecionarGrupo
         ? '<select id="raGrupoSelect" onchange="alterarGrupoRevistaArmario(this.value)">' + grupos.map(function(grupo) { return '<option value="' + escaparAttr(grupo) + '"' + (grupo === dados.grupo ? ' selected' : '') + '>' + escapar(grupo) + '</option>'; }).join('') + '</select>'
         : '<input value="' + escaparAttr(dados.grupo || '') + '" readonly>';
-      const vistoriador = ciclo ? ciclo.identificacaoVistoriador : 'Será definido na primeira vistoria';
-      const situacao = ciclo ? 'EM ANDAMENTO' : 'AGUARDANDO INÍCIO';
+      const vistoriador = ciclo ? ciclo.identificacaoVistoriador : (dados.somenteConsulta ? 'Não há ciclo registrado neste mês' : 'Será definido na primeira vistoria');
+      const situacao = ciclo ? (dados.somenteConsulta ? 'REGISTRO HISTÓRICO' : 'EM ANDAMENTO') : (dados.somenteConsulta ? 'SEM REGISTROS' : 'AGUARDANDO INÍCIO');
       const botaoPdf = capacidades.podeGerarPdf ? '<button class="ra-btn secundario" type="button" onclick="gerarPdfRevistaArmario(this)">GERAR PDF</button>' : '';
       const aviso = capacidades.bloqueioVistoria
         ? '<div class="ra-aviso bloqueio">' + escapar(capacidades.bloqueioVistoria) + '</div>'
@@ -8116,7 +8138,12 @@ Banco de dados: Google Sheets.
 
       const box = document.getElementById('revistaArmarioConteudo');
       if (!box) return;
-      box.innerHTML = `<section class="ra-painel">
+      box.innerHTML = `<div class="freq-months" aria-label="Meses da Revista de Armário">
+        ${(dados.meses || []).map(function(mes) {
+          return '<button type="button" class="freq-month-btn ' + (mes === dados.referencia ? 'ativo' : '') + '" onclick="abrirRevistaArmario(\'' + escaparAttr(dados.grupo || '') + '\',\'' + escaparAttr(mes) + '\')">' + escapar(rotuloCompetenciaFrequencia(mes)) + '</button>';
+        }).join('')}
+      </div>
+      <section class="ra-painel">
         <div class="ra-toolbar">
           <div class="ra-campo"><label>Pelotão / grupo</label>${seletorGrupo}</div>
           <div class="ra-status">
@@ -8128,7 +8155,10 @@ Banco de dados: Google Sheets.
         </div>
         ${aviso}
         ${montarFormularioRevistaArmario(dados)}
-        <div class="ra-resumo-rodape"><span><strong>${Number(dados.quantidadeVistoriados || 0)}</strong> de <strong>${Number(dados.quantidadeEfetivo || 0)}</strong> armários vistoriados</span><span>Os registros seguem a ordem oficial do Cadastro Geral.</span></div>
+        <div class="ra-resumo-rodape">${dados.somenteConsulta
+          ? '<span><strong>' + Number(dados.quantidadeVistoriados || 0) + '</strong> registro(s) de vistoria preservado(s)</span><span>O histórico exibe somente dados realmente gravados naquele ciclo.</span>'
+          : '<span><strong>' + Number(dados.quantidadeVistoriados || 0) + '</strong> de <strong>' + Number(dados.quantidadeEfetivo || 0) + '</strong> armários vistoriados</span><span>Os registros seguem a ordem oficial do Cadastro Geral.</span>'}
+        </div>
       </section>`;
     }
 
@@ -8197,6 +8227,8 @@ Banco de dados: Google Sheets.
       if (assinatura && assinatura.idOperacao) {
         conteudo = '<strong>ASSINADO DIGITALMENTE</strong><small>ID: ' + escapar(assinatura.idOperacao) + '</small><small>' + escapar(assinatura.identificacao || '') + '</small>' +
           (vaga && capacidades.podeCorrigir ? '<button class="ra-corrigir" type="button" onclick="abrirAnulacaoTestemunhaRevistaArmario(' + vaga + ')">ANULAR COM JUSTIFICATIVA</button>' : '');
+      } else if (dados.somenteConsulta) {
+        conteudo = '<small class="ra-pendente">NÃO REGISTRADO</small>';
       } else if (vaga && capacidades.podeAssinarTestemunha && dados.ciclo) {
         conteudo = '<label class="ra-assinar-testemunha"><input type="checkbox" onchange="assinarTestemunhaRevistaArmario(this,' + vaga + ')"> ASSINAR COMO TESTEMUNHA ' + vaga + '</label>';
       } else if (!vaga && !dados.ciclo) {
@@ -8207,10 +8239,11 @@ Banco de dados: Google Sheets.
 
 
     function alterarGrupoRevistaArmario(grupo) {
+      const referencia = APP.dadosRevistaArmario && APP.dadosRevistaArmario.referencia || '';
       const box = document.getElementById('revistaArmarioConteudo');
       if (box) box.innerHTML = '<div class="ra-loading">Carregando o formulário de ' + escapar(grupo || '') + '...</div>';
       APP.dadosRevistaArmario = null;
-      carregarDadosRevistaArmario(grupo).catch(function(erro) {
+      carregarDadosRevistaArmario(grupo, referencia).catch(function(erro) {
         if (box) box.innerHTML = '<div class="ra-loading">Não foi possível carregar o grupo.<br><small>' + escapar(erro.message || String(erro)) + '</small></div>';
       });
     }
@@ -8225,7 +8258,7 @@ Banco de dados: Google Sheets.
         return chamarApi('vistoriar_armario', { grupo: dados.grupo || '', reAlvo: reAlvo }, { semCache: true }).then(function(resp) {
           if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao registrar a vistoria.');
           mostrarToastFt('Vistoria registrada', resp.dados.mensagem || 'Armário vistoriado.', 'sucesso');
-          return carregarDadosRevistaArmario(dados.grupo || '');
+          return carregarDadosRevistaArmario(dados.grupo || '', dados.referencia || '');
         }).catch(function(erro) {
           checkbox.checked = false;
           checkbox.disabled = false;
@@ -8257,7 +8290,8 @@ Banco de dados: Google Sheets.
         if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao registrar a correção.');
         fecharModalRevistaArmario();
         mostrarToastFt('Correção registrada', resp.dados.mensagem || 'Histórico preservado.', 'sucesso');
-        return carregarDadosRevistaArmario(grupo);
+        const referencia = APP.dadosRevistaArmario && APP.dadosRevistaArmario.referencia || '';
+        return carregarDadosRevistaArmario(grupo, referencia);
       }).catch(function(erro) {
         mostrarToastFt('Correção não registrada', erro.message || String(erro), 'erro');
         if (botao && document.body.contains(botao)) { botao.disabled = false; botao.textContent = operacao === 'ANULAR' ? 'ANULAR MARCAÇÃO' : 'REGISTRAR CORREÇÃO'; }
@@ -8274,7 +8308,7 @@ Banco de dados: Google Sheets.
         return chamarApi('assinar_testemunha_revista_armario', { grupo: dados.grupo || '', vaga: vaga }, { semCache: true }).then(function(resp) {
           if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao registrar a assinatura.');
           mostrarToastFt('Testemunha registrada', (resp.dados.mensagem || 'Assinatura registrada.') + ' ID: ' + String(resp.dados.idOperacao || ''), 'sucesso');
-          return carregarDadosRevistaArmario(dados.grupo || '');
+          return carregarDadosRevistaArmario(dados.grupo || '', dados.referencia || '');
         }).catch(function(erro) {
           checkbox.checked = false;
           checkbox.disabled = false;
@@ -8305,7 +8339,8 @@ Banco de dados: Google Sheets.
         if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao anular a assinatura.');
         fecharModalRevistaArmario();
         mostrarToastFt('Assinatura anulada', resp.dados.mensagem || 'Histórico preservado.', 'sucesso');
-        return carregarDadosRevistaArmario(grupo);
+        const referencia = APP.dadosRevistaArmario && APP.dadosRevistaArmario.referencia || '';
+        return carregarDadosRevistaArmario(grupo, referencia);
       }).catch(function(erro) {
         mostrarToastFt('Anulação não realizada', erro.message || String(erro), 'erro');
         if (botao && document.body.contains(botao)) { botao.disabled = false; botao.textContent = 'ANULAR ASSINATURA'; }
@@ -8323,7 +8358,7 @@ Banco de dados: Google Sheets.
       const dados = APP.dadosRevistaArmario || {};
       const texto = botao ? botao.textContent : '';
       if (botao) { botao.disabled = true; botao.textContent = 'GERANDO PDF...'; }
-      chamarApi('gerar_pdf_revista_armario', { grupo: dados.grupo || '' }, { semCache: true }).then(function(resp) {
+      chamarApi('gerar_pdf_revista_armario', { grupo: dados.grupo || '', competencia: dados.referencia || '' }, { semCache: true }).then(function(resp) {
         if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao gerar o PDF.');
         baixarArquivoBase64Frequencia(resp.dados.base64, resp.dados.mimeType || 'application/pdf', resp.dados.nomeArquivo || 'Revista_Armario.pdf');
         mostrarToastFt('PDF gerado', resp.dados.mensagem || 'Formulário oficial baixado.', 'sucesso');
@@ -8353,7 +8388,7 @@ Banco de dados: Google Sheets.
 
           <div class="menu-grid cop-menu-grid">
             <div class="menu-card" onclick="abrirPortalCop()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirPortalCop();}">
-              <div class="cop-card-icon"><img src="./cop.png?v=1210" alt="Câmera operacional COP"></div>
+              <div class="cop-card-icon"><img src="https://ciaft.github.io/sistema-cia-ft/cop.png?v=1210" alt="Câmera operacional COP"></div>
               <h3>PORTAL COP</h3>
               <p>Acesso ao sistema Motorola PMESP.</p>
             </div>
@@ -10087,7 +10122,7 @@ Banco de dados: Google Sheets.
 
     function carregarPdfJsFt() {
       if (window.pdfjsLib) {
-        window.pdfjsLib.GlobalWorkerOptions.workerSrc = './pdf.worker.min.js?v=1211';
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://ciaft.github.io/sistema-cia-ft/pdf.worker.min.js?v=1211';
         return Promise.resolve(window.pdfjsLib);
       }
       if (APP.pdfLoader) return APP.pdfLoader;
@@ -10097,14 +10132,14 @@ Banco de dados: Google Sheets.
         if (existente) existente.remove();
         const script = document.createElement('script');
         script.id = 'ftPdfJsLoader';
-        script.src = './pdf.min.js?v=1211';
+        script.src = 'https://ciaft.github.io/sistema-cia-ft/pdf.min.js?v=1211';
         script.async = true;
         script.onload = function() {
           if (!window.pdfjsLib) {
             reject(new Error('O leitor de PDF foi carregado sem inicializar.'));
             return;
           }
-          window.pdfjsLib.GlobalWorkerOptions.workerSrc = './pdf.worker.min.js?v=1211';
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://ciaft.github.io/sistema-cia-ft/pdf.worker.min.js?v=1211';
           resolve(window.pdfjsLib);
         };
         script.onerror = function() {
@@ -12989,9 +13024,14 @@ Banco de dados: Google Sheets.
 
 
 
+    function usuarioEhCmtCiaFtCliente_() {
+      const perfil = normalizarTexto((APP.usuario && APP.usuario.perfilAcesso) || '').replace(/[\s-]+/g, '_');
+      return ['CMT_CIA_FT','CMT_CIA','COMANDANTE_CIA_FT','COMANDANTE_DE_CIA','COMANDANTE_CIA'].indexOf(perfil) !== -1;
+    }
+
     function usuarioPodeEditarPerfilApp() {
       const perfil = normalizarTexto((APP.usuario && APP.usuario.perfilAcesso) || '');
-      return perfil === 'GESTOR_TEC_FT' || perfil === 'ENC_ADM_FT';
+      return usuarioEhCmtCiaFtCliente_() || perfil === 'GESTOR_TEC_FT' || perfil === 'ENC_ADM_FT';
     }
 
     function consultaCampoPerfilApp(valor) {
@@ -13619,7 +13659,7 @@ Banco de dados: Google Sheets.
       const gestor = ['GESTOR','GESTOR_TEC_FT','GESTOR_TECNICO_FT','ACESSO_TOTAL'].indexOf(perfil) !== -1;
       const encAdm = ['ENC_ADM_FT','ENC_ADM','ENCARREGADO_ADM_FT','ENCARREGADO_ADMINISTRATIVO'].indexOf(perfil) !== -1;
       const auxAdm = ['AUX_ADM_FT','AUX_ADM','AUXILIAR_ADM_FT','AUXILIAR_ADMINISTRATIVO'].indexOf(perfil) !== -1;
-      return gestor || encAdm || (auxAdm && funcaoUsuarioEhP4Cliente_());
+      return gestor || usuarioEhCmtCiaFtCliente_() || encAdm || (auxAdm && funcaoUsuarioEhP4Cliente_());
     }
 
     function usuarioPodeInserirViatura() {
@@ -14353,81 +14393,40 @@ Banco de dados: Google Sheets.
     }
 
 
-    function iniciarPonteApiFt() {
-      if (document.getElementById('ftApiBridge')) return;
-      const frame = document.createElement('iframe');
-      frame.id = 'ftApiBridge';
-      frame.title = 'Conexão segura com a API do Portal';
-      frame.setAttribute('aria-hidden', 'true');
-      frame.tabIndex = -1;
-      frame.style.cssText = 'position:fixed;width:1px;height:1px;left:-9999px;bottom:0;border:0;opacity:0;pointer-events:none';
-      frame.src = API_URL + '?action=api_bridge_ft&_cache=132';
-      document.body.appendChild(frame);
+    function transporteNativoDisponivelFt() {
+      return !!(window.google && google.script && google.script.run);
     }
 
 
-    function reiniciarPonteApiFt() {
-      APP.apiBridgePronta = false;
-      const frame = document.getElementById('ftApiBridge');
-      if (frame) frame.remove();
-      Object.keys(APP.apiBridgePendentes || {}).forEach(function(id) {
-        const pendente = APP.apiBridgePendentes[id];
-        if (!pendente) return;
-        clearTimeout(pendente.timeout);
-        pendente.reject(new Error('A conexão otimizada foi reiniciada.'));
-        delete APP.apiBridgePendentes[id];
-      });
-      if (APP.usuario) setTimeout(iniciarPonteApiFt, 1200);
-    }
-
-
-    function tratarMensagemPonteApiFt(event) {
-      const frame = document.getElementById('ftApiBridge');
-      if (!frame || event.source !== frame.contentWindow || !event.data) return;
-      const msg = event.data;
-      if (msg.type === 'FT_API_BRIDGE_READY') {
-        APP.apiBridgePronta = true;
-        return;
-      }
-      if (msg.type !== 'FT_API_RESPONSE' || !msg.id) return;
-      const pendente = APP.apiBridgePendentes[msg.id];
-      if (!pendente) return;
-      delete APP.apiBridgePendentes[msg.id];
-      clearTimeout(pendente.timeout);
-      if (msg.erro) pendente.reject(new Error(msg.erro));
-      else pendente.resolve(msg.resp);
-    }
-
-
-    function chamadaPelaPonteApiFt(action, params, limiteMs) {
+    function chamadaNativaFt(action, params, limiteMs) {
       return new Promise(function(resolve, reject) {
-        const frame = document.getElementById('ftApiBridge');
-        if (!APP.apiBridgePronta || !frame || !frame.contentWindow) {
-          reject(new Error('A conexão otimizada com a API ainda não está disponível.'));
+        if (!transporteNativoDisponivelFt()) {
+          const erro = new Error('O transporte nativo não está disponível nesta origem.');
+          erro.semEnvioFt = true;
+          reject(erro);
           return;
         }
-        const id = 'ft_req_' + Date.now() + '_' + (++APP.apiBridgeSequencia);
+        let concluida = false;
         const timeout = setTimeout(function() {
-          delete APP.apiBridgePendentes[id];
-          reiniciarPonteApiFt();
-          reject(new Error('Tempo esgotado na conexão otimizada com a API.'));
-        }, Number(limiteMs || 20000));
-        APP.apiBridgePendentes[id] = { resolve: resolve, reject: reject, timeout: timeout };
-        frame.contentWindow.postMessage({ type: 'FT_API_REQUEST', id: id, action: action, params: params || {} }, '*');
-      });
-    }
-
-
-    function aguardarPonteApiFt(limiteMs) {
-      if (APP.apiBridgePronta) return Promise.resolve(true);
-      const inicio = Date.now();
-      return new Promise(function(resolve) {
-        const verificar = function() {
-          if (APP.apiBridgePronta) return resolve(true);
-          if (Date.now() - inicio >= limiteMs) return resolve(false);
-          setTimeout(verificar, 100);
-        };
-        verificar();
+          if (concluida) return;
+          concluida = true;
+          reject(new Error('Tempo esgotado na comunicação nativa com a API.'));
+        }, Number(limiteMs || 30000));
+        google.script.run
+          .withSuccessHandler(function(resp) {
+            if (concluida) return;
+            concluida = true;
+            clearTimeout(timeout);
+            if (resp && typeof resp === 'object') resp.__transporteFt = 'NATIVO_APPS_SCRIPT';
+            resolve(resp);
+          })
+          .withFailureHandler(function(err) {
+            if (concluida) return;
+            concluida = true;
+            clearTimeout(timeout);
+            reject(new Error(err && err.message ? err.message : String(err || 'Falha interna na API.')));
+          })
+          .apiPortalFt({ action: action, params: params || {} });
       });
     }
 
@@ -14448,6 +14447,7 @@ Banco de dados: Google Sheets.
         window[callbackName] = function(resp) {
           clearTimeout(timeout);
           cleanup();
+          if (resp && typeof resp === 'object') resp.__transporteFt = 'JSONP_CONTINGENCIA';
           resolve(resp);
         };
         script.onerror = function() {
@@ -14467,7 +14467,9 @@ Banco de dados: Google Sheets.
 
     function acaoApiSomenteLeitura(action) {
       const acao = normalizarTexto(action || '').replace(/[^A-Z0-9]/g, '');
-      return acao === 'LOGIN' || acao === 'PING' || acao.indexOf('DADOS') === 0 || acao.indexOf('CONSULT') === 0 || acao.indexOf('HISTORICO') === 0 || acao.indexOf('BAIXAR') === 0 || acao.indexOf('GERARPDF') === 0;
+      /* Gerar PDF pode criar arquivo e histórico no servidor; por isso não é
+         leitura e nunca pode ser repetido automaticamente. */
+      return acao === 'LOGIN' || acao === 'PING' || acao.indexOf('DADOS') === 0 || acao.indexOf('CONSULT') === 0 || acao.indexOf('HISTORICO') === 0 || acao.indexOf('BAIXAR') === 0;
     }
 
 
@@ -14514,31 +14516,46 @@ Banco de dados: Google Sheets.
         params.sessao = APP.sessaoApi;
       }
       const somenteLeitura = acaoApiSomenteLeitura(action);
+      /* R14: gravações e PDFs são enviados em sequência. Nenhuma operação
+         mutável é reenviada após timeout, pois a execução pode ter chegado ao
+         servidor mesmo quando a resposta não retornou ao navegador. */
+      if (!somenteLeitura && !opcoes.filaExecutando) {
+        const filaAnterior = APP.apiFilaEscrita || Promise.resolve();
+        const opcoesNaFila = Object.assign({}, opcoes, { filaExecutando: true });
+        const filaAtual = filaAnterior.catch(function() { return null; }).then(function() {
+          return chamarApi(action, paramsOriginais, opcoesNaFila);
+        });
+        APP.apiFilaEscrita = filaAtual.catch(function() { return null; });
+        return filaAtual;
+      }
       const chave = chaveChamadaApi(action, params);
       const agora = Date.now();
       const acaoNormalizada = normalizarTexto(action).replace(/[^A-Z0-9]/g, '');
       const operacaoPesada = acaoNormalizada.indexOf('GERARPDF') === 0 || acaoNormalizada.indexOf('BAIXAR') === 0;
       const operacaoEscrita = !somenteLeitura;
-      const limitePonte = operacaoPesada ? 45000 : (operacaoEscrita ? 35000 : 20000);
+      const limiteNativo = operacaoPesada ? 60000 : (operacaoEscrita ? 45000 : (ehLogin ? 30000 : 35000));
       const limiteJsonp = operacaoPesada ? 60000 : (operacaoEscrita ? 40000 : (ehLogin ? 25000 : 30000));
       const podeCache = !opcoes.semCache && somenteLeitura && !ehLogin && acaoNormalizada.indexOf('BAIXAR') !== 0 && acaoNormalizada.indexOf('GERARPDF') !== 0;
       const cache = APP.apiCache[chave];
       if (podeCache && cache && cache.expiraEm > agora) return Promise.resolve(cache.resp);
       if (somenteLeitura && APP.apiChamadasPendentes[chave]) return APP.apiChamadasPendentes[chave];
 
-      /* Duas rotas de transporte já oferecem contingência suficiente: ponte
-         privada e JSONP. Uma terceira execução repetia consultas potencialmente
-         pesadas e podia prolongar a espera total por mais de um minuto. */
-      const maxTentativas = !somenteLeitura ? 1 : 2;
+      const paramsTransporte = Object.assign({}, params, {
+        requestId: 'web_r14_' + Date.now() + '_' + (++APP.apiRequestSequencia)
+      });
+      const transporteNativo = transporteNativoDisponivelFt();
+      /* No modo nativo cada chamada é única. Na contingência JSONP, somente
+         login e ping podem receber uma segunda tentativa, pois são operações
+         leves, sem mutação e necessárias para recuperar o acesso. */
+      const maxTentativas = !transporteNativo && (ehLogin || acaoNormalizada === 'PING') ? 2 : 1;
       const executar = function(tentativa) {
         if (navigator.onLine === false) return Promise.reject(new Error('Sem conexão com a internet. Verifique a rede do aparelho.'));
-        const prepararTransporte = !somenteLeitura && tentativa === 1 && !APP.apiBridgePronta ? aguardarPonteApiFt(700) : Promise.resolve(APP.apiBridgePronta);
-        return prepararTransporte.then(function() {
-          const usarPonte = APP.apiBridgePronta && tentativa === 1;
-          return usarPonte ? chamadaPelaPonteApiFt(action, params, limitePonte) : chamadaJsonpFt(action, params, limiteJsonp);
-        }).catch(function(erro) {
+        const chamada = transporteNativo
+          ? chamadaNativaFt(action, paramsTransporte, limiteNativo)
+          : chamadaJsonpFt(action, paramsTransporte, limiteJsonp);
+        return chamada.catch(function(erro) {
           if (tentativa >= maxTentativas) throw erro;
-          const espera = tentativa === 1 ? 700 : 1800;
+          const espera = 900;
           return new Promise(function(resolve) { setTimeout(resolve, espera); }).then(function() { return executar(tentativa + 1); });
         });
       };
@@ -14550,7 +14567,7 @@ Banco de dados: Google Sheets.
         if (resp && !resp.ok && resp.codigo === 'SESSAO_EXPIRADA' && !ehLogin && !opcoes.semRenovar) {
           APP.apiCache = {};
           return renovarSessaoApiFt().then(function() {
-            return chamarApi(action, paramsOriginais, { semRenovar: true, semCache: opcoes.semCache });
+            return chamarApi(action, paramsOriginais, { semRenovar: true, semCache: opcoes.semCache, filaExecutando: opcoes.filaExecutando });
           });
         }
         if (podeCache && resp && resp.ok) APP.apiCache[chave] = { resp: resp, expiraEm: Date.now() + 90000 };
@@ -14610,7 +14627,7 @@ Banco de dados: Google Sheets.
 
     function usuarioPodeEditarHistoricoEscalaAdmV125() {
       const p=normalizarTexto((APP.usuario&&APP.usuario.perfilAcesso)||'');
-      return p==='GESTOR_TEC_FT'||p==='ENC_ADM_FT';
+      return usuarioEhCmtCiaFtCliente_()||p==='GESTOR_TEC_FT'||p==='ENC_ADM_FT';
     }
 
     function montarHistoricoEscalasAdm(lista) {
