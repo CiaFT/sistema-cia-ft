@@ -20,6 +20,7 @@ VERSÃO V1.3.2 — ICC E REVISTA DE ARMÁRIO
 - Inclui a estrutura inicial do módulo COP para análise, rótulo e auditoria de vídeos.
 - Espelha o efetivo diretamente do CADASTRO GERAL em todas as funções.
 - Exibe a relação final da DEJEM com escalados e excedentes até sexta-feira às 23h59.
+- Só contabiliza e envia ao P3 horários com dupla completa; inscrições isoladas não constituem escala.
 - Amplia a foto no card aberto pela Consulta do Efetivo, com ajuste responsivo.
 - Permite excluir Resenhas apenas do painel, preservando registro e auditoria na planilha.
 - Restringe a gestão de Viaturas ao Gestor, Enc Adm e Aux Adm individualmente designado como P/4.
@@ -44,7 +45,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="cia-ft-build" content="FT-V132-20260903-R14.5.1-LINK-OFICIAL">
+  <meta name="cia-ft-build" content="FT-V132-20260910-R14.7-DEJEM-DUPLAS">
   <title>Portal Força Tática • V1.3.2</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
@@ -8454,7 +8455,7 @@ Banco de dados: Google Sheets.
       const prazoTexto = cap.prazoEncerrado ? 'INSCRIÇÕES ENCERRADAS' : 'INSCRIÇÕES ABERTAS';
       box.innerHTML = `
         <section class="dejem-status">
-          <div><h2>Escala de ${escapar(d.ciclo.inicioBR)} a ${escapar(d.ciclo.fimBR)}</h2><p>Cada horário possui duas vagas regulares e uma terceira posição para análise no fechamento.</p></div>
+          <div><h2>Período de inscrições: ${escapar(d.ciclo.inicioBR)} a ${escapar(d.ciclo.fimBR)}</h2><p>Somente dois policiais no mesmo dia e horário formam uma escala ROCAM. Uma inscrição isolada não será contabilizada nem enviada ao P3.</p></div>
           <div class="dejem-deadline ${cap.prazoEncerrado ? 'fechado' : ''}">${prazoTexto}<strong>Limite: ${escapar(d.ciclo.limiteBR)}</strong></div>
         </section>
         <div class="dejem-days">${(d.dias || []).map(function(dia) { return montarDiaDejemRocam(dia, d); }).join('')}</div>
@@ -8477,7 +8478,10 @@ Banco de dados: Google Sheets.
       const inscricoes = (dados.inscricoes || []).filter(function(item) { return item.dataISO === dia.dataISO && item.horario === horario; })
         .sort(function(a, b) { return Number(a.posicao || 0) - Number(b.posicao || 0); });
       const ocupadas = inscricoes.length;
-      return '<div class="dejem-slot"><div class="dejem-slot-head"><strong>' + escapar(horario) + 'h</strong><span>' + ocupadas + '/3 INSCRIÇÕES</span></div><div class="dejem-vagas">' +
+      const situacao = ocupadas === 0 ? 'SEM INSCRITOS' :
+        (ocupadas === 1 ? 'AGUARDANDO DUPLA' :
+          (ocupadas === 2 ? 'DUPLA VÁLIDA' : 'DECISÃO NO FECHAMENTO'));
+      return '<div class="dejem-slot"><div class="dejem-slot-head"><strong>' + escapar(horario) + 'h</strong><span>' + ocupadas + '/3 INSCRIÇÕES • ' + situacao + '</span></div><div class="dejem-vagas">' +
         [1,2,3].map(function(posicao) {
           const item = inscricoes.find(function(registro) { return Number(registro.posicao) === posicao; }) || null;
           return montarVagaDejemRocam(dia, horario, posicao, item, inscricoes, dados);
@@ -8562,14 +8566,14 @@ Banco de dados: Google Sheets.
       if (!cap.podeExcluirNoFechamento && !cap.podeFechar) return '<div class="dejem-close"><h3>Inscrições encerradas</h3><p>A escala aguarda conferência e fechamento administrativo.</p></div>';
       const excessos = dados.slotsComExcesso || [];
       return '<div class="dejem-close ' + (excessos.length ? 'excesso' : '') + '"><h3>Fechamento semanal</h3><p>' +
-        (excessos.length ? 'Existem três inscritos em: <strong>' + escapar(excessos.join(', ')) + '</strong>. Exclua um policial de cada horário antes do fechamento.' : 'Todos os horários possuem no máximo dois policiais. A escala pode ser consolidada para o P3.') +
+        (excessos.length ? 'Existem três inscritos em: <strong>' + escapar(excessos.join(', ')) + '</strong>. Exclua um policial de cada horário antes do fechamento.' : 'Somente horários com exatamente dois policiais serão confirmados e enviados ao P3. Inscrições isoladas serão ignoradas automaticamente.') +
         '</p><button type="button" onclick="confirmarFechamentoDejemRocam(this)" ' + (cap.podeFechar ? '' : 'disabled') + '>FECHAR E GERAR RESUMO P3</button></div>';
     }
 
 
     function confirmarFechamentoDejemRocam(botao) {
       const d = APP.dadosDejemRocam || {};
-      confirmarToastFt('FECHAR DEJEM ROCAM', 'Após o fechamento, as inscrições serão confirmadas e não poderão mais ser alteradas. Deseja continuar?', { confirmar: 'FECHAR ESCALA', cancelar: 'CANCELAR' }).then(function(confirmado) {
+      confirmarToastFt('FECHAR DEJEM ROCAM', 'Após o fechamento, somente as duplas completas serão confirmadas. Inscrições isoladas serão marcadas como não escaladas e não irão ao P3. Deseja continuar?', { confirmar: 'FECHAR ESCALA', cancelar: 'CANCELAR' }).then(function(confirmado) {
         if (confirmado) executarAcaoDejemRocam('fechar_dejem_rocam', { cicloId: d.ciclo && d.ciclo.id }, botao, 'FECHANDO...');
       });
     }
@@ -8640,19 +8644,23 @@ Banco de dados: Google Sheets.
       const restante = expiraEm - Date.now();
       if (restante <= 0) {
         APP.dadosDejemRocam.relacaoFechamento = null;
+        APP.dadosDejemRocam.ultimoFechamento = null;
         renderizarDejemRocam();
         return;
       }
       APP.dejemExpiracaoTimer = setTimeout(function() {
         APP.dejemExpiracaoTimer = null;
-        if (APP.dadosDejemRocam) APP.dadosDejemRocam.relacaoFechamento = null;
+        if (APP.dadosDejemRocam) {
+          APP.dadosDejemRocam.relacaoFechamento = null;
+          APP.dadosDejemRocam.ultimoFechamento = null;
+        }
         renderizarDejemRocam();
       }, Math.min(restante + 1000, 2147483000));
     }
 
 
     function montarTotaisDejemRocam(totais) {
-      return '<section class="dejem-panel"><div class="dejem-panel-head"><div><h3>Quantidade de escalas por policial</h3><p>Ordem hierárquica do Cadastro Geral. Os totais contabilizam somente escalas confirmadas após o fechamento completo do ciclo.</p></div></div>' +
+      return '<section class="dejem-panel"><div class="dejem-panel-head"><div><h3>Quantidade de escalas por policial</h3><p>Ordem hierárquica do Cadastro Geral. Os totais contabilizam somente policiais confirmados em duplas completas após o fechamento do ciclo.</p></div></div>' +
         '<div class="dejem-table-wrap"><table class="dejem-table"><thead><tr><th>POLICIAL</th><th>PEL</th><th>MÊS ATUAL</th><th>TOTAL DO ANO</th></tr></thead><tbody>' +
         (totais || []).map(function(item) { return '<tr><td>' + escapar([item.postoGrad,item.re,item.nomeGuerra].filter(Boolean).join(' ')) + '</td><td>' + escapar(item.pelotao || 'PEL NÃO INFORMADO') + '</td><td class="' + classeTotalDejemRocam(item.mesAtual) + '">' + Number(item.mesAtual || 0) + '</td><td class="' + classeTotalDejemRocam(item.totalAno) + '">' + Number(item.totalAno || 0) + '</td></tr>'; }).join('') +
         '</tbody></table></div></section>';
@@ -15468,3 +15476,4 @@ Banco de dados: Google Sheets.
 </script>
 </body>
 </html>
+
