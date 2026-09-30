@@ -7063,6 +7063,7 @@ Banco de dados: Google Sheets.
           </div>
         </div>
       `;
+      aplicarFotosSupabaseNosCards();
     }
 
     function montarCardPolicial(u) {
@@ -7075,7 +7076,7 @@ Banco de dados: Google Sheets.
       return `
         <div class="pm-profile-card ${classeHierarquia}">
           <div class="pm-photo-area">
-            <div class="foto-pm home">${foto}</div>
+            <div class="foto-pm home" data-foto-supabase-re="${escaparAttr(chaveREFotoSupabase(u.re))}">${foto}</div>
           </div>
 
           <div class="pm-main-info">
@@ -7203,7 +7204,7 @@ Banco de dados: Google Sheets.
           <div class="meus-dados-grid">
             <div class="dados-card ${classeHierarquia}">
               <div class="perfil-resumo">
-                <div class="foto-pm home">${foto}</div>
+                <div class="foto-pm home" data-foto-supabase-re="${escaparAttr(chaveREFotoSupabase(u.re))}">${foto}</div>
                 <h2>${escapar(u.postoGrad || '')} ${escapar(u.nomeGuerra || '')}</h2>
                 <div class="sub">RE ${escapar(u.re || '')}</div>
               </div>
@@ -7460,6 +7461,7 @@ Banco de dados: Google Sheets.
           </div>
         </div>
       `;
+      aplicarFotosSupabaseNosCards();
     }
 
 
@@ -7746,6 +7748,9 @@ Banco de dados: Google Sheets.
     const APPFT_FERIAS_SUPABASE_URL = 'https://zmsuvyyqddvqjaacutcl.supabase.co';
     const APPFT_FERIAS_SUPABASE_ANON_KEY = 'sb_publishable_cqG2KMMDzLsFBGXaA2WgFA_wxis7-29';
     let APPFT_FERIAS_SUPABASE_SESSION = null;
+    let APPFT_FOTOS_SUPABASE_POR_RE = Object.create(null);
+    let APPFT_FOTOS_SUPABASE_EXPIRA_EM = 0;
+    let APPFT_FOTOS_SUPABASE_PROMISE = null;
 
     function configPlanoFerias() {
       return window.APPFT_FERIAS_CONFIG || {};
@@ -7852,6 +7857,108 @@ Banco de dados: Google Sheets.
         throw new Error(mensagem);
       }
       return corpo;
+    }
+
+    function chaveREFotoSupabase(valor) {
+      return String(valor || '').replace(/\D/g, '').substring(0, 6);
+    }
+
+    async function carregarFotosSupabaseAssinadas(forcar) {
+      if (!forcar && APPFT_FOTOS_SUPABASE_EXPIRA_EM > Date.now() + 60000) {
+        return APPFT_FOTOS_SUPABASE_POR_RE;
+      }
+      if (APPFT_FOTOS_SUPABASE_PROMISE) return APPFT_FOTOS_SUPABASE_PROMISE;
+
+      const cfgAtual = configPlanoFerias();
+      const tokenExternoDisponivel = typeof cfgAtual.getAccessToken === 'function' ||
+        typeof window.APPFT_SUPABASE_GET_ACCESS_TOKEN === 'function' ||
+        !!window.APPFT_SUPABASE_ACCESS_TOKEN;
+      // Respeita o login explícito do Supabase adotado no deployment atual.
+      // A tela de fotos não inicia uma autenticação nova por conta própria.
+      if (!APPFT_FERIAS_SUPABASE_SESSION && !tokenExternoDisponivel) {
+        return APPFT_FOTOS_SUPABASE_POR_RE;
+      }
+
+      APPFT_FOTOS_SUPABASE_PROMISE = (async function() {
+        const respostaRpc = await rpcPlanoFerias('consultar_fotos_efetivo_leitura', {});
+        if (!respostaRpc || respostaRpc.ok !== true || respostaRpc.authorized !== true) {
+          throw new Error('O Supabase não autorizou a consulta das fotos do efetivo.');
+        }
+
+        const itens = Array.isArray(respostaRpc.items) ? respostaRpc.items : [];
+        const itensComFoto = itens.filter(function(item) {
+          return item && chaveREFotoSupabase(item.re) &&
+            /^policiais\/[0-9a-fA-F-]{36}\/avatar\.(jpg|png|webp)$/.test(String(item.photo_object_path || ''));
+        });
+        if (!itensComFoto.length) {
+          APPFT_FOTOS_SUPABASE_POR_RE = Object.create(null);
+          APPFT_FOTOS_SUPABASE_EXPIRA_EM = Date.now() + 50 * 60 * 1000;
+          return APPFT_FOTOS_SUPABASE_POR_RE;
+        }
+
+        const cfg = configPlanoFerias();
+        const url = String(cfg.url || APPFT_FERIAS_SUPABASE_URL).replace(/\/$/, '');
+        const anonKey = cfg.anonKey || window.APPFT_SUPABASE_ANON_KEY || APPFT_FERIAS_SUPABASE_ANON_KEY;
+        const token = await tokenPlanoFerias();
+        const respostaAssinatura = await fetch(url + '/storage/v1/object/sign/policiais-fotos', {
+          method: 'POST',
+          headers: {
+            'apikey': anonKey,
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            expiresIn: 3600,
+            paths: itensComFoto.map(function(item) { return item.photo_object_path; })
+          })
+        });
+        const assinaturas = await respostaAssinatura.json().catch(function() { return null; });
+        if (!respostaAssinatura.ok || !Array.isArray(assinaturas)) {
+          const mensagem = assinaturas && (assinaturas.message || assinaturas.error) ||
+            'Não foi possível gerar os endereços temporários das fotos (' + respostaAssinatura.status + ').';
+          throw new Error(mensagem);
+        }
+
+        const novoMapa = Object.create(null);
+        const baseStorage = url + '/storage/v1';
+        itensComFoto.forEach(function(item, indice) {
+          const assinatura = assinaturas[indice] || {};
+          const caminhoAssinado = assinatura.signedURL || assinatura.signedUrl;
+          if (!caminhoAssinado || assinatura.error) return;
+          const endereco = /^https?:\/\//i.test(caminhoAssinado)
+            ? caminhoAssinado
+            : baseStorage + (String(caminhoAssinado).startsWith('/') ? caminhoAssinado : '/' + caminhoAssinado);
+          novoMapa[chaveREFotoSupabase(item.re)] = endereco;
+        });
+
+        APPFT_FOTOS_SUPABASE_POR_RE = novoMapa;
+        APPFT_FOTOS_SUPABASE_EXPIRA_EM = Date.now() + 50 * 60 * 1000;
+        return APPFT_FOTOS_SUPABASE_POR_RE;
+      })().finally(function() {
+        APPFT_FOTOS_SUPABASE_PROMISE = null;
+      });
+
+      return APPFT_FOTOS_SUPABASE_PROMISE;
+    }
+
+    async function aplicarFotosSupabaseNosCards() {
+      try {
+        const fotos = await carregarFotosSupabaseAssinadas(false);
+        document.querySelectorAll('[data-foto-supabase-re]').forEach(function(area) {
+          const endereco = fotos[chaveREFotoSupabase(area.getAttribute('data-foto-supabase-re'))];
+          if (!endereco) return;
+          let imagem = area.querySelector('img');
+          if (!imagem) {
+            imagem = document.createElement('img');
+            imagem.alt = 'Foto do policial';
+            area.replaceChildren(imagem);
+          }
+          imagem.src = endereco;
+        });
+      } catch (erro) {
+        console.warn('Fotos Supabase indisponíveis; mantendo as fotos atuais do portal.', erro);
+      }
     }
 
     function escaparFerias(valor) {
@@ -9241,14 +9348,15 @@ Banco de dados: Google Sheets.
     function capacidadesVistoriaCopCliente() {
       const perfil = normalizarTexto((APP.usuario && APP.usuario.perfilAcesso) || '').replace(/\s+/g, '_');
       const gestor = ['GESTOR','GESTOR_TEC_FT','GESTOR_TECNICO_FT','GESTOR_FT','ADM_GERAL','ADMINISTRADOR_GERAL','ACESSO_TOTAL'].indexOf(perfil) !== -1;
+      const cmtPel = ['CMT_PEL','CMT_PELOTAO','COMANDANTE_PELOTAO','COMANDANTE_DE_PELOTAO'].indexOf(perfil) !== -1;
       const cmtEquipe = ['CMT_EQUIPE','CMT_EQUIPE_FT','COMANDANTE_EQUIPE','COMANDANTE_DE_EQUIPE'].indexOf(perfil) !== -1;
       const auxAdm = ['AUX_ADM_FT','AUX_ADM','AUXILIAR_ADM_FT','AUXILIAR_ADMINISTRATIVO'].indexOf(perfil) !== -1;
       const encAdm = ['ENC_ADM_FT','ENC_ADM','ENCARREGADO_ADM_FT','ENCARREGADO_ADMINISTRATIVO'].indexOf(perfil) !== -1;
       const cmtCia = ['CMT_CIA_FT','CMT_CIA','COMANDANTE_CIA_FT','COMANDANTE_DE_CIA'].indexOf(perfil) !== -1;
       const efetivoAdm = gestor || auxAdm || encAdm || cmtCia;
       return {
-        podeVisualizar: gestor || cmtEquipe || auxAdm || encAdm || cmtCia,
-        podeInserir: gestor || cmtEquipe || encAdm || cmtCia,
+        podeVisualizar: gestor || cmtPel || cmtEquipe || auxAdm || encAdm || cmtCia,
+        podeInserir: gestor || cmtPel || cmtEquipe || encAdm || cmtCia,
         podeCorrigir: gestor || encAdm || cmtCia,
         podeGerarPdf: efetivoAdm,
         podeImprimir: efetivoAdm
@@ -13042,11 +13150,19 @@ Banco de dados: Google Sheets.
           login: APP.credenciais.login,
           senha: APP.credenciais.senha
         })
-        .then(function(resp) {
+        .then(async function(resp) {
           if (!resp || !resp.ok) {
             throw new Error(resp && resp.erro ? resp.erro : 'Falha ao carregar Consulta do Efetivo.');
           }
           APP.dadosConsultaEfetivo = resp.dados || {};
+          try {
+            const fotos = await carregarFotosSupabaseAssinadas(false);
+            (APP.dadosConsultaEfetivo.efetivo || []).forEach(function(pm) {
+              pm.fotoSupabaseUrl = fotos[chaveREFotoSupabase(pm.re)] || '';
+            });
+          } catch (erroFoto) {
+            console.warn('Consulta de fotos Supabase indisponível; mantendo as fotos atuais.', erroFoto);
+          }
           return APP.dadosConsultaEfetivo;
         });
     }
@@ -13317,7 +13433,7 @@ Banco de dados: Google Sheets.
       const classeHierarquia = classeHierarquiaConsulta(pm.postoGrad);
       const reKey = escaparAttr(normalizarLoginConsultaCliente(pm.re || ''));
 
-      const fotoUrl = resolverFotoConsulta(pm.foto);
+      const fotoUrl = pm.fotoSupabaseUrl || resolverFotoConsulta(pm.foto);
       const fotoInterna = fotoUrl
         ? `<img class="consulta-foto ${classeHierarquia}" src="${escaparAttr(fotoUrl)}" alt="Foto de ${escaparAttr(nome)}" loading="lazy" onerror="fallbackFotoConsulta(this, '${classeHierarquia}')">`
         : `<div class="consulta-foto sem-foto ${classeHierarquia}">FT</div>`;
@@ -13393,7 +13509,7 @@ Banco de dados: Google Sheets.
 
       const nome = [alvo.postoGrad, alvo.nomeGuerra].filter(Boolean).join(' ');
       const classeHierarquia = classeHierarquiaConsulta(alvo.postoGrad);
-      const fotoUrl = resolverFotoConsulta(alvo.foto, 'w480');
+      const fotoUrl = alvo.fotoSupabaseUrl || resolverFotoConsulta(alvo.foto, 'w480');
       const foto = fotoUrl
         ? `<img class="consulta-foto consulta-foto-modal ${classeHierarquia}" src="${escaparAttr(fotoUrl)}" alt="Foto de ${escaparAttr(nome)}" loading="lazy" onerror="fallbackFotoConsulta(this, '${classeHierarquia}')">`
         : `<div class="consulta-foto consulta-foto-modal sem-foto ${classeHierarquia}">FT</div>`;
@@ -14929,6 +15045,9 @@ Banco de dados: Google Sheets.
       APP.sessaoApi = null;
       APP.sessaoExpiraEm = 0;
       APPFT_FERIAS_SUPABASE_SESSION = null;
+      APPFT_FOTOS_SUPABASE_POR_RE = Object.create(null);
+      APPFT_FOTOS_SUPABASE_EXPIRA_EM = 0;
+      APPFT_FOTOS_SUPABASE_PROMISE = null;
       APP.renovacaoSessao = null;
       APP.dadosResenha = null;
       APP.dadosEscalasAdm = null;
