@@ -7555,6 +7555,11 @@ Banco de dados: Google Sheets.
         return;
       }
 
+      if (normalizarModuloCliente(id) === 'PLANO_ANUAL_FERIAS') {
+        abrirPlanoAnualFerias();
+        return;
+      }
+
       if (normalizarModuloCliente(id) === 'COP') {
         if (!usuarioTemPermissaoCliente('COP', 'visualizar')) {
           abrirAcessoNegado('COP');
@@ -7632,6 +7637,12 @@ Banco de dados: Google Sheets.
         icone: '',
         descricao: 'Acesso às rotinas, registros e controles de revistas de armário.'
       });
+      modulos.push({
+        id: 'PLANO_ANUAL_FERIAS',
+        titulo: 'PLANO ANUAL DE FÉRIAS',
+        icone: '📅',
+        descricao: 'Solicitação e acompanhamento do plano anual de férias.'
+      });
 
       document.getElementById('appConteudo').innerHTML = `
         <div class="page-wrap">
@@ -7650,6 +7661,411 @@ Banco de dados: Google Sheets.
             ${modulos.map(montarMenuCard).join('') || '<div class="modal-card">Nenhuma rotina operacional liberada para seu perfil.</div>'}
           </div>
         </div>`;
+    }
+
+
+    function abrirPlanoAnualFerias() {
+      window.scrollTo(0, 0);
+      document.getElementById('appConteudo').innerHTML = `
+        <div class="page-wrap">
+          <div class="page-header">
+            <div class="page-header-row">
+              <div>
+                <div class="page-kicker">Rotinas Operacionais</div>
+                <h1>Plano Anual de Férias</h1>
+                <p>Solicitação e acompanhamento de férias, com datas corridas e validação de conflitos pelo sistema.</p>
+              </div>
+              <div class="page-actions"><button class="btn-page" onclick="abrirRotinasOperacionais()">VOLTAR</button></div>
+            </div>
+          </div>
+          <div id="feriasAviso" class="modal-card"><h2>Carregando plano...</h2></div>
+          <div id="feriasConteudo"></div>
+        </div>`;
+      carregarPlanoAnualFerias();
+    }
+
+    const APPFT_FERIAS_SUPABASE_URL = 'https://zmsuvyyqddvqjaacutcl.supabase.co';
+    const APPFT_FERIAS_SUPABASE_ANON_KEY = 'sb_publishable_cqG2KMMDzLsFBGXaA2WgFA_wxis7-29';
+    let APPFT_FERIAS_SUPABASE_SESSION = null;
+
+    function configPlanoFerias() {
+      return window.APPFT_FERIAS_CONFIG || {};
+    }
+
+    async function senhaSupabasePonteFerias(reBase, senhaLegada) {
+      const material = 'APP_FT_AUTH_V2_LOGIN6|' + reBase + '|' + senhaLegada;
+      const bytes = new TextEncoder().encode(material);
+      const digest = await crypto.subtle.digest('SHA-256', bytes);
+      const valores = new Uint8Array(digest);
+      let binario = '';
+      for (let i = 0; i < valores.length; i++) binario += String.fromCharCode(valores[i]);
+      const base64url = btoa(binario).replace(/=+$/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+      return 'Af1!' + base64url;
+    }
+
+    async function autenticarSupabaseFerias(senhaSupabaseManual) {
+      const cfg = configPlanoFerias();
+      const url = String(cfg.url || APPFT_FERIAS_SUPABASE_URL).replace(/\/$/, '');
+      const anonKey = cfg.anonKey || window.APPFT_SUPABASE_ANON_KEY || APPFT_FERIAS_SUPABASE_ANON_KEY;
+      if (!url || !anonKey || anonKey === 'COLE_AQUI_A_CHAVE_PUBLICA_ANON_OU_PUBLISHABLE') {
+        throw new Error('A chave pública do Supabase ainda não foi configurada. Substitua o texto COLE_AQUI_A_CHAVE_PUBLICA_ANON_OU_PUBLISHABLE pela chave publishable do projeto.');
+      }
+      const agora = Math.floor(Date.now() / 1000);
+      if (APPFT_FERIAS_SUPABASE_SESSION && APPFT_FERIAS_SUPABASE_SESSION.expires_at > agora + 60) {
+        return APPFT_FERIAS_SUPABASE_SESSION.access_token;
+      }
+
+      let sessaoNova = null;
+      if (APPFT_FERIAS_SUPABASE_SESSION && APPFT_FERIAS_SUPABASE_SESSION.refresh_token) {
+        try {
+          const refresh = await fetch(url + '/auth/v1/token?grant_type=refresh_token', {
+            method: 'POST',
+            headers: { 'apikey': anonKey, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: APPFT_FERIAS_SUPABASE_SESSION.refresh_token })
+          });
+          if (refresh.ok) sessaoNova = await refresh.json();
+        } catch (e) { /* Se a renovação falhar, tenta autenticar novamente com a sessão do portal. */ }
+      }
+
+      if (!sessaoNova || !sessaoNova.access_token) {
+        const usuario = APP.usuario || {};
+        const cred = APP.credenciais || {};
+        const re = String(usuario.re || usuario.login || cred.login || '').replace(/\D/g, '').slice(0, 6);
+        const senhaLegada = senhaSupabaseManual == null ? String(cred.senha || '') : String(senhaSupabaseManual || '');
+        if (re.length !== 6 || !senhaLegada) throw new Error('Não foi possível obter o RE de seis dígitos e a senha atual do portal para autenticar no Supabase.');
+        const senha = await senhaSupabasePonteFerias(re, senhaLegada);
+        const emailTecnico = 're-' + re + '@appft.invalid';
+        const login = await fetch(url + '/auth/v1/token?grant_type=password', {
+          method: 'POST',
+          headers: { 'apikey': anonKey, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: emailTecnico, password: senha })
+        });
+        sessaoNova = await login.json().catch(function() { return null; });
+        if (!login.ok || !sessaoNova || !sessaoNova.access_token) {
+          const msg = sessaoNova && (sessaoNova.msg || sessaoNova.message || sessaoNova.error_description) || 'Autenticação Supabase recusada.';
+          if (/invalid api key/i.test(msg)) {
+            throw new Error('O Supabase recusou a chave pública configurada. A senha ainda não foi validada. Use a publishable key do mesmo projeto Supabase desta homologação.');
+          }
+          if (/invalid login credentials/i.test(msg) && senhaSupabaseManual == null) {
+            throw new Error('SUPABASE_PASSWORD_REQUIRED');
+          }
+          if (/invalid login credentials/i.test(msg)) {
+            throw new Error('O Supabase não aceitou o login com a senha derivada pela ponte de compatibilidade para ' + emailTecnico + '. Confira a senha atual do portal e se o RE-base corresponde ao usuário migrado.');
+          }
+          throw new Error('Falha ao autenticar no Supabase para ' + emailTecnico + ': ' + msg);
+        }
+      }
+      sessaoNova.expires_at = Number(sessaoNova.expires_at || (agora + Number(sessaoNova.expires_in || 3600)));
+      APPFT_FERIAS_SUPABASE_SESSION = sessaoNova;
+      return sessaoNova.access_token;
+    }
+
+    async function tokenPlanoFerias() {
+      const cfg = configPlanoFerias();
+      if (typeof cfg.getAccessToken === 'function') return await cfg.getAccessToken();
+      if (typeof window.APPFT_SUPABASE_GET_ACCESS_TOKEN === 'function') return await window.APPFT_SUPABASE_GET_ACCESS_TOKEN();
+      if (window.APPFT_SUPABASE_ACCESS_TOKEN) return window.APPFT_SUPABASE_ACCESS_TOKEN;
+      return await autenticarSupabaseFerias();
+    }
+
+    async function rpcPlanoFerias(nome, parametros) {
+      const cfg = configPlanoFerias();
+      const url = String(cfg.url || APPFT_FERIAS_SUPABASE_URL).replace(/\/$/, '');
+      const anonKey = cfg.anonKey || window.APPFT_SUPABASE_ANON_KEY || APPFT_FERIAS_SUPABASE_ANON_KEY;
+      if (!url || !anonKey || anonKey === 'COLE_AQUI_A_CHAVE_PUBLICA_ANON_OU_PUBLISHABLE') {
+        throw new Error('A chave pública do Supabase ainda não foi configurada.');
+      }
+      const token = await tokenPlanoFerias();
+      if (!token) throw new Error('Não foi possível abrir uma sessão autenticada no Supabase.');
+      const resposta = await fetch(url + '/rest/v1/rpc/' + encodeURIComponent(nome), {
+        method: 'POST',
+        headers: {
+          'apikey': anonKey,
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(parametros || {})
+      });
+      const corpo = await resposta.json().catch(function() { return null; });
+      if (!resposta.ok) {
+        const mensagem = corpo && (corpo.message || corpo.error_description || corpo.error) || 'Falha ao consultar o Supabase (' + resposta.status + ').';
+        throw new Error(mensagem);
+      }
+      return corpo;
+    }
+
+    function escaparFerias(valor) {
+      return escapar(valor == null ? '' : String(valor));
+    }
+
+    function dataFeriasBR(valor) {
+      const m = String(valor || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+      return m ? m[3] + '/' + m[2] + '/' + m[1] : (valor || '—');
+    }
+
+    function dataFimFerias(inicio, dias) {
+      const m = String(inicio || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (!m) return '';
+      const dt = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]) + Number(dias) - 1));
+      return dt.toISOString().slice(0, 10);
+    }
+
+    function intervaloSobrepoeFerias(aIni, aFim, bIni, bFim) {
+      return !!(aIni && aFim && bIni && bFim && aIni <= bFim && bIni <= aFim);
+    }
+
+    async function carregarPlanoAnualFerias() {
+      const aviso = document.getElementById('feriasAviso');
+      const conteudo = document.getElementById('feriasConteudo');
+      if (!aviso || !conteudo) return;
+      aviso.innerHTML = '<h2>Carregando ciclo e disponibilidade...</h2>';
+      conteudo.innerHTML = '';
+      try {
+        const dados = await rpcPlanoFerias('appft_ferias_listar', { p_ano_fruicao: null });
+        window.APPFT_FERIAS_DADOS = dados || {};
+        renderizarPlanoAnualFerias(dados || {});
+      } catch (erro) {
+        if (erro && erro.message === 'SUPABASE_PASSWORD_REQUIRED') {
+          aviso.innerHTML = '<h2>Senha do portal necessária</h2>' +
+            '<p>Informe a senha atual do portal. O módulo aplica localmente a mesma ponte SHA-256 usada na migração antes de autenticar no Supabase; a senha original não é gravada no código.</p>' +
+            '<form onsubmit="entrarSupabaseFeriasComSenha(event)">' +
+              '<div class="field"><label for="feriasSenhaSupabase">Senha atual do portal</label>' +
+              '<input id="feriasSenhaSupabase" type="password" autocomplete="current-password" required></div>' +
+              '<button class="btn-primary-soft" id="feriasEntrarSupabase" type="submit">ENTRAR</button>' +
+            '</form>' +
+            '<p>O acesso usa o e-mail técnico re-XXXXXX@appft.invalid derivado do RE logado. Não compartilhe a senha pelo chat.</p>';
+          return;
+        }
+        aviso.innerHTML = '<h2>Integração Supabase pendente</h2>' +
+          '<p>' + escaparFerias(erro && erro.message || 'Não foi possível carregar o plano.') + '</p>' +
+          '<p>A tela e as chamadas às RPCs estão preparadas. O portal precisa receber a URL/chave pública do projeto e uma sessão Supabase autenticada, vinculada ao policial logado, antes de liberar consultas e gravações.</p>' +
+          '<button class="btn-primary-soft" type="button" onclick="carregarPlanoAnualFerias()">TENTAR NOVAMENTE</button>';
+      }
+    }
+
+    async function entrarSupabaseFeriasComSenha(event) {
+      event.preventDefault();
+      const campo = document.getElementById('feriasSenhaSupabase');
+      const botao = document.getElementById('feriasEntrarSupabase');
+      const aviso = document.getElementById('feriasAviso');
+      const senha = campo ? campo.value : '';
+      if (botao) botao.disabled = true;
+      if (aviso) aviso.insertAdjacentHTML('beforeend', '<p>Autenticando...</p>');
+      try {
+        await autenticarSupabaseFerias(senha);
+        if (campo) campo.value = '';
+        await carregarPlanoAnualFerias();
+      } catch (erro) {
+        if (campo) campo.value = '';
+        if (aviso) aviso.innerHTML = '<h2>Não foi possível autenticar</h2><p>' + escaparFerias(erro && erro.message || 'Confira a senha do Supabase Auth.') + '</p><button class="btn-primary-soft" type="button" onclick="carregarPlanoAnualFerias()">TENTAR NOVAMENTE</button>';
+      } finally {
+        if (botao) botao.disabled = false;
+      }
+    }
+
+    function renderizarPlanoAnualFerias(dados) {
+      const aviso = document.getElementById('feriasAviso');
+      const conteudo = document.getElementById('feriasConteudo');
+      if (!aviso || !conteudo) return;
+      const ciclo = dados.ciclo;
+      const janelas = Array.isArray(dados.janelas_bloqueadas) ? dados.janelas_bloqueadas : [];
+      const indisponiveis = Array.isArray(dados.periodos_indisponiveis) ? dados.periodos_indisponiveis : [];
+      const solicitacoes = Array.isArray(dados.solicitacoes_visiveis) ? dados.solicitacoes_visiveis : [];
+      const minha = dados.minha_solicitacao || null;
+      const aberto = ciclo && ['ABERTO', 'REABERTO'].includes(String(ciclo.status || '').toUpperCase()) && Date.now() <= Date.parse(ciclo.prazo_final);
+      const ano = ciclo && ciclo.ano_fruição || new Date().getFullYear() + 1;
+
+      if (!ciclo) {
+        aviso.innerHTML = '<h2>Nenhum ciclo configurado</h2><p>O comando precisa configurar o ano de fruição e o prazo final antes da abertura do formulário.</p>';
+      } else {
+        aviso.innerHTML = '<h2>Plano de Férias ' + escaparFerias(ano) + ' — ' + escaparFerias(ciclo.status) + '</h2>' +
+          '<p>Preenchimento a partir de ' + escaparFerias(dataFeriasBR(String(ciclo.inicio_preenchimento || '').slice(0,10))) +
+          ' • prazo final: ' + escaparFerias(dataFeriasBR(String(ciclo.prazo_final || '').slice(0,10))) +
+          ' • períodos contados em dias corridos; datas finais inclusivas.</p>';
+      }
+
+      const linhasBloqueio = janelas.map(function(j) {
+        return '<li>' + escaparFerias(dataFeriasBR(j.inicio)) + ' a ' + escaparFerias(dataFeriasBR(j.fim)) + ' — ' + escaparFerias(j.motivo) + '</li>';
+      }).join('');
+      const linhasAgenda = solicitacoes.map(function(s) {
+        const periodos = Array.isArray(s.periodos) ? s.periodos : [];
+        return '<article class="modal-card" style="margin-top:12px"><strong>' + escaparFerias(s.graduacao) + ' ' + escaparFerias(s.nome) +
+          ' • ' + escaparFerias(s.escopo) + '</strong><div>' + escaparFerias(s.modalidade) + ' • ' + escaparFerias(s.status) + '</div>' +
+          periodos.map(function(p) { return '<div>' + escaparFerias(dataFeriasBR(p.inicio)) + ' a ' + escaparFerias(dataFeriasBR(p.fim)) +
+            ' (' + escaparFerias(p.dias) + ' dias) • ' + escaparFerias(p.status) + (p.motivo ? ' — ' + escaparFerias(p.motivo) : '') + '</div>'; }).join('') + '</article>';
+      }).join('') || '<p>Ainda não há solicitações visíveis no seu escopo.</p>';
+
+      const minhaPeriodos = minha && Array.isArray(minha.periodos) ? minha.periodos : [];
+      const defaultMode = minha && minha.modalidade || '30_DIAS';
+      const defaultDates = minhaPeriodos.map(function(p) { return p.inicio || ''; });
+      const adminHtml = usuarioPodeConfigurarPlanoFerias() ? `
+        <section class="modal-card" style="margin-top:14px">
+          <h2>Configuração administrativa do ciclo ${escaparFerias(ano)}</h2>
+          <p>O ciclo começa automaticamente em 25/09 do ano anterior. Defina abaixo o prazo final. Para 2027, o bloqueio de 01 a 15 de fevereiro é aplicado pelo servidor.</p>
+          <form id="feriasAdminForm" onsubmit="configurarCicloPlanoFerias(event)">
+            <label for="feriasAdminPrazo">Data limite para preenchimento</label>
+            <input id="feriasAdminPrazo" type="date" min="${Number(ano)-1}-09-25" required style="display:block;width:100%;max-width:280px;padding:12px;margin:8px 0 14px">
+            <label>Janelas adicionais proibidas (opcionais)</label>
+            <div id="feriasAdminJanelas" data-proximo="0"></div>
+            <button class="btn-page" type="button" onclick="adicionarJanelaPlanoFerias()">ADICIONAR JANELA</button>
+            <label for="feriasAdminJustificativa" style="display:block;margin-top:14px">Justificativa/observação</label>
+            <textarea id="feriasAdminJustificativa" rows="2" style="display:block;width:100%;padding:12px;margin:8px 0 14px"></textarea>
+            <button class="btn-primary-soft" type="submit">CONFIGURAR CICLO ${escaparFerias(ano)}</button>
+          </form>
+        </section>` : '';
+      conteudo.innerHTML = `${adminHtml}
+        <section class="modal-card" style="margin-top:14px">
+          <h2>Minha solicitação</h2>
+          ${aberto ? `<form id="feriasForm" onsubmit="enviarPlanoAnualFerias(event)">
+            <label for="feriasModalidade">Escolha a modalidade</label>
+            <select id="feriasModalidade" onchange="atualizarCamposPlanoFerias()" style="display:block;width:100%;max-width:420px;padding:12px;margin:8px 0 16px">
+              <option value="30_DIAS" ${defaultMode === '30_DIAS' ? 'selected' : ''}>30 dias corridos</option>
+              <option value="2X15_DIAS" ${defaultMode === '2X15_DIAS' ? 'selected' : ''}>Dois períodos de 15 dias corridos</option>
+            </select>
+            <div id="feriasDatas"></div>
+            <div id="feriasValidacao" role="status" style="margin:12px 0"></div>
+            <button class="btn-primary-soft" type="submit">SALVAR SOLICITAÇÃO</button>
+          </form>` : '<p>O formulário está fechado ou ainda não foi aberto pelo comando. As datas e o prazo são definidos no ciclo anual.</p>'}
+          ${minha ? '<p>Solicitação atual: <strong>' + escaparFerias(minha.status) + '</strong>. Atualizada em ' + escaparFerias(minha.atualizado_em || '') + '.</p>' : ''}
+        </section>
+        <section class="modal-card" style="margin-top:14px">
+          <h2>Regras e bloqueios deste ciclo</h2>
+          <ul><li>As datas são verificadas no servidor considerando sobreposição de qualquer dia e prioridade hierárquica.</li>
+          <li>Datas indisponíveis por escolha de superior não podem ser reservadas por subordinado.</li>
+          <li>Solicitação de superior pode colocar período incompatível de subordinado em ajuste necessário.</li>
+          ${linhasBloqueio || '<li>Nenhuma janela adicional informada.</li>'}</ul>
+          ${indisponiveis.length ? '<h3>Períodos indisponíveis para sua prioridade</h3><ul>' + indisponiveis.map(function(p) { return '<li>' + escaparFerias(dataFeriasBR(p.inicio)) + ' a ' + escaparFerias(dataFeriasBR(p.fim)) + ' — ' + escaparFerias(p.motivo) + '</li>'; }).join('') + '</ul>' : ''}
+        </section>
+        <section style="margin-top:16px"><h2>Solicitações do seu escopo</h2>${linhasAgenda}</section>`;
+      if (aberto) atualizarCamposPlanoFerias(defaultDates);
+      if (usuarioPodeConfigurarPlanoFerias()) adicionarJanelaPlanoFerias();
+    }
+
+    function usuarioPodeConfigurarPlanoFerias() {
+      const u = APP.usuario || {};
+      const perfil = normalizarTexto(u.perfilAcesso || u.roleCode || u.role_code || '').replace(/[\s-]+/g, '_');
+      return ['ENC_ADM_FT','CMT_CIA_FT','GESTOR_TEC_FT'].includes(perfil);
+    }
+
+    function adicionarJanelaPlanoFerias() {
+      const host=document.getElementById('feriasAdminJanelas');
+      if(!host)return;
+      const n=Number(host.dataset.proximo||0)+1;
+      host.dataset.proximo=String(n);
+      const bloco=document.createElement('div');
+      bloco.className='feriasJanelaConfig';
+      bloco.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin:10px 0';
+      bloco.innerHTML='<input type="date" aria-label="Início da janela '+n+'" data-campo="inicio" style="padding:10px">'+
+        '<input type="date" aria-label="Fim da janela '+n+'" data-campo="fim" style="padding:10px">'+
+        '<input type="text" aria-label="Motivo da janela '+n+'" data-campo="motivo" placeholder="Motivo do bloqueio" style="padding:10px">'+
+        '<button class="btn-page" type="button" onclick="this.parentElement.remove()">REMOVER</button>';
+      host.appendChild(bloco);
+    }
+
+    async function configurarCicloPlanoFerias(event) {
+      if(event)event.preventDefault();
+      if(!usuarioPodeConfigurarPlanoFerias()){mostrarAlerta('Seu perfil não está habilitado para configurar o ciclo.','erro');return;}
+      const dados=window.APPFT_FERIAS_DADOS||{};
+      const ano=Number((dados.ciclo&&dados.ciclo.ano_fruição)||new Date().getFullYear()+1);
+      const prazo=document.getElementById('feriasAdminPrazo')?.value||'';
+      if(!prazo){mostrarAlerta('Informe a data limite de preenchimento.','erro');return;}
+      const janelas=[];
+      for(const bloco of document.querySelectorAll('#feriasAdminJanelas .feriasJanelaConfig')){
+        const inicio=bloco.querySelector('[data-campo="inicio"]').value;
+        const fim=bloco.querySelector('[data-campo="fim"]').value;
+        const motivo=bloco.querySelector('[data-campo="motivo"]').value.trim();
+        if(!inicio&&!fim&&!motivo)continue;
+        if(!inicio||!fim||!motivo){mostrarAlerta('Complete início, fim e motivo de cada janela adicional.','erro');return;}
+        janelas.push({data_inicio:inicio,data_fim:fim,motivo:motivo});
+      }
+      const botao=document.querySelector('#feriasAdminForm button[type="submit"]');
+      if(botao){botao.disabled=true;botao.textContent='CONFIGURANDO...';}
+      try{
+        await rpcPlanoFerias('appft_ferias_admin_configurar_ciclo',{
+          p_ano_fruicao:ano,
+          p_prazo_final:prazo+'T23:59:59-03:00',
+          p_janelas:janelas,
+          p_justificativa:(document.getElementById('feriasAdminJustificativa')?.value||'').trim()||null
+        });
+        mostrarAlerta('Ciclo '+ano+' configurado.','ok');
+        await carregarPlanoAnualFerias();
+      }catch(erro){mostrarAlerta(erro&&erro.message||'Não foi possível configurar o ciclo.','erro');}
+      finally{if(botao){botao.disabled=false;botao.textContent='CONFIGURAR CICLO '+ano;}}
+    }
+
+    function atualizarCamposPlanoFerias(datasIniciais) {
+      const modo = document.getElementById('feriasModalidade');
+      const host = document.getElementById('feriasDatas');
+      if (!modo || !host) return;
+      const dados = window.APPFT_FERIAS_DADOS || {};
+      const ano = dados.ciclo && dados.ciclo.ano_fruição || new Date().getFullYear() + 1;
+      const qtd = modo.value === '2X15_DIAS' ? 2 : 1;
+      const atual = Array.isArray(datasIniciais) ? datasIniciais : Array.from({length:qtd}, function(_,i) {
+        const input = document.getElementById('feriasInicio' + (i+1)); return input ? input.value : '';
+      });
+      host.innerHTML = Array.from({length:qtd}, function(_,i) {
+        const n=i+1, dias=qtd===1?30:15;
+        return '<label for="feriasInicio' + n + '">Início do ' + (qtd===1?'período de 30 dias':'período '+n+' de 15 dias') +
+          '</label><input id="feriasInicio' + n + '" type="date" min="' + ano + '-01-01" max="' + ano + '-12-31" value="' + escaparFerias(atual[i] || '') +
+          '" onchange="validarCamposPlanoFerias()" style="display:block;width:100%;max-width:280px;padding:12px;margin:8px 0 4px">' +
+          '<small id="feriasFim' + n + '">Selecione o início para calcular o término (' + dias + ' dias corridos).</small>';
+      }).join('');
+      validarCamposPlanoFerias();
+    }
+
+    function validarCamposPlanoFerias() {
+      const dados = window.APPFT_FERIAS_DADOS || {};
+      const box = document.getElementById('feriasValidacao');
+      const modo = document.getElementById('feriasModalidade');
+      if (!box || !modo) return false;
+      const dias=modo.value==='2X15_DIAS'?15:30;
+      const qtd=modo.value==='2X15_DIAS'?2:1;
+      const janelas=dados.janelas_bloqueadas||[];
+      const indisponiveis=dados.periodos_indisponiveis||[];
+      const inicios=Array.from({length:qtd},function(_,i){return document.getElementById('feriasInicio'+(i+1))?.value||'';});
+      let erros=[];
+      inicios.forEach(function(ini,i){
+        const fim=dataFimFerias(ini,dias);
+        const label=document.getElementById('feriasFim'+(i+1));
+        if(label) label.textContent=ini&&fim?'Término calculado: '+dataFeriasBR(fim)+' ('+dias+' dias corridos, inclusivo).':'Selecione a data de início.';
+        if(ini&&fim){
+          janelas.forEach(function(j){if(intervaloSobrepoeFerias(ini,fim,String(j.inicio||''),String(j.fim||'')))erros.push('O período '+(i+1)+' atravessa bloqueio: '+(j.motivo||'janela proibida')+'.');});
+          indisponiveis.forEach(function(p){if(intervaloSobrepoeFerias(ini,fim,String(p.inicio||''),String(p.fim||'')))erros.push('O período '+(i+1)+' coincide com data indisponível por prioridade superior.');});
+        }
+      });
+      if(qtd===2&&inicios[0]&&inicios[1]){
+        const f1=dataFimFerias(inicios[0],dias), f2=dataFimFerias(inicios[1],dias);
+        if(intervaloSobrepoeFerias(inicios[0],f1,inicios[1],f2))erros.push('Os dois períodos da própria solicitação não podem se sobrepor.');
+      }
+      box.innerHTML=erros.length?'<strong style="color:#b42318">'+erros.map(escaparFerias).join('<br>')+'</strong>':'<span>As datas serão revalidadas pelo servidor antes de gravar.</span>';
+      return erros.length===0&&inicios.every(Boolean);
+    }
+
+    async function enviarPlanoAnualFerias(event) {
+      if(event)event.preventDefault();
+      if(!validarCamposPlanoFerias()){mostrarAlerta('Revise as datas indicadas antes de salvar.','erro');return;}
+      const dados=window.APPFT_FERIAS_DADOS||{};
+      const modo=document.getElementById('feriasModalidade').value;
+      const dias=modo==='2X15_DIAS'?15:30;
+      const qtd=modo==='2X15_DIAS'?2:1;
+      const periodos=Array.from({length:qtd},function(_,i){return {data_inicio:document.getElementById('feriasInicio'+(i+1)).value};});
+      const ciclo=dados.ciclo||{};
+      const confirma=window.confirm('O servidor vai validar o ciclo, os bloqueios, as sobreposições e a prioridade hierárquica. Se esta solicitação tiver prioridade superior e houver conflito incompatível, somente os períodos conflitantes de solicitações menos prioritárias poderão passar para AJUSTE NECESSÁRIO, com notificação. Deseja enviar?');
+      if(!confirma)return;
+      const botao=document.querySelector('#feriasForm button[type="submit"]');
+      if(botao){botao.disabled=true;botao.textContent='SALVANDO...';}
+      try{
+        const resposta=await rpcPlanoFerias('appft_ferias_salvar',{
+          p_ano_fruicao:Number(ciclo.ano_fruição),
+          p_modalidade:modo,
+          p_periodos:periodos,
+          p_chave_idempotencia:crypto.randomUUID()
+        });
+        mostrarAlerta('Solicitação registrada: '+(resposta.status||'ENVIADA')+'.','ok');
+        await carregarPlanoAnualFerias();
+      }catch(erro){mostrarAlerta(erro&&erro.message||'Falha ao salvar solicitação.','erro');}
+      finally{if(botao){botao.disabled=false;botao.textContent='SALVAR SOLICITAÇÃO';}}
     }
 
 
@@ -14365,6 +14781,7 @@ Banco de dados: Google Sheets.
       APP.credenciais = null;
       APP.sessaoApi = null;
       APP.sessaoExpiraEm = 0;
+      APPFT_FERIAS_SUPABASE_SESSION = null;
       APP.renovacaoSessao = null;
       APP.dadosResenha = null;
       APP.dadosEscalasAdm = null;
@@ -15476,4 +15893,3 @@ Banco de dados: Google Sheets.
 </script>
 </body>
 </html>
-
