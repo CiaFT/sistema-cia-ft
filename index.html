@@ -7992,6 +7992,7 @@ Banco de dados: Google Sheets.
           <div class="ferias-panel-head"><h2>Regras e bloqueios deste ciclo</h2><p>Critérios aplicados ao preenchimento desta previsão.</p></div>
           <div class="ferias-panel-body"><ul class="ferias-rules"><li>As datas são verificadas no servidor considerando sobreposição de qualquer dia e prioridade hierárquica.</li>
           <li>Datas indisponíveis por escolha de superior não podem ser reservadas por subordinado.</li>
+          ${Number(ano) === 2027 ? '<li>Regra de 2027: 30 dias somente com início no dia 01, sem ultrapassar o mês.</li><li>Regra de 2027: no 15 + 15, não combine início na segunda quinzena de um mês com início na primeira quinzena do mês imediatamente seguinte, mesmo se informar os períodos em ordem inversa.</li>' : ''}
           <li>Solicitação de superior pode colocar período incompatível de subordinado em ajuste necessário.</li>
           ${linhasBloqueio || '<li>Nenhuma janela adicional informada.</li>'}</ul>
           ${indisponiveis.length ? '<div><h3>Períodos indisponíveis para sua prioridade</h3><ul class="ferias-rules">' + indisponiveis.map(function(p) { return '<li>' + escaparFerias(dataFeriasBR(p.inicio)) + ' a ' + escaparFerias(dataFeriasBR(p.fim)) + ' — ' + escaparFerias(p.motivo) + '</li>'; }).join('') + '</ul></div>' : ''}
@@ -8166,6 +8167,22 @@ Banco de dados: Google Sheets.
       if(qtd===2&&inicios[0]&&inicios[1]){
         const f1=dataFimFerias(inicios[0],dias), f2=dataFimFerias(inicios[1],dias);
         if(intervaloSobrepoeFerias(inicios[0],f1,inicios[1],f2))erros.push('Os dois períodos da própria solicitação não podem se sobrepor.');
+      }
+      if (Number(dados.ciclo && dados.ciclo.ano_fruição) === 2027) {
+        if (qtd === 1 && inicios[0]) {
+          if (inicios[0].slice(8,10) !== '01') erros.push('Em 2027, o período de 30 dias deve começar no dia 01.');
+          const fim = dataFimFerias(inicios[0], 30);
+          if (fim && fim.slice(0,7) !== inicios[0].slice(0,7)) erros.push('Em 2027, os 30 dias devem ficar inteiramente no mesmo mês.');
+        }
+        if (qtd === 2 && inicios.every(Boolean)) {
+          const datas = inicios.slice().sort();
+          const primeiro = datas[0].split('-').map(Number);
+          const segundo = datas[1].split('-').map(Number);
+          if (primeiro[2] >= 16 && segundo[2] <= 15 &&
+              segundo[0] * 12 + segundo[1] === primeiro[0] * 12 + primeiro[1] + 1) {
+            erros.push('Em 2027, não é permitido combinar início na segunda quinzena de um mês com início na primeira quinzena do mês seguinte.');
+          }
+        }
       }
       box.classList.toggle('erro', erros.length > 0);
       box.innerHTML=erros.length?'<strong>'+erros.map(escaparFerias).join('<br>')+'</strong>':'<span>As datas serão revalidadas pelo servidor antes de gravar.</span>';
@@ -8679,7 +8696,7 @@ Banco de dados: Google Sheets.
       const botaoPdf = capacidades.podeGerarPdf ? '<button class="ra-btn secundario" type="button" onclick="gerarPdfRevistaArmario(this)">GERAR PDF</button>' : '';
       const aviso = capacidades.bloqueioVistoria
         ? '<div class="ra-aviso bloqueio">' + escapar(capacidades.bloqueioVistoria) + '</div>'
-        : '<div class="ra-aviso">A primeira vistoria do mês vincula este formulário a um único CMT PEL, Oficial, SubTen ou Sgt responsável.</div>';
+        : '<div class="ra-aviso">A primeira vistoria do mês vincula este formulário a um único Oficial, SubTen ou Sgt responsável.</div>';
 
       const box = document.getElementById('revistaArmarioConteudo');
       if (!box) return;
@@ -16023,3 +16040,4 @@ Banco de dados: Google Sheets.
 </script>
 </body>
 </html>
+
