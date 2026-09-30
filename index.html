@@ -16204,14 +16204,23 @@ Banco de dados: Google Sheets.
           grupos.map(g => '<option value="' + escaparAttr(g) + '"' +
             (g === resposta.grupo ? ' selected' : '') + '>' + escapar(g) + '</option>').join('') + '</select>'
         : '<strong>' + escapar(resposta.grupo) + '</strong>';
-      const corpo = linhas.map(x => '<tr><td>' + escapar(x.posto || '') +
-        '</td><td>' + escapar(x.re || '') + '</td><td>' + escapar(x.nome || '') +
-        '</td><td>' + (x.estado === 'ASSINADO'
+      const corpo = linhas.map(x => {
+        const assinatura = x.estado === 'ASSINADO'
           ? 'ASSINADO DIGITALMENTE<br><small>' + escapar(iccHoraBR(x.assinado_em)) + '</small>'
-          : x.justificativa ? escapar(x.justificativa)
-          : x.proprio && resposta.pode_assinar
-            ? '<button type="button" class="icc-btn" onclick="iccAssinarSupabase(this)">CONFIRMAR CIÊNCIA</button>'
-            : escapar(x.estado || 'PENDENTE')) + '</td></tr>').join('');
+          : x.justificativa ? 'PENDENTE — ' + escapar(x.justificativa)
+          : escapar(x.estado || 'PENDENTE');
+        let botoes = '';
+        if (x.proprio && resposta.pode_assinar && x.estado !== 'ASSINADO')
+          botoes += '<button type="button" class="icc-btn" onclick="iccAssinarSupabase(this)">CONFIRMAR CIÊNCIA</button>';
+        if (resposta.pode_editar && x.estado === 'ASSINADO' && x.assinatura_id)
+          botoes += '<button type="button" class="icc-btn secundario" onclick="iccAnularSupabase(\'' +
+            escaparAttr(x.assinatura_id) + '\')">ANULAR COM JUSTIFICATIVA</button>';
+        if (resposta.pode_editar && x.estado === 'PENDENTE' && x.ciencia_id)
+          botoes += '<button type="button" class="icc-btn secundario" onclick="iccJustificarSupabase(\'' +
+            escaparAttr(x.ciencia_id) + '\')">REGISTRAR MOTIVO</button>';
+        return '<tr><td>' + escapar(x.posto || '') + '</td><td>' + escapar(x.re || '') +
+          '</td><td>' + escapar(x.nome || '') + '</td><td>' + assinatura + botoes + '</td></tr>';
+      }).join('');
       const box = document.getElementById('iccConteudo');
       if (!box) return;
       box.innerHTML =
@@ -16282,6 +16291,38 @@ Banco de dados: Google Sheets.
         botao.disabled = false;
         mostrarToastFt('Assinatura não registrada', erro.message, 'erro');
       }
+    }
+    async function iccAnularSupabase(assinaturaId) {
+      const motivo = window.prompt('Justificativa obrigatória para anular a assinatura (5 a 300 caracteres):');
+      if (motivo === null) return;
+      if (motivo.trim().length < 5 || motivo.trim().length > 300) {
+        mostrarToastFt('Justificativa inválida', 'Informe de 5 a 300 caracteres.', 'erro');
+        return;
+      }
+      try {
+        const r = await rpcPlanoFerias('anular_assinatura_icc_portal', {
+          p_assinatura_id: assinaturaId, p_motivo: motivo.trim()
+        });
+        if (!r || !r.ok) throw new Error('Anulação não confirmada.');
+        await carregarDadosIcc(APP.iccSupabase.grupo, '', '');
+        mostrarToastFt('Assinatura anulada', 'O motivo foi preservado para auditoria.', 'sucesso');
+      } catch (erro) { mostrarToastFt('Anulação não realizada', erro.message, 'erro'); }
+    }
+    async function iccJustificarSupabase(cienciaId) {
+      const motivo = window.prompt('Motivo da pendência desta ciência:');
+      if (motivo === null) return;
+      if (motivo.trim().length < 3 || motivo.trim().length > 300) {
+        mostrarToastFt('Motivo inválido', 'Informe de 3 a 300 caracteres.', 'erro');
+        return;
+      }
+      try {
+        const r = await rpcPlanoFerias('registrar_justificativa_ciencia_icc', {
+          p_ciencia_id: cienciaId, p_justificativa: motivo.trim()
+        });
+        if (!r || !r.ok) throw new Error('Justificativa não confirmada.');
+        await carregarDadosIcc(APP.iccSupabase.grupo, '', '');
+        mostrarToastFt('Motivo registrado', 'A pendência foi atualizada no Supabase.', 'sucesso');
+      } catch (erro) { mostrarToastFt('Motivo não registrado', erro.message, 'erro'); }
     }
     async function iccVisualizarSupabase(botao) {
       const atual = APP.iccSupabase;
