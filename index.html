@@ -6694,63 +6694,6 @@ Banco de dados: Google Sheets.
     }
 
     /* DEJEM ROCAM — inscrições semanais */
-    /* PLANO ANUAL DE FÉRIAS — padrão visual das subpáginas */
-    #appScreen .ferias-state,
-    #appScreen .ferias-panel {
-      margin: 0 0 14px;
-      border: 1px solid rgba(55,66,71,.16);
-      border-radius: 20px;
-      background: #fff;
-      color: #17202a;
-      box-shadow: 0 10px 26px rgba(15,23,42,.06);
-      overflow: hidden;
-    }
-    #appScreen .ferias-state { padding: 16px 18px; }
-    #appScreen .ferias-state h2,
-    #appScreen .ferias-panel h2 { margin: 0 0 5px; color: #17202a; font-size: 16px; line-height: 1.3; }
-    #appScreen .ferias-state p,
-    #appScreen .ferias-panel p { margin: 0 0 10px; color: #64748b; font-size: 11px; line-height: 1.5; }
-    #appScreen .ferias-panel-head { padding: 14px 16px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; }
-    #appScreen .ferias-panel-head p { margin: 3px 0 0; }
-    #appScreen .ferias-panel-body { display: grid; gap: 13px; padding: 15px; }
-    #appScreen .ferias-form-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; align-items: end; }
-    #appScreen .ferias-field { display: grid; gap: 5px; min-width: 0; }
-    #appScreen .ferias-field label { margin: 0; color: #475569; text-align: left; font-size: 9px; font-weight: 950; letter-spacing: .25px; text-transform: uppercase; }
-    #appScreen .ferias-field input,
-    #appScreen .ferias-field select,
-    #appScreen .ferias-field textarea { width: 100%; min-height: 42px; border: 1px solid #cbd5e1; border-radius: 11px; background: #fff; color: #17202a; padding: 9px 10px; text-align: left; font: inherit; font-size: 12px; font-weight: 700; }
-    #appScreen .ferias-field textarea { min-height: 76px; resize: vertical; }
-    #appScreen .ferias-field input:focus,
-    #appScreen .ferias-field select:focus,
-    #appScreen .ferias-field textarea:focus { outline: 3px solid rgba(142,27,27,.13); border-color: #8E1B1B; }
-    #appScreen .ferias-field small { color: #64748b; font-size: 10px; line-height: 1.4; }
-    #appScreen .ferias-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-    #appScreen .ferias-primary { min-height: 42px; border: 1px solid #8E1B1B; border-radius: 11px; background: #8E1B1B; color: #fff; padding: 9px 13px; font: inherit; font-size: 10px; font-weight: 950; cursor: pointer; }
-    #appScreen .ferias-primary:hover { background: #741616; }
-    #appScreen .ferias-primary:disabled { opacity: .6; cursor: wait; }
-    #appScreen .ferias-inline-note { border-left: 4px solid #D4AF37; border-radius: 10px; background: #fffbeb; color: #713f12; padding: 10px 12px; font-size: 10.5px; font-weight: 750; line-height: 1.45; }
-    #appScreen .ferias-validacao { min-height: 20px; margin: 0; color: #64748b; font-size: 10px; line-height: 1.45; }
-    #appScreen .ferias-validacao.erro { color: #b42318; }
-    #appScreen .ferias-rules { margin: 0; padding-left: 18px; color: #475569; font-size: 10.5px; line-height: 1.6; }
-    #appScreen .ferias-agenda-wrap { overflow: auto; border: 1px solid #dbe1e7; border-radius: 14px; }
-    #appScreen .ferias-agenda { width: 100%; min-width: 600px; border-collapse: collapse; font-size: 10px; }
-    #appScreen .ferias-agenda th { position: sticky; top: 0; z-index: 1; background: #374247; color: #fff; padding: 10px 9px; text-align: left; font-size: 9px; font-weight: 950; letter-spacing: .25px; text-transform: uppercase; }
-    #appScreen .ferias-agenda td { border-top: 1px solid #e2e8f0; padding: 9px; color: #17202a; line-height: 1.4; vertical-align: top; }
-    #appScreen .ferias-agenda tbody tr:nth-child(even) td { background: #f8fafc; }
-    #appScreen .ferias-empty { border: 1px dashed #cbd5e1; border-radius: 12px; padding: 13px; color: #64748b; font-size: 10.5px; text-align: center; }
-    #appScreen .feriasJanelaConfig { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; margin: 10px 0; }
-    #appScreen .feriasJanelaConfig .ferias-field:last-of-type { grid-column: 1 / -1; }
-    @media (max-width: 620px) {
-      #appScreen .ferias-state { padding: 13px; }
-      #appScreen .ferias-panel-body { padding: 12px; }
-      #appScreen .ferias-form-grid { grid-template-columns: 1fr; }
-      #appScreen .ferias-actions { display: grid; grid-template-columns: 1fr; }
-      #appScreen .ferias-actions > * { width: 100%; }
-      #appScreen .feriasJanelaConfig { grid-template-columns: 1fr; }
-      #appScreen .feriasJanelaConfig .ferias-field:last-of-type { grid-column: auto; }
-    }
-
-    /* DEJEM ROCAM — inscrições semanais */
     .dejem-status{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;margin:0 0 16px;border:1px solid rgba(55,66,71,.16);border-radius:20px;background:#fff;padding:16px;color:#17202a;box-shadow:0 10px 24px rgba(15,23,42,.06)}
     .dejem-status h2{margin:0 0 4px;font-size:17px}.dejem-status p{margin:0;color:#64748b;font-size:12px;line-height:1.45}.dejem-deadline{border-radius:14px;background:#E8F5E9;color:#1B5E20;padding:10px 13px;text-align:center;font-size:10px;font-weight:900}.dejem-deadline.fechado{background:#8E1B1B;color:#fff}.dejem-deadline strong{display:block;margin-top:2px;font-size:12px}
     .dejem-days{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.dejem-day{border:1px solid rgba(55,66,71,.16);border-radius:20px;background:#fff;color:#17202a;overflow:hidden;box-shadow:0 9px 22px rgba(15,23,42,.05)}.dejem-day-head{display:flex;justify-content:space-between;align-items:center;background:#374247;color:#fff;padding:12px 14px}.dejem-day-head strong{font-size:14px}.dejem-day-head span{font-size:11px;font-weight:850;color:#e2e8f0}.dejem-slots{display:grid;gap:10px;padding:12px}.dejem-slot{border:1px solid #dbe1e7;border-radius:15px;background:#f8fafc;padding:10px}.dejem-slot-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.dejem-slot-head strong{font-size:14px}.dejem-slot-head span{color:#64748b;font-size:9px;font-weight:900}.dejem-vagas{display:grid;gap:6px}.dejem-vaga{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:8px;align-items:center;min-height:42px;border:1px solid #e2e8f0;border-radius:11px;background:#fff;padding:6px 8px}.dejem-vaga.extra{border-color:#F59E0B;background:#FFFBEB}.dejem-vaga-num{display:grid;place-items:center;width:24px;height:24px;border-radius:8px;background:#e9edf1;color:#374247;font-size:9px;font-weight:950}.dejem-vaga.extra .dejem-vaga-num{background:#F59E0B;color:#fff}.dejem-pm{min-width:0}.dejem-pm strong{display:block;overflow:hidden;text-overflow:ellipsis;color:#17202a;font-size:10.5px;line-height:1.25}.dejem-pm small{color:#64748b;font-size:8px;font-weight:800}.dejem-empty{color:#94a3b8;font-size:10px;font-weight:800}.dejem-action{border:1px solid #1B5E20;border-radius:9px;background:#fff;color:#1B5E20;padding:6px 7px;font:inherit;font-size:8px;font-weight:950;cursor:pointer}.dejem-action.cancelar,.dejem-action.excluir{border-color:#C62828;color:#C62828}.dejem-action:disabled{opacity:.55;cursor:wait}
@@ -7735,7 +7678,7 @@ Banco de dados: Google Sheets.
               <div class="page-actions"><button class="btn-page" onclick="abrirRotinasOperacionais()">VOLTAR</button></div>
             </div>
           </div>
-          <div id="feriasAviso" class="ferias-state"><h2>Carregando plano...</h2></div>
+          <div id="feriasAviso" class="modal-card"><h2>Carregando plano...</h2></div>
           <div id="feriasConteudo"></div>
         </div>`;
       carregarPlanoAnualFerias();
@@ -7876,8 +7819,7 @@ Banco de dados: Google Sheets.
       const aviso = document.getElementById('feriasAviso');
       const conteudo = document.getElementById('feriasConteudo');
       if (!aviso || !conteudo) return;
-      aviso.className = 'ferias-state';
-      aviso.innerHTML = '<h2>Carregando ciclo e disponibilidade...</h2><p>Consultando datas, bloqueios e solicitações do ciclo.</p>';
+      aviso.innerHTML = '<h2>Carregando ciclo e disponibilidade...</h2>';
       conteudo.innerHTML = '';
       try {
         const dados = await rpcPlanoFerias('appft_ferias_listar', { p_ano_fruicao: null });
@@ -7887,17 +7829,18 @@ Banco de dados: Google Sheets.
         if (erro && erro.message === 'SUPABASE_PASSWORD_REQUIRED') {
           aviso.innerHTML = '<h2>Senha do portal necessária</h2>' +
             '<p>Informe a senha atual do portal. O módulo aplica localmente a mesma ponte SHA-256 usada na migração antes de autenticar no Supabase; a senha original não é gravada no código.</p>' +
-            '<form class="ferias-panel-body" style="padding:0" onsubmit="entrarSupabaseFeriasComSenha(event)">' +
-              '<div class="ferias-field"><label for="feriasSenhaSupabase">Senha atual do portal</label>' +
+            '<form onsubmit="entrarSupabaseFeriasComSenha(event)">' +
+              '<div class="field"><label for="feriasSenhaSupabase">Senha atual do portal</label>' +
               '<input id="feriasSenhaSupabase" type="password" autocomplete="current-password" required></div>' +
-              '<div class="ferias-actions"><button class="ferias-primary" id="feriasEntrarSupabase" type="submit">ENTRAR</button></div>' +
+              '<button class="btn-primary-soft" id="feriasEntrarSupabase" type="submit">ENTRAR</button>' +
             '</form>' +
             '<p>O acesso usa o e-mail técnico re-XXXXXX@appft.invalid derivado do RE logado. Não compartilhe a senha pelo chat.</p>';
           return;
         }
-        aviso.innerHTML = '<h2>Não foi possível carregar o plano</h2>' +
+        aviso.innerHTML = '<h2>Integração Supabase pendente</h2>' +
           '<p>' + escaparFerias(erro && erro.message || 'Não foi possível carregar o plano.') + '</p>' +
-          '<div class="ferias-actions"><button class="ferias-primary" type="button" onclick="carregarPlanoAnualFerias()">TENTAR NOVAMENTE</button></div>';
+          '<p>A tela e as chamadas às RPCs estão preparadas. O portal precisa receber a URL/chave pública do projeto e uma sessão Supabase autenticada, vinculada ao policial logado, antes de liberar consultas e gravações.</p>' +
+          '<button class="btn-primary-soft" type="button" onclick="carregarPlanoAnualFerias()">TENTAR NOVAMENTE</button>';
       }
     }
 
@@ -7945,60 +7888,56 @@ Banco de dados: Google Sheets.
       const linhasBloqueio = janelas.map(function(j) {
         return '<li>' + escaparFerias(dataFeriasBR(j.inicio)) + ' a ' + escaparFerias(dataFeriasBR(j.fim)) + ' — ' + escaparFerias(j.motivo) + '</li>';
       }).join('');
-      const linhasAgenda = solicitacoes.flatMap(function(s) {
+      const linhasAgenda = solicitacoes.map(function(s) {
         const periodos = Array.isArray(s.periodos) ? s.periodos : [];
-        return periodos.map(function(p) {
-          return '<tr><td><strong>' + escaparFerias(s.graduacao) + ' ' + escaparFerias(s.nome) + '</strong></td>' +
-            '<td>' + escaparFerias(s.modalidade) + '</td>' +
-            '<td>' + escaparFerias(dataFeriasBR(p.inicio)) + ' a ' + escaparFerias(dataFeriasBR(p.fim)) + '<br><small>' + escaparFerias(p.dias) + ' dias corridos</small></td>' +
-            '<td>' + escaparFerias(p.status || s.status) + (p.motivo ? '<br><small>' + escaparFerias(p.motivo) + '</small>' : '') + '</td></tr>';
-        });
-      }).join('');
+        return '<article class="modal-card" style="margin-top:12px"><strong>' + escaparFerias(s.graduacao) + ' ' + escaparFerias(s.nome) +
+          ' • ' + escaparFerias(s.escopo) + '</strong><div>' + escaparFerias(s.modalidade) + ' • ' + escaparFerias(s.status) + '</div>' +
+          periodos.map(function(p) { return '<div>' + escaparFerias(dataFeriasBR(p.inicio)) + ' a ' + escaparFerias(dataFeriasBR(p.fim)) +
+            ' (' + escaparFerias(p.dias) + ' dias) • ' + escaparFerias(p.status) + (p.motivo ? ' — ' + escaparFerias(p.motivo) : '') + '</div>'; }).join('') + '</article>';
+      }).join('') || '<p>Ainda não há solicitações visíveis no seu escopo.</p>';
 
       const minhaPeriodos = minha && Array.isArray(minha.periodos) ? minha.periodos : [];
       const defaultMode = minha && minha.modalidade || '30_DIAS';
       const defaultDates = minhaPeriodos.map(function(p) { return p.inicio || ''; });
       const adminHtml = usuarioPodeConfigurarPlanoFerias() ? `
-        <section class="ferias-panel">
-          <div class="ferias-panel-head"><h2>Configuração administrativa do ciclo ${escaparFerias(ano)}</h2><p>Defina o prazo final e eventuais janelas adicionais de bloqueio.</p></div>
-          <form id="feriasAdminForm" class="ferias-panel-body" onsubmit="configurarCicloPlanoFerias(event)">
-            <div class="ferias-inline-note">O ciclo começa automaticamente em 25/09 do ano anterior. Para 2027, o bloqueio de 01 a 15 de fevereiro é aplicado pelo servidor.</div>
-            <div class="ferias-field"><label for="feriasAdminPrazo">Data limite para preenchimento</label><input id="feriasAdminPrazo" type="date" min="${Number(ano)-1}-09-25" required></div>
-            <div><div class="ferias-field"><label>Janelas adicionais proibidas (opcionais)</label></div><div id="feriasAdminJanelas" data-proximo="0"></div>
-              <div class="ferias-actions"><button class="btn-page" type="button" onclick="adicionarJanelaPlanoFerias()">ADICIONAR JANELA</button></div></div>
-            <div class="ferias-field"><label for="feriasAdminJustificativa">Justificativa/observação</label><textarea id="feriasAdminJustificativa" rows="2"></textarea></div>
-            <div class="ferias-actions"><button class="ferias-primary" type="submit">CONFIGURAR CICLO ${escaparFerias(ano)}</button></div>
+        <section class="modal-card" style="margin-top:14px">
+          <h2>Configuração administrativa do ciclo ${escaparFerias(ano)}</h2>
+          <p>O ciclo começa automaticamente em 25/09 do ano anterior. Defina abaixo o prazo final. Para 2027, o bloqueio de 01 a 15 de fevereiro é aplicado pelo servidor.</p>
+          <form id="feriasAdminForm" onsubmit="configurarCicloPlanoFerias(event)">
+            <label for="feriasAdminPrazo">Data limite para preenchimento</label>
+            <input id="feriasAdminPrazo" type="date" min="${Number(ano)-1}-09-25" required style="display:block;width:100%;max-width:280px;padding:12px;margin:8px 0 14px">
+            <label>Janelas adicionais proibidas (opcionais)</label>
+            <div id="feriasAdminJanelas" data-proximo="0"></div>
+            <button class="btn-page" type="button" onclick="adicionarJanelaPlanoFerias()">ADICIONAR JANELA</button>
+            <label for="feriasAdminJustificativa" style="display:block;margin-top:14px">Justificativa/observação</label>
+            <textarea id="feriasAdminJustificativa" rows="2" style="display:block;width:100%;padding:12px;margin:8px 0 14px"></textarea>
+            <button class="btn-primary-soft" type="submit">CONFIGURAR CICLO ${escaparFerias(ano)}</button>
           </form>
         </section>` : '';
       conteudo.innerHTML = `${adminHtml}
-        <section class="ferias-panel">
-          <div class="ferias-panel-head"><h2>Minha solicitação</h2><p>Escolha os períodos de férias do ciclo vigente.</p></div>
-          <div class="ferias-panel-body">
-          ${aberto ? `<form id="feriasForm" class="ferias-panel-body" style="padding:0" onsubmit="enviarPlanoAnualFerias(event)">
-            <div class="ferias-field"><label for="feriasModalidade">Modalidade de férias</label><select id="feriasModalidade" onchange="atualizarCamposPlanoFerias()">
+        <section class="modal-card" style="margin-top:14px">
+          <h2>Minha solicitação</h2>
+          ${aberto ? `<form id="feriasForm" onsubmit="enviarPlanoAnualFerias(event)">
+            <label for="feriasModalidade">Escolha a modalidade</label>
+            <select id="feriasModalidade" onchange="atualizarCamposPlanoFerias()" style="display:block;width:100%;max-width:420px;padding:12px;margin:8px 0 16px">
               <option value="30_DIAS" ${defaultMode === '30_DIAS' ? 'selected' : ''}>30 dias corridos</option>
               <option value="2X15_DIAS" ${defaultMode === '2X15_DIAS' ? 'selected' : ''}>Dois períodos de 15 dias corridos</option>
-            </select></div>
-            <div id="feriasDatas" class="ferias-form-grid"></div>
-            <div id="feriasValidacao" class="ferias-validacao" role="status"></div>
-            <div class="ferias-actions"><button class="ferias-primary" type="submit">SALVAR SOLICITAÇÃO</button></div>
+            </select>
+            <div id="feriasDatas"></div>
+            <div id="feriasValidacao" role="status" style="margin:12px 0"></div>
+            <button class="btn-primary-soft" type="submit">SALVAR SOLICITAÇÃO</button>
           </form>` : '<p>O formulário está fechado ou ainda não foi aberto pelo comando. As datas e o prazo são definidos no ciclo anual.</p>'}
           ${minha ? '<p>Solicitação atual: <strong>' + escaparFerias(minha.status) + '</strong>. Atualizada em ' + escaparFerias(minha.atualizado_em || '') + '.</p>' : ''}
-          </div>
         </section>
-        <section class="ferias-panel">
-          <div class="ferias-panel-head"><h2>Regras e bloqueios deste ciclo</h2><p>Critérios aplicados ao preenchimento desta previsão.</p></div>
-          <div class="ferias-panel-body"><ul class="ferias-rules"><li>As datas são verificadas no servidor considerando sobreposição de qualquer dia e prioridade hierárquica.</li>
+        <section class="modal-card" style="margin-top:14px">
+          <h2>Regras e bloqueios deste ciclo</h2>
+          <ul><li>As datas são verificadas no servidor considerando sobreposição de qualquer dia e prioridade hierárquica.</li>
           <li>Datas indisponíveis por escolha de superior não podem ser reservadas por subordinado.</li>
           <li>Solicitação de superior pode colocar período incompatível de subordinado em ajuste necessário.</li>
           ${linhasBloqueio || '<li>Nenhuma janela adicional informada.</li>'}</ul>
-          ${indisponiveis.length ? '<div><h3>Períodos indisponíveis para sua prioridade</h3><ul class="ferias-rules">' + indisponiveis.map(function(p) { return '<li>' + escaparFerias(dataFeriasBR(p.inicio)) + ' a ' + escaparFerias(dataFeriasBR(p.fim)) + ' — ' + escaparFerias(p.motivo) + '</li>'; }).join('') + '</ul></div>' : ''}
-          </div>
+          ${indisponiveis.length ? '<h3>Períodos indisponíveis para sua prioridade</h3><ul>' + indisponiveis.map(function(p) { return '<li>' + escaparFerias(dataFeriasBR(p.inicio)) + ' a ' + escaparFerias(dataFeriasBR(p.fim)) + ' — ' + escaparFerias(p.motivo) + '</li>'; }).join('') + '</ul>' : ''}
         </section>
-        <section class="ferias-panel">
-          <div class="ferias-panel-head"><h2>Previsão de Férias do efetivo</h2><p>Períodos informados e situação atual das solicitações.</p></div>
-          <div class="ferias-panel-body">${linhasAgenda ? '<div class="ferias-agenda-wrap"><table class="ferias-agenda"><thead><tr><th>Policial</th><th>Modalidade</th><th>Período previsto</th><th>Situação</th></tr></thead><tbody>' + linhasAgenda + '</tbody></table></div>' : '<div class="ferias-empty">Ainda não há períodos informados.</div>'}</div>
-        </section>`;
+        <section style="margin-top:16px"><h2>Solicitações do seu escopo</h2>${linhasAgenda}</section>`;
       if (aberto) atualizarCamposPlanoFerias(defaultDates);
       if (usuarioPodeConfigurarPlanoFerias()) adicionarJanelaPlanoFerias();
     }
@@ -8016,27 +7955,28 @@ Banco de dados: Google Sheets.
       host.dataset.proximo=String(n);
       const bloco=document.createElement('div');
       bloco.className='feriasJanelaConfig';
-      bloco.innerHTML='<div class="ferias-field"><label>Início da janela '+n+'</label><input type="date" aria-label="Início da janela '+n+'" data-campo="inicio"></div>'+
-        '<div class="ferias-field"><label>Fim da janela '+n+'</label><input type="date" aria-label="Fim da janela '+n+'" data-campo="fim"></div>'+
-        '<div class="ferias-field"><label>Motivo do bloqueio</label><input type="text" aria-label="Motivo da janela '+n+'" data-campo="motivo" placeholder="Ex.: evento ou restrição do comando"></div>'+
+      bloco.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin:10px 0';
+      bloco.innerHTML='<input type="date" aria-label="Início da janela '+n+'" data-campo="inicio" style="padding:10px">'+
+        '<input type="date" aria-label="Fim da janela '+n+'" data-campo="fim" style="padding:10px">'+
+        '<input type="text" aria-label="Motivo da janela '+n+'" data-campo="motivo" placeholder="Motivo do bloqueio" style="padding:10px">'+
         '<button class="btn-page" type="button" onclick="this.parentElement.remove()">REMOVER</button>';
       host.appendChild(bloco);
     }
 
     async function configurarCicloPlanoFerias(event) {
       if(event)event.preventDefault();
-      if(!usuarioPodeConfigurarPlanoFerias()){mostrarToastFt('Configuração não permitida','Seu perfil não está habilitado para configurar o ciclo.','erro');return;}
+      if(!usuarioPodeConfigurarPlanoFerias()){mostrarAlerta('Seu perfil não está habilitado para configurar o ciclo.','erro');return;}
       const dados=window.APPFT_FERIAS_DADOS||{};
       const ano=Number((dados.ciclo&&dados.ciclo.ano_fruição)||new Date().getFullYear()+1);
       const prazo=document.getElementById('feriasAdminPrazo')?.value||'';
-      if(!prazo){mostrarToastFt('Prazo obrigatório','Informe a data limite de preenchimento.','atencao');return;}
+      if(!prazo){mostrarAlerta('Informe a data limite de preenchimento.','erro');return;}
       const janelas=[];
       for(const bloco of document.querySelectorAll('#feriasAdminJanelas .feriasJanelaConfig')){
         const inicio=bloco.querySelector('[data-campo="inicio"]').value;
         const fim=bloco.querySelector('[data-campo="fim"]').value;
         const motivo=bloco.querySelector('[data-campo="motivo"]').value.trim();
         if(!inicio&&!fim&&!motivo)continue;
-        if(!inicio||!fim||!motivo){mostrarToastFt('Janela incompleta','Complete início, fim e motivo de cada janela adicional.','atencao');return;}
+        if(!inicio||!fim||!motivo){mostrarAlerta('Complete início, fim e motivo de cada janela adicional.','erro');return;}
         janelas.push({data_inicio:inicio,data_fim:fim,motivo:motivo});
       }
       const botao=document.querySelector('#feriasAdminForm button[type="submit"]');
@@ -8048,9 +7988,9 @@ Banco de dados: Google Sheets.
           p_janelas:janelas,
           p_justificativa:(document.getElementById('feriasAdminJustificativa')?.value||'').trim()||null
         });
-        mostrarToastFt('Ciclo configurado','O ciclo '+ano+' foi configurado.','sucesso');
+        mostrarAlerta('Ciclo '+ano+' configurado.','ok');
         await carregarPlanoAnualFerias();
-      }catch(erro){mostrarToastFt('Ciclo não configurado',erro&&erro.message||'Não foi possível configurar o ciclo.','erro');}
+      }catch(erro){mostrarAlerta(erro&&erro.message||'Não foi possível configurar o ciclo.','erro');}
       finally{if(botao){botao.disabled=false;botao.textContent='CONFIGURAR CICLO '+ano;}}
     }
 
@@ -8066,9 +8006,10 @@ Banco de dados: Google Sheets.
       });
       host.innerHTML = Array.from({length:qtd}, function(_,i) {
         const n=i+1, dias=qtd===1?30:15;
-        return '<div class="ferias-field"><label for="feriasInicio' + n + '">Início do ' + (qtd===1?'período de 30 dias':'período '+n+' de 15 dias') +
+        return '<label for="feriasInicio' + n + '">Início do ' + (qtd===1?'período de 30 dias':'período '+n+' de 15 dias') +
           '</label><input id="feriasInicio' + n + '" type="date" min="' + ano + '-01-01" max="' + ano + '-12-31" value="' + escaparFerias(atual[i] || '') +
-          '" onchange="validarCamposPlanoFerias()"><small id="feriasFim' + n + '">Selecione o início para calcular o término (' + dias + ' dias corridos).</small></div>';
+          '" onchange="validarCamposPlanoFerias()" style="display:block;width:100%;max-width:280px;padding:12px;margin:8px 0 4px">' +
+          '<small id="feriasFim' + n + '">Selecione o início para calcular o término (' + dias + ' dias corridos).</small>';
       }).join('');
       validarCamposPlanoFerias();
     }
@@ -8097,21 +8038,20 @@ Banco de dados: Google Sheets.
         const f1=dataFimFerias(inicios[0],dias), f2=dataFimFerias(inicios[1],dias);
         if(intervaloSobrepoeFerias(inicios[0],f1,inicios[1],f2))erros.push('Os dois períodos da própria solicitação não podem se sobrepor.');
       }
-      box.classList.toggle('erro', erros.length > 0);
-      box.innerHTML=erros.length?'<strong>'+erros.map(escaparFerias).join('<br>')+'</strong>':'<span>As datas serão revalidadas pelo servidor antes de gravar.</span>';
+      box.innerHTML=erros.length?'<strong style="color:#b42318">'+erros.map(escaparFerias).join('<br>')+'</strong>':'<span>As datas serão revalidadas pelo servidor antes de gravar.</span>';
       return erros.length===0&&inicios.every(Boolean);
     }
 
     async function enviarPlanoAnualFerias(event) {
       if(event)event.preventDefault();
-      if(!validarCamposPlanoFerias()){mostrarToastFt('Datas pendentes','Revise e complete as datas indicadas antes de salvar.','atencao');return;}
+      if(!validarCamposPlanoFerias()){mostrarAlerta('Revise as datas indicadas antes de salvar.','erro');return;}
       const dados=window.APPFT_FERIAS_DADOS||{};
       const modo=document.getElementById('feriasModalidade').value;
       const dias=modo==='2X15_DIAS'?15:30;
       const qtd=modo==='2X15_DIAS'?2:1;
       const periodos=Array.from({length:qtd},function(_,i){return {data_inicio:document.getElementById('feriasInicio'+(i+1)).value};});
       const ciclo=dados.ciclo||{};
-      const confirma=await confirmarToastFt('CONFIRMAR ENVIO DA PREVISÃO','O servidor validará o ciclo, os bloqueios, as sobreposições e a prioridade hierárquica. Se houver conflito incompatível, os períodos de menor prioridade poderão passar para AJUSTE NECESSÁRIO, com notificação.',{confirmar:'ENVIAR SOLICITAÇÃO',cancelar:'REVISAR'});
+      const confirma=window.confirm('O servidor vai validar o ciclo, os bloqueios, as sobreposições e a prioridade hierárquica. Se esta solicitação tiver prioridade superior e houver conflito incompatível, somente os períodos conflitantes de solicitações menos prioritárias poderão passar para AJUSTE NECESSÁRIO, com notificação. Deseja enviar?');
       if(!confirma)return;
       const botao=document.querySelector('#feriasForm button[type="submit"]');
       if(botao){botao.disabled=true;botao.textContent='SALVANDO...';}
@@ -8122,9 +8062,9 @@ Banco de dados: Google Sheets.
           p_periodos:periodos,
           p_chave_idempotencia:crypto.randomUUID()
         });
-        mostrarToastFt('Solicitação registrada','Situação: '+(resposta.status||'ENVIADA')+'.','sucesso');
+        mostrarAlerta('Solicitação registrada: '+(resposta.status||'ENVIADA')+'.','ok');
         await carregarPlanoAnualFerias();
-      }catch(erro){mostrarToastFt('Solicitação não salva',erro&&erro.message||'Falha ao salvar solicitação.','erro');}
+      }catch(erro){mostrarAlerta(erro&&erro.message||'Falha ao salvar solicitação.','erro');}
       finally{if(botao){botao.disabled=false;botao.textContent='SALVAR SOLICITAÇÃO';}}
     }
 
