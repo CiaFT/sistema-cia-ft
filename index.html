@@ -16156,6 +16156,254 @@ Banco de dados: Google Sheets.
     }
 
     abrirHistoricoVtrV125 = abrirHistoricoViaturaV126;
+
+    /* M4.8: ICC nova, leitura/publicação/ciência com JWT Supabase. */
+    const iccCarregarLegado = carregarDadosIcc;
+    function iccConfigSupabase() {
+      const cfg = configPlanoFerias();
+      return {
+        url: String(cfg.url || APPFT_FERIAS_SUPABASE_URL).replace(/\/$/, ''),
+        key: cfg.anonKey || window.APPFT_SUPABASE_ANON_KEY || APPFT_FERIAS_SUPABASE_ANON_KEY
+      };
+    }
+    async function iccChamadaStorage(caminho, opcoes) {
+      const cfg = iccConfigSupabase();
+      const token = await tokenPlanoFerias();
+      if (!token) throw new Error('Sessão Supabase indisponível. Entre novamente no portal.');
+      const segmentos = String(caminho).split('/').map(encodeURIComponent).join('/');
+      const resposta = await fetch(cfg.url + '/storage/v1/object/icc-documentos/' + segmentos, {
+        ...opcoes,
+        headers: {
+          apikey: cfg.key, Authorization: 'Bearer ' + token,
+          ...(opcoes && opcoes.headers || {})
+        }
+      });
+      if (!resposta.ok) {
+        const erro = await resposta.json().catch(() => ({}));
+        throw new Error(erro.message || erro.error || 'Storage ICC: HTTP ' + resposta.status);
+      }
+      return resposta;
+    }
+    function iccDataBR(iso) {
+      const partes = String(iso || '').slice(0, 10).split('-');
+      return partes.length === 3 ? partes.reverse().join('/') : '-';
+    }
+    function iccHoraBR(iso) {
+      if (!iso) return '';
+      return new Intl.DateTimeFormat('pt-BR', {
+        timeZone: 'America/Sao_Paulo', dateStyle: 'short', timeStyle: 'short'
+      }).format(new Date(iso));
+    }
+    function iccRenderSupabase(resposta) {
+      const d = resposta.documento;
+      const linhas = Array.isArray(resposta.linhas) ? resposta.linhas : [];
+      const assinadas = linhas.filter(x => x.estado === 'ASSINADO').length;
+      const grupos = resposta.admin ? ['ADM', '1º PEL', '2º PEL'] : [resposta.grupo];
+      const grupoSelect = resposta.admin
+        ? '<select id="iccGrupoSupabase" onchange="iccMudarGrupoSupabase(this.value)">' +
+          grupos.map(g => '<option value="' + escaparAttr(g) + '"' +
+            (g === resposta.grupo ? ' selected' : '') + '>' + escapar(g) + '</option>').join('') + '</select>'
+        : '<strong>' + escapar(resposta.grupo) + '</strong>';
+      const corpo = linhas.map(x => '<tr><td>' + escapar(x.posto || '') +
+        '</td><td>' + escapar(x.re || '') + '</td><td>' + escapar(x.nome || '') +
+        '</td><td>' + (x.estado === 'ASSINADO'
+          ? 'ASSINADO DIGITALMENTE<br><small>' + escapar(iccHoraBR(x.assinado_em)) + '</small>'
+          : x.justificativa ? escapar(x.justificativa)
+          : x.proprio && resposta.pode_assinar
+            ? '<button type="button" class="icc-btn" onclick="iccAssinarSupabase(this)">CONFIRMAR CIÊNCIA</button>'
+            : escapar(x.estado || 'PENDENTE')) + '</td></tr>').join('');
+      const box = document.getElementById('iccConteudo');
+      if (!box) return;
+      box.innerHTML =
+        '<section class="icc-documento"><div class="icc-section-head"><div><h2>ICC ' +
+        escapar(d.numero_icc) + '/' + escapar(d.ano_icc) +
+        '</h2><p>' + escapar(d.tema || '') + '</p></div></div>' +
+        '<div class="icc-documento-body"><div class="icc-doc-info">' +
+        '<div class="icc-meta-cards"><div class="icc-meta-card"><small>Prazo</small><strong>' +
+        escapar(iccDataBR(d.data_limite)) + ' • 23h59</strong></div>' +
+        '<div class="icc-meta-card"><small>Arquivo</small><strong>' +
+        escapar(d.nome_arquivo || 'ICC.pdf') + '</strong></div></div>' +
+        '<p><button type="button" class="icc-btn" onclick="iccVisualizarSupabase(this)">VISUALIZAR PDF DA ICC</button></p>' +
+        '</div></div></section>' +
+        (resposta.admin ? '<section class="icc-admin-panel"><div class="icc-admin-body">' +
+        '<button type="button" class="icc-btn" onclick="iccAbrirFormularioSupabase()">PUBLICAR PRÓXIMA ICC</button>' +
+        '<div id="iccFormSupabase"></div></div></section>' : '') +
+        '<section id="iccListaPresenca" class="icc-lista"><div class="icc-section-head"><div>' +
+        '<h2>Lista de presença</h2><p>A ciência é individual e vinculada à sessão autenticada.</p>' +
+        '</div></div><div class="icc-lista-toolbar"><div class="icc-campo"><label>Pelotão / grupo</label>' +
+        grupoSelect + '</div><div class="icc-lista-resumo"><span class="icc-badge ok">' +
+        assinadas + ' ASSINADO(S)</span><span class="icc-badge">' + linhas.length +
+        ' POLICIAL(IS)</span>' + (resposta.admin
+          ? '<button type="button" class="icc-btn secundario" onclick="iccImprimirListaSupabase()">IMPRIMIR / SALVAR PDF</button>'
+          : '') + '</div></div><div class="icc-form-oficial">' +
+        '<div class="icc-form-linha">COMANDO DE POLICIAMENTO DE ÁREA METROPOLITANA DOIS</div>' +
+        '<div class="icc-form-linha">GABINETE DE TREINAMENTO</div>' +
+        '<div class="icc-form-linha">46º BPM/M - FORÇA TÁTICA</div>' +
+        '<div class="icc-form-linha icc-form-titulo">ICC ' + escapar(d.numero_icc) +
+        ' DE ' + escapar(d.ano_icc) + ' - ATÉ ' + escapar(iccDataBR(d.data_limite)) + '</div>' +
+        '<div class="icc-form-linha icc-form-tema">TEMA: ' + escapar(d.tema || '') + '</div>' +
+        '<div class="icc-form-linha icc-form-titulo">LISTA DE PRESENÇA - ' +
+        escapar(resposta.grupo) + '</div><div class="icc-table-wrap"><table class="icc-table">' +
+        '<thead><tr><th>POSTO/GRADUAÇÃO</th><th>RE</th><th>NOME</th><th>ASSINATURA</th></tr></thead>' +
+        '<tbody>' + corpo + '</tbody></table></div></div></section>';
+    }
+    carregarDadosIcc = async function(grupo, competencia, idIcc) {
+      /* A RPC determina o escopo efetivo; histórico anterior permanece no legado. */
+      const atual = await rpcPlanoFerias('icc_portal_dados', { p_grupo: grupo || null });
+      if (atual && atual.migrado) {
+        APP.iccSupabase = atual;
+        APP.dadosIcc = { grupo: atual.grupo, documento: { id: atual.documento.id } };
+        iccRenderSupabase(atual);
+        return atual;
+      }
+      APP.iccSupabase = null;
+      return iccCarregarLegado(grupo, competencia, idIcc);
+    };
+    async function iccMudarGrupoSupabase(grupo) {
+      try { await carregarDadosIcc(grupo, '', ''); }
+      catch (erro) { mostrarToastFt('ICC não carregada', erro.message, 'erro'); }
+    }
+    async function iccAssinarSupabase(botao) {
+      const atual = APP.iccSupabase;
+      if (!atual || !atual.pode_assinar) return;
+      const confirmado = await confirmarToastFt('ASSINAR ICC',
+        'Confirma sua ciência individual da ICC ' + atual.documento.numero_icc + '/' +
+        atual.documento.ano_icc + '?', { confirmar: 'ASSINAR DIGITALMENTE', cancelar: 'CANCELAR' });
+      if (!confirmado) return;
+      botao.disabled = true;
+      try {
+        const resultado = await rpcPlanoFerias('assinar_icc_portal', {
+          p_documento_id: atual.documento.id
+        });
+        if (!resultado || !resultado.ok) throw new Error(resultado && resultado.message || 'Assinatura não confirmada.');
+        await carregarDadosIcc(atual.grupo, '', '');
+        mostrarToastFt('Ciência registrada', 'Assinatura confirmada no Supabase.', 'sucesso');
+      } catch (erro) {
+        botao.disabled = false;
+        mostrarToastFt('Assinatura não registrada', erro.message, 'erro');
+      }
+    }
+    async function iccVisualizarSupabase(botao) {
+      const atual = APP.iccSupabase;
+      if (!atual) return;
+      botao.disabled = true;
+      try {
+        const resp = await iccChamadaStorage(atual.documento.caminho_storage, { method: 'GET' });
+        const blob = await resp.blob();
+        if (blob.type && blob.type !== 'application/pdf') throw new Error('O arquivo retornado não é um PDF.');
+        const bytes = new Uint8Array(await blob.arrayBuffer());
+        let binario = '';
+        for (let i = 0; i < bytes.length; i += 32768)
+          binario += String.fromCharCode(...bytes.subarray(i, i + 32768));
+        await exibirPdfEscalaCiaFt(btoa(binario), atual.documento.nome_arquivo,
+          'application/pdf', 'ICC VIA APP FT');
+      } catch (erro) {
+        mostrarToastFt('PDF indisponível', erro.message, 'erro');
+      }
+      finally { botao.disabled = false; }
+    }
+    function iccImprimirListaSupabase() {
+      const box = document.querySelector('#iccListaPresenca .icc-form-oficial');
+      if (!box) return;
+      const nova = window.open('', '_blank');
+      if (!nova) { mostrarToastFt('Janela bloqueada', 'Permita a janela de impressão.', 'erro'); return; }
+      nova.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Lista ICC</title>' +
+        '<style>@page{size:A4 portrait;margin:12mm}body{font:11px Arial;text-align:center}' +
+        '.icc-form-linha{padding:3px}.icc-form-titulo{font-weight:bold}' +
+        'table{width:100%;border-collapse:collapse;text-align:left;margin-top:12px}' +
+        'td,th{border:1px solid #333;padding:5px}button{display:none}</style></head><body>' +
+        box.innerHTML + '</body></html>');
+      nova.document.close();
+      nova.onload = () => nova.print();
+    }
+    function iccAbrirFormularioSupabase() {
+      const alvo = document.getElementById('iccFormSupabase') || document.getElementById('iccUploaderConteudo');
+      if (!alvo) return;
+      alvo.innerHTML = '<form id="iccPublicarSupabase" onsubmit="iccPublicarSupabase(event)">' +
+        '<div class="icc-meta-grid">' +
+        '<div class="icc-campo"><label>Número da ICC</label><input name="numero" type="number" min="1" max="999" required></div>' +
+        '<div class="icc-campo"><label>Ano</label><input name="ano" type="number" min="2020" max="2100" required></div>' +
+        '<div class="icc-campo"><label>Data limite</label><input name="limite" type="date" required></div>' +
+        '<div class="icc-campo"><label>Tema</label><textarea name="tema" maxlength="300" required></textarea></div>' +
+        '<div class="icc-campo"><label>PDF (até 10 MB)</label><input name="pdf" type="file" accept="application/pdf,.pdf" required></div>' +
+        '<button class="icc-btn" type="submit">PUBLICAR ICC NO SUPABASE</button></div>' +
+        '<p id="iccEstadoPublicacao" role="status"></p></form>';
+      alvo.querySelector('[name=ano]').value = new Date().getFullYear();
+    }
+    abrirUploaderIcc = function(botao) {
+      const pai = document.querySelector('.icc-uploader');
+      if (pai) pai.classList.remove('icc-uploader-fechado');
+      iccAbrirFormularioSupabase();
+      if (botao) botao.disabled = true;
+    };
+    async function iccPublicarSupabase(evento) {
+      evento.preventDefault();
+      const form = evento.currentTarget;
+      const botao = form.querySelector('button[type=submit]');
+      const aviso = document.getElementById('iccEstadoPublicacao');
+      const pdf = form.elements.pdf.files[0];
+      if (!pdf || pdf.size < 1 || pdf.size > 10485760 || !/\.pdf$/i.test(pdf.name)) {
+        mostrarToastFt('PDF inválido', 'Escolha um PDF de até 10 MB.', 'erro'); return;
+      }
+      const magic = new Uint8Array(await pdf.slice(0, 5).arrayBuffer());
+      if (String.fromCharCode(...magic) !== '%PDF-') {
+        mostrarToastFt('PDF inválido', 'O arquivo não tem assinatura PDF.', 'erro'); return;
+      }
+      const numero = Number(form.elements.numero.value);
+      const ano = Number(form.elements.ano.value);
+      const limite = form.elements.limite.value;
+      const tema = form.elements.tema.value.trim();
+      const chaveSessao = 'icc-publicacao-pendente:' + ano + ':' + numero;
+      let pendente = JSON.parse(sessionStorage.getItem(chaveSessao) || 'null');
+      if (pendente && (pendente.nome !== pdf.name || pendente.tamanho !== pdf.size ||
+          pendente.limite !== limite || pendente.tema !== tema)) {
+        mostrarToastFt('Publicação pendente',
+          'Há uma publicação pendente para esse número nesta aba. Revise os dados antes de continuar.', 'erro');
+        return;
+      }
+      if (!pendente) {
+        const chave = crypto.randomUUID();
+        pendente = { chave, caminho: 'icc/' + ano + '_' + numero + '_' + chave + '.pdf',
+          nome: pdf.name, tamanho: pdf.size, limite, tema, enviado: false };
+        sessionStorage.setItem(chaveSessao, JSON.stringify(pendente));
+      }
+      botao.disabled = true;
+      try {
+        if (!pendente.enviado) {
+          aviso.textContent = 'Enviando PDF ao bucket privado...';
+          await iccChamadaStorage(pendente.caminho, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/pdf', 'x-upsert': 'false' },
+            body: pdf
+          });
+          pendente.enviado = true;
+          sessionStorage.setItem(chaveSessao, JSON.stringify(pendente));
+        }
+        const parametros = {
+          p_numero_icc: numero, p_ano_icc: ano, p_data_limite: limite, p_tema: tema,
+          p_nome_arquivo: pdf.name, p_caminho_storage: pendente.caminho,
+          p_idempotency_key: pendente.chave
+        };
+        aviso.textContent = 'Validando efetivo e documento...';
+        const conferido = await rpcPlanoFerias('publicar_icc', { ...parametros, p_preflight: true });
+        if (!conferido || !conferido.ok) throw new Error('Pré validação não confirmada.');
+        const confirmado = await confirmarToastFt('PUBLICAR ICC ' + numero + '/' + ano,
+          'O PDF está no Supabase. Serão criadas ' + conferido.ciencias_previstas +
+          ' ciências e a ICC anterior será substituída. Confirmar?',
+          { confirmar: 'PUBLICAR AGORA', cancelar: 'CANCELAR' });
+        if (!confirmado) { aviso.textContent = 'PDF enviado. Publicação aguardando confirmação.'; return; }
+        aviso.textContent = 'Publicando ICC...';
+        const resultado = await rpcPlanoFerias('publicar_icc', { ...parametros, p_preflight: false });
+        if (!resultado || !resultado.ok) throw new Error('Publicação não confirmada pelo servidor.');
+        sessionStorage.removeItem(chaveSessao);
+        mostrarToastFt('ICC publicada', 'ICC ' + numero + '/' + ano + ' disponível no Supabase.', 'sucesso');
+        await carregarDadosIcc('', '', '');
+      } catch (erro) {
+        aviso.textContent = 'Publicação não concluída: ' + erro.message;
+        mostrarToastFt('ICC não publicada', erro.message, 'erro');
+      } finally { if (document.body.contains(botao)) botao.disabled = false; }
+    }
+
 </script>
 </body>
 </html>
