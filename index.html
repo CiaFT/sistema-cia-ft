@@ -14189,7 +14189,7 @@ Banco de dados: Google Sheets.
                 <h3>Dados cadastrais</h3>
                 <div class="consulta-edit-grid">
                   ${consultaSelect('Posto/Graduação', 'postoGrad', '', cfg.postoGrad || [])}
-                  ${consultaInput('RE', 're', '')}
+                  ${consultaInputTipo('RE completo', 're', '', 'text', 'Ex.: 211572-7', 'maxlength="8" autocapitalize="characters" oninput="this.value=this.value.toUpperCase()"')}
                   ${consultaInput('Nome de guerra', 'nomeGuerra', '')}
                   ${consultaInput('Nome completo', 'nomeCompleto', '')}
                   ${consultaSelect('Pelotão', 'pelotao', '', cfg.pelotoes || [])}
@@ -14279,8 +14279,15 @@ Banco de dados: Google Sheets.
         campos[el.getAttribute('data-consulta-campo')] = String(el.value || '').trim();
       });
 
+      campos.re = String(campos.re || '').trim().toUpperCase();
+
       if (!campos.re || !campos.nomeGuerra) {
         mostrarToastFt('Cadastro não enviado', 'Informe pelo menos RE e Nome de Guerra.');
+        return;
+      }
+
+      if (!/^\d{6}-[0-9A-Z]$/.test(campos.re)) {
+        mostrarToastFt('Cadastro não enviado', 'Informe o RE completo no formato 000000-0 ou 000000-A.');
         return;
       }
 
@@ -16448,4 +16455,3 @@ Banco de dados: Google Sheets.
 </script>
 </body>
 </html>
-
