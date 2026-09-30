@@ -8679,7 +8679,7 @@ Banco de dados: Google Sheets.
       const botaoPdf = capacidades.podeGerarPdf ? '<button class="ra-btn secundario" type="button" onclick="gerarPdfRevistaArmario(this)">GERAR PDF</button>' : '';
       const aviso = capacidades.bloqueioVistoria
         ? '<div class="ra-aviso bloqueio">' + escapar(capacidades.bloqueioVistoria) + '</div>'
-        : '<div class="ra-aviso">A primeira vistoria do mês vincula este formulário a um único Oficial, SubTen ou Sgt responsável.</div>';
+        : '<div class="ra-aviso">A primeira vistoria do mês vincula este formulário a um único CMT PEL, Oficial, SubTen ou Sgt responsável.</div>';
 
       const box = document.getElementById('revistaArmarioConteudo');
       if (!box) return;
