@@ -7998,11 +7998,79 @@ Banco de dados: Google Sheets.
           </div>
         </section>
         <section class="ferias-panel">
-          <div class="ferias-panel-head"><h2>Previsão de Férias do efetivo</h2><p>Períodos informados e situação atual das solicitações.</p></div>
+          <div class="ferias-panel-head"><h2>Previsão de Férias do efetivo</h2><p>Períodos informados e situação atual das solicitações.</p>
+            ${usuarioPodeExportarPlanoFerias() ? '<div class="ferias-actions"><button class="btn-page" type="button" onclick="imprimirPlanoAnualFerias(this)" ' + (ciclo && ciclo.status === 'ENCERRADO' ? '' : 'disabled title="Disponível após o encerramento do prazo"') + '>PDF / IMPRIMIR PAF</button></div>' + (ciclo && ciclo.status === 'ENCERRADO' ? '' : '<p style="margin-top:8px">A relação para impressão será liberada ao encerrar o ciclo.</p>') : ''}
+          </div>
           <div class="ferias-panel-body">${linhasAgenda ? '<div class="ferias-agenda-wrap"><table class="ferias-agenda"><thead><tr><th>Policial</th><th>Modalidade</th><th>Período previsto</th><th>Situação</th></tr></thead><tbody>' + linhasAgenda + '</tbody></table></div>' : '<div class="ferias-empty">Ainda não há períodos informados.</div>'}</div>
         </section>`;
       if (aberto) atualizarCamposPlanoFerias(defaultDates);
       if (usuarioPodeConfigurarPlanoFerias()) adicionarJanelaPlanoFerias();
+    }
+
+    function usuarioPodeExportarPlanoFerias() {
+      const u = APP.usuario || {};
+      const perfil = normalizarTexto(u.perfilAcesso || u.roleCode || u.role_code || '').replace(/[\s-]+/g, '_');
+      return ['AUX_ADM_FT','ENC_ADM_FT','CMT_CIA_FT','GESTOR_TEC_FT'].includes(perfil);
+    }
+
+    async function imprimirPlanoAnualFerias(botao) {
+      if (!usuarioPodeExportarPlanoFerias()) {
+        mostrarToastFt('Acesso não permitido','Seu perfil não pode emitir a relação completa do PAF.','erro');
+        return;
+      }
+      const ciclo = (window.APPFT_FERIAS_DADOS || {}).ciclo;
+      if (!ciclo || ciclo.status !== 'ENCERRADO') {
+        mostrarToastFt('Ciclo em andamento','A impressão será liberada após o encerramento do ciclo.','atencao');
+        return;
+      }
+      const janela = window.open('', '_blank');
+      if (!janela) {
+        mostrarToastFt('Impressão bloqueada','Autorize a abertura de uma nova janela para imprimir ou salvar o PDF.','atencao');
+        return;
+      }
+      janela.document.write('<title>PAF</title><p style="font-family:Arial;padding:20px">Preparando relação completa...</p>');
+      janela.document.close();
+      const rotulo = botao && botao.textContent;
+      if (botao) { botao.disabled = true; botao.textContent = 'PREPARANDO...'; }
+      try {
+        const dados = await rpcPlanoFerias('appft_ferias_exportar', { p_ano_fruicao: Number(ciclo.ano_fruição) });
+        const lista = Array.isArray(dados.solicitacoes) ? dados.solicitacoes : [];
+        if (!lista.length) throw new Error('Não há solicitações registradas para emitir neste ciclo.');
+        // A RPC conserva a ordem: graduação DESC, peso de antiguidade DESC.
+        const linhas = lista.map(function(p, i) {
+          const periodos = Array.isArray(p.periodos) ? p.periodos : [];
+          const datas = periodos.map(function(f) {
+            return escaparFerias(dataFeriasBR(f.inicio)) + ' a ' + escaparFerias(dataFeriasBR(f.fim)) +
+              ' (' + escaparFerias(f.dias) + ' dias)' +
+              (f.status === 'AJUSTE_NECESSARIO' ? '<br><strong>PENDENTE DE AJUSTE</strong>' : '');
+          }).join('<br>');
+          const area = {'1_PEL':'1º Pel','2_PEL':'2º Pel','ADM':'ADM'}[p.escopo] || p.escopo;
+          return '<tr><td>' + (i + 1) + '</td><td>' + escaparFerias(p.graduacao) + ' ' + escaparFerias(p.nome) +
+            '</td><td>' + escaparFerias(p.re) + '</td><td>' + escaparFerias(area) + '</td><td>' +
+            (p.modalidade === '2X15_DIAS' ? '2 × 15 dias' : '30 dias') + '</td><td>' + (datas || 'Sem período') +
+            '</td><td>' + escaparFerias(p.status) + '</td></tr>';
+        }).join('');
+        const pendentes = lista.filter(function(p) {
+          return p.status === 'AJUSTE_NECESSARIO' || (p.periodos || []).some(function(f) { return f.status === 'AJUSTE_NECESSARIO'; });
+        }).length;
+        const ano = Number(dados.ciclo.ano_fruição);
+        const html = '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>PAF_' + ano + '_Cia_FT</title>' +
+          '<style>@page{size:A4 portrait;margin:12mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#17202a;margin:0;font-size:9pt}h1{font-size:15pt;margin:0 0 5mm}p{margin:0 0 3mm}table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:8pt}thead{display:table-header-group}tr{break-inside:avoid;page-break-inside:avoid}th,td{border:1px solid #b8c0c8;padding:2mm 1.4mm;vertical-align:top;overflow-wrap:anywhere}th{background:#edf0f2;text-align:left}th:nth-child(1){width:5%}th:nth-child(2){width:25%}th:nth-child(3){width:13%}th:nth-child(4){width:9%}th:nth-child(5){width:12%}th:nth-child(6){width:24%}th:nth-child(7){width:12%}.aviso{font-weight:bold;color:#8e1b1b}.acoes{margin:12px 0;display:flex;gap:8px}button{padding:10px 14px;cursor:pointer}@media print{.acoes{display:none}}@media screen{body{max-width:800px;margin:24px auto;padding:16px}}</style></head><body>' +
+          '<div class="acoes"><button onclick="window.print()">Imprimir / Salvar como PDF</button></div>' +
+          '<h1>Companhia de Força Tática — Plano Anual de Férias ' + ano + '</h1>' +
+          '<p>Relação completa das solicitações, em ordem de graduação e antiguidade.</p><p>Emitido em ' +
+          escaparFerias(new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })) + ' • ' + lista.length + ' policiais com solicitação.</p>' +
+          (pendentes ? '<p class="aviso">Há ' + pendentes + ' solicitações com ajuste necessário. O encerramento do prazo não representa aprovação das pendências.</p>' : '') +
+          '<table><thead><tr><th>Nº</th><th>Policial</th><th>RE</th><th>Área</th><th>Modalidade</th><th>Períodos</th><th>Situação</th></tr></thead><tbody>' + linhas + '</tbody></table></body></html>';
+        janela.document.open(); janela.document.write(html); janela.document.close();
+        janela.focus();
+        mostrarToastFt('Relação pronta','Na nova janela, clique em Imprimir / Salvar como PDF. O formato é A4 retrato.','sucesso');
+      } catch (erro) {
+        janela.close();
+        mostrarToastFt('Relação não emitida',erro && erro.message || 'Não foi possível carregar o PAF completo.','erro');
+      } finally {
+        if (botao) { botao.disabled = false; botao.textContent = rotulo; }
+      }
     }
 
     function usuarioPodeConfigurarPlanoFerias() {
