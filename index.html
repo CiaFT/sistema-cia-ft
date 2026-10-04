@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.3.2
+SISTEMA CIA FT — PORTAL GITHUB V1.3.3
 Arquivo: index.html
 ============================================================
 
-VERSÃO V1.3.2 — ICC E REVISTA DE ARMÁRIO
+VERSÃO V1.3.3 — RESENHAS E DEJEM ROCAM
 - Preserva a última versão encerrada do Controle de Frequência.
 - Preserva a implantação completa de Viaturas V1.2.6.
 - Corrige a leitura e a identificação funcional em Resenhas Enviadas.
@@ -36,7 +36,7 @@ VERSÃO V1.3.2 — ICC E REVISTA DE ARMÁRIO
 - Otimiza sessão, monitor de avisos e retentativas para reduzir carga e tempos de espera.
 
 Front-end externo hospedado no GitHub Pages.
-Backend/API: Apps Script API_FT.gs V1.3.2.
+Backend/API: Apps Script API_FT.gs V1.3.3.
 Banco de dados: Google Sheets.
 
 ============================================================
@@ -45,8 +45,8 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="cia-ft-build" content="FT-V132-20260910-R14.7-DEJEM-DUPLAS">
-  <title>Portal Força Tática • V1.3.2</title>
+  <meta name="cia-ft-build" content="FT-V132-20261004-RESENHA-EDICAO-AUX-DEJEM">
+  <title>Portal Força Tática • V1.3.3</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
 
@@ -6860,7 +6860,7 @@ Banco de dados: Google Sheets.
         <div id="loginAlerta" class="alerta"></div>
 
         <div class="footer">
-          Portal Força Tática • V1.3.2
+          Portal Força Tática • V1.3.3
         </div>
       </main>
 
@@ -6928,6 +6928,8 @@ Banco de dados: Google Sheets.
       iccMiniaturaToken: 0,
       dadosRevistaArmario: null,
       dadosDejemRocam: null,
+      resenhasEnviadasPorId: {},
+      resenhaEdicao: null,
       dejemExpiracaoTimer: null,
       apiBridgePronta: false,
       apiBridgePendentes: {},
@@ -9128,6 +9130,7 @@ Banco de dados: Google Sheets.
           <div><h2>Período de inscrições: ${escapar(d.ciclo.inicioBR)} a ${escapar(d.ciclo.fimBR)}</h2><p>Somente dois policiais no mesmo dia e horário formam uma escala ROCAM. Uma inscrição isolada não será contabilizada nem enviada ao P3.</p></div>
           <div class="dejem-deadline ${cap.prazoEncerrado ? 'fechado' : ''}">${prazoTexto}<strong>Limite: ${escapar(d.ciclo.limiteBR)}</strong></div>
         </section>
+        ${cap.somenteConsulta ? '<div class="resenha-edicao-banner" style="margin:12px 0;padding:12px 14px;border:1px solid #cbd5e1;background:#f1f5f9;border-radius:12px;color:#334155"><strong>AUXILIAR ADMINISTRATIVO — CONSULTA E FECHAMENTO</strong><br>Este perfil pode consultar a escala, fechar após o encerramento das inscrições e emitir os relatórios. Inscrições continuam restritas às modalidades ROCAM e DUQUE.</div>' : ''}
         <div class="dejem-days">${(d.dias || []).map(function(dia) { return montarDiaDejemRocam(dia, d); }).join('')}</div>
         ${montarFechamentoDejemRocam(d)}
         ${montarRelacaoFinalDejemRocam(d.relacaoFechamento)}
@@ -11224,7 +11227,8 @@ Banco de dados: Google Sheets.
     }
 
 
-    function abrirResenhasEscalas() {
+    function abrirResenhasEscalas(modoEdicao) {
+      if (!modoEdicao) APP.resenhaEdicao = null;
       window.scrollTo(0, 0);
 
       document.getElementById('appConteudo').innerHTML = `
@@ -11233,7 +11237,7 @@ Banco de dados: Google Sheets.
             <div class="page-header-row">
               <div>
                 <div class="page-kicker">Serviço operacional</div>
-                <h1>Resenhas de Escalas</h1>
+                <h1>${APP.resenhaEdicao ? 'Editar Resenha Enviada' : 'Resenhas de Escalas'}</h1>
                 <p>Envio das resenhas operacionais toda segunda-feira, até às 11h, com as escalas previstas até a segunda-feira seguinte.</p>
                 <div id="resenhaClock" class="resenha-clock">
                   <span>Data/hora do preenchimento:</span>
@@ -11258,6 +11262,7 @@ Banco de dados: Google Sheets.
       carregarDadosResenha()
         .then(function() {
           renderizarFormularioResenha();
+          if (APP.resenhaEdicao) prepararFormularioEdicaoResenha(APP.resenhaEdicao);
         })
         .catch(function(err) {
           document.getElementById('resenhaConteudo').innerHTML = `
@@ -11300,6 +11305,7 @@ Banco de dados: Google Sheets.
     function renderizarFormularioResenha() {
       const u = APP.usuario || {};
       const dados = APP.dadosResenha || {};
+      const edicao = APP.resenhaEdicao;
 
       document.getElementById('resenhaConteudo').innerHTML = `
         <div class="resenha-grid">
@@ -11325,11 +11331,12 @@ Banco de dados: Google Sheets.
           <div class="resenha-card">
             <div class="resenha-card-header">
               <h2>Informações da Escala</h2>
-              <p>Preencha a data da escala, o pelotão, as equipes FT, as duplas ROCAM, folgas/dispensas, afastamentos e observações.</p>
+              <p>${edicao ? 'Revise a resenha original e ajuste somente os dados necessários. O envio manterá o mesmo registro e voltará para análise.' : 'Preencha a data da escala, o pelotão, as equipes FT, as duplas ROCAM, folgas/dispensas, afastamentos e observações.'}</p>
             </div>
 
             <div class="resenha-card-body">
               <form id="formResenhaEscala">
+                ${edicao ? '<div class="resenha-edicao-banner" style="margin:0 0 14px;padding:12px 14px;border:1px solid #d5a928;background:#fff8df;border-radius:12px;color:#4f4218"><strong>Correção da resenha ' + escapar(edicao.cabecalho && edicao.cabecalho.id || '') + '</strong><br>Última decisão: ' + escapar(edicao.cabecalho && edicao.cabecalho.justificativaAnalise || 'Aguardando aprovação.') + '</div>' : ''}
                 <div class="resenha-form-grid escala-topo">
                   <div class="resenha-form-field">
                     <label>Pelotão</label>
@@ -11412,7 +11419,7 @@ Banco de dados: Google Sheets.
                 <div id="resenhaValidacao" class="resenha-validacao"></div>
 
                 <button class="resenha-submit" type="button" onclick="enviarResenhaEscalaVisual()">
-                  ENVIAR RESENHA DE ESCALA
+                  ${edicao ? 'SALVAR ALTERAÇÕES E REENVIAR' : 'ENVIAR RESENHA DE ESCALA'}
                 </button>
               </form>
 
@@ -11635,10 +11642,14 @@ Banco de dados: Google Sheets.
 
     function instalarEventosResenha() {
       document.querySelectorAll('#formResenhaEscala select').forEach(function(sel) {
+        if (sel.dataset.resenhaEventosInstalados === '1') return;
+        sel.dataset.resenhaEventosInstalados = '1';
         sel.addEventListener('change', atualizarDisponibilidadeResenha);
       });
 
       document.querySelectorAll('#formResenhaEscala [data-tipo="FOLGA_DISPENSA"] select[name$="_tipo"]').forEach(function(sel) {
+        if (sel.dataset.resenhaRegraInstalada === '1') return;
+        sel.dataset.resenhaRegraInstalada = '1';
         atualizarRegrasFolgaDispensa(sel);
       });
     }
@@ -11814,6 +11825,68 @@ Banco de dados: Google Sheets.
     }
 
 
+    function prepararFormularioEdicaoResenha(edicao) {
+      const payload = edicao && edicao.payload;
+      if (!payload || typeof payload !== 'object') {
+        mostrarToastFt('Edição indisponível', 'Não foi possível abrir os dados originais desta resenha.');
+        APP.resenhaEdicao = null;
+        renderizarFormularioResenha();
+        return;
+      }
+      const tipoWraps = {
+        FT: ['equipesFtWrap', equipeFtBox, 6],
+        ROCAM: ['duplasRocamWrap', duplaRocamBox, 6],
+        FOLGA_DISPENSA: ['folgasDispensasWrap', registroFolgaDispensaBox, 40],
+        AFASTAMENTO: ['afastamentosWrap', registroAfastamentoBox, 40]
+      };
+      const itens = Array.isArray(payload.itens) ? payload.itens : [];
+      Object.keys(tipoWraps).forEach(function(tipo) {
+        const relacionados = itens.filter(function(item) { return normalizarTexto(item.tipo || '') === tipo; });
+        const maiorGrupo = relacionados.reduce(function(maior, item) { return Math.max(maior, Number(item.grupo || 1)); }, 1);
+        const spec = tipoWraps[tipo];
+        const wrap = document.getElementById(spec[0]);
+        if (!wrap) return;
+        while (wrap.querySelectorAll('[data-tipo="' + tipo + '"]').length < maiorGrupo && wrap.querySelectorAll('[data-tipo="' + tipo + '"]').length < spec[2]) {
+          wrap.insertAdjacentHTML('beforeend', spec[1](wrap.querySelectorAll('[data-tipo="' + tipo + '"]').length + 1));
+        }
+      });
+
+      const data = document.getElementById('resenhaDataEscala');
+      const pelotao = document.getElementById('resenhaPelotao');
+      const horario = document.getElementById('resenhaHorarioEscala');
+      const observacoes = document.getElementById('resenhaObservacoes');
+      if (data) data.value = payload.dataEscala || '';
+      if (pelotao) pelotao.value = payload.pelotao || '';
+      if (horario) horario.value = payload.horarioEscala || '';
+      if (observacoes) observacoes.value = payload.observacoes || '';
+
+      itens.forEach(function(item) {
+        const tipo = normalizarTexto(item.tipo || '');
+        const grupo = String(item.grupo || '1');
+        const box = document.querySelector('#formResenhaEscala [data-tipo="' + tipo + '"][data-numero="' + grupo + '"]');
+        if (!box) return;
+        const labelAlvo = normalizarTexto(item.campo || '');
+        const controle = Array.from(box.querySelectorAll('input,select,textarea')).find(function(el) {
+          const label = el.closest('.resenha-mini-field, .resenha-form-field')?.querySelector('label');
+          return normalizarTexto(label && label.textContent || el.name || '') === labelAlvo;
+        });
+        if (!controle) return;
+        const valorTecnico = item.valorTecnico != null && item.valorTecnico !== '' ? String(item.valorTecnico) : String(item.valor || '');
+        if (controle.tagName === 'SELECT' && valorTecnico && !Array.from(controle.options).some(function(op) { return op.value === valorTecnico; })) {
+          const opcao = document.createElement('option');
+          opcao.value = valorTecnico;
+          opcao.textContent = String(item.valor || valorTecnico);
+          controle.appendChild(opcao);
+        }
+        controle.value = valorTecnico;
+      });
+      instalarEventosResenha();
+      atualizarDisponibilidadeResenha();
+      const botao = document.querySelector('.resenha-submit');
+      if (botao) botao.textContent = 'SALVAR ALTERAÇÕES E REENVIAR';
+    }
+
+
     function iniciarRelogioResenha() {
       atualizarRelogioResenha();
 
@@ -11877,23 +11950,31 @@ Banco de dados: Google Sheets.
       }
 
       const payload = coletarPayloadResenhaEscala();
+      const edicaoAtual = APP.resenhaEdicao;
       const btn = document.querySelector('.resenha-submit');
       if (btn) {
         btn.disabled = true;
-        btn.textContent = 'ENVIANDO...';
+        btn.textContent = edicaoAtual ? 'SALVANDO ALTERAÇÕES...' : 'ENVIANDO...';
       }
 
-      chamarApi('enviar_resenha_escala', {
+      chamarApi(edicaoAtual ? 'editar_resenha_escala' : 'enviar_resenha_escala', {
           login: APP.credenciais.login,
           senha: APP.credenciais.senha,
+          id: edicaoAtual && edicaoAtual.cabecalho && edicaoAtual.cabecalho.id || '',
           payload: JSON.stringify(payload)
         })
         .then(function(resp) {
           if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao enviar resenha.');
-          mostrarToastFt('Resenha enviada', resp.dados && resp.dados.mensagem ? resp.dados.mensagem : 'Resenha gravada com sucesso.');
-          if (form) form.reset();
-          renderizarFormularioResenha();
-          window.scrollTo(0, 0);
+          if (edicaoAtual) {
+            APP.resenhaEdicao = null;
+            mostrarToastFt('Resenha atualizada', resp.dados && resp.dados.mensagem ? resp.dados.mensagem : 'Resenha reenviada para análise.');
+            abrirConsultaResenhasEnviadas(payload.dataEscala || dataISOHoje());
+          } else {
+            mostrarToastFt('Resenha enviada', resp.dados && resp.dados.mensagem ? resp.dados.mensagem : 'Resenha gravada com sucesso.');
+            if (form) form.reset();
+            renderizarFormularioResenha();
+            window.scrollTo(0, 0);
+          }
         })
         .catch(function(err) {
           mostrarToastFt('Resenha não enviada', err.message || String(err));
@@ -11901,7 +11982,7 @@ Banco de dados: Google Sheets.
         .finally(function() {
           if (btn) {
             btn.disabled = false;
-            btn.textContent = 'ENVIAR RESENHA DE ESCALA';
+            btn.textContent = APP.resenhaEdicao ? 'SALVAR ALTERAÇÕES E REENVIAR' : 'ENVIAR RESENHA DE ESCALA';
           }
         });
     }
@@ -14789,7 +14870,7 @@ Banco de dados: Google Sheets.
           login: APP.credenciais.login,
           senha: APP.credenciais.senha,
           data: dataISO || dataISOHoje()
-        })
+        }, { semCache: true })
         .then(function(resp) {
           if (!resp || !resp.ok) {
             throw new Error(resp && resp.erro ? resp.erro : 'Falha ao carregar resenhas enviadas.');
@@ -14806,6 +14887,11 @@ Banco de dados: Google Sheets.
       const dataISO = dados.dataISO || dataISOHoje();
       const dataBR = dados.dataBR || dataISOParaBR(dataISO);
       const resenhas = Array.isArray(dados.resenhas) ? dados.resenhas : [];
+      APP.resenhasEnviadasPorId = {};
+      resenhas.forEach(function(item) {
+        const cab = item && item.cabecalho || {};
+        if (cab.id) APP.resenhasEnviadasPorId[String(cab.id)] = item;
+      });
       const podeAnalisar = !!dados.podeAnalisar;
       const anterior = dados.diaAnterior || '';
       const proximo = dados.diaProximo || '';
@@ -14839,6 +14925,10 @@ Banco de dados: Google Sheets.
       const titulo = cabecalho.titulo || cabecalho.pelotao || cabecalho.PELOTAO || ('Resenha ' + (idx + 1));
       const subtitulo = cabecalho.responsavel || cabecalho.escalante || cabecalho.enviadoPor || cabecalho.RESPONSAVEL || '';
       const podeExcluir = !!cabecalho.podeExcluir;
+      const podeEditar = !!cabecalho.podeEditar;
+      const avisoEdicao = cabecalho.ultimaEdicaoEm
+        ? '<div class="resenha-edicao-banner" style="margin:0 0 14px;padding:12px 14px;border:1px solid #e1c55b;background:#fff8df;border-radius:12px;color:#4f4218"><strong>RESENHA ALTERADA APÓS O ENVIO</strong><br>Última edição: ' + escapar(cabecalho.ultimaEdicaoEm) + ' — ' + escapar(cabecalho.ultimaEdicaoPorNome || cabecalho.ultimaEdicaoPorRe || 'autor não informado') + ' (' + Number(cabecalho.numeroEdicoes || 0) + ' edição(ões)).</div>'
+        : '';
 
       return `
         <div class="resenha-view-card">
@@ -14849,10 +14939,12 @@ Banco de dados: Google Sheets.
             </div>
             <div class="resenha-view-header-actions">
               <span class="resenha-view-badge">${escapar(cabecalho.status || cabecalho.STATUS || 'ENVIADA')}</span>
+              ${podeEditar ? `<button type="button" class="resenha-view-delete" style="border-color:#006b75;color:#006b75" onclick="editarResenhaEnviadaPainel('${escaparAttr(cabecalho.id || '')}')">EDITAR E REENVIAR</button>` : ''}
               ${podeExcluir ? `<button type="button" class="resenha-view-delete" onclick="excluirResenhaEnviadaPainel('${escaparAttr(cabecalho.id || '')}', this)">EXCLUIR DO PAINEL</button>` : ''}
             </div>
           </div>
           <div class="resenha-view-body">
+            ${avisoEdicao}
             <div class="resenha-view-grid">
               ${renderizarCamposObjetoResenha(cabecalho, ['id','titulo','status','observacoes','podeExcluir']).join('') || '<div class="resenha-view-empty">Cabeçalho sem campos detalhados.</div>'}
             </div>
@@ -14866,6 +14958,26 @@ Banco de dados: Google Sheets.
           </div>
         </div>
       `;
+    }
+
+
+    function editarResenhaEnviadaPainel(id) {
+      const resenha = APP.resenhasEnviadasPorId && APP.resenhasEnviadasPorId[String(id || '')];
+      const cabecalho = resenha && resenha.cabecalho || {};
+      if (!resenha || !cabecalho.podeEditar) {
+        mostrarToastFt('Edição não permitida', 'A resenha não está mais disponível para edição por este perfil. Atualize a tela.');
+        return;
+      }
+      let payload = resenha.payload || cabecalho.payload || null;
+      if (typeof payload === 'string') {
+        try { payload = JSON.parse(payload); } catch (erro) { payload = null; }
+      }
+      if (!payload || typeof payload !== 'object') {
+        mostrarToastFt('Edição indisponível', 'Não foi possível ler os dados originais da resenha.');
+        return;
+      }
+      APP.resenhaEdicao = { cabecalho: cabecalho, payload: payload };
+      abrirResenhasEscalas(true);
     }
 
 
