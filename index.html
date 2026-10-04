@@ -13535,6 +13535,7 @@ Banco de dados: Google Sheets.
               <p>Card do policial — Consulta do Efetivo</p>
             </div>
             <div class="consulta-modal-actions">
+              ${String(alvo.re || '').trim().toUpperCase() === '211572-7' && usuarioPodeInserirConsultaEfetivo() ? '<button id="btnM1Incluir211572" class="consulta-edit-btn" type="button" onclick="sincronizarPolicial211572Supabase()">SINCRONIZAR NO SUPABASE</button>' : ''}
               ${podeEditar ? `<button id="btnEditarConsultaEfetivo" class="consulta-edit-btn" type="button" onclick="alternarEdicaoConsultaEfetivo(true)">EDITAR DADOS</button>` : ''}
               <button class="consulta-modal-close" type="button" onclick="fecharCardConsultaEfetivo()">FECHAR</button>
             </div>
@@ -13559,6 +13560,228 @@ Banco de dados: Google Sheets.
     function usuarioPodeEditarConsultaEfetivo() {
       const permissao = obterPermissaoCliente('CONSULTA_EFETIVO') || {};
       return !!(permissao.acessoTotal || permissao.editar);
+    }
+
+    function chaveCatalogoInclusaoM1(valor, tipo) {
+      let s = normalizarTexto(valor || '').toUpperCase()
+        .replace(/[ºª]/g, ' ')
+        .replace(/[._\/-]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      if (tipo === 'posto') {
+        s = s.replace(/\bPOLICIA MILITAR\b/g, ' ')
+          .replace(/\bPM\b/g, ' ')
+          .replace(/\bTENENTE\b/g, 'TEN')
+          .replace(/\bSARGENTO\b/g, 'SGT')
+          .replace(/\bCABO\b/g, 'CB')
+          .replace(/\bSOLDADO\b/g, 'SD');
+      } else if (tipo === 'pelotao') {
+        s = s.replace(/\bPELOTAO\b|\bPEL\b/g, ' ');
+      } else if (tipo === 'funcao') {
+        s = s.replace(/\bSUBCMT\b/g, 'SUBCOMANDANTE')
+          .replace(/\bCMT\b/g, 'COMANDANTE')
+          .replace(/\bPEL\b/g, 'PELOTAO')
+          .replace(/\b(DE|DO|DA|DOS|DAS)\b/g, ' ');
+      } else if (tipo === 'modalidade') {
+        s = s.replace(/\bESTAGIARIO\b/g, 'ESTAGIARIO');
+      }
+      return s.replace(/\s+/g, ' ').trim();
+    }
+
+    function codigoCatalogoInclusaoM1(lista, valor, tipo) {
+      const itens = Array.isArray(lista) ? lista : [];
+      const desejado = chaveCatalogoInclusaoM1(valor, tipo);
+      const encontrado = itens.find(function(item) {
+        return item && [item.code, item.name].some(function(campo) {
+          return chaveCatalogoInclusaoM1(campo, tipo) === desejado;
+        });
+      });
+      return encontrado ? String(encontrado.code || '') : '';
+    }
+
+    function dataIsoInclusaoM1(valor) {
+      const s = String(valor || '').trim();
+      let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (m) return m[1] + '-' + m[2] + '-' + m[3];
+      m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      return m ? m[3] + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0') : '';
+    }
+
+    function valorMaterialInclusaoM1(pm, grupo, campo) {
+      const lista = pm && pm.materialBelico && pm.materialBelico[grupo];
+      if (!Array.isArray(lista)) return '';
+      const item = lista.find(function(x) { return x && x.campo === campo; });
+      return item && item.valor != null ? String(item.valor).trim() : '';
+    }
+
+    function montarPayloadInclusaoM1(pm, catalogos) {
+      const posto = codigoCatalogoInclusaoM1(catalogos.ranks, pm.postoGrad, 'posto');
+      const pelotao = codigoCatalogoInclusaoM1(catalogos.platoons, pm.pelotao, 'pelotao');
+      const modalidade = codigoCatalogoInclusaoM1(catalogos.modalities, pm.modalidade, 'modalidade');
+      const funcao = codigoCatalogoInclusaoM1(catalogos.duty_functions, pm.funcao, 'funcao');
+      const perfil = String(pm.perfilAcesso || 'EFETIVO').trim().toUpperCase();
+      const dataEntrada = dataIsoInclusaoM1(pm.dataEntrada || pm.entradaCia);
+      const numero = function(valor) {
+        const s = String(valor == null ? '' : valor).trim();
+        return s && /^-?\d+(?:\.\d+)?$/.test(s) ? s : '';
+      };
+      const faltantes = [];
+      if (!posto) faltantes.push('posto/graduação');
+      if (!pelotao) faltantes.push('pelotão');
+      if (!modalidade) faltantes.push('modalidade');
+      if (!funcao) faltantes.push('função');
+      if (!dataEntrada) faltantes.push('data de entrada');
+      if (!Array.isArray(catalogos.roles) || !catalogos.roles.some(function(r) { return r && String(r.code || '').toUpperCase() === perfil; })) faltantes.push('perfil ' + perfil);
+      if (faltantes.length) throw new Error('O Supabase não reconheceu: ' + faltantes.join(', ') + '. Nenhum cadastro foi gravado.');
+
+      return {
+        re: String(pm.re || '').trim().toUpperCase(),
+        full_name: String(pm.nomeCompleto || '').trim(),
+        war_name: String(pm.nomeGuerra || '').trim(),
+        rank_code: posto,
+        platoon_code: pelotao,
+        modality_code: modalidade,
+        duty_function_code: funcao,
+        status_code: String(pm.status || 'APTO').trim().toUpperCase(),
+        entry_date: dataEntrada,
+        role_code: perfil,
+        almanaque: numero(pm.almanaque),
+        seniority_weight: numero(pm.pesoAntiguidade),
+        locker_number: String(pm.numeroArmario || '').trim(),
+        personal: {
+          cpf: String(pm.cpf || '').trim(),
+          rg: String(pm.rg || '').trim(),
+          birth_date: dataIsoInclusaoM1(pm.dataNascimento),
+          phone: String(pm.telefone || '').trim(),
+          email: String(pm.email || '').trim(),
+          address: String(pm.endereco || '').trim()
+        },
+        administrative: {
+          vacation_30_days: dataIsoInclusaoM1(pm.ferias30),
+          vacation_15_days_1: dataIsoInclusaoM1(pm.ferias15a),
+          vacation_15_days_2: dataIsoInclusaoM1(pm.ferias15b),
+          eap: dataIsoInclusaoM1(pm.eap)
+        },
+        weapon: {
+          serial_number: valorMaterialInclusaoM1(pm, 'arma', 'armaSerie'),
+          asset_number: valorMaterialInclusaoM1(pm, 'arma', 'armaPatrimonio'),
+          model: valorMaterialInclusaoM1(pm, 'arma', 'armaModelo'),
+          ammunition_lot: valorMaterialInclusaoM1(pm, 'arma', 'armaMunicaoLote'),
+          lcm_number: valorMaterialInclusaoM1(pm, 'arma', 'armaLcm')
+        },
+        vest: {
+          serial_number: valorMaterialInclusaoM1(pm, 'colete', 'coleteSerie'),
+          asset_number: valorMaterialInclusaoM1(pm, 'colete', 'coletePatrimonio'),
+          plate_expiration: dataIsoInclusaoM1(valorMaterialInclusaoM1(pm, 'colete', 'coleteValidadePlaca')),
+          lcm_expiration: dataIsoInclusaoM1(valorMaterialInclusaoM1(pm, 'colete', 'coleteValidadeLcm')),
+          size: valorMaterialInclusaoM1(pm, 'colete', 'coleteTamanho'),
+          vest_type: valorMaterialInclusaoM1(pm, 'colete', 'coleteTipo'),
+          lcm_number: valorMaterialInclusaoM1(pm, 'colete', 'coleteLcm')
+        },
+        handcuff: {
+          serial_number: valorMaterialInclusaoM1(pm, 'algema', 'algemaSerie'),
+          asset_number: valorMaterialInclusaoM1(pm, 'algema', 'algemaPatrimonio'),
+          key_count: valorMaterialInclusaoM1(pm, 'algema', 'algemaQtdeChaves'),
+          lcm_number: valorMaterialInclusaoM1(pm, 'algema', 'algemaLcm')
+        }
+      };
+    }
+
+    async function sincronizarPolicial211572Supabase() {
+      const btn = document.getElementById('btnM1Incluir211572');
+      if (!usuarioPodeInserirConsultaEfetivo()) {
+        mostrarToastFt('Acesso negado', 'Seu perfil não possui permissão para incluir efetivo no Supabase.');
+        return;
+      }
+      const lista = APP.dadosConsultaEfetivo && APP.dadosConsultaEfetivo.efetivo || [];
+      const pm = lista.find(function(item) { return String(item.re || '').trim().toUpperCase() === '211572-7'; });
+      if (!pm) {
+        mostrarToastFt('Cadastro não localizado', 'Atualize a Consulta do Efetivo e tente novamente.');
+        return;
+      }
+      if (!confirm('Sincronizar 211572-7 com o Supabase usando os dados funcionais e pessoais já cadastrados? A senha inicial será criada pelo fluxo M1. A foto será migrada em etapa própria.')) return;
+      if (btn) { btn.disabled = true; btn.textContent = 'VALIDANDO...'; }
+
+      let requestId = '';
+      try {
+        const leitura = await rpcPlanoFerias('gestao_efetivo_leitura', {});
+        if (!leitura || !leitura.ok || !leitura.capabilities || !leitura.capabilities.can_insert) {
+          throw new Error('A sessão atual não tem permissão de inclusão no Supabase.');
+        }
+        const jaExiste = (leitura.items || []).some(function(item) {
+          const re = String(item.re || '').trim().toUpperCase();
+          return re === '211572-7' || String(item.re_base || '') === '211572';
+        });
+        if (jaExiste) {
+          mostrarToastFt('Já sincronizado', 'O RE 211572-7 já aparece no efetivo do Supabase.');
+          return;
+        }
+        const payload = montarPayloadInclusaoM1(pm, leitura.catalogs || {});
+        const validacao = await rpcPlanoFerias('validar_inclusao_novo_policial_m1', { p_payload: payload });
+        if (!validacao || validacao.ok !== true) {
+          throw new Error(validacao && (validacao.message || validacao.error_code) || 'A validação M1 recusou os dados.');
+        }
+        if (!confirm('Pré-validação aprovada para ' + payload.re + ' — ' + payload.full_name + '. Confirmar a inclusão definitiva no Supabase?')) return;
+
+        requestId = crypto.randomUUID();
+        if (btn) btn.textContent = 'INCLUINDO...';
+        const cfg = configPlanoFerias();
+        const url = String(cfg.url || APPFT_FERIAS_SUPABASE_URL).replace(/\/$/, '');
+        const anonKey = cfg.anonKey || window.APPFT_SUPABASE_ANON_KEY || APPFT_FERIAS_SUPABASE_ANON_KEY;
+        const token = await tokenPlanoFerias();
+        const controller = new AbortController();
+        const timer = setTimeout(function() { controller.abort(); }, 45000);
+        let resposta;
+        let corpo;
+        try {
+          resposta = await fetch(url + '/functions/v1/app-ft-incluir-policial-m1', {
+            method: 'POST',
+            headers: { 'apikey': anonKey, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ request_id: requestId, payload: payload }),
+            signal: controller.signal
+          });
+          corpo = await resposta.json().catch(function() { return null; });
+        } finally { clearTimeout(timer); }
+
+        if (!resposta.ok || !corpo || corpo.ok !== true) {
+          const code = corpo && corpo.error_code || '';
+          if (code === 'CONFIRMATION_UNKNOWN') throw new Error('CONFIRMAÇÃO INCERTA. Não clique novamente. Protocolo: ' + requestId + '. Primeiro será necessário conferir o estado no Supabase.');
+          if (resposta.status >= 500 || controller.signal.aborted) throw new Error('RESPOSTA INCERTA (HTTP ' + resposta.status + '). Não clique novamente. Protocolo: ' + requestId + '. Primeiro será necessário conferir o estado no Supabase.');
+          throw new Error(corpo && (corpo.message || corpo.error_code) || 'A função M1 recusou a inclusão (HTTP ' + resposta.status + '). Protocolo: ' + requestId);
+        }
+
+        let confirmadoNaLeitura = false;
+        try {
+          const depois = await rpcPlanoFerias('gestao_efetivo_leitura', {});
+          confirmadoNaLeitura = (depois.items || []).some(function(item) {
+            return String(item.re || '').trim().toUpperCase() === '211572-7' || String(item.re_base || '') === '211572';
+          });
+        } catch (ignorado) {}
+        if (!confirmadoNaLeitura) {
+          throw new Error('A função M1 respondeu sucesso, mas a leitura de conferência não localizou o policial. Não repita a inclusão. Protocolo: ' + requestId);
+        }
+        mostrarToastFt('Policial sincronizado', '211572-7 incluído e conferido no Supabase. A foto seguirá pela etapa de Storage.');
+      } catch (erro) {
+        const mensagem = erro && erro.message || String(erro);
+        if (requestId) {
+          let localizado = false;
+          try {
+            const conferencia = await rpcPlanoFerias('gestao_efetivo_leitura', {});
+            localizado = (conferencia.items || []).some(function(item) {
+              return String(item.re || '').trim().toUpperCase() === '211572-7' || String(item.re_base || '') === '211572';
+            });
+          } catch (ignorado) {}
+          if (localizado) {
+            mostrarToastFt('Policial sincronizado', '211572-7 foi localizado no Supabase após a conferência. A foto seguirá pela etapa de Storage.');
+          } else {
+            mostrarToastFt('Resultado não confirmado', mensagem + ' Não clique novamente. Protocolo para conferência: ' + requestId);
+          }
+        } else {
+          mostrarToastFt('Sincronização interrompida', mensagem);
+        }
+      } finally {
+        if (btn && document.body.contains(btn)) { btn.disabled = false; btn.textContent = 'SINCRONIZAR NO SUPABASE'; }
+      }
     }
 
     function montarLeituraConsultaEfetivo(pm) {
