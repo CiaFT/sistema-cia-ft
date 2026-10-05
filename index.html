@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.3.5 — EAP
+SISTEMA CIA FT — PORTAL GITHUB V1.3.6 — EAP
 Arquivo: index.html
 ============================================================
 
-VERSÃO V1.3.5 — EAP
+VERSÃO V1.3.6 — EAP
 - Preserva a última versão encerrada do Controle de Frequência.
 - Preserva a implantação completa de Viaturas V1.2.6.
 - Corrige a leitura e a identificação funcional em Resenhas Enviadas.
@@ -36,7 +36,7 @@ VERSÃO V1.3.5 — EAP
 - Otimiza sessão, monitor de avisos e retentativas para reduzir carga e tempos de espera.
 
 Front-end externo hospedado no GitHub Pages.
-Backend/API: Apps Script API_FT.gs V1.3.5.
+Backend/API: Apps Script API_FT.gs V1.3.6.
 Banco de dados: Google Sheets.
 
 ============================================================
@@ -45,8 +45,8 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="cia-ft-build" content="FT-V135-20261005-EAP">
-  <title>Portal Força Tática • V1.3.5</title>
+  <meta name="cia-ft-build" content="FT-V136-20261005-EAP-VISUAL-FILTROS">
+  <title>Portal Força Tática • V1.3.6</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
 
@@ -6829,7 +6829,16 @@ Banco de dados: Google Sheets.
       #loginScreen .hexis-brand-login{margin-top:12px}
       #appScreen .hexis-footer{margin-top:22px;padding-top:17px}
     }
-    .eap-barra{display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin:12px 0 18px}.eap-barra label,.eap-form-grid label{display:flex;flex-direction:column;gap:5px;color:#cbd5e1;font-size:.85rem}.eap-barra select,.eap-barra input,.eap-form-grid input,.eap-form-grid select,.eap-form-grid textarea{background:#111827;color:#fff;border:1px solid #475569;border-radius:9px;padding:10px;min-height:40px}.eap-tabela-wrap{overflow:auto;border:1px solid #374151;border-radius:14px;background:#0b0b0b}.eap-tabela{width:100%;border-collapse:collapse;min-width:900px}.eap-tabela th,.eap-tabela td{padding:10px 12px;border-bottom:1px solid #293241;text-align:left;vertical-align:top}.eap-tabela th{background:#151515;color:#ffe600;font-size:.78rem}.eap-tabela td{font-size:.88rem}.eap-status{display:inline-block;padding:4px 8px;border-radius:20px;background:#1f2937;color:#e5e7eb;font-size:.75rem;font-weight:700}.eap-modal-backdrop{position:fixed;inset:0;z-index:10020;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:14px}.eap-modal{width:min(920px,100%);max-height:92vh;overflow:auto;background:#111827;border:1px solid #475569;border-radius:16px;padding:18px;color:#fff;box-shadow:0 20px 70px #000}.eap-modal h2{margin:0 0 6px;color:#ffe600}.eap-form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}.eap-form-grid .span2{grid-column:span 2}.eap-form-grid .span3{grid-column:1/-1}.eap-modal-actions{display:flex;justify-content:flex-end;gap:9px;flex-wrap:wrap}.eap-solicitacao{border:1px solid #475569;border-radius:12px;padding:12px;margin:9px 0;background:#111827}.eap-nota{color:#cbd5e1;font-size:.86rem}.eap-reprovado{color:#fecaca;background:#451a1a;padding:9px 12px;border-radius:10px;margin:10px 0}@media(max-width:700px){.eap-form-grid{grid-template-columns:1fr}.eap-form-grid .span2,.eap-form-grid .span3{grid-column:auto}.eap-modal{padding:14px}}
+    .eap-barra,.eap-filtros{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin:12px 0 16px;border:1px solid rgba(55,66,71,.14);border-radius:18px;background:linear-gradient(180deg,#fff,#f8fafc);padding:14px 16px;box-shadow:0 8px 22px rgba(15,23,42,.045)}
+    .eap-barra label,.eap-filtros label,.eap-form-grid label{display:flex;flex-direction:column;gap:6px;color:#475569;font-size:10px;font-weight:900;letter-spacing:.25px}
+    #appScreen .eap-barra select,#appScreen .eap-barra input,#appScreen .eap-filtros select,#appScreen .eap-filtros input,#appScreen .eap-form-grid input,#appScreen .eap-form-grid select,#appScreen .eap-form-grid textarea{width:100%;min-width:180px;min-height:46px;border:1px solid rgba(55,66,71,.18);border-radius:12px;background:#fff;color:#17202a;padding:11px 13px;font:inherit;font-size:12px;font-weight:750;box-shadow:0 5px 14px rgba(15,23,42,.045)}
+    #appScreen .eap-form-grid textarea{min-height:90px;resize:vertical}
+    #appScreen .eap-barra select:focus,#appScreen .eap-barra input:focus,#appScreen .eap-filtros select:focus,#appScreen .eap-filtros input:focus,#appScreen .eap-form-grid input:focus,#appScreen .eap-form-grid select:focus,#appScreen .eap-form-grid textarea:focus{outline:3px solid rgba(142,27,27,.12);border-color:#8e1b1b}
+    .eap-filtros{margin-top:0}.eap-filtros label:first-child{min-width:210px}.eap-filtros label:nth-child(2){min-width:180px;flex:1}
+    .eap-tabela-wrap{overflow:auto;border:1px solid rgba(55,66,71,.15);border-radius:18px;background:#fff;box-shadow:0 10px 24px rgba(15,23,42,.05)}.eap-tabela{width:100%;border-collapse:collapse;min-width:1120px}.eap-tabela th,.eap-tabela td{padding:11px 12px;border-bottom:1px solid #e8edf1;text-align:left;vertical-align:top}.eap-tabela th{background:linear-gradient(180deg,#f8fafc,#eef2f6);color:#374247;font-size:10px;font-weight:950;letter-spacing:.25px}.eap-tabela td{background:#fff;color:#17202a;font-size:12px}.eap-tabela tbody tr:nth-child(even) td{background:#fbfcfd}.eap-tabela tbody tr:hover td{background:#fff8c7}
+    .eap-status{display:inline-block;padding:5px 9px;border:1px solid rgba(55,66,71,.12);border-radius:20px;background:#f1f4f6;color:#374247;font-size:10px;font-weight:850}
+    .eap-modal-backdrop{position:fixed;inset:0;z-index:10020;background:rgba(15,23,42,.58);display:flex;align-items:center;justify-content:center;padding:14px}.eap-modal{width:min(920px,100%);max-height:92vh;overflow:auto;background:linear-gradient(180deg,#fff,#f8fafc);border:1px solid rgba(55,66,71,.18);border-radius:18px;padding:20px;color:#17202a;box-shadow:0 20px 70px rgba(15,23,42,.25)}.eap-modal h2{margin:0 0 6px;color:#374247}
+    .eap-form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}.eap-form-grid .span2{grid-column:span 2}.eap-form-grid .span3{grid-column:1/-1}.eap-modal-actions{display:flex;justify-content:flex-end;gap:9px;flex-wrap:wrap}.eap-solicitacao{border:1px solid rgba(55,66,71,.14);border-radius:14px;padding:13px;margin:9px 0;background:linear-gradient(180deg,#fff,#f8fafc);color:#17202a}.eap-nota{color:#64748b;font-size:11px}.eap-reprovado{color:#991b1b;background:#fff1f2;border:1px solid rgba(185,28,28,.18);padding:10px 12px;border-radius:10px;margin:10px 0}@media(max-width:700px){.eap-form-grid{grid-template-columns:1fr}.eap-form-grid .span2,.eap-form-grid .span3{grid-column:auto}.eap-modal{padding:14px}.eap-barra,.eap-filtros{align-items:stretch}.eap-barra>* , .eap-filtros>*{width:100%}}
 </style>
 </head>
 
@@ -6861,7 +6870,7 @@ Banco de dados: Google Sheets.
         <div id="loginAlerta" class="alerta"></div>
 
         <div class="footer">
-          Portal Força Tática • V1.3.5
+          Portal Força Tática • V1.3.6
         </div>
       </main>
 
@@ -7771,17 +7780,33 @@ Banco de dados: Google Sheets.
     function resumoAnoAnteriorEap(r){const a=r&&r.registroAnterior;if(!a)return 'Sem registro de '+(APP.dadosEap&&APP.dadosEap.anoAnterior||'ano anterior');const turma=a.statusEap==='DISPENSADO'?'Dispensa '+(a.cursoDispensa||'curso'):a.turma?(a.turma+' — '+String(a.mes||'').padStart(2,'0')+'/'+a.ano):rotuloStatusEap(a.statusEap);return 'EAP: '+turma+' · TAF: '+rotuloResultadoEap(a.statusTaf)+(a.pontosTaf?' ('+a.pontosTaf+' pts)':'')+(a.conceitoTaf?' / '+a.conceitoTaf:'')+' · TAT: '+rotuloResultadoEap(a.statusTat);}
 
     function montarConteudoEap(dados){
-      const lista=dados.policiais||[];
+      const listaBase=dados.policiais||[];
+      const ehLista=!!(dados.podeAdministrar||dados.podeVerCompanhia||dados.podeVerPelotao);
+      const pelAnterior=document.getElementById('eapFiltroPelotao');
+      const reAnterior=document.getElementById('eapFiltroRe');
+      const pelSelecionado=pelAnterior?pelAnterior.value:'';
+      const reDigitado=reAnterior?reAnterior.value:'';
+      const reTermo=normalizarLoginConsultaCliente(reDigitado);
+      const pels=[...new Set(listaBase.map(r=>String(r.pelotao||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR',{sensitivity:'base'}));
+      const lista=listaBase.filter(function(r){
+        if(pelSelecionado&&normalizarTexto(r.pelotao)!==normalizarTexto(pelSelecionado))return false;
+        if(reTermo&&!normalizarLoginConsultaCliente(r.re).includes(reTermo))return false;
+        return true;
+      }).sort(ordenarConsultaEfetivoHierarquiaReal);
+      const filtros=ehLista?'<div class="eap-filtros"><label>FILTRAR POR PELOTÃO<select id="eapFiltroPelotao" class="select-ft" onchange="filtrarEap()"><option value="">Todos os Pelotões</option>'+pels.map(p=>'<option value="'+escaparAttr(p)+'" '+(normalizarTexto(p)===normalizarTexto(pelSelecionado)?'selected':'')+'>'+escapar(p)+'</option>').join('')+'</select></label><label>FILTRAR POR RE<input id="eapFiltroRe" type="search" inputmode="numeric" autocomplete="off" placeholder="Digite o RE" value="'+escaparAttr(reDigitado)+'" oninput="filtrarEap()"></label><button class="btn-page" onclick="limparFiltrosEap()">LIMPAR FILTROS</button></div>':'';
       const linhas=lista.map(function(r){
         const atrib=r.statusEap==='DISPENSADO'?(r.cursoDispensa+' ('+(r.cursoDispensaAno||r.ano)+')'):(r.turma?escapar(r.turma)+' — '+String(r.mes||'').padStart(2,'0')+'/'+r.ano:'—');
         const acao=dados.podeAdministrar?'<button class="btn-primary-soft" onclick="abrirEditorEap(\''+escaparAttr(r.re)+'\')">EDITAR</button>':(dados.podeSolicitar?'<button class="btn-page" onclick="abrirSolicitacaoEap(\''+escaparAttr(r.re)+'\')">SOLICITAR MUDANÇA</button>':'—');
         return '<tr><td><strong>'+escapar(r.postoGrad||'')+' '+escapar(r.nomeGuerra||r.nomeCompleto||'')+'</strong><br><small>RE '+escapar(r.re||'')+'</small></td><td>'+escapar(r.pelotao||'')+'</td><td>'+atrib+'</td><td><span class="eap-status">'+escapar(rotuloStatusEap(r.statusEap))+'</span></td><td>'+escapar(rotuloResultadoEap(r.statusTaf))+(r.statusTaf==='APROVADO'&&r.pontosTaf?' — '+escapar(r.pontosTaf)+' pts':'')+(r.conceitoTaf?' / '+escapar(r.conceitoTaf):'')+'</td><td><span class="eap-status">'+escapar(rotuloResultadoEap(r.statusTat))+'</span></td><td>'+escapar(resumoAnoAnteriorEap(r))+'</td><td>'+acao+'</td></tr>';
       }).join('');
       const pend=(dados.solicitacoes||[]).map(function(s){const controles=s.podeDecidir?'<div class="eap-modal-actions"><button class="btn-primary-soft" onclick="decidirSolicitacaoEap(\''+escaparAttr(s.id)+'\',\'APROVAR\')">APROVAR</button><button class="btn-page" onclick="decidirSolicitacaoEap(\''+escaparAttr(s.id)+'\',\'RECUSAR\')">RECUSAR</button></div>':'';return '<div class="eap-solicitacao"><strong>'+escapar(s.nomeAlvo)+' — RE '+escapar(s.reAlvo)+' ('+escapar(s.pelotao)+')</strong><p>Status: <b>'+escapar(s.status)+'</b> · Solicitado: '+escapar(s.solicitadoEm||'')+'</p><p>Turma solicitada: '+escapar(s.turmaSolicitada)+' — '+String(s.mesSolicitado||'').padStart(2,'0')+'/'+s.ano+'</p><p>Justificativa: '+escapar(s.justificativa)+'</p>'+(s.respostaAdmin?'<p>Resposta: '+escapar(s.respostaAdmin)+' — '+escapar(s.decididoPorNome||'')+'</p>':'')+controles+'</div>';}).join('');
-      return (dados.podeAdministrar?'<div class="modal-card" style="margin-bottom:14px"><h2>Ciclo '+dados.ano+'</h2><p>Registros anuais existentes: '+lista.length+'. Abrir ciclo cria os registros que ainda faltam, sem duplicar os já cadastrados.</p></div>':'')+
-        ((dados.podeAdministrar||dados.podeVerCompanhia||dados.podeVerPelotao)?'<div class="eap-tabela-wrap"><table class="eap-tabela"><thead><tr><th>POLICIAL</th><th>PELOTÃO</th><th>TURMA EAP</th><th>EAP</th><th>TAF</th><th>TAT</th><th>ANO ANTERIOR ('+dados.anoAnterior+')</th><th>AÇÃO</th></tr></thead><tbody>'+(linhas||'<tr><td colspan="8">Nenhum policial encontrado neste escopo.</td></tr>')+'</tbody></table></div>':'<div class="modal-card"><h2>Meu EAP — '+dados.ano+'</h2>'+(lista.length?'<p>Turma: '+(lista[0].turma?escapar(lista[0].turma)+' — '+String(lista[0].mes||'').padStart(2,'0')+'/'+lista[0].ano:'ainda não atribuída')+'</p><p>EAP: '+escapar(rotuloStatusEap(lista[0].statusEap))+' · TAF: '+escapar(rotuloResultadoEap(lista[0].statusTaf))+' · TAT: '+escapar(rotuloResultadoEap(lista[0].statusTat))+'</p><p><strong>Resumo do ano anterior ('+dados.anoAnterior+'):</strong> '+escapar(resumoAnoAnteriorEap(lista[0]))+'</p>'+(dados.podeSolicitar?'<button class="btn-page" onclick="abrirSolicitacaoEap(\''+escaparAttr(lista[0].re)+'\')">SOLICITAR MUDANÇA DE TURMA</button>':''):'Registro anual ainda não aberto.')+'</div>')+
+      return (dados.podeAdministrar?'<div class="modal-card" style="margin-bottom:14px"><h2>Ciclo '+dados.ano+'</h2><p>Registros anuais existentes: '+listaBase.length+'. Abrir ciclo cria os registros que ainda faltam, sem duplicar os já cadastrados.</p></div>':'')+
+        (ehLista?filtros+'<div class="eap-tabela-wrap"><table class="eap-tabela"><thead><tr><th>POLICIAL</th><th>PELOTÃO</th><th>TURMA EAP</th><th>EAP</th><th>TAF</th><th>TAT</th><th>ANO ANTERIOR ('+dados.anoAnterior+')</th><th>AÇÃO</th></tr></thead><tbody>'+(linhas||'<tr><td colspan="8">Nenhum policial encontrado para os filtros informados.</td></tr>')+'</tbody></table></div>':'<div class="modal-card"><h2>Meu EAP — '+dados.ano+'</h2>'+(lista.length?'<p>Turma: '+(lista[0].turma?escapar(lista[0].turma)+' — '+String(lista[0].mes||'').padStart(2,'0')+'/'+lista[0].ano:'ainda não atribuída')+'</p><p>EAP: '+escapar(rotuloStatusEap(lista[0].statusEap))+' · TAF: '+escapar(rotuloResultadoEap(lista[0].statusTaf))+' · TAT: '+escapar(rotuloResultadoEap(lista[0].statusTat))+'</p><p><strong>Resumo do ano anterior ('+dados.anoAnterior+'):</strong> '+escapar(resumoAnoAnteriorEap(lista[0]))+'</p>'+(dados.podeSolicitar?'<button class="btn-page" onclick="abrirSolicitacaoEap(\''+escaparAttr(lista[0].re)+'\')">SOLICITAR MUDANÇA DE TURMA</button>':''):'Registro anual ainda não aberto.')+'</div>')+
         ((dados.podeAdministrar||dados.podeSolicitar)&&(dados.solicitacoes||[]).length?'<div class="modal-card" style="margin-top:16px"><h2>Solicitações de mudança de turma</h2>'+pend+'</div>':(dados.podeAdministrar?'<div class="modal-card" style="margin-top:16px"><h2>Solicitações de mudança de turma</h2><p>Nenhuma solicitação neste ciclo.</p></div>':''));
     }
+
+    function filtrarEap(){if(!APP.dadosEap)return;const ativo=document.activeElement,id=ativo&&ativo.id,pos=ativo&&typeof ativo.selectionStart==='number'?ativo.selectionStart:null;document.getElementById('eapConteudo').innerHTML=montarConteudoEap(APP.dadosEap);const restaurar=id&&document.getElementById(id);if(restaurar){restaurar.focus();if(pos!==null&&typeof restaurar.setSelectionRange==='function')restaurar.setSelectionRange(pos,pos);}}
+    function limparFiltrosEap(){const p=document.getElementById('eapFiltroPelotao'),r=document.getElementById('eapFiltroRe');if(p)p.value='';if(r)r.value='';filtrarEap();}
 
     function abrirCicloEap(){const ano=Number(document.getElementById('eapAno').value);if(!confirm('Abrir o ciclo EAP '+ano+' para o efetivo atual? Os registros existentes serão preservados.'))return;const b=document.getElementById('eapAbrirCicloBtn');if(b)b.disabled=true;chamarApi('abrir_ciclo_eap',{ano:ano}).then(function(r){if(!r||!r.ok)throw new Error(r&&r.erro||'Falha ao abrir ciclo.');mostrarToastFt('Ciclo EAP aberto',r.dados.mensagem,'sucesso');carregarDadosEap(ano);}).catch(e=>mostrarToastFt('Não foi possível abrir o ciclo',e.message||String(e),'erro')).finally(()=>{if(b)b.disabled=false;});}
 
