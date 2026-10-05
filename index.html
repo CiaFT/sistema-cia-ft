@@ -10000,7 +10000,7 @@ Banco de dados: Google Sheets.
 
     function abrirControleFrequencia(competencia) {
       window.scrollTo(0, 0);
-      const alvo = competencia || (APP.dadosControleFrequencia && APP.dadosControleFrequencia.competencia) || '2026-08';
+      const alvo = competencia || competenciaAtualClienteControleFolgas();
       document.getElementById('appConteudo').innerHTML = `
         <div class="page-wrap">
           <div class="page-header">
@@ -10163,14 +10163,14 @@ Banco de dados: Google Sheets.
 
 
     function montarGeracaoPdfFrequencia(d) {
-      const fechamento = d && d.auditoria && d.auditoria.fechamentoCmt || { status: 'PENDENTE' };
-      const pronto = fechamento.status === 'APROVADO';
+      const fechamento = d && d.auditoria && d.auditoria.fechamentoEnc || { status: 'PENDENTE' };
+      const pronto = fechamento.status === 'CONFERIDO' && !!(d.capacidades && d.capacidades.podeGerarPdf);
       return '<div class="freq-pdf-card ' + (pronto ? 'pronto' : '') + '">' +
         '<div class="freq-pdf-info"><span class="freq-pdf-icon" aria-hidden="true">▣</span><div>' +
           '<h3>RELATÓRIO MENSAL EM PDF</h3>' +
-          '<p>' + (pronto ? 'Mês encerrado. Gere o relatório oficial de ' + escapar(rotuloCompetenciaFrequencia(d.competencia)) + ' com os lançamentos e totais consolidados.' : 'Disponível após a aprovação final e o encerramento do mês pelo Cmt de Cia.') + '</p>' +
+          '<p>' + (fechamento.status === 'CONFERIDO' ? 'Conferência do Enc Adm concluída. O Aux Adm pode gerar o relatório de ' + escapar(rotuloCompetenciaFrequencia(d.competencia)) + ', mesmo antes da aprovação do Cmt de Cia.' : 'Disponível ao Aux Adm após a conferência final do Enc Adm.') + '</p>' +
         '</div></div>' +
-        '<button id="freqPdfBtn" type="button" onclick="gerarPdfControleFrequencia()" ' + (pronto ? '' : 'disabled') + '>' + (pronto ? 'GERAR PLANILHA PDF' : 'AGUARDANDO FECHAMENTO') + '</button>' +
+        '<button id="freqPdfBtn" type="button" onclick="gerarPdfControleFrequencia()" ' + (pronto ? '' : 'disabled') + '>' + (pronto ? 'GERAR PLANILHA PDF' : 'AGUARDANDO CONFERÊNCIA') + '</button>' +
       '</div>';
     }
 
@@ -10348,9 +10348,9 @@ Banco de dados: Google Sheets.
 
     function gerarPdfControleFrequencia() {
       const dados = APP.dadosControleFrequencia || {};
-      const fechamento = dados.auditoria && dados.auditoria.fechamentoCmt || {};
-      if (fechamento.status !== 'APROVADO') {
-        mostrarToastFt('PDF ainda indisponível', 'Conclua a aprovação final e o encerramento do mês antes de gerar o relatório.');
+      const fechamento = dados.auditoria && dados.auditoria.fechamentoEnc || {};
+      if (fechamento.status !== 'CONFERIDO' || !(dados.capacidades && dados.capacidades.podeGerarPdf)) {
+        mostrarToastFt('PDF ainda indisponível', 'O Aux Adm pode gerar o PDF após a conferência final do Enc Adm.');
         return;
       }
 
