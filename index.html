@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.3.3
+SISTEMA CIA FT — PORTAL GITHUB V1.3.5 — EAP
 Arquivo: index.html
 ============================================================
 
-VERSÃO V1.3.3 — RESENHAS E DEJEM ROCAM
+VERSÃO V1.3.5 — EAP
 - Preserva a última versão encerrada do Controle de Frequência.
 - Preserva a implantação completa de Viaturas V1.2.6.
 - Corrige a leitura e a identificação funcional em Resenhas Enviadas.
@@ -36,7 +36,7 @@ VERSÃO V1.3.3 — RESENHAS E DEJEM ROCAM
 - Otimiza sessão, monitor de avisos e retentativas para reduzir carga e tempos de espera.
 
 Front-end externo hospedado no GitHub Pages.
-Backend/API: Apps Script API_FT.gs V1.3.3.
+Backend/API: Apps Script API_FT.gs V1.3.5.
 Banco de dados: Google Sheets.
 
 ============================================================
@@ -45,8 +45,8 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="cia-ft-build" content="FT-V132-20261004-RESENHA-EDICAO-AUX-DEJEM">
-  <title>Portal Força Tática • V1.3.3</title>
+  <meta name="cia-ft-build" content="FT-V135-20261005-EAP">
+  <title>Portal Força Tática • V1.3.5</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
 
@@ -6829,6 +6829,7 @@ Banco de dados: Google Sheets.
       #loginScreen .hexis-brand-login{margin-top:12px}
       #appScreen .hexis-footer{margin-top:22px;padding-top:17px}
     }
+    .eap-barra{display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin:12px 0 18px}.eap-barra label,.eap-form-grid label{display:flex;flex-direction:column;gap:5px;color:#cbd5e1;font-size:.85rem}.eap-barra select,.eap-barra input,.eap-form-grid input,.eap-form-grid select,.eap-form-grid textarea{background:#111827;color:#fff;border:1px solid #475569;border-radius:9px;padding:10px;min-height:40px}.eap-tabela-wrap{overflow:auto;border:1px solid #374151;border-radius:14px;background:#0b0b0b}.eap-tabela{width:100%;border-collapse:collapse;min-width:900px}.eap-tabela th,.eap-tabela td{padding:10px 12px;border-bottom:1px solid #293241;text-align:left;vertical-align:top}.eap-tabela th{background:#151515;color:#ffe600;font-size:.78rem}.eap-tabela td{font-size:.88rem}.eap-status{display:inline-block;padding:4px 8px;border-radius:20px;background:#1f2937;color:#e5e7eb;font-size:.75rem;font-weight:700}.eap-modal-backdrop{position:fixed;inset:0;z-index:10020;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:14px}.eap-modal{width:min(920px,100%);max-height:92vh;overflow:auto;background:#111827;border:1px solid #475569;border-radius:16px;padding:18px;color:#fff;box-shadow:0 20px 70px #000}.eap-modal h2{margin:0 0 6px;color:#ffe600}.eap-form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}.eap-form-grid .span2{grid-column:span 2}.eap-form-grid .span3{grid-column:1/-1}.eap-modal-actions{display:flex;justify-content:flex-end;gap:9px;flex-wrap:wrap}.eap-solicitacao{border:1px solid #475569;border-radius:12px;padding:12px;margin:9px 0;background:#111827}.eap-nota{color:#cbd5e1;font-size:.86rem}.eap-reprovado{color:#fecaca;background:#451a1a;padding:9px 12px;border-radius:10px;margin:10px 0}@media(max-width:700px){.eap-form-grid{grid-template-columns:1fr}.eap-form-grid .span2,.eap-form-grid .span3{grid-column:auto}.eap-modal{padding:14px}}
 </style>
 </head>
 
@@ -6860,7 +6861,7 @@ Banco de dados: Google Sheets.
         <div id="loginAlerta" class="alerta"></div>
 
         <div class="footer">
-          Portal Força Tática • V1.3.3
+          Portal Força Tática • V1.3.5
         </div>
       </main>
 
@@ -7618,6 +7619,11 @@ Banco de dados: Google Sheets.
         return;
       }
 
+      if (normalizarModuloCliente(id) === 'EAP') {
+        abrirEap();
+        return;
+      }
+
       if (normalizarModuloCliente(id) === 'PLANO_ANUAL_FERIAS') {
         abrirPlanoAnualFerias();
         return;
@@ -7706,6 +7712,12 @@ Banco de dados: Google Sheets.
         icone: '📅',
         descricao: 'Solicitação e acompanhamento do plano anual de férias.'
       });
+      modulos.push({
+        id: 'EAP',
+        titulo: 'EAP',
+        icone: '🎓',
+        descricao: 'Programação anual e acompanhamento de EAP, TAF e TAT do efetivo.'
+      });
 
       document.getElementById('appConteudo').innerHTML = `
         <div class="page-wrap">
@@ -7726,6 +7738,62 @@ Banco de dados: Google Sheets.
         </div>`;
     }
 
+
+    function abrirEap() {
+      window.scrollTo(0,0);
+      const anoAtual = new Date().getFullYear();
+      APP.eapAno = APP.eapAno || anoAtual;
+      document.getElementById('appConteudo').innerHTML = `
+        <div class="page-wrap">
+          <div class="page-header"><div class="page-header-row"><div><div class="page-kicker">Rotinas Operacionais</div><h1>EAP — Estágio de Aperfeiçoamento Profissional</h1><p>Programação anual e acompanhamento do EAP, TAF e TAT. Os registros ficam preservados por ano.</p></div><div class="page-actions"><button class="btn-page" onclick="abrirRotinasOperacionais()">VOLTAR</button></div></div></div>
+          <div class="eap-barra"><label>Ano do ciclo<select id="eapAno" onchange="carregarDadosEap(Number(this.value))">${[anoAtual-1,anoAtual,anoAtual+1,anoAtual+2].map(y=>'<option value="'+y+'" '+(y===APP.eapAno?'selected':'')+'>'+y+'</option>').join('')}</select></label><button id="eapAbrirCicloBtn" class="btn-primary-soft" style="display:none" onclick="abrirCicloEap()">ABRIR CICLO</button><button class="btn-page" onclick="carregarDadosEap(Number(document.getElementById('eapAno').value))">ATUALIZAR</button></div>
+          <div id="eapAviso" class="modal-card">Carregando registros de EAP...</div><div id="eapConteudo"></div>
+          <div id="eapModalRoot"></div>
+        </div>`;
+      carregarDadosEap(APP.eapAno);
+    }
+
+    function carregarDadosEap(ano) {
+      APP.eapAno=Number(ano)||new Date().getFullYear();
+      const aviso=document.getElementById('eapAviso'),conteudo=document.getElementById('eapConteudo');
+      if(aviso)aviso.innerHTML='Carregando EAP '+APP.eapAno+'...';
+      chamarApi('dados_eap',{ano:APP.eapAno},{semCache:true}).then(function(resp){
+        if(!resp||!resp.ok)throw new Error(resp&&resp.erro||'Não foi possível carregar os dados do EAP.');
+        APP.dadosEap=resp.dados||{};
+        const botao=document.getElementById('eapAbrirCicloBtn');if(botao)botao.style.display=APP.dadosEap.podeAdministrar?'inline-flex':'none';
+        if(aviso)aviso.innerHTML=APP.dadosEap.podeAdministrar?'<strong>Gestão administrativa:</strong> você pode abrir o ciclo anual e atualizar registros. O ciclo pode ser aberto antecipadamente para organizar as turmas do próximo ano.':'<strong>Consulta conforme seu perfil e escopo.</strong> Solicitações de mudança de turma dependem da análise do Aux Adm.';
+        if(conteudo)conteudo.innerHTML=montarConteudoEap(APP.dadosEap);
+      }).catch(function(err){if(aviso)aviso.innerHTML='<strong>Não foi possível carregar o EAP.</strong><br>'+escapar(err.message||String(err));});
+    }
+
+    function rotuloStatusEap(valor){const m={AGUARDANDO_TURMA:'AGUARDANDO TURMA',PROGRAMADO:'PROGRAMADO',CONCLUIDO:'CONCLUÍDO',DISPENSADO:'DISPENSADO',REAPRESENTACAO_TAF:'REAPRESENTAÇÃO TAF'};return m[valor]||valor||'—';}
+    function rotuloResultadoEap(valor){return valor==='APROVADO'?'APROVADO':valor==='REPROVADO'?'REPROVADO':valor==='NAO_SE_APLICA'?'NÃO SE APLICA':'PENDENTE';}
+    function resumoAnoAnteriorEap(r){const a=r&&r.registroAnterior;if(!a)return 'Sem registro de '+(APP.dadosEap&&APP.dadosEap.anoAnterior||'ano anterior');const turma=a.statusEap==='DISPENSADO'?'Dispensa '+(a.cursoDispensa||'curso'):a.turma?(a.turma+' — '+String(a.mes||'').padStart(2,'0')+'/'+a.ano):rotuloStatusEap(a.statusEap);return 'EAP: '+turma+' · TAF: '+rotuloResultadoEap(a.statusTaf)+(a.pontosTaf?' ('+a.pontosTaf+' pts)':'')+(a.conceitoTaf?' / '+a.conceitoTaf:'')+' · TAT: '+rotuloResultadoEap(a.statusTat);}
+
+    function montarConteudoEap(dados){
+      const lista=dados.policiais||[];
+      const linhas=lista.map(function(r){
+        const atrib=r.statusEap==='DISPENSADO'?(r.cursoDispensa+' ('+(r.cursoDispensaAno||r.ano)+')'):(r.turma?escapar(r.turma)+' — '+String(r.mes||'').padStart(2,'0')+'/'+r.ano:'—');
+        const acao=dados.podeAdministrar?'<button class="btn-primary-soft" onclick="abrirEditorEap(\''+escaparAttr(r.re)+'\')">EDITAR</button>':(dados.podeSolicitar?'<button class="btn-page" onclick="abrirSolicitacaoEap(\''+escaparAttr(r.re)+'\')">SOLICITAR MUDANÇA</button>':'—');
+        return '<tr><td><strong>'+escapar(r.postoGrad||'')+' '+escapar(r.nomeGuerra||r.nomeCompleto||'')+'</strong><br><small>RE '+escapar(r.re||'')+'</small></td><td>'+escapar(r.pelotao||'')+'</td><td>'+atrib+'</td><td><span class="eap-status">'+escapar(rotuloStatusEap(r.statusEap))+'</span></td><td>'+escapar(rotuloResultadoEap(r.statusTaf))+(r.statusTaf==='APROVADO'&&r.pontosTaf?' — '+escapar(r.pontosTaf)+' pts':'')+(r.conceitoTaf?' / '+escapar(r.conceitoTaf):'')+'</td><td><span class="eap-status">'+escapar(rotuloResultadoEap(r.statusTat))+'</span></td><td>'+escapar(resumoAnoAnteriorEap(r))+'</td><td>'+acao+'</td></tr>';
+      }).join('');
+      const pend=(dados.solicitacoes||[]).map(function(s){const controles=s.podeDecidir?'<div class="eap-modal-actions"><button class="btn-primary-soft" onclick="decidirSolicitacaoEap(\''+escaparAttr(s.id)+'\',\'APROVAR\')">APROVAR</button><button class="btn-page" onclick="decidirSolicitacaoEap(\''+escaparAttr(s.id)+'\',\'RECUSAR\')">RECUSAR</button></div>':'';return '<div class="eap-solicitacao"><strong>'+escapar(s.nomeAlvo)+' — RE '+escapar(s.reAlvo)+' ('+escapar(s.pelotao)+')</strong><p>Status: <b>'+escapar(s.status)+'</b> · Solicitado: '+escapar(s.solicitadoEm||'')+'</p><p>Turma solicitada: '+escapar(s.turmaSolicitada)+' — '+String(s.mesSolicitado||'').padStart(2,'0')+'/'+s.ano+'</p><p>Justificativa: '+escapar(s.justificativa)+'</p>'+(s.respostaAdmin?'<p>Resposta: '+escapar(s.respostaAdmin)+' — '+escapar(s.decididoPorNome||'')+'</p>':'')+controles+'</div>';}).join('');
+      return (dados.podeAdministrar?'<div class="modal-card" style="margin-bottom:14px"><h2>Ciclo '+dados.ano+'</h2><p>Registros anuais existentes: '+lista.length+'. Abrir ciclo cria os registros que ainda faltam, sem duplicar os já cadastrados.</p></div>':'')+
+        ((dados.podeAdministrar||dados.podeVerCompanhia||dados.podeVerPelotao)?'<div class="eap-tabela-wrap"><table class="eap-tabela"><thead><tr><th>POLICIAL</th><th>PELOTÃO</th><th>TURMA EAP</th><th>EAP</th><th>TAF</th><th>TAT</th><th>ANO ANTERIOR ('+dados.anoAnterior+')</th><th>AÇÃO</th></tr></thead><tbody>'+(linhas||'<tr><td colspan="8">Nenhum policial encontrado neste escopo.</td></tr>')+'</tbody></table></div>':'<div class="modal-card"><h2>Meu EAP — '+dados.ano+'</h2>'+(lista.length?'<p>Turma: '+(lista[0].turma?escapar(lista[0].turma)+' — '+String(lista[0].mes||'').padStart(2,'0')+'/'+lista[0].ano:'ainda não atribuída')+'</p><p>EAP: '+escapar(rotuloStatusEap(lista[0].statusEap))+' · TAF: '+escapar(rotuloResultadoEap(lista[0].statusTaf))+' · TAT: '+escapar(rotuloResultadoEap(lista[0].statusTat))+'</p><p><strong>Resumo do ano anterior ('+dados.anoAnterior+'):</strong> '+escapar(resumoAnoAnteriorEap(lista[0]))+'</p>'+(dados.podeSolicitar?'<button class="btn-page" onclick="abrirSolicitacaoEap(\''+escaparAttr(lista[0].re)+'\')">SOLICITAR MUDANÇA DE TURMA</button>':''):'Registro anual ainda não aberto.')+'</div>')+
+        ((dados.podeAdministrar||dados.podeSolicitar)&&(dados.solicitacoes||[]).length?'<div class="modal-card" style="margin-top:16px"><h2>Solicitações de mudança de turma</h2>'+pend+'</div>':(dados.podeAdministrar?'<div class="modal-card" style="margin-top:16px"><h2>Solicitações de mudança de turma</h2><p>Nenhuma solicitação neste ciclo.</p></div>':''));
+    }
+
+    function abrirCicloEap(){const ano=Number(document.getElementById('eapAno').value);if(!confirm('Abrir o ciclo EAP '+ano+' para o efetivo atual? Os registros existentes serão preservados.'))return;const b=document.getElementById('eapAbrirCicloBtn');if(b)b.disabled=true;chamarApi('abrir_ciclo_eap',{ano:ano}).then(function(r){if(!r||!r.ok)throw new Error(r&&r.erro||'Falha ao abrir ciclo.');mostrarToastFt('Ciclo EAP aberto',r.dados.mensagem,'sucesso');carregarDadosEap(ano);}).catch(e=>mostrarToastFt('Não foi possível abrir o ciclo',e.message||String(e),'erro')).finally(()=>{if(b)b.disabled=false;});}
+
+    function abrirEditorEap(re){const r=(APP.dadosEap&&APP.dadosEap.policiais||[]).find(x=>String(x.re)===String(re));if(!r)return;const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];const mesOpts='<option value="0">— selecione —</option>'+meses.map((m,i)=>'<option value="'+(i+1)+'" '+(Number(r.mes)===i+1?'selected':'')+'>'+m+'</option>').join('');const root=document.getElementById('eapModalRoot');root.innerHTML='<div class="eap-modal-backdrop" onclick="if(event.target===this)fecharModalEap()"><div class="eap-modal"><h2>Atualizar EAP — '+escapar(r.postoGrad)+' '+escapar(r.nomeCompleto)+'</h2><p>RE '+escapar(r.re)+' · '+escapar(r.pelotao)+' · Ciclo '+APP.eapAno+'</p>'+(r.statusTaf==='REPROVADO'?'<div class="eap-reprovado">TAF reprovado: programe uma nova turma/mês de EAP para a reapresentação e, depois, registre o novo resultado.</div>':'')+'<div class="eap-form-grid"><label>Turma EAP<input id="eapEditTurma" maxlength="80" value="'+escaparAttr(r.turma||'')+'" placeholder="Ex.: Turma 01"></label><label>Mês do EAP<select id="eapEditMes">'+mesOpts+'</select></label><label>Situação do EAP<select id="eapEditStatus"><option value="AGUARDANDO_TURMA">Aguardando turma</option><option value="PROGRAMADO">Programado</option><option value="CONCLUIDO">Concluído</option><option value="DISPENSADO">Dispensado por curso</option><option value="REAPRESENTACAO_TAF">Reapresentação TAF</option></select></label><label>Curso que dispensa<select id="eapEditCurso"><option value="">— não se aplica —</option><option value="CFSD">CFSd</option><option value="CFS">CFS</option><option value="CAS">CAS</option></select></label><label>Ano em que frequentou o curso<input id="eapEditCursoAno" type="number" min="2020" max="2100" value="'+escaparAttr(r.cursoDispensaAno||APP.eapAno)+'"></label><label>Data do EAP<input id="eapEditData" type="date" value="'+dataEapParaInput(r.dataEap)+'"></label><label>Boletim EAP<input id="eapEditBolEap" maxlength="120" value="'+escaparAttr(r.boletimEap||'')+'" placeholder="Referência, quando disponível"></label><label>Resultado TAF<select id="eapEditTaf"><option value="PENDENTE">Pendente</option><option value="APROVADO">Aprovado</option><option value="REPROVADO">Reprovado</option><option value="NAO_SE_APLICA">Não se aplica</option></select></label><label>Pontuação TAF<input id="eapEditPontos" maxlength="30" value="'+escaparAttr(r.pontosTaf||'')+'"></label><label>Conceito TAF<input id="eapEditConceito" maxlength="50" value="'+escaparAttr(r.conceitoTaf||'')+'"></label><label>Boletim TAF<input id="eapEditBolTaf" maxlength="120" value="'+escaparAttr(r.boletimTaf||'')+'" placeholder="Referência, quando disponível"></label><label>Data do TAF<input id="eapEditDataTaf" type="date" value="'+dataEapParaInput(r.dataTaf)+'"></label><label>Resultado TAT<select id="eapEditTat"><option value="PENDENTE">Pendente</option><option value="APROVADO">Aprovado</option><option value="NAO_SE_APLICA">Não se aplica</option></select></label><label>Boletim TAT<input id="eapEditBolTat" maxlength="120" value="'+escaparAttr(r.boletimTat||'')+'" placeholder="Referência, quando disponível"></label><label>Data do TAT<input id="eapEditDataTat" type="date" value="'+dataEapParaInput(r.dataTat)+'"></label><label class="span3">Observação<textarea id="eapEditObs" maxlength="500">'+escapar(r.observacao||'')+'</textarea></label></div><div class="eap-nota">Boletins podem ser informados quando publicados. Cada gravação preserva o estado anterior na trilha de auditoria.</div><div class="eap-modal-actions" style="margin-top:14px"><button class="btn-page" onclick="fecharModalEap()">CANCELAR</button><button class="btn-primary-soft" onclick="salvarRegistroEap(\''+escaparAttr(r.re)+'\')">SALVAR</button></div></div></div>';document.getElementById('eapEditStatus').value=r.statusEap||'AGUARDANDO_TURMA';document.getElementById('eapEditCurso').value=r.cursoDispensa||'';document.getElementById('eapEditCursoAno').value=r.cursoDispensaAno||APP.eapAno;document.getElementById('eapEditTaf').value=r.statusTaf||'PENDENTE';document.getElementById('eapEditTat').value=r.statusTat||'PENDENTE';}
+
+    function dataEapParaInput(v){const s=String(v||'');let m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return m[1]+'-'+m[2]+'-'+m[3];m=s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);return m?m[3]+'-'+m[2]+'-'+m[1]:'';}
+    function fecharModalEap(){const r=document.getElementById('eapModalRoot');if(r)r.innerHTML='';}
+    function salvarRegistroEap(re){const campos={turma:document.getElementById('eapEditTurma').value,mes:Number(document.getElementById('eapEditMes').value),statusEap:document.getElementById('eapEditStatus').value,cursoDispensa:document.getElementById('eapEditCurso').value,cursoDispensaAno:Number(document.getElementById('eapEditCursoAno').value),dataEap:document.getElementById('eapEditData').value,boletimEap:document.getElementById('eapEditBolEap').value,statusTaf:document.getElementById('eapEditTaf').value,pontosTaf:document.getElementById('eapEditPontos').value,conceitoTaf:document.getElementById('eapEditConceito').value,boletimTaf:document.getElementById('eapEditBolTaf').value,dataTaf:document.getElementById('eapEditDataTaf').value,statusTat:document.getElementById('eapEditTat').value,boletimTat:document.getElementById('eapEditBolTat').value,dataTat:document.getElementById('eapEditDataTat').value,observacao:document.getElementById('eapEditObs').value};chamarApi('salvar_eap',{ano:APP.eapAno,reAlvo:re,campos:JSON.stringify(campos)}).then(function(resp){if(!resp||!resp.ok)throw new Error(resp&&resp.erro||'Não foi possível salvar.');fecharModalEap();mostrarToastFt('EAP atualizado',resp.dados.mensagem,'sucesso');carregarDadosEap(APP.eapAno);}).catch(e=>mostrarToastFt('Falha ao salvar EAP',e.message||String(e),'erro'));}
+
+    function abrirSolicitacaoEap(re){const r=(APP.dadosEap&&APP.dadosEap.policiais||[]).find(x=>String(x.re)===String(re));if(!r)return;const root=document.getElementById('eapModalRoot');root.innerHTML='<div class="eap-modal-backdrop" onclick="if(event.target===this)fecharModalEap()"><div class="eap-modal"><h2>Solicitar mudança de turma</h2><p>'+escapar(r.postoGrad)+' '+escapar(r.nomeCompleto)+' — RE '+escapar(r.re)+' — '+escapar(r.pelotao)+'</p><div class="eap-form-grid"><label>Nova turma<input id="eapReqTurma" maxlength="80" required></label><label>Mês<select id="eapReqMes"><option value="">— selecione —</option>'+['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'].map((m,i)=>'<option value="'+(i+1)+'">'+m+'</option>').join('')+'</select></label><label class="span3">Justificativa<textarea id="eapReqMotivo" maxlength="500" required></textarea></label></div><div class="eap-modal-actions"><button class="btn-page" onclick="fecharModalEap()">CANCELAR</button><button class="btn-primary-soft" onclick="enviarSolicitacaoEap(\''+escaparAttr(r.re)+'\')">ENVIAR SOLICITAÇÃO</button></div></div></div>';}
+    function enviarSolicitacaoEap(re){const turma=document.getElementById('eapReqTurma').value,mes=Number(document.getElementById('eapReqMes').value),justificativa=document.getElementById('eapReqMotivo').value;chamarApi('solicitar_mudanca_eap',{ano:APP.eapAno,reAlvo:re,turmaSolicitada:turma,mesSolicitado:mes,justificativa:justificativa}).then(function(r){if(!r||!r.ok)throw new Error(r&&r.erro||'Não foi possível enviar.');fecharModalEap();mostrarToastFt('Solicitação enviada',r.dados.mensagem,'sucesso');carregarDadosEap(APP.eapAno);}).catch(e=>mostrarToastFt('Falha na solicitação',e.message||String(e),'erro'));}
+    function decidirSolicitacaoEap(id,decisao){let respostaAdmin='';if(decisao==='RECUSAR'){respostaAdmin=prompt('Informe o motivo da recusa:')||'';if(respostaAdmin.trim().length<3)return;}else if(!confirm('Aprovar e aplicar a mudança de turma solicitada?'))return;chamarApi('decidir_solicitacao_eap',{id:id,decisao:decisao,respostaAdmin:respostaAdmin}).then(function(r){if(!r||!r.ok)throw new Error(r&&r.erro||'Não foi possível decidir.');mostrarToastFt('Solicitação processada',r.dados.mensagem,'sucesso');carregarDadosEap(APP.eapAno);}).catch(e=>mostrarToastFt('Falha ao decidir',e.message||String(e),'erro'));}
 
     function abrirPlanoAnualFerias() {
       window.scrollTo(0, 0);
