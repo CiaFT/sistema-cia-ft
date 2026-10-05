@@ -1038,6 +1038,15 @@ Banco de dados: Google Sheets.
       filter: drop-shadow(0 7px 9px rgba(15,23,42,.22));
     }
 
+
+    /* Ícones das subpáginas: caixa idêntica à dos demais cards do portal. */
+    #appScreen .menu-card[data-modulo="ESCALAS_CIA_FT"] .menu-icon-imagem img,
+    #appScreen .menu-card[data-modulo="FOLGAS_PENDENTES"] .menu-icon-imagem img{transform:scale(.97)}
+    #appScreen .menu-card[data-modulo="CONTROLE_FREQUENCIA"] .menu-icon-imagem img{transform:scale(1.26)}
+    #appScreen .menu-card[data-modulo="ROTINAS_ADMINISTRATIVAS"] .menu-icon-imagem img{transform:scale(1.52)}
+    #appScreen .menu-card[data-modulo="CONTROLE_FOLGAS"] .menu-icon-imagem img{transform:scale(1.16)}
+    #appScreen .menu-card[data-modulo="CONSULTAS_P4"] .menu-icon-imagem img{transform:scale(1.14)}
+
     #appScreen .cop-intro {
       display: grid;
       grid-template-columns: 150px minmax(0, 1fr);
@@ -9720,21 +9729,21 @@ Banco de dados: Google Sheets.
           </div>
           <div class="menu-grid">
             <div class="menu-card" data-modulo="CONTROLE_FREQUENCIA" onclick="abrirControleFrequencia()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirControleFrequencia();}">
-              <div class="menu-icon">📅</div>
+              <div class="menu-icon menu-icon-imagem"><img src="./icone-controle-frequencia.png?v=138-paginas-r1" alt="Controle de Frequência"></div>
               <h3>CONTROLE DE FREQUÊNCIA</h3>
               <p>Lançamento mensal para apuração de diárias, dias trabalhados e auditorias administrativas.</p>
             </div>
             <div class="menu-card" data-modulo="ROTINAS_ADMINISTRATIVAS" onclick="abrirRotinasAdministrativas()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirRotinasAdministrativas();}">
-              <div class="menu-icon">✅</div>
+              <div class="menu-icon menu-icon-imagem"><img src="./icone-rotinas-administrativas.png?v=138-paginas-r1" alt="Rotinas Administrativas"></div>
               <h3>ROTINAS ADMINISTRATIVAS</h3>
               <p>Acompanhamento e confirmação das rotinas mensais, semanais e diárias da administração.</p>
             </div>
             <div class="menu-card" data-modulo="CONTROLE_FOLGAS" onclick="abrirControleFolgas()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirControleFolgas();}">
-              <div class="menu-icon">🛡️</div>
+              <div class="menu-icon menu-icon-imagem"><img src="./icone-controle-folgas.png?v=138-paginas-r1" alt="Controle Folgas"></div>
               <h3>CONTROLE FOLGAS</h3>
               <p>Lançamento diário, ciclo de 14 serviços e acompanhamento dos saldos individuais de folgas.</p>
             </div>
-            ${podeConsultarArmarioCliente() ? '<div class="menu-card" data-modulo="CONSULTAS_P4" onclick="abrirConsultasP4()" role="button" tabindex="0" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();abrirConsultasP4();}"><div class="menu-icon">🔎</div><h3>CONSULTAS P/4</h3><p>Localizar detentores de armário, arma, colete e algemas.</p></div>' : ''}
+            ${podeConsultarArmarioCliente() ? '<div class="menu-card" data-modulo="CONSULTAS_P4" onclick="abrirConsultasP4()" role="button" tabindex="0" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();abrirConsultasP4();}"><div class="menu-icon menu-icon-imagem"><img src="./icone-consultas-p4.png?v=138-paginas-r1" alt="Consultas P/4"></div><h3>CONSULTAS P/4</h3><p>Localizar detentores de armário, arma, colete e algemas.</p></div>' : ''}
           </div>
         </div>`;
     }
@@ -10745,13 +10754,13 @@ Banco de dados: Google Sheets.
       box.innerHTML = `
         <div class="menu-grid ef-menu-grid">
           <div class="menu-card" data-modulo="ESCALAS_CIA_FT" onclick="abrirEscalasCiaFt()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirEscalasCiaFt();}">
-            <div class="menu-icon">📄</div>
+            <div class="menu-icon menu-icon-imagem"><img src="./icone-escalas-cia-ft.png?v=138-paginas-r1" alt="Escalas Cia FT"></div>
             <h3>ESCALAS CIA FT</h3>
             <p>Consulte as escalas de serviço em PDF.</p>
             <div class="ef-status-line">${escalaAmanha ? '<span class="ef-pill amanha">✓ ESCALA DE AMANHÃ DISPONÍVEL</span>' : '<span class="ef-pill">ESCALA DE AMANHÃ NÃO PUBLICADA</span>'}</div>
           </div>
           <div class="menu-card" data-modulo="FOLGAS_PENDENTES" onclick="abrirFolgasPendentes()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirFolgasPendentes();}">
-            <div class="menu-icon">🛡️</div>
+            <div class="menu-icon menu-icon-imagem"><img src="./icone-folgas-pendentes.png?v=138-paginas-r1" alt="Folgas Pendentes"></div>
             <h3>FOLGAS PENDENTES</h3>
             <p>Consulte seus saldos de folgas e dias trabalhados.</p>
             <div class="ef-status-line"><span class="ef-pill">${totalFolgas} POLICIAL(IS) VISÍVEL(IS)</span></div>
