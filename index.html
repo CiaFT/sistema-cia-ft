@@ -9734,10 +9734,42 @@ Banco de dados: Google Sheets.
               <h3>CONTROLE FOLGAS</h3>
               <p>Lançamento diário, ciclo de 14 serviços e acompanhamento dos saldos individuais de folgas.</p>
             </div>
+            ${podeConsultarArmarioCliente() ? '<div class="menu-card" data-modulo="CONSULTAS_P4" onclick="abrirConsultasP4()" role="button" tabindex="0" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();abrirConsultasP4();}"><div class="menu-icon">🔎</div><h3>CONSULTAS P/4</h3><p>Localizar detentores de armário, arma, colete e algemas.</p></div>' : ''}
           </div>
         </div>`;
     }
 
+    function podeConsultarArmarioCliente() {
+      const perfil=normalizarTexto((APP.usuario && APP.usuario.perfilAcesso) || '').replace(/[\s-]+/g,'_');
+      return ['AUX_ADM_FT','ENC_ADM_FT','CMT_CIA_FT','CMT_CIA','COMANDANTE_CIA_FT','COMANDANTE_DE_CIA','GESTOR_TEC_FT','GESTOR'].includes(perfil) && usuarioTemPermissaoCliente('PAINEL_ADMINISTRATIVO','visualizar');
+    }
+
+    function abrirConsultasP4() {
+      if (!podeConsultarArmarioCliente()) { abrirAcessoNegado('Consultas P/4'); return; }
+      window.scrollTo(0,0);
+      document.getElementById('appConteudo').innerHTML=`<div class="page-wrap"><div class="page-header"><div class="page-header-row"><div><div class="page-kicker">Painel Administrativo</div><h1>Consultas P/4</h1><p>Localize o detentor atual pelo número do armário, série ou patrimônio do material.</p></div><div class="page-actions"><button class="btn-page" onclick="abrirPainelAdministrativo()">VOLTAR</button></div></div></div><div class="modal-card"><div class="eap-filtros"><label for="consultaTipoP4">MATERIAL<select id="consultaTipoP4" onchange="document.getElementById('consultaP4Resultado').textContent='Informe o número e clique em PESQUISAR.'"><option value="ARMARIO">Armário</option><option value="ARMA">Arma</option><option value="COLETE">Colete</option><option value="ALGEMA">Algemas</option></select></label><label for="consultaNumeroP4">NÚMERO DO ARMÁRIO, SÉRIE OU PATRIMÔNIO<input id="consultaNumeroP4" type="text" maxlength="40" autocomplete="off" placeholder="Digite a identificação exata" onkeydown="if(event.key==='Enter')consultarMaterialP4()"></label><button id="consultarP4Btn" class="btn-primary-soft" type="button" onclick="consultarMaterialP4()">PESQUISAR</button></div><div id="consultaP4Resultado" role="status" aria-live="polite">Selecione o material, digite o número e clique em PESQUISAR.</div></div></div>`;
+      document.getElementById('consultaNumeroP4').focus();
+    }
+
+    function consultarMaterialP4() {
+      if (!podeConsultarArmarioCliente()) return;
+      const campo=document.getElementById('consultaNumeroP4');
+      const tipo=document.getElementById('consultaTipoP4').value;
+      const numero=campo && campo.value.trim();
+      const resultado=document.getElementById('consultaP4Resultado');
+      if (!numero || numero.length>40) { if(resultado)resultado.textContent='Informe uma identificação válida.'; return; }
+      const botao=document.getElementById('consultarP4Btn');
+      if(botao)botao.disabled=true;
+      if(resultado)resultado.textContent='Pesquisando...';
+      chamarApi('consultar_material_p4',{login:APP.credenciais.login,senha:APP.credenciais.senha,tipo:tipo,numero:numero}).then(function(resp){
+        if(!resp || !resp.ok)throw new Error(resp && resp.erro || 'Falha na consulta.');
+        const dados=resp.dados || {};
+        const encontrados=dados.detentores || [];
+        if(!resultado || !document.body.contains(resultado) || campo.value.trim()!==numero || document.getElementById('consultaTipoP4').value!==tipo)return;
+        if(!encontrados.length){resultado.innerHTML='<div class="adm-alerta">Nenhum detentor ativo localizado para '+escapar(numero)+'. Confira a identificação cadastrada.</div>';return;}
+        resultado.innerHTML=(dados.conflito?'<div class="adm-alerta">Atenção: mais de um policial ativo está vinculado a esta identificação. Confira o cadastro.</div>':'')+encontrados.map(function(pm){return '<div class="modal-card"><strong>'+escapar([pm.postoGrad,pm.nomeCompleto].filter(Boolean).join(' '))+'</strong><p>RE '+escapar(pm.re)+' · '+escapar(pm.pelotao||'Pelotão não informado')+'</p>'+(pm.identificacoes||[]).map(function(item){return '<p>'+escapar(item.campo)+': '+escapar(item.valor)+'</p>';}).join('')+'</div>';}).join('');
+      }).catch(function(err){if(resultado && document.body.contains(resultado))resultado.textContent=err.message||String(err);}).finally(function(){if(botao && document.body.contains(botao))botao.disabled=false;});
+    }
 
     function abrirRotinasAdministrativas() {
       window.scrollTo(0, 0);
