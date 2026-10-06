@@ -10333,7 +10333,7 @@ Banco de dados: Google Sheets.
         dia: select.getAttribute('data-dia'),
         valor: select.value
       };
-      chamarApiLancamentoVerificado_('salvar_frequencia', pedido).then(function(resp) {
+      enfileirarLancamentoFt_('salvar_frequencia', pedido).then(function(resp) {
         if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao salvar o lançamento.');
         const dados = resp.dados || {};
         const re = select.getAttribute('data-re');
@@ -10756,7 +10756,7 @@ Banco de dados: Google Sheets.
         dia: select.getAttribute('data-dia'),
         valor: select.value
       };
-      chamarApiLancamentoVerificado_('salvar_controle_folgas', pedido).then(function(resp) {
+      enfileirarLancamentoFt_('salvar_controle_folgas', pedido).then(function(resp) {
         if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao salvar o lançamento.');
         const dados = resp.dados || {};
         const re = select.getAttribute('data-re');
@@ -10779,7 +10779,9 @@ Banco de dados: Google Sheets.
           diasTrabalhados: Number(dados.diasTrabalhados || 0),
           creditosDisponiveis: Array.isArray(dados.creditosDisponiveis) ? dados.creditosDisponiveis : []
         });
-        mostrarToastFt('Controle de Folgas atualizado', dados.mensagem || 'Lançamento salvo.');
+        if (dados.mensagem && /período|periodo|conexão|conexao/i.test(dados.mensagem)) {
+          mostrarToastFt('Controle de Folgas atualizado', dados.mensagem);
+        }
         setTimeout(function() {
           select.classList.remove('freq-saved');
           if (wrap) wrap.classList.remove('freq-saved');
@@ -15912,6 +15914,17 @@ Banco de dados: Google Sheets.
       return APP.renovacaoSessao;
     }
 
+
+    /* A fila permite preencher varias celulas rapidamente sem disputar o
+       bloqueio do Apps Script entre requisicoes desta mesma aba. */
+    let filaLancamentosFt_ = Promise.resolve();
+    function enfileirarLancamentoFt_(acao, pedido) {
+      const tarefa = filaLancamentosFt_.then(function() {
+        return chamarApiLancamentoVerificado_(acao, pedido);
+      });
+      filaLancamentosFt_ = tarefa.catch(function() {});
+      return tarefa;
+    }
 
     /* A resposta pode se perder depois da gravacao. Nessas duas telas,
        conferimos o valor no servidor antes de declarar falha ao auxiliar. */
