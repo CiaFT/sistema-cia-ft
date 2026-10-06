@@ -45,7 +45,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="cia-ft-build" content="FT-V138-20261005-EAP-CONSULTA-INDIVIDUAL-LISTA-R2">
+  <meta name="cia-ft-build" content="FT-V138-20261006-TRANSFERENCIA-FOLGAS-R3">
   <title>Portal Força Tática • V1.3.8</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
@@ -5910,6 +5910,9 @@ Banco de dados: Google Sheets.
       color:#C62828;
     }
     @media(min-width:761px){.freq-legend[open] summary{margin-bottom:2px}.freq-legend summary{pointer-events:none}.freq-legend summary::-webkit-details-marker{display:none}}
+    #transferenciaFolgas summary{pointer-events:auto;cursor:pointer}
+    #transferenciaFolgas .freq-legend-grid label{display:flex;flex-direction:column;gap:6px;font-weight:700;color:#17202a}
+    #transferenciaFolgas input,#transferenciaFolgas select{width:100%;min-height:40px;padding:8px 10px;border:1px solid #94a3b8;border-radius:8px;background:#fff;color:#17202a}
     @media(max-width:900px){.freq-audit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.freq-legend-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:760px){.freq-launch-card{padding:14px}.freq-close-grid{grid-template-columns:1fr}.freq-pdf-card{grid-template-columns:1fr}.freq-pdf-card button{width:100%;min-width:0}.freq-mobile-weeks{display:flex}.freq-mobile-hint{display:block}.freq-table-wrap{max-height:62vh;-webkit-overflow-scrolling:touch}.freq-table{min-width:650px}.freq-table .freq-pm{width:148px;min-width:148px;max-width:148px;padding-left:7px;padding-right:7px}.freq-table .freq-total{width:72px;min-width:72px}.freq-table .freq-total.diarias,.freq-table .freq-total.trabalhados{position:static}.freq-legend-grid{grid-template-columns:1fr}.freq-audit-grid{grid-template-columns:1fr 1fr}.freq-note{font-size:11px}.folga-rule-note{grid-template-columns:1fr}}
     @media(max-width:480px){.freq-table-wrap{overflow-x:hidden}.freq-table{width:100%;min-width:0;table-layout:fixed}.freq-table .freq-pm{width:110px;min-width:110px;max-width:110px;padding:4px 5px}.freq-table .freq-pm strong{font-size:9px;line-height:1.15}.freq-table .freq-pm small{font-size:8px}.freq-table .freq-day{width:34px;min-width:34px;max-width:34px;padding:2px}.freq-select-wrap{width:29px}.freq-table .freq-total{width:54px;min-width:54px;font-size:9px;padding:2px}.freq-group td{padding:7px!important}}
@@ -10510,8 +10513,8 @@ Banco de dados: Google Sheets.
         </div>
         <div class="freq-note">Os lançamentos são salvos individualmente. FOLGAS mostra o saldo disponível e DIAS TRAB. mostra o progresso atual do ciclo, de 0 a 13.</div>
         ${d.capacidades && d.capacidades.podeTransferirSaldo ? `
-          <details class="freq-legend" id="transferenciaFolgas">
-            <summary>TRANSFERIR SALDO DA UNIDADE ANTERIOR</summary>
+          <section class="freq-legend" id="transferenciaFolgas">
+            <h3 style="margin:0;color:#17202a">TRANSFERIR SALDO DA UNIDADE ANTERIOR</h3>
             <p>Uso único para policial recém-incluído. As folgas adquiridas e os dias EO já trabalhados entram no saldo inicial; os lançamentos posteriores são recalculados.</p>
             <div class="freq-legend-grid">
               <label>Policial (RE)
@@ -10525,11 +10528,16 @@ Banco de dados: Google Sheets.
               <label>Início do ciclo EO <input id="transferenciaFolgasInicio" type="date"></label>
             </div>
             <p id="transferenciaFolgasAviso">Se houver dias EO, informe a data real em que começou o ciclo na unidade anterior.</p>
-            <button class="btn-page" id="transferenciaFolgasSalvar" onclick="salvarTransferenciaFolgas()">REGISTRAR TRANSFERÊNCIA</button>
-          </details>` : ''}
+            <button type="button" class="btn-page" id="transferenciaFolgasSalvar">REGISTRAR TRANSFERÊNCIA</button>
+            <p id="transferenciaFolgasStatus" role="status" aria-live="polite" style="min-height:1.5em;font-weight:700;color:#17202a"></p>
+          </section>` : ''}
         ${montarNavegacaoSemanasTabelaMobile('folgas', d, faixaDias)}
         ${montarTabelaControleFolgas(d, faixaDias)}
       `;
+      if (d.capacidades && d.capacidades.podeTransferirSaldo) {
+        atualizarTransferenciaFolgas();
+        document.getElementById('transferenciaFolgasSalvar').addEventListener('click', salvarTransferenciaFolgas);
+      }
     }
 
 
@@ -10547,33 +10555,42 @@ Banco de dados: Google Sheets.
 
 
     async function salvarTransferenciaFolgas() {
+      const status = document.getElementById('transferenciaFolgasStatus');
+      const informar = function(texto, erro) {
+        if (status) { status.textContent = texto; status.style.color = erro ? '#9f1239' : '#166534'; }
+      };
+      informar('Conferindo os dados...', false);
       const re = document.getElementById('transferenciaFolgasRe')?.value || '';
       const folgas = document.getElementById('transferenciaFolgasQuantidade')?.value;
       const dias = document.getElementById('transferenciaFolgasDias')?.value;
       const inicio = document.getElementById('transferenciaFolgasInicio')?.value || '';
       if (!re || !/^\d+$/.test(folgas) || !/^\d+$/.test(dias) ||
           (!Number(folgas) && !Number(dias)) || Number(dias) > 13 || (Number(dias) && !inicio)) {
+        informar('Selecione o policial, informe as folgas e os dias EO. Se houver dias EO, preencha também o início do ciclo.', true);
         mostrarToastFt('Dados incompletos', 'Selecione o policial e informe o saldo e o início do ciclo EO, quando houver.');
         return;
       }
-      const confirmado = await confirmarToastFt('CONFIRMAR SALDO DA UNIDADE ANTERIOR',
-        'RE ' + re + ': ' + folgas + ' folga(s) a gozar e ' + dias + '/14 EO. O registro só pode ser feito uma vez.',
-        { confirmar: 'CONFIRMAR', cancelar: 'VOLTAR' });
-      if (!confirmado) return;
       const botao = document.getElementById('transferenciaFolgasSalvar');
-      if (botao) botao.disabled = true;
       try {
+        const confirmado = await confirmarToastFt('CONFIRMAR SALDO DA UNIDADE ANTERIOR',
+          'RE ' + re + ': ' + folgas + ' folga(s) a gozar e ' + dias + '/14 EO. O registro só pode ser feito uma vez.',
+          { confirmar: 'CONFIRMAR', cancelar: 'VOLTAR' });
+        if (!confirmado) { informar('Transferência cancelada.', false); return; }
+        if (botao) { botao.disabled = true; botao.textContent = 'REGISTRANDO...'; }
+        informar('Enviando o saldo para o servidor. Aguarde a confirmação.', false);
         const resp = await chamarApi('transferir_saldo_folgas', {
           login: APP.credenciais.login, senha: APP.credenciais.senha,
           re: re, folgas: folgas, diasTrabalhados: dias, inicioCicloISO: inicio
         });
         if (!resp || !resp.ok) throw new Error(resp && resp.erro || 'Falha ao transferir saldo.');
+        informar('Saldo transferido com sucesso.', false);
         mostrarToastFt('Saldo transferido', resp.dados.mensagem);
-        abrirControleFolgas(APP.dadosControleFolgas.competencia);
+        setTimeout(function() { abrirControleFolgas(APP.dadosControleFolgas.competencia); }, 900);
       } catch (erro) {
+        informar(erro.message || String(erro), true);
         mostrarToastFt('Saldo não transferido', erro.message || String(erro));
       } finally {
-        if (botao && document.body.contains(botao)) botao.disabled = false;
+        if (botao && document.body.contains(botao)) { botao.disabled = false; botao.textContent = 'REGISTRAR TRANSFERÊNCIA'; }
       }
     }
 
