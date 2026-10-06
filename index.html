@@ -9018,7 +9018,28 @@ Banco de dados: Google Sheets.
     }
 
 
-    function acaoLinhaRevistaArmario(item, dados, modoMovel) {
+    function acaoLinhaRevistaArmario(item,dados,modoMovel){
+      const original=acaoLinhaRevistaArmarioOriginal(item,dados,modoMovel);
+      if(!item||item.vistoriado)return original;
+      const justificativa=item.justificativa;
+      const texto=justificativa?'<div class="ra-pendente"><strong>AFASTAMENTO JUSTIFICADO</strong><br>'+escapar(justificativa.motivo)+'<br><small>'+escapar(justificativa.autor)+' · '+escapar(justificativa.dataHora)+'</small></div>':'';
+      const botao=dados.capacidades&&dados.capacidades.podeJustificar?'<button type="button" class="ra-corrigir" onclick="justificarAusenciaArmario(decodeURIComponent(\''+encodeURIComponent(item.re)+'\'))">'+(justificativa?'ALTERAR JUSTIFICATIVA':'JUSTIFICAR AFASTAMENTO')+'</button>':'';
+      return texto+original+botao;
+    }
+    async function justificarAusenciaArmario(re){
+      const dados=APP.dadosRevistaArmario;
+      if(!dados||!dados.capacidades||!dados.capacidades.podeJustificar)return;
+      const motivo=window.prompt('Justifique o afastamento: LSV, Férias ou outro impedimento. Informe o período quando conhecido.');
+      if(motivo===null)return;
+      if(motivo.trim().length<3||motivo.trim().length>300){mostrarToastFt('Motivo inválido','Informe de 3 a 300 caracteres.','erro');return;}
+      try{
+        const resp=await chamarApi('justificar_ausencia_armario',{re:re,grupo:dados.grupo,referencia:dados.referencia,motivo:motivo.trim()});
+        if(!resp||!resp.ok)throw new Error(resp&&resp.erro||'Justificativa não registrada.');
+        await carregarDadosRevistaArmario(dados.grupo,dados.referencia);
+        mostrarToastFt('Afastamento justificado',resp.dados.mensagem,'sucesso');
+      }catch(e){mostrarToastFt('Falha ao justificar',e.message,'erro');}
+    }
+    function acaoLinhaRevistaArmarioOriginal(item, dados, modoMovel) {
       if (!item) return '';
       const capacidades = dados.capacidades || {};
       const nomeCodificado = encodeURIComponent([item.postoGrad, item.re, item.nomeCompleto].filter(Boolean).join(' '));
@@ -16277,13 +16298,23 @@ Banco de dados: Google Sheets.
         motivoSaida: motivo,
         memorandoSaida: memorando,
         destino: destino
-      }).then(function(r) {
+      }).then(async function(r) {
         if (!r || !r.ok) throw new Error(r && r.erro ? r.erro : 'Falha ao arquivar policial.');
+        let erroSincronizacao='';
+        try {
+          const sincronizado=await rpcPlanoFerias('arquivar_policial_supabase_icc',{
+            p_re:re,p_motivo:motivo,p_memorando:memorando,p_destino:destino
+          });
+          if(!sincronizado||!sincronizado.ok)throw new Error('O Supabase não confirmou a retirada.');
+        } catch(erro) {
+          erroSincronizacao=erro.message||String(erro);
+        }
         const modal = document.getElementById('modalV125');
         if (modal) modal.remove();
         fecharCardConsultaEfetivo();
         APP.dadosConsultaEfetivo = null;
-        mostrarToastFt('Policial arquivado', r.dados.mensagem);
+        if(erroSincronizacao)mostrarToastFt('Sincronização pendente','Cadastro arquivado. A retirada do Supabase não foi confirmada: '+erroSincronizacao,'erro');
+        else mostrarToastFt('Policial arquivado','Retirada confirmada no cadastro e no Supabase.','sucesso');
         return carregarDadosConsultaEfetivo(true).then(renderizarConsultaEfetivo);
       }).catch(function(e) {
         mostrarToastFt('Erro', e.message || String(e));
@@ -17037,7 +17068,7 @@ Banco de dados: Google Sheets.
       const corpo = linhas.map(x => {
         const assinatura = x.estado === 'ASSINADO'
           ? 'ASSINADO DIGITALMENTE<br><small>' + escapar(iccHoraBR(x.assinado_em)) + '</small>'
-          : x.justificativa ? 'PENDENTE — ' + escapar(x.justificativa)
+          : x.justificativa ? 'AFASTAMENTO JUSTIFICADO — ' + escapar(x.justificativa) + '<br><small>' + escapar(x.justificativa_autor || '') + ' · ' + escapar(iccHoraBR(x.justificativa_em)) + '</small>'
           : escapar(x.estado || 'PENDENTE');
         let botoes = '';
         if (x.proprio && resposta.pode_assinar && x.estado !== 'ASSINADO')
@@ -17045,9 +17076,9 @@ Banco de dados: Google Sheets.
         if (resposta.pode_editar && x.estado === 'ASSINADO' && x.assinatura_id)
           botoes += '<button type="button" class="icc-btn secundario" onclick="iccAnularSupabase(\'' +
             escaparAttr(x.assinatura_id) + '\')">ANULAR COM JUSTIFICATIVA</button>';
-        if (resposta.pode_editar && x.estado === 'PENDENTE' && x.ciencia_id)
+        if (resposta.pode_justificar && x.estado === 'PENDENTE' && x.ciencia_id)
           botoes += '<button type="button" class="icc-btn secundario" onclick="iccJustificarSupabase(\'' +
-            escaparAttr(x.ciencia_id) + '\')">REGISTRAR MOTIVO</button>';
+            escaparAttr(x.ciencia_id) + '\')">JUSTIFICAR AFASTAMENTO</button>';
         return '<tr><td>' + escapar(x.posto || '') + '</td><td>' + escapar(x.re || '') +
           '</td><td>' + escapar(x.nome || '') + '</td><td>' + assinatura + botoes + '</td></tr>';
       }).join('');
@@ -17090,8 +17121,12 @@ Banco de dados: Google Sheets.
     carregarDadosIcc = async function(grupo, competencia, idIcc) {
       /* Entrada padrão permanece na ICC ativa do Supabase. Histórico é explícito. */
       if (competencia && idIcc) return iccCarregarHistorico(grupo, competencia, idIcc);
-      const atual = await rpcPlanoFerias('icc_portal_dados', { p_grupo: grupo || null });
+      const atual = await rpcPlanoFerias('icc_portal_dados_afastamentos', { p_grupo: grupo || null });
       if (atual && atual.migrado) {
+        const roster=await chamarApi('efetivo_icc_atual',{grupo:atual.grupo},{semCache:true});
+        if(!roster||!roster.ok||!roster.dados||!Array.isArray(roster.dados.efetivo))throw new Error('Não foi possível conferir o efetivo atual da ICC.');
+        const ativos=new Set(roster.dados.efetivo.map(pm=>normalizarLoginConsultaCliente(pm.re)));
+        atual.linhas=(atual.linhas||[]).filter(item=>ativos.has(normalizarLoginConsultaCliente(item.re)));
         APP.iccSupabase = atual;
         APP.dadosIcc = { grupo: atual.grupo, documento: { id: atual.documento.id } };
         iccRenderSupabase(atual);
@@ -17142,7 +17177,8 @@ Banco de dados: Google Sheets.
       } catch (erro) { mostrarToastFt('Anulação não realizada', erro.message, 'erro'); }
     }
     async function iccJustificarSupabase(cienciaId) {
-      const motivo = window.prompt('Motivo da pendência desta ciência:');
+      if(!APP.iccSupabase||!APP.iccSupabase.pode_justificar)return;
+      const motivo = window.prompt('Justifique o afastamento: LSV, Férias ou outro impedimento. Informe o período quando conhecido.');
       if (motivo === null) return;
       if (motivo.trim().length < 3 || motivo.trim().length > 300) {
         mostrarToastFt('Motivo inválido', 'Informe de 3 a 300 caracteres.', 'erro');
