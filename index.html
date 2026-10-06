@@ -45,7 +45,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="cia-ft-build" content="FT-V138-20261006-TRANSFERENCIA-FOLGAS-VISUAL-R5">
+  <meta name="cia-ft-build" content="FT-V138-20261006-TRANSFERENCIA-FOLGAS-ALINHAMENTO-R6">
   <title>Portal Força Tática • V1.3.8</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
@@ -5918,7 +5918,9 @@ Banco de dados: Google Sheets.
     #transferenciaFolgasStatus:empty{display:none}
     @media(min-width:901px){
       #transferenciaFolgas .transferencia-folgas-grid{grid-template-columns:minmax(0,1fr) 114px 122px 175px auto;align-items:end}
-      #transferenciaFolgas input{min-height:34px;height:34px;padding:5px 8px;font-size:12px}
+      #appScreen #transferenciaFolgas .transferencia-folgas-grid label{margin:0!important}
+      #appScreen #transferenciaFolgas input,#appScreen #transferenciaFolgas select{box-sizing:border-box!important;min-height:48px!important;height:48px!important;max-height:48px!important;margin:0!important}
+      #transferenciaFolgas input{padding:5px 8px;font-size:12px}
       #appScreen #transferenciaFolgasSalvar{min-height:34px!important;height:34px!important;padding:7px 10px;font-size:10px;justify-self:center;align-self:end;margin-bottom:7px!important}
     }
     @media(max-width:900px){.freq-audit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.freq-legend-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -10555,7 +10557,7 @@ Banco de dados: Google Sheets.
       const aviso = document.getElementById('transferenciaFolgasAviso');
       const inicio = document.getElementById('transferenciaFolgasInicio');
       const dias = Number(document.getElementById('transferenciaFolgasDias')?.value || 0);
-      if (inicio) { inicio.required = dias > 0; inicio.disabled = dias === 0; }
+      if (inicio) { inicio.required = dias > 0; inicio.disabled = false; }
       if (aviso) {
         const transferido = !!(re && d.transferencias && d.transferencias[normalizarReClienteFrequencia(re)]);
         aviso.hidden = !transferido;
