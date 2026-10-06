@@ -13942,6 +13942,15 @@ Banco de dados: Google Sheets.
       };
     }
 
+    async function sincronizarLinkFotoSupabase(re, foto) {
+      const link = String(foto || '').trim();
+      if (!link) return;
+      const retorno = await rpcPlanoFerias('sincronizar_link_foto_efetivo', {
+        p_re: re, p_photo_url: link
+      });
+      if (!retorno || retorno.ok !== true) throw new Error('O link da foto não foi confirmado no Supabase.');
+    }
+
     async function sincronizarPolicialSupabase(reAlvo, automatico) {
       const reAlvoCompleto = String(reAlvo || '').trim().toUpperCase();
       const reBase = reAlvoCompleto.replace(/[^0-9]/g, '').slice(0, 6);
@@ -13972,7 +13981,13 @@ Banco de dados: Google Sheets.
         });
         if (jaExiste) {
           sessionStorage.removeItem(chavePendente);
-          if (!automatico) mostrarToastFt('Já sincronizado', 'O RE ' + reAlvoCompleto + ' já aparece no Supabase.');
+          let fotoPendente = '';
+          if (pm.foto) {
+            try { await sincronizarLinkFotoSupabase(reAlvoCompleto, pm.foto); }
+            catch (erroFoto) { fotoPendente = erroFoto.message || String(erroFoto); }
+          }
+          if (fotoPendente) mostrarToastFt('Foto pendente no Supabase', fotoPendente, 'erro');
+          else if (!automatico) mostrarToastFt('Já sincronizado', 'O RE ' + reAlvoCompleto + ' já aparece no Supabase. Link da foto conferido.');
           return true;
         }
         if (sessionStorage.getItem(chavePendente))
@@ -14024,7 +14039,14 @@ Banco de dados: Google Sheets.
           throw new Error('A função M1 respondeu sucesso, mas a leitura de conferência não localizou o policial. Não repita a inclusão. Protocolo: ' + requestId);
         }
         sessionStorage.removeItem(chavePendente);
-        mostrarToastFt('Policial sincronizado', reAlvoCompleto + ' incluído e conferido no Supabase. A ciência na ICC aberta é criada pelo gatilho. A foto segue pela etapa de Storage.');
+        let fotoPendente = '';
+        if (pm.foto) {
+          try { await sincronizarLinkFotoSupabase(reAlvoCompleto, pm.foto); }
+          catch (erroFoto) { fotoPendente = erroFoto.message || String(erroFoto); }
+        }
+        mostrarToastFt(fotoPendente ? 'Foto pendente no Supabase' : 'Policial sincronizado',
+          fotoPendente || reAlvoCompleto + ' incluído e conferido no Supabase. A ciência na ICC aberta é criada pelo gatilho. A foto segue pela etapa de Storage.',
+          fotoPendente ? 'erro' : 'sucesso');
         return true;
       } catch (erro) {
         const mensagem = erro && erro.message || String(erro);
@@ -14038,6 +14060,10 @@ Banco de dados: Google Sheets.
           } catch (ignorado) {}
           if (localizado) {
             sessionStorage.removeItem(chavePendente);
+            if (pm.foto) {
+              try { await sincronizarLinkFotoSupabase(reAlvoCompleto, pm.foto); }
+              catch (erroFoto) { mostrarToastFt('Foto pendente no Supabase', erroFoto.message, 'erro'); return true; }
+            }
             mostrarToastFt('Policial sincronizado', reAlvoCompleto + ' localizado no Supabase após a conferência.');
             return true;
           } else {
@@ -14323,7 +14349,7 @@ Banco de dados: Google Sheets.
           reAlvo: reLogin,
           campos: JSON.stringify(campos)
         })
-        .then(function(resp) {
+        .then(async function(resp) {
           if (!resp || !resp.ok) {
             throw new Error(resp && resp.erro ? resp.erro : 'Falha ao salvar alterações.');
           }
@@ -14337,7 +14363,14 @@ Banco de dados: Google Sheets.
             if (idx !== -1) lista[idx] = Object.assign({}, lista[idx], atualizado);
           }
 
-          mostrarToastFt('Dados atualizados', 'As alterações foram gravadas na CADASTRO GERAL.');
+          let erroFoto = '';
+          if (campos.foto) {
+            try { await sincronizarLinkFotoSupabase(atualizado ? atualizado.re : reLogin, campos.foto); }
+            catch (erro) { erroFoto = erro.message || String(erro); }
+          }
+          mostrarToastFt(erroFoto ? 'Foto pendente no Supabase' : 'Dados atualizados',
+            erroFoto ? 'Os dados foram salvos na planilha, mas o link da foto não foi sincronizado: ' + erroFoto :
+              'As alterações foram gravadas na CADASTRO GERAL.', erroFoto ? 'erro' : 'sucesso');
           filtrarConsultaEfetivo();
           abrirCardConsultaEfetivo(atualizado ? atualizado.re : reLogin);
         })
