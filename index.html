@@ -10509,9 +10509,72 @@ Banco de dados: Google Sheets.
           <div><strong>ZERAM O CICLO</strong>DS, CM, LTS, LSV, CEP e OUT zeram os dias, sem eliminar folgas adquiridas.</div>
         </div>
         <div class="freq-note">Os lançamentos são salvos individualmente. FOLGAS mostra o saldo disponível e DIAS TRAB. mostra o progresso atual do ciclo, de 0 a 13.</div>
+        ${d.capacidades && d.capacidades.podeTransferirSaldo ? `
+          <details class="freq-legend" id="transferenciaFolgas">
+            <summary>TRANSFERIR SALDO DA UNIDADE ANTERIOR</summary>
+            <p>Uso único para policial recém-incluído. As folgas adquiridas e os dias EO já trabalhados entram no saldo inicial; os lançamentos posteriores são recalculados.</p>
+            <div class="freq-legend-grid">
+              <label>Policial (RE)
+                <select id="transferenciaFolgasRe" onchange="atualizarTransferenciaFolgas()">
+                  <option value="">Selecione</option>
+                  ${(d.efetivo || []).map(function(pm) { return '<option value="' + escaparAttr(pm.re) + '">' + escapar(pm.postoGrad + ' ' + pm.nomeGuerra + ' — ' + pm.re) + '</option>'; }).join('')}
+                </select>
+              </label>
+              <label>Folgas a gozar <input id="transferenciaFolgasQuantidade" type="number" min="0" max="100" step="1" value="0"></label>
+              <label>Dias EO no ciclo <input id="transferenciaFolgasDias" type="number" min="0" max="13" step="1" value="0" oninput="atualizarTransferenciaFolgas()"></label>
+              <label>Início do ciclo EO <input id="transferenciaFolgasInicio" type="date"></label>
+            </div>
+            <p id="transferenciaFolgasAviso">Se houver dias EO, informe a data real em que começou o ciclo na unidade anterior.</p>
+            <button class="btn-page" id="transferenciaFolgasSalvar" onclick="salvarTransferenciaFolgas()">REGISTRAR TRANSFERÊNCIA</button>
+          </details>` : ''}
         ${montarNavegacaoSemanasTabelaMobile('folgas', d, faixaDias)}
         ${montarTabelaControleFolgas(d, faixaDias)}
       `;
+    }
+
+
+    function atualizarTransferenciaFolgas() {
+      const d = APP.dadosControleFolgas || {};
+      const re = document.getElementById('transferenciaFolgasRe')?.value || '';
+      const aviso = document.getElementById('transferenciaFolgasAviso');
+      const inicio = document.getElementById('transferenciaFolgasInicio');
+      const dias = Number(document.getElementById('transferenciaFolgasDias')?.value || 0);
+      if (inicio) { inicio.required = dias > 0; inicio.disabled = dias === 0; }
+      if (aviso) aviso.textContent = re && d.transferencias && d.transferencias[normalizarReClienteFrequencia(re)] ?
+        'Já existe transferência registrada para este RE. Não é possível duplicar.' :
+        'Se houver dias EO, informe a data real em que começou o ciclo na unidade anterior.';
+    }
+
+
+    async function salvarTransferenciaFolgas() {
+      const re = document.getElementById('transferenciaFolgasRe')?.value || '';
+      const folgas = document.getElementById('transferenciaFolgasQuantidade')?.value;
+      const dias = document.getElementById('transferenciaFolgasDias')?.value;
+      const inicio = document.getElementById('transferenciaFolgasInicio')?.value || '';
+      if (!re || !/^\d+$/.test(folgas) || !/^\d+$/.test(dias) ||
+          (!Number(folgas) && !Number(dias)) || Number(dias) > 13 || (Number(dias) && !inicio)) {
+        mostrarToastFt('Dados incompletos', 'Selecione o policial e informe o saldo e o início do ciclo EO, quando houver.');
+        return;
+      }
+      const confirmado = await confirmarToastFt('CONFIRMAR SALDO DA UNIDADE ANTERIOR',
+        'RE ' + re + ': ' + folgas + ' folga(s) a gozar e ' + dias + '/14 EO. O registro só pode ser feito uma vez.',
+        { confirmar: 'CONFIRMAR', cancelar: 'VOLTAR' });
+      if (!confirmado) return;
+      const botao = document.getElementById('transferenciaFolgasSalvar');
+      if (botao) botao.disabled = true;
+      try {
+        const resp = await chamarApi('transferir_saldo_folgas', {
+          login: APP.credenciais.login, senha: APP.credenciais.senha,
+          re: re, folgas: folgas, diasTrabalhados: dias, inicioCicloISO: inicio
+        });
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro || 'Falha ao transferir saldo.');
+        mostrarToastFt('Saldo transferido', resp.dados.mensagem);
+        abrirControleFolgas(APP.dadosControleFolgas.competencia);
+      } catch (erro) {
+        mostrarToastFt('Saldo não transferido', erro.message || String(erro));
+      } finally {
+        if (botao && document.body.contains(botao)) botao.disabled = false;
+      }
     }
 
 
