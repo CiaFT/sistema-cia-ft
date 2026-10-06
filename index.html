@@ -16675,6 +16675,68 @@ Banco de dados: Google Sheets.
 
     /* M4.8: ICC nova, leitura/publicação/ciência com JWT Supabase. */
     const iccCarregarLegado = carregarDadosIcc;
+    let iccHistoricosDisponiveis = [];
+    function iccBarraHistorico(grupo, idAtivo) {
+      const botoes = iccHistoricosDisponiveis.map(function(item) {
+        return '<button type="button" class="freq-month-btn ' + (item.id === idAtivo ? 'ativo' : '') +
+          '" onclick="abrirIcc(\'' + escaparAttr(grupo || '') + '\',\'' +
+          escaparAttr(item.competencia) + '\',\'' + escaparAttr(item.id) + '\')">ICC ' +
+          escapar(item.numero) + '/' + escapar(item.ano) + '</button>';
+      }).join('');
+      return '<div class="freq-months" aria-label="Quinzenas da ICC">' +
+        '<button type="button" class="freq-month-btn ' + (!idAtivo ? 'ativo' : '') +
+        '" onclick="abrirIcc(\'' + escaparAttr(grupo || '') + '\',\'\',\'\')">ICC ATUAL</button>' +
+        botoes + '</div>';
+    }
+    async function iccBuscarHistoricos(grupo, documentoAtualId) {
+      try {
+        const base = await chamarApi('dados_icc', { grupo: grupo || '' }, { semCache: true });
+        if (!base || !base.ok) throw new Error(base && base.erro || 'Histórico não carregado.');
+        const meses = (base.dados && base.dados.meses || []).filter(m => /^\d{4}-\d{2}$/.test(m));
+        const respostas = await Promise.allSettled(meses.map(m => chamarApi('dados_icc', {
+          grupo: grupo || '', competencia: m
+        }, { semCache: true })));
+        iccHistoricosDisponiveis = respostas.flatMap(function(r, i) {
+          if (r.status !== 'fulfilled' || !r.value || !r.value.ok) return [];
+          return (r.value.dados && r.value.dados.documentosMes || []).map(function(d) {
+            return { id: String(d.id || ''), numero: String(d.numero || ''),
+              ano: String(d.ano || ''), competencia: meses[i] };
+          }).filter(d => d.id && d.id !== documentoAtualId);
+        }).filter((d, i, arr) => arr.findIndex(x => x.id === d.id) === i)
+          .sort((a, b) => b.competencia.localeCompare(a.competencia) ||
+            Number(b.numero) - Number(a.numero));
+        const nav = document.getElementById('iccBarraHistorico');
+        if (nav) nav.innerHTML = iccBarraHistorico(grupo, '');
+      } catch (erro) {
+        const nav = document.getElementById('iccBarraHistorico');
+        if (nav) nav.innerHTML = iccBarraHistorico(grupo, '') +
+          '<p>Histórico temporariamente indisponível: ' + escapar(erro.message || String(erro)) + '</p>';
+      }
+    }
+    async function iccCarregarHistorico(grupo, competencia, idIcc) {
+      const resp = await chamarApi('dados_icc', {
+        grupo: grupo || '', competencia: competencia, idIcc: idIcc
+      }, { semCache: true });
+      if (!resp || !resp.ok || !resp.dados || !resp.dados.documento ||
+          String(resp.dados.documento.id) !== String(idIcc))
+        throw new Error('ICC histórica não localizada.');
+      const dados = resp.dados;
+      dados.documento.status = 'HISTORICO';
+      (dados.documentosMes || []).forEach(d => { d.atual = false; });
+      (dados.linhas || []).forEach(l => { l.podeAnular = false; });
+      dados.capacidades = { ...(dados.capacidades || {}), podeAdministrar: false,
+        podeAssinar: false, podeUpload: false, podeEditarMetadados: false };
+      APP.iccSupabase = null;
+      APP.dadosIcc = dados;
+      renderizarIcc();
+      const box = document.getElementById('iccConteudo');
+      if (box) {
+        box.querySelectorAll(':scope > .freq-months').forEach(el => el.remove());
+        box.insertAdjacentHTML('afterbegin', '<div id="iccBarraHistorico">' +
+          iccBarraHistorico(dados.grupo, idIcc) + '</div><div class="ra-aviso">ICC HISTÓRICA — somente consulta.</div>');
+      }
+      return dados;
+    }
     function iccConfigSupabase() {
       const cfg = configPlanoFerias();
       return {
@@ -16740,6 +16802,7 @@ Banco de dados: Google Sheets.
       const box = document.getElementById('iccConteudo');
       if (!box) return;
       box.innerHTML =
+        '<div id="iccBarraHistorico">' + iccBarraHistorico(resposta.grupo, '') + '</div>' +
         '<section class="icc-documento"><div class="icc-section-head"><div><h2>ICC ' +
         escapar(d.numero_icc) + '/' + escapar(d.ano_icc) +
         '</h2><p>' + escapar(d.tema || '') + '</p></div></div>' +
@@ -16773,12 +16836,14 @@ Banco de dados: Google Sheets.
         '<tbody>' + corpo + '</tbody></table></div></div></section>';
     }
     carregarDadosIcc = async function(grupo, competencia, idIcc) {
-      /* A RPC determina o escopo efetivo; histórico anterior permanece no legado. */
+      /* Entrada padrão permanece na ICC ativa do Supabase. Histórico é explícito. */
+      if (competencia && idIcc) return iccCarregarHistorico(grupo, competencia, idIcc);
       const atual = await rpcPlanoFerias('icc_portal_dados', { p_grupo: grupo || null });
       if (atual && atual.migrado) {
         APP.iccSupabase = atual;
         APP.dadosIcc = { grupo: atual.grupo, documento: { id: atual.documento.id } };
         iccRenderSupabase(atual);
+        iccBuscarHistoricos(atual.grupo, atual.documento.id);
         return atual;
       }
       APP.iccSupabase = null;
