@@ -13404,7 +13404,7 @@ Banco de dados: Google Sheets.
       return chamarApi('dados_consulta_efetivo', {
           login: APP.credenciais.login,
           senha: APP.credenciais.senha
-        })
+        }, { semCache: true })
         .then(async function(resp) {
           if (!resp || !resp.ok) {
             throw new Error(resp && resp.erro ? resp.erro : 'Falha ao carregar Consulta do Efetivo.');
@@ -13790,7 +13790,7 @@ Banco de dados: Google Sheets.
               <p>Card do policial — Consulta do Efetivo</p>
             </div>
             <div class="consulta-modal-actions">
-              ${String(alvo.re || '').trim().toUpperCase() === '211572-7' && usuarioPodeInserirConsultaEfetivo() ? '<button id="btnM1Incluir211572" class="consulta-edit-btn" type="button" onclick="sincronizarPolicial211572Supabase()">SINCRONIZAR NO SUPABASE</button>' : ''}
+              ${usuarioPodeInserirConsultaEfetivo() ? '<button id="btnM1IncluirPolicial" class="consulta-edit-btn" type="button" onclick="sincronizarPolicialSupabase(\'' + escaparAttr(alvo.re || '') + '\', false)">CONFERIR / SINCRONIZAR SUPABASE</button>' : ''}
               ${podeEditar ? `<button id="btnEditarConsultaEfetivo" class="consulta-edit-btn" type="button" onclick="alternarEdicaoConsultaEfetivo(true)">EDITAR DADOS</button>` : ''}
               <button class="consulta-modal-close" type="button" onclick="fecharCardConsultaEfetivo()">FECHAR</button>
             </div>
@@ -13942,22 +13942,25 @@ Banco de dados: Google Sheets.
       };
     }
 
-    async function sincronizarPolicial211572Supabase() {
-      const btn = document.getElementById('btnM1Incluir211572');
+    async function sincronizarPolicialSupabase(reAlvo, automatico) {
+      const reAlvoCompleto = String(reAlvo || '').trim().toUpperCase();
+      const reBase = reAlvoCompleto.replace(/[^0-9]/g, '').slice(0, 6);
+      const btn = document.getElementById('btnM1IncluirPolicial');
       if (!usuarioPodeInserirConsultaEfetivo()) {
         mostrarToastFt('Acesso negado', 'Seu perfil não possui permissão para incluir efetivo no Supabase.');
-        return;
+        return false;
       }
       const lista = APP.dadosConsultaEfetivo && APP.dadosConsultaEfetivo.efetivo || [];
-      const pm = lista.find(function(item) { return String(item.re || '').trim().toUpperCase() === '211572-7'; });
+      const pm = lista.find(function(item) { return String(item.re || '').trim().toUpperCase() === reAlvoCompleto; });
       if (!pm) {
         mostrarToastFt('Cadastro não localizado', 'Atualize a Consulta do Efetivo e tente novamente.');
-        return;
+        return false;
       }
-      if (!confirm('Sincronizar 211572-7 com o Supabase usando os dados funcionais e pessoais já cadastrados? A senha inicial será criada pelo fluxo M1. A foto será migrada em etapa própria.')) return;
+      if (!automatico && !confirm('Conferir e, se necessário, sincronizar o RE ' + reAlvoCompleto + ' com o Supabase?')) return false;
       if (btn) { btn.disabled = true; btn.textContent = 'VALIDANDO...'; }
 
       let requestId = '';
+      const chavePendente = 'appft-m1-pendente-' + reAlvoCompleto;
       try {
         const leitura = await rpcPlanoFerias('gestao_efetivo_leitura', {});
         if (!leitura || !leitura.ok || !leitura.capabilities || !leitura.capabilities.can_insert) {
@@ -13965,20 +13968,24 @@ Banco de dados: Google Sheets.
         }
         const jaExiste = (leitura.items || []).some(function(item) {
           const re = String(item.re || '').trim().toUpperCase();
-          return re === '211572-7' || String(item.re_base || '') === '211572';
+          return re === reAlvoCompleto || String(item.re_base || '') === reBase;
         });
         if (jaExiste) {
-          mostrarToastFt('Já sincronizado', 'O RE 211572-7 já aparece no efetivo do Supabase.');
-          return;
+          sessionStorage.removeItem(chavePendente);
+          if (!automatico) mostrarToastFt('Já sincronizado', 'O RE ' + reAlvoCompleto + ' já aparece no Supabase.');
+          return true;
         }
+        if (sessionStorage.getItem(chavePendente))
+          throw new Error('Inclusão anterior com resposta incerta. Protocolo: ' + sessionStorage.getItem(chavePendente) + '. Não crie outro usuário antes da conferência.');
         const payload = montarPayloadInclusaoM1(pm, leitura.catalogs || {});
         const validacao = await rpcPlanoFerias('validar_inclusao_novo_policial_m1', { p_payload: payload });
         if (!validacao || validacao.ok !== true) {
           throw new Error(validacao && (validacao.message || validacao.error_code) || 'A validação M1 recusou os dados.');
         }
-        if (!confirm('Pré-validação aprovada para ' + payload.re + ' — ' + payload.full_name + '. Confirmar a inclusão definitiva no Supabase?')) return;
+        if (!automatico && !confirm('Pré-validação aprovada para ' + payload.re + ' — ' + payload.full_name + '. Confirmar a inclusão definitiva no Supabase?')) return false;
 
         requestId = crypto.randomUUID();
+        sessionStorage.setItem(chavePendente, requestId);
         if (btn) btn.textContent = 'INCLUINDO...';
         const cfg = configPlanoFerias();
         const url = String(cfg.url || APPFT_FERIAS_SUPABASE_URL).replace(/\/$/, '');
@@ -14002,6 +14009,7 @@ Banco de dados: Google Sheets.
           const code = corpo && corpo.error_code || '';
           if (code === 'CONFIRMATION_UNKNOWN') throw new Error('CONFIRMAÇÃO INCERTA. Não clique novamente. Protocolo: ' + requestId + '. Primeiro será necessário conferir o estado no Supabase.');
           if (resposta.status >= 500 || controller.signal.aborted) throw new Error('RESPOSTA INCERTA (HTTP ' + resposta.status + '). Não clique novamente. Protocolo: ' + requestId + '. Primeiro será necessário conferir o estado no Supabase.');
+          sessionStorage.removeItem(chavePendente);
           throw new Error(corpo && (corpo.message || corpo.error_code) || 'A função M1 recusou a inclusão (HTTP ' + resposta.status + '). Protocolo: ' + requestId);
         }
 
@@ -14009,13 +14017,15 @@ Banco de dados: Google Sheets.
         try {
           const depois = await rpcPlanoFerias('gestao_efetivo_leitura', {});
           confirmadoNaLeitura = (depois.items || []).some(function(item) {
-            return String(item.re || '').trim().toUpperCase() === '211572-7' || String(item.re_base || '') === '211572';
+            return String(item.re || '').trim().toUpperCase() === reAlvoCompleto || String(item.re_base || '') === reBase;
           });
         } catch (ignorado) {}
         if (!confirmadoNaLeitura) {
           throw new Error('A função M1 respondeu sucesso, mas a leitura de conferência não localizou o policial. Não repita a inclusão. Protocolo: ' + requestId);
         }
-        mostrarToastFt('Policial sincronizado', '211572-7 incluído e conferido no Supabase. A foto seguirá pela etapa de Storage.');
+        sessionStorage.removeItem(chavePendente);
+        mostrarToastFt('Policial sincronizado', reAlvoCompleto + ' incluído e conferido no Supabase. A ciência na ICC aberta é criada pelo gatilho. A foto segue pela etapa de Storage.');
+        return true;
       } catch (erro) {
         const mensagem = erro && erro.message || String(erro);
         if (requestId) {
@@ -14023,19 +14033,22 @@ Banco de dados: Google Sheets.
           try {
             const conferencia = await rpcPlanoFerias('gestao_efetivo_leitura', {});
             localizado = (conferencia.items || []).some(function(item) {
-              return String(item.re || '').trim().toUpperCase() === '211572-7' || String(item.re_base || '') === '211572';
+              return String(item.re || '').trim().toUpperCase() === reAlvoCompleto || String(item.re_base || '') === reBase;
             });
           } catch (ignorado) {}
           if (localizado) {
-            mostrarToastFt('Policial sincronizado', '211572-7 foi localizado no Supabase após a conferência. A foto seguirá pela etapa de Storage.');
+            sessionStorage.removeItem(chavePendente);
+            mostrarToastFt('Policial sincronizado', reAlvoCompleto + ' localizado no Supabase após a conferência.');
+            return true;
           } else {
             mostrarToastFt('Resultado não confirmado', mensagem + ' Não clique novamente. Protocolo para conferência: ' + requestId);
           }
         } else {
           mostrarToastFt('Sincronização interrompida', mensagem);
         }
+        return false;
       } finally {
-        if (btn && document.body.contains(btn)) { btn.disabled = false; btn.textContent = 'SINCRONIZAR NO SUPABASE'; }
+        if (btn && document.body.contains(btn)) { btn.disabled = false; btn.textContent = 'CONFERIR / SINCRONIZAR SUPABASE'; }
       }
     }
 
@@ -14795,14 +14808,20 @@ Banco de dados: Google Sheets.
           senha: APP.credenciais.senha,
           campos: JSON.stringify(campos)
         })
-        .then(function(resp) {
+        .then(async function(resp) {
           if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao adicionar policial.');
-          mostrarToastFt('Policial adicionado', resp.dados && resp.dados.mensagem ? resp.dados.mensagem : 'Cadastro incluído com sucesso.');
           fecharCardConsultaEfetivo();
-          return carregarConsultaEfetivo().then(function() { renderizarConsultaEfetivo(); });
+          await carregarConsultaEfetivo();
+          renderizarConsultaEfetivo();
+          const sincronizado = await sincronizarPolicialSupabase(campos.re, true);
+          if (sincronizado) mostrarToastFt('Cadastro completo',
+            'O RE ' + campos.re + ' foi salvo e conferido no Supabase.');
+          else mostrarToastFt('Cadastro parcial',
+            'O RE ' + campos.re + ' foi salvo na planilha. A sincronização com Supabase/ICC não foi confirmada. Abra o card e use CONFERIR / SINCRONIZAR SUPABASE.', 'erro');
         })
         .catch(function(err) {
-          mostrarToastFt('Cadastro não enviado', err.message || String(err));
+          mostrarToastFt('Inclusão não confirmada integralmente',
+            (err.message || String(err)) + ' Confira o RE na Consulta do Efetivo antes de tentar novamente.', 'erro');
         })
         .finally(function() {
           if (btn) {
