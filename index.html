@@ -17073,7 +17073,7 @@ Banco de dados: Google Sheets.
         let botoes = '';
         if (x.proprio && resposta.pode_assinar && x.estado !== 'ASSINADO')
           botoes += '<button type="button" class="icc-btn" onclick="iccAssinarSupabase(this)">CONFIRMAR CIÊNCIA</button>';
-        if (resposta.pode_editar && x.estado === 'ASSINADO' && x.assinatura_id)
+        if (resposta.pode_anular && x.estado === 'ASSINADO' && x.assinatura_id)
           botoes += '<button type="button" class="icc-btn secundario" onclick="iccAnularSupabase(\'' +
             escaparAttr(x.assinatura_id) + '\')">ANULAR COM JUSTIFICATIVA</button>';
         if (resposta.pode_justificar && x.estado === 'PENDENTE' && x.ciencia_id)
@@ -17157,6 +17157,7 @@ Banco de dados: Google Sheets.
       }
     }
     async function iccAnularSupabase(assinaturaId) {
+      if(!APP.iccSupabase||!APP.iccSupabase.pode_anular){mostrarToastFt('Acesso restrito','Somente Enc Adm e Gestor podem anular assinaturas.','erro');return;}
       const motivo = window.prompt('Justificativa obrigatória para anular a assinatura (5 a 300 caracteres):');
       if (motivo === null) return;
       if (motivo.trim().length < 5 || motivo.trim().length > 300) {
