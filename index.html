@@ -45,7 +45,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="cia-ft-build" content="FT-V138-20261006-TRANSFERENCIA-FOLGAS-ALINHAMENTO-R6">
+  <meta name="cia-ft-build" content="FT-V138-20261006-GRAVACAO-CONFIAVEL-R7">
   <title>Portal Força Tática • V1.3.8</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
@@ -10325,14 +10325,15 @@ Banco de dados: Google Sheets.
       select.classList.add('freq-saving');
       if (wrap) wrap.classList.add('freq-saving');
 
-      chamarApi('salvar_frequencia', {
+      const pedido = {
         login: APP.credenciais.login,
         senha: APP.credenciais.senha,
         competencia: APP.dadosControleFrequencia.competencia,
         re: select.getAttribute('data-re'),
         dia: select.getAttribute('data-dia'),
         valor: select.value
-      }).then(function(resp) {
+      };
+      chamarApiLancamentoVerificado_('salvar_frequencia', pedido).then(function(resp) {
         if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao salvar o lançamento.');
         const dados = resp.dados || {};
         const re = select.getAttribute('data-re');
@@ -10348,6 +10349,13 @@ Banco de dados: Google Sheets.
           wrap.classList.add('freq-saved');
         }
         if (APP.dadosControleFrequencia) {
+          const chave = normalizarReClienteFrequencia(re);
+          const lancamento = APP.dadosControleFrequencia.lancamentos[chave];
+          if (lancamento) {
+            lancamento.dias[Number(pedido.dia) - 1] = pedido.valor;
+            lancamento.diarias = Number(dados.diarias || 0);
+            lancamento.diasTrabalhados = Number(dados.diasTrabalhados || 0);
+          }
           APP.dadosControleFrequencia.auditoria = dados.auditoria || APP.dadosControleFrequencia.auditoria;
           const auditArea = document.getElementById('freqAuditArea');
           if (auditArea) auditArea.innerHTML = montarAuditoriaFrequencia(APP.dadosControleFrequencia);
@@ -10357,6 +10365,13 @@ Banco de dados: Google Sheets.
           if (wrap) wrap.classList.remove('freq-saved');
         }, 800);
       }).catch(function(err) {
+        if (err && err.naoConfirmado) {
+          select.classList.remove('freq-saving');
+          if (wrap) wrap.classList.remove('freq-saving');
+          select.classList.add('freq-saving');
+          mostrarToastFt('Lançamento sem confirmação', 'Não foi possível verificar o resultado. Reabra este mês antes de lançar novamente.');
+          return;
+        }
         const anterior = select.getAttribute('data-valor-anterior');
         if (anterior !== null) select.value = anterior;
         atualizarVisualCelulaFrequencia(select);
@@ -10365,7 +10380,7 @@ Banco de dados: Google Sheets.
         mostrarToastFt('Lançamento não salvo', err.message || String(err));
       }).finally(function() {
         const fechado = APP.dadosControleFrequencia && APP.dadosControleFrequencia.auditoria && APP.dadosControleFrequencia.auditoria.fechamentoCmt.status === 'APROVADO';
-        select.disabled = fechado && !(APP.dadosControleFrequencia.capacidades || {}).podeReabrir;
+        select.disabled = select.classList.contains('freq-saving') || (fechado && !(APP.dadosControleFrequencia.capacidades || {}).podeReabrir);
       });
     }
 
@@ -10733,14 +10748,15 @@ Banco de dados: Google Sheets.
       select.classList.add('freq-saving');
       if (wrap) wrap.classList.add('freq-saving');
 
-      chamarApi('salvar_controle_folgas', {
+      const pedido = {
         login: APP.credenciais.login,
         senha: APP.credenciais.senha,
         competencia: APP.dadosControleFolgas.competencia,
         re: select.getAttribute('data-re'),
         dia: select.getAttribute('data-dia'),
         valor: select.value
-      }).then(function(resp) {
+      };
+      chamarApiLancamentoVerificado_('salvar_controle_folgas', pedido).then(function(resp) {
         if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao salvar o lançamento.');
         const dados = resp.dados || {};
         const re = select.getAttribute('data-re');
@@ -10769,6 +10785,13 @@ Banco de dados: Google Sheets.
           if (wrap) wrap.classList.remove('freq-saved');
         }, 800);
       }).catch(function(err) {
+        if (err && err.naoConfirmado) {
+          select.classList.remove('freq-saving');
+          if (wrap) wrap.classList.remove('freq-saving');
+          select.classList.add('freq-saving');
+          mostrarToastFt('Lançamento sem confirmação', 'Não foi possível verificar o resultado. Reabra este mês antes de lançar novamente.');
+          return;
+        }
         const anterior = select.getAttribute('data-valor-anterior');
         if (anterior !== null) select.value = anterior;
         atualizarVisualCelulaControleFolgas(select, true);
@@ -10776,7 +10799,7 @@ Banco de dados: Google Sheets.
         if (wrap) wrap.classList.remove('freq-saving');
         mostrarToastFt('Lançamento não salvo', err.message || String(err));
       }).finally(function() {
-        if (select && document.body.contains(select)) select.disabled = false;
+        if (select && document.body.contains(select)) select.disabled = select.classList.contains('freq-saving');
       });
     }
 
@@ -15890,6 +15913,51 @@ Banco de dados: Google Sheets.
     }
 
 
+    /* A resposta pode se perder depois da gravacao. Nessas duas telas,
+       conferimos o valor no servidor antes de declarar falha ao auxiliar. */
+    function chamarApiLancamentoVerificado_(acao, pedido) {
+      return chamarApi(acao, pedido).then(function(resp) {
+        if (!resp || !resp.ok) throw new Error(resp && resp.erro || 'A API nao confirmou o lancamento.');
+        return resp;
+      }).catch(function(erroOriginal) {
+        const frequencia = acao === 'salvar_frequencia';
+        return chamarApi(frequencia ? 'dados_controle_frequencia' : 'dados_controle_folgas', {
+          login: APP.credenciais.login, senha: APP.credenciais.senha,
+          competencia: pedido.competencia
+        }, { semCache: true }).then(function(leitura) {
+          if (!leitura || !leitura.ok || !leitura.dados) throw new Error('Leitura de conferencia indisponivel.');
+          const dados = leitura.dados;
+          const re = normalizarReClienteFrequencia(pedido.re);
+          const indice = Number(pedido.dia) - 1;
+          const lancamento = dados.lancamentos && dados.lancamentos[re];
+          if (!lancamento || !Array.isArray(lancamento.dias)) throw new Error('Policial nao retornou na conferencia.');
+          if (String(lancamento.dias[indice] || '') !== String(pedido.valor || '')) throw erroOriginal;
+          if (frequencia) {
+            return { ok: true, dados: {
+              re: pedido.re, dia: Number(pedido.dia), valor: pedido.valor,
+              diarias: lancamento.diarias, diasTrabalhados: lancamento.diasTrabalhados,
+              auditoria: dados.auditoria,
+              mensagem: 'Lancamento confirmado no servidor apos falha de conexao.'
+            } };
+          }
+          const saldo = dados.saldos && dados.saldos[re];
+          if (!saldo) throw new Error('Saldo nao retornou na conferencia.');
+          return { ok: true, dados: {
+            re: pedido.re, dia: Number(pedido.dia), valor: pedido.valor,
+            folgas: saldo.folgas, diasTrabalhados: saldo.diasTrabalhados,
+            creditosDisponiveis: saldo.creditosDisponiveis,
+            mensagem: 'Lancamento confirmado no servidor apos falha de conexao.'
+          } };
+        }).catch(function(erroConferencia) {
+          if (erroConferencia === erroOriginal) throw erroOriginal;
+          const pendente = new Error('Nao foi possivel conferir se o lancamento foi gravado.');
+          pendente.naoConfirmado = true;
+          throw pendente;
+        });
+      });
+    }
+
+
     function chamarApi(action, params, opcoes) {
       params = params || {};
       opcoes = opcoes || {};
@@ -15908,8 +15976,9 @@ Banco de dados: Google Sheets.
       const acaoNormalizada = normalizarTexto(action).replace(/[^A-Z0-9]/g, '');
       const operacaoPesada = acaoNormalizada.indexOf('GERARPDF') === 0 || acaoNormalizada.indexOf('BAIXAR') === 0;
       const operacaoEscrita = !somenteLeitura;
-      const limitePonte = operacaoPesada ? 45000 : (operacaoEscrita ? 35000 : 20000);
-      const limiteJsonp = operacaoPesada ? 60000 : (operacaoEscrita ? 40000 : (ehLogin ? 25000 : 30000));
+      const lancamentoDiario = acaoNormalizada === 'SALVARFREQUENCIA' || acaoNormalizada === 'SALVARCONTROLEFOLGAS';
+      const limitePonte = operacaoPesada ? 45000 : (lancamentoDiario ? 55000 : (operacaoEscrita ? 35000 : 20000));
+      const limiteJsonp = operacaoPesada ? 60000 : (lancamentoDiario ? 60000 : (operacaoEscrita ? 40000 : (ehLogin ? 25000 : 30000)));
       const podeCache = !opcoes.semCache && somenteLeitura && !ehLogin && acaoNormalizada.indexOf('BAIXAR') !== 0 && acaoNormalizada.indexOf('GERARPDF') !== 0;
       const cache = APP.apiCache[chave];
       if (podeCache && cache && cache.expiraEm > agora) return Promise.resolve(cache.resp);
