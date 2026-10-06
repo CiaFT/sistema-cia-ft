@@ -16025,13 +16025,25 @@ Banco de dados: Google Sheets.
         motivoSaida: motivo,
         memorandoSaida: memorando,
         destino: destino
-      }).then(function(r) {
+      }).then(async function(r) {
         if (!r || !r.ok) throw new Error(r && r.erro ? r.erro : 'Falha ao arquivar policial.');
+        let sincronizado = false;
+        let erroSincronizacao = '';
+        try {
+          const resp = await rpcPlanoFerias('arquivar_policial_supabase_icc', {
+            p_re: re, p_motivo: motivo, p_memorando: memorando, p_destino: destino
+          });
+          if (!resp || resp.ok !== true) throw new Error(resp && (resp.message || resp.error_code) || 'Arquivamento Supabase não confirmado.');
+          sincronizado = true;
+        } catch (erro) { erroSincronizacao = erro.message || String(erro); }
         const modal = document.getElementById('modalV125');
         if (modal) modal.remove();
         fecharCardConsultaEfetivo();
         APP.dadosConsultaEfetivo = null;
-        mostrarToastFt('Policial arquivado', r.dados.mensagem);
+        mostrarToastFt(sincronizado ? 'Policial arquivado nos dois sistemas' : 'SINCRONIZAÇÃO PENDENTE',
+          sincronizado ? r.dados.mensagem :
+          'O cadastro saiu da planilha, mas ainda consta no Supabase e na ICC. RE ' + re + '. ' + erroSincronizacao,
+          sincronizado ? 'sucesso' : 'erro');
         return carregarDadosConsultaEfetivo(true).then(renderizarConsultaEfetivo);
       }).catch(function(e) {
         mostrarToastFt('Erro', e.message || String(e));
@@ -16675,6 +16687,25 @@ Banco de dados: Google Sheets.
 
     /* M4.8: ICC nova, leitura/publicação/ciência com JWT Supabase. */
     const iccCarregarLegado = carregarDadosIcc;
+    let iccMesesLegados = [];
+    async function iccNavegacaoHistorica(grupo) {
+      try {
+        const resp = await chamarApi('dados_icc', { grupo: grupo || '' }, { semCache: true });
+        if (!resp || !resp.ok) return;
+        const dados = resp.dados || {};
+        iccMesesLegados = (Array.isArray(dados.meses) ? dados.meses : [])
+          .filter(m => /^\d{4}-\d{2}$/.test(m));
+        const box = document.getElementById('iccHistoricoNavegacao');
+        if (!box) return;
+        box.innerHTML = '<div class="freq-months" aria-label="Quinzenas anteriores da ICC">' +
+          iccMesesLegados.map(m => '<button type="button" class="freq-month-btn" onclick="abrirIcc(\'' +
+            escaparAttr(grupo || '') + '\',\'' + escaparAttr(m) + '\',\'\')">' +
+            escapar(rotuloCompetenciaFrequencia(m)) + '</button>').join('') + '</div>';
+      } catch (erro) {
+        const box = document.getElementById('iccHistoricoNavegacao');
+        if (box) box.textContent = 'Histórico indisponível: ' + (erro.message || String(erro));
+      }
+    }
     function iccConfigSupabase() {
       const cfg = configPlanoFerias();
       return {
@@ -16740,6 +16771,7 @@ Banco de dados: Google Sheets.
       const box = document.getElementById('iccConteudo');
       if (!box) return;
       box.innerHTML =
+        '<div id="iccHistoricoNavegacao"></div>' +
         '<section class="icc-documento"><div class="icc-section-head"><div><h2>ICC ' +
         escapar(d.numero_icc) + '/' + escapar(d.ano_icc) +
         '</h2><p>' + escapar(d.tema || '') + '</p></div></div>' +
@@ -16773,12 +16805,21 @@ Banco de dados: Google Sheets.
         '<tbody>' + corpo + '</tbody></table></div></div></section>';
     }
     carregarDadosIcc = async function(grupo, competencia, idIcc) {
-      /* A RPC determina o escopo efetivo; histórico anterior permanece no legado. */
+      /* Meses históricos continuam na API legada; a ICC ativa usa Supabase. */
+      if (competencia || idIcc) {
+        APP.iccSupabase = null;
+        const historico = await iccCarregarLegado(grupo, competencia, idIcc);
+        const box = document.getElementById('iccConteudo');
+        if (box) box.insertAdjacentHTML('afterbegin', '<div class="freq-months"><button type="button" class="freq-month-btn" onclick="abrirIcc(\'' +
+          escaparAttr(grupo || '') + '\',\'\',\'\')">ICC ATUAL</button></div>');
+        return historico;
+      }
       const atual = await rpcPlanoFerias('icc_portal_dados', { p_grupo: grupo || null });
       if (atual && atual.migrado) {
         APP.iccSupabase = atual;
         APP.dadosIcc = { grupo: atual.grupo, documento: { id: atual.documento.id } };
         iccRenderSupabase(atual);
+        iccNavegacaoHistorica(atual.grupo);
         return atual;
       }
       APP.iccSupabase = null;
