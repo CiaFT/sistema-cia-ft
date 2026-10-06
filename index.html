@@ -10228,13 +10228,16 @@ Banco de dados: Google Sheets.
 
     function montarGeracaoPdfFrequencia(d) {
       const fechamento = d && d.auditoria && d.auditoria.fechamentoEnc || { status: 'PENDENTE' };
-      const pronto = fechamento.status === 'CONFERIDO' && !!(d.capacidades && d.capacidades.podeGerarPdf);
+      const aprovacao = d && d.auditoria && d.auditoria.fechamentoCmt || { status: 'PENDENTE' };
+      const cap = d.capacidades || {};
+      const pronto = fechamento.status === 'CONFERIDO' && !!cap.podeGerarPdf &&
+        (aprovacao.status === 'APROVADO' || !!cap.podeGerarPdfAposConferencia);
       return '<div class="freq-pdf-card ' + (pronto ? 'pronto' : '') + '">' +
         '<div class="freq-pdf-info"><span class="freq-pdf-icon" aria-hidden="true">▣</span><div>' +
           '<h3>RELATÓRIO MENSAL EM PDF</h3>' +
-          '<p>' + (fechamento.status === 'CONFERIDO' ? 'Conferência do Enc Adm concluída. O Aux Adm pode gerar o relatório de ' + escapar(rotuloCompetenciaFrequencia(d.competencia)) + ', mesmo antes da aprovação do Cmt de Cia.' : 'Disponível ao Aux Adm após a conferência final do Enc Adm.') + '</p>' +
+          '<p>' + (aprovacao.status === 'APROVADO' ? 'Após a aprovação do Cmt Cia, Aux Adm, Enc Adm e Gestor podem gerar o PDF.' : fechamento.status === 'CONFERIDO' ? 'Após a conferência final do Enc Adm, Aux Adm e Gestor podem gerar o PDF.' : 'Disponível após a conferência final do Enc Adm, conforme o perfil.') + '</p>' +
         '</div></div>' +
-        '<button id="freqPdfBtn" type="button" onclick="gerarPdfControleFrequencia()" ' + (pronto ? '' : 'disabled') + '>' + (pronto ? 'GERAR PLANILHA PDF' : 'AGUARDANDO CONFERÊNCIA') + '</button>' +
+        '<button id="freqPdfBtn" type="button" onclick="gerarPdfControleFrequencia()" ' + (pronto ? '' : 'disabled') + '>' + (pronto ? 'GERAR PLANILHA PDF' : fechamento.status !== 'CONFERIDO' ? 'AGUARDANDO CONFERÊNCIA' : aprovacao.status !== 'APROVADO' ? 'AGUARDANDO APROVAÇÃO' : 'PDF INDISPONÍVEL') + '</button>' +
       '</div>';
     }
 
@@ -10428,8 +10431,11 @@ Banco de dados: Google Sheets.
     function gerarPdfControleFrequencia() {
       const dados = APP.dadosControleFrequencia || {};
       const fechamento = dados.auditoria && dados.auditoria.fechamentoEnc || {};
-      if (fechamento.status !== 'CONFERIDO' || !(dados.capacidades && dados.capacidades.podeGerarPdf)) {
-        mostrarToastFt('PDF ainda indisponível', 'O Aux Adm pode gerar o PDF após a conferência final do Enc Adm.');
+      const aprovacao = dados.auditoria && dados.auditoria.fechamentoCmt || {};
+      const cap = dados.capacidades || {};
+      if (fechamento.status !== 'CONFERIDO' || !cap.podeGerarPdf ||
+          (aprovacao.status !== 'APROVADO' && !cap.podeGerarPdfAposConferencia)) {
+        mostrarToastFt('PDF ainda indisponível', 'Aux Adm e Gestor podem gerar após a conferência do Enc Adm. Após a aprovação do Cmt Cia, o Enc Adm também pode gerar.');
         return;
       }
 
