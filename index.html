@@ -17123,10 +17123,6 @@ Banco de dados: Google Sheets.
       if (competencia && idIcc) return iccCarregarHistorico(grupo, competencia, idIcc);
       const atual = await rpcPlanoFerias('icc_portal_dados_afastamentos', { p_grupo: grupo || null });
       if (atual && atual.migrado) {
-        const roster=await chamarApi('efetivo_icc_atual',{grupo:atual.grupo},{semCache:true});
-        if(!roster||!roster.ok||!roster.dados||!Array.isArray(roster.dados.efetivo))throw new Error('Não foi possível conferir o efetivo atual da ICC.');
-        const ativos=new Set(roster.dados.efetivo.map(pm=>normalizarLoginConsultaCliente(pm.re)));
-        atual.linhas=(atual.linhas||[]).filter(item=>ativos.has(normalizarLoginConsultaCliente(item.re)));
         APP.iccSupabase = atual;
         APP.dadosIcc = { grupo: atual.grupo, documento: { id: atual.documento.id } };
         iccRenderSupabase(atual);
