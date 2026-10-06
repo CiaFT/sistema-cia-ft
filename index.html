@@ -13537,11 +13537,14 @@ Banco de dados: Google Sheets.
       const p = normalizarTexto(pm.postoGrad || '').replace(/[º°ª]/g, '');
       const planilha = numeroConsultaCliente(pm.pesoHierarquico);
 
+      if (p.includes('TEN CEL') || p.includes('TEN-CEL')) return 10000;
+      if (p.includes('CEL')) return 11000;
       if (p.includes('MAJ')) return 9000;
       if (p.includes('CAP')) return 8000;
       if (p.includes('1') && p.includes('TEN') && !p.includes('SUBTEN')) return 7000;
       if (p.includes('2') && p.includes('TEN') && !p.includes('SUBTEN')) return 6500;
       if (p.includes('TEN') && !p.includes('SUBTEN')) return 6400;
+      if (p.includes('ASP')) return 6200;
       if (p.includes('SUBTEN')) return 6000;
       if (p.includes('1') && p.includes('SGT')) return 5500;
       if (p.includes('2') && p.includes('SGT')) return 5200;
@@ -13559,9 +13562,11 @@ Banco de dados: Google Sheets.
       if (p.includes('CB') || p.includes('SD')) return false;
 
       return (
+        p.includes('CEL') ||
         p.includes('MAJ') ||
         p.includes('CAP') ||
         (p.includes('TEN') && !p.includes('SUBTEN')) ||
+        p.includes('ASP') ||
         p.includes('SUBTEN') ||
         p.includes('SGT')
       );
