@@ -45,7 +45,7 @@ Banco de dados: Google Sheets.
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="cia-ft-build" content="FT-V138-20261006-TRANSFERENCIA-FOLGAS-R3">
+  <meta name="cia-ft-build" content="FT-V138-20261006-TRANSFERENCIA-FOLGAS-VISUAL-R4">
   <title>Portal Força Tática • V1.3.8</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
@@ -5913,6 +5913,14 @@ Banco de dados: Google Sheets.
     #transferenciaFolgas summary{pointer-events:auto;cursor:pointer}
     #transferenciaFolgas .freq-legend-grid label{display:flex;flex-direction:column;gap:6px;font-weight:700;color:#17202a}
     #transferenciaFolgas input,#transferenciaFolgas select{width:100%;min-height:40px;padding:8px 10px;border:1px solid #94a3b8;border-radius:8px;background:#fff;color:#17202a}
+    #transferenciaFolgas .freq-note{font-size:12px;color:#64748b;font-weight:400;line-height:1.45;margin:10px 0}
+    #transferenciaFolgasSalvar{align-self:end;white-space:nowrap}
+    #transferenciaFolgasStatus:empty{display:none}
+    @media(min-width:901px){
+      #transferenciaFolgas .transferencia-folgas-grid{grid-template-columns:calc((100% - 42px)/4) minmax(80px,.65fr) minmax(100px,.65fr) minmax(145px,1fr) auto;align-items:end}
+      #transferenciaFolgas input{min-height:34px;height:34px;padding:5px 8px;font-size:12px}
+      #transferenciaFolgasSalvar{min-height:34px;padding:7px 10px;font-size:10px}
+    }
     @media(max-width:900px){.freq-audit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.freq-legend-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:760px){.freq-launch-card{padding:14px}.freq-close-grid{grid-template-columns:1fr}.freq-pdf-card{grid-template-columns:1fr}.freq-pdf-card button{width:100%;min-width:0}.freq-mobile-weeks{display:flex}.freq-mobile-hint{display:block}.freq-table-wrap{max-height:62vh;-webkit-overflow-scrolling:touch}.freq-table{min-width:650px}.freq-table .freq-pm{width:148px;min-width:148px;max-width:148px;padding-left:7px;padding-right:7px}.freq-table .freq-total{width:72px;min-width:72px}.freq-table .freq-total.diarias,.freq-table .freq-total.trabalhados{position:static}.freq-legend-grid{grid-template-columns:1fr}.freq-audit-grid{grid-template-columns:1fr 1fr}.freq-note{font-size:11px}.folga-rule-note{grid-template-columns:1fr}}
     @media(max-width:480px){.freq-table-wrap{overflow-x:hidden}.freq-table{width:100%;min-width:0;table-layout:fixed}.freq-table .freq-pm{width:110px;min-width:110px;max-width:110px;padding:4px 5px}.freq-table .freq-pm strong{font-size:9px;line-height:1.15}.freq-table .freq-pm small{font-size:8px}.freq-table .freq-day{width:34px;min-width:34px;max-width:34px;padding:2px}.freq-select-wrap{width:29px}.freq-table .freq-total{width:54px;min-width:54px;font-size:9px;padding:2px}.freq-group td{padding:7px!important}}
@@ -10514,9 +10522,9 @@ Banco de dados: Google Sheets.
         <div class="freq-note">Os lançamentos são salvos individualmente. FOLGAS mostra o saldo disponível e DIAS TRAB. mostra o progresso atual do ciclo, de 0 a 13.</div>
         ${d.capacidades && d.capacidades.podeTransferirSaldo ? `
           <section class="freq-legend" id="transferenciaFolgas">
-            <h3 style="margin:0;color:#17202a">TRANSFERIR SALDO DA UNIDADE ANTERIOR</h3>
-            <p>Uso único para policial recém-incluído. As folgas adquiridas e os dias EO já trabalhados entram no saldo inicial; os lançamentos posteriores são recalculados.</p>
-            <div class="freq-legend-grid">
+            <h3 style="margin:0;color:#17202a;font-size:12px;font-weight:900">TRANSFERIR SALDO DA UNIDADE ANTERIOR</h3>
+            <p class="freq-note">Uso único para policial recém-incluído. As folgas adquiridas e os dias EO já trabalhados entram no saldo inicial; os lançamentos posteriores são recalculados.</p>
+            <div class="freq-legend-grid transferencia-folgas-grid">
               <label>Policial (RE)
                 <select id="transferenciaFolgasRe" onchange="atualizarTransferenciaFolgas()">
                   <option value="">Selecione</option>
@@ -10526,9 +10534,9 @@ Banco de dados: Google Sheets.
               <label>Folgas a gozar <input id="transferenciaFolgasQuantidade" type="number" min="0" max="100" step="1" value="0"></label>
               <label>Dias EO no ciclo <input id="transferenciaFolgasDias" type="number" min="0" max="13" step="1" value="0" oninput="atualizarTransferenciaFolgas()"></label>
               <label>Início do ciclo EO <input id="transferenciaFolgasInicio" type="date"></label>
+              <button type="button" class="btn-page" id="transferenciaFolgasSalvar">REGISTRAR TRANSFERÊNCIA</button>
             </div>
-            <p id="transferenciaFolgasAviso">Se houver dias EO, informe a data real em que começou o ciclo na unidade anterior.</p>
-            <button type="button" class="btn-page" id="transferenciaFolgasSalvar">REGISTRAR TRANSFERÊNCIA</button>
+            <p id="transferenciaFolgasAviso" class="freq-note" hidden></p>
             <p id="transferenciaFolgasStatus" role="status" aria-live="polite" style="min-height:1.5em;font-weight:700;color:#17202a"></p>
           </section>` : ''}
         ${montarNavegacaoSemanasTabelaMobile('folgas', d, faixaDias)}
@@ -10548,9 +10556,11 @@ Banco de dados: Google Sheets.
       const inicio = document.getElementById('transferenciaFolgasInicio');
       const dias = Number(document.getElementById('transferenciaFolgasDias')?.value || 0);
       if (inicio) { inicio.required = dias > 0; inicio.disabled = dias === 0; }
-      if (aviso) aviso.textContent = re && d.transferencias && d.transferencias[normalizarReClienteFrequencia(re)] ?
-        'Já existe transferência registrada para este RE. Não é possível duplicar.' :
-        'Se houver dias EO, informe a data real em que começou o ciclo na unidade anterior.';
+      if (aviso) {
+        const transferido = !!(re && d.transferencias && d.transferencias[normalizarReClienteFrequencia(re)]);
+        aviso.hidden = !transferido;
+        aviso.textContent = transferido ? 'Já existe transferência registrada para este RE. Não é possível duplicar.' : '';
+      }
     }
 
 
