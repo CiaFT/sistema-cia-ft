@@ -6881,7 +6881,24 @@ Banco de dados: Google Sheets.
     #appScreen .icc-assinatura-acoes{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;width:100%;max-width:230px;min-width:0}
     #appScreen .icc-assinatura-acoes .icc-btn{position:static;display:block;float:none;transform:none;width:100%;min-width:0;height:auto;min-height:36px;margin:0;box-sizing:border-box;white-space:normal;overflow-wrap:anywhere;line-height:1.4}
 
-  </style>
+  
+    .toast-ft.confirmacao .toast-ft-texto{max-height:45vh;overflow-y:auto;overscroll-behavior:contain}
+    /* Ocorrências: formulários e tabelas seguem a paleta do portal. */
+    .oc-ft-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .oc-ft-grid .oc-ft-largo{grid-column:1/-1}
+    #ocFtConteudo label{display:grid;gap:6px;min-width:0;font-size:11px;font-weight:800;color:#374247}
+    #ocFtConteudo input,#ocFtConteudo select,#ocFtConteudo textarea{width:100%;min-width:0;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:10px;padding:10px;background:#fff;color:#17202a;font:inherit;font-size:12px}
+    .oc-ft-responsavel{background:#f1f5f9;border:1px solid #dbe1e7;border-radius:12px;padding:12px;margin-bottom:16px;color:#374247;font-size:12px}
+    .oc-ft-secao{margin-top:20px;padding-top:16px;border-top:1px solid #dbe1e7}
+    .oc-ft-secao h2{font-size:16px;color:#374247;margin:0 0 12px}
+    .oc-ft-dinamico{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;margin-bottom:8px}
+    .oc-ft-pessoa{display:grid;grid-template-columns:minmax(0,2fr) minmax(100px,1fr) auto;align-items:end;gap:8px;margin-bottom:10px}
+    .oc-ft-tabela{overflow:auto;margin-top:14px}.oc-ft-tabela table{border-collapse:collapse;width:100%;font-size:11px;color:#17202a}.oc-ft-tabela th{background:#374247;color:#fff;text-align:left}.oc-ft-tabela td,.oc-ft-tabela th{padding:10px;border:1px solid #dbe1e7;vertical-align:top}
+    .oc-ft-acoes{display:grid;gap:8px;min-width:150px}.oc-ft-acoes button{white-space:normal;height:auto;min-height:35px}
+    #ocFtImportarPainel label{margin-top:10px}#ocFtImportarStatus,#ocFtEnvioStatus{white-space:pre-wrap;font-size:12px}
+    @media(max-width:620px){.oc-ft-grid{grid-template-columns:1fr}.oc-ft-pessoa{grid-template-columns:minmax(0,1fr)}.oc-ft-pessoa button{justify-self:end}}
+
+</style>
 </head>
 
 <body>
@@ -7833,16 +7850,128 @@ Banco de dados: Google Sheets.
         </div>`;
     }
 
-    function abrirSubpaginaOcorrencias(id) {
-      const titulo = id === 'OCORRENCIAS_INCLUSAO' ? 'Inclusão de Ocorrência' : 'Ranking de Ocorrências';
-      window.scrollTo(0, 0);
-      document.getElementById('appConteudo').innerHTML = `
-        <div class="page-wrap">
-          <div class="page-header"><div class="page-header-row">
-            <div><div class="page-kicker">Ocorrências</div><h1>${escapar(titulo)}</h1></div>
-            <div class="page-actions"><button class="btn-page" onclick="abrirOcorrencias()">VOLTAR</button></div>
-          </div></div>
-        </div>`;
+    let OC_FT_CATALOGOS = null;
+    let OC_FT_REQUEST_ID = null;
+    let OC_FT_IMPORTACAO = null;
+    async function ocFtApi(acao,parametros) {
+      const r=await chamarApi(acao,parametros||{},{semCache:true});
+      if(!r||!r.ok)throw new Error(r&&r.erro||'A API não confirmou a operação.');
+      return r.dados||{};
+    }
+    function ocFtTitulo(titulo) {
+      return '<div class="page-header"><div class="page-header-row"><div><div class="page-kicker">Ocorrências</div><h1>'+escapar(titulo)+'</h1></div><div class="page-actions"><button class="btn-page" onclick="abrirOcorrencias()">VOLTAR</button></div></div></div>';
+    }
+    async function abrirSubpaginaOcorrencias(id) {
+      window.scrollTo(0,0);
+      const inclusao=id==='OCORRENCIAS_INCLUSAO';
+      document.getElementById('appConteudo').innerHTML='<div class="page-wrap">'+ocFtTitulo(inclusao?'Inclusão de Ocorrência':'Ranking de Ocorrências')+'<div id="ocFtConteudo" class="modal-card">Carregando...</div></div>';
+      try{
+        OC_FT_CATALOGOS=await ocFtApi('ocorrencias_catalogos');
+        if(!document.getElementById('ocFtConteudo'))return;
+        if(inclusao)ocFtRenderFormulario();else await ocFtRenderRanking();
+      }catch(e){const box=document.getElementById('ocFtConteudo');if(box)box.innerHTML='<p>'+escapar(e.message)+'</p><button class="btn-page" onclick="abrirSubpaginaOcorrencias(\''+id+'\')">TENTAR NOVAMENTE</button>';}
+    }
+    function ocFtOptionsEquipe(re) {
+      return '<option value="">Selecione o policial</option>'+OC_FT_CATALOGOS.efetivo.map(p=>'<option value="'+escaparAttr(p.re)+'" '+(p.re===re?'selected':'')+'>'+escapar([p.posto,p.re,p.nomeGuerra||p.nome].join(' '))+'</option>').join('');
+    }
+    function ocFtAdicionarEquipe(){const box=document.getElementById('ocFtEquipe');box.insertAdjacentHTML('beforeend','<div class="oc-ft-dinamico"><select data-oc-equipe aria-label="Policial da equipe">'+ocFtOptionsEquipe('')+'</select><button type="button" class="btn-page" onclick="this.parentElement.remove()" aria-label="Remover policial">REMOVER</button></div>');}
+    function ocFtAdicionarApoio(){document.getElementById('ocFtApoio').insertAdjacentHTML('beforeend','<div class="oc-ft-dinamico"><input data-oc-apoio maxlength="60" placeholder="Prefixo da viatura de apoio" aria-label="Prefixo da viatura de apoio"><button type="button" class="btn-page" onclick="this.parentElement.remove()">REMOVER</button></div>');}
+    function ocFtAdicionarPessoa(tipo){document.getElementById(tipo==='indiciados'?'ocFtIndiciados':'ocFtSindicados').insertAdjacentHTML('beforeend','<div class="oc-ft-pessoa" data-oc-pessoa="'+tipo+'"><label>Nome<input data-oc-nome maxlength="200"></label><label>RG<input data-oc-rg maxlength="40"></label><button type="button" class="btn-page" onclick="this.parentElement.remove()">REMOVER</button></div>');}
+    function ocFtRenderFormulario(){
+      const c=OC_FT_CATALOGOS,p=c.usuario;
+      OC_FT_REQUEST_ID=OC_FT_REQUEST_ID||crypto.randomUUID();
+      document.getElementById('ocFtConteudo').innerHTML='<form id="ocFtForm" onsubmit="ocFtEnviar(event)">'+
+        '<div class="oc-ft-responsavel"><strong>Responsável pelo Envio:</strong> '+escapar([p.posto,p.re,String(p.nomeGuerra||p.nome).toUpperCase()].join(' '))+'</div>'+
+        '<div class="oc-ft-grid"><label>Pel<select id="ocFtPel" required>'+['1º PEL','2º PEL','ADM','DEJEM'].map(g=>'<option '+(p.pelotao===g?'selected':'')+'>'+g+'</option>').join('')+'</select></label>'+
+        '<label>Data<input id="ocFtData" type="date" required></label><label>QTR<input id="ocFtQtr" type="time" required></label>'+
+        '<label class="oc-ft-largo">QTH<input id="ocFtQth" maxlength="500" required placeholder="Endereço da ocorrência"></label>'+
+        '<label>BOPM<input id="ocFtBopm" maxlength="60" required></label><label>BOPC<input id="ocFtBopc" maxlength="60"></label><label>DP<input id="ocFtDp" maxlength="100"></label>'+
+        '<label class="oc-ft-largo">Natureza<input id="ocFtNatureza" maxlength="500" required></label>'+
+        '<label class="oc-ft-largo">VTR<select id="ocFtVtr" required><option value="">Selecione a viatura</option>'+c.viaturas.map(v=>'<option value="'+escaparAttr(v.prefixo)+'">'+escapar(v.prefixo)+(v.situacao?' — '+escapar(v.situacao):'')+'</option>').join('')+'</select></label></div>'+
+        '<section class="oc-ft-secao"><h2>Equipe</h2><div id="ocFtEquipe"></div><button type="button" class="btn-page" onclick="ocFtAdicionarEquipe()">ADICIONAR POLICIAL</button></section>'+
+        '<section class="oc-ft-secao"><h2>Apoio</h2><div id="ocFtApoio"></div><button type="button" class="btn-page" onclick="ocFtAdicionarApoio()">ADICIONAR VIATURA DE APOIO</button></section>'+
+        '<section class="oc-ft-secao"><h2>Indiciados</h2><div id="ocFtIndiciados"></div><button type="button" class="btn-page" onclick="ocFtAdicionarPessoa(\'indiciados\')">ADICIONAR INDICIADO</button></section>'+
+        '<section class="oc-ft-secao"><h2>Sindicados</h2><div id="ocFtSindicados"></div><button type="button" class="btn-page" onclick="ocFtAdicionarPessoa(\'sindicados\')">ADICIONAR SINDICADO</button></section>'+
+        '<section class="oc-ft-secao"><label>Apreensão<textarea id="ocFtApreensao" rows="6" maxlength="12000" placeholder="Descreva os itens apreendidos"></textarea></label></section>'+
+        '<p id="ocFtEnvioStatus" role="status"></p><button id="ocFtEnviarBtn" class="btn-primary-soft" type="submit">ENVIAR OCORRÊNCIA</button></form>'+
+        '<section class="oc-ft-secao"><h2>Consulta de ocorrências</h2><button class="btn-page" onclick="ocFtCarregarConsulta()">CONSULTAR REGISTROS / VALIDAÇÃO</button><div id="ocFtConsulta"></div></section>'+
+        (c.capacidades.importar?'<section class="oc-ft-secao"><h2>Importação do histórico</h2><p>Selecione o JSON preparado a partir do Excel. A importação preserva as FF já gozadas e evita repetir registros.</p><input id="ocFtArquivo" type="file" accept=".json,application/json" onchange="ocFtPrepararImportacao(this)"><div id="ocFtImportarPainel"></div></section>':'');
+      for(let i=0;i<5;i++)ocFtAdicionarEquipe();for(let i=0;i<3;i++){ocFtAdicionarApoio();ocFtAdicionarPessoa('indiciados');}ocFtAdicionarPessoa('sindicados');
+    }
+    async function ocFtEnviar(event){
+      event.preventDefault();const btn=document.getElementById('ocFtEnviarBtn'),status=document.getElementById('ocFtEnvioStatus');
+      if(btn.disabled)return;
+      const val=id=>document.getElementById(id).value.trim();
+      const pessoas=tipo=>Array.from(document.querySelectorAll('[data-oc-pessoa="'+tipo+'"]')).map(row=>({nome:row.querySelector('[data-oc-nome]').value.trim(),rg:row.querySelector('[data-oc-rg]').value.trim()})).filter(p=>p.nome||p.rg);
+      const f={pel:val('ocFtPel'),data:val('ocFtData'),qtr:val('ocFtQtr'),qth:val('ocFtQth'),bopm:val('ocFtBopm'),bopc:val('ocFtBopc'),dp:val('ocFtDp'),natureza:val('ocFtNatureza'),vtr:val('ocFtVtr'),equipe:Array.from(document.querySelectorAll('[data-oc-equipe]')).map(x=>x.value).filter(Boolean),apoio:Array.from(document.querySelectorAll('[data-oc-apoio]')).map(x=>x.value.trim()).filter(Boolean),indiciados:pessoas('indiciados'),sindicados:pessoas('sindicados'),apreensao:val('ocFtApreensao')};
+      if(!f.equipe.length){mostrarToastFt('Equipe obrigatória','Selecione ao menos um policial da equipe.','erro');return;}
+      btn.disabled=true;status.textContent='Enviando. Aguarde a confirmação.';
+      try{const r=await ocFtApi('ocorrencias_enviar',{requestId:OC_FT_REQUEST_ID,campos:JSON.stringify(f)});status.textContent='Ocorrência enviada. Protocolo: '+r.id;mostrarToastFt('Ocorrência enviada','Aguardando validação do Enc Adm ou Cmt Cia.','sucesso');OC_FT_REQUEST_ID=null;btn.textContent='ENVIADA';document.getElementById('ocFtForm').insertAdjacentHTML('beforeend',' <button type="button" class="btn-page" onclick="ocFtRenderFormulario()">NOVA OCORRÊNCIA</button>');}
+      catch(e){status.textContent=e.message+' Se houve falha de conexão, tente novamente neste mesmo formulário para conservar o protocolo.';mostrarToastFt('Envio não confirmado',e.message,'erro');btn.disabled=false;}
+    }
+    async function ocFtRenderRanking(){
+      const box=document.getElementById('ocFtConteudo'),ano=new Date().getFullYear();
+      box.innerHTML='<div class="oc-ft-grid"><label>Ano<select id="ocFtAno" onchange="ocFtAtualizarRanking()"><option value="">Todos os anos</option>'+Array.from(new Set([2026,ano,ano-1])).sort((a,b)=>b-a).map(y=>'<option value="'+y+'" '+(y===ano?'selected':'')+'>'+y+'</option>').join('')+'</select></label></div><div id="ocFtRanking"></div><section class="oc-ft-secao"><h2>Histórico individual</h2><label>Policial<select id="ocFtConsultaRe" onchange="ocFtCarregarConsulta()">'+ocFtOptionsEquipe('')+'</select></label><div id="ocFtConsulta"></div></section>';
+      await ocFtAtualizarRanking();
+    }
+    async function ocFtAtualizarRanking(){try{const r=await ocFtApi('ocorrencias_ranking',{ano:document.getElementById('ocFtAno').value});document.getElementById('ocFtRanking').innerHTML='<div class="oc-ft-tabela"><table><thead><tr><th>Posição</th><th>Policial</th><th>Pel</th><th>Ocorrências validadas</th></tr></thead><tbody>'+r.ranking.map((p,i)=>'<tr><td>'+(i+1)+'º</td><td>'+escapar([p.posto,p.re,p.nomeGuerra||p.nome].join(' '))+'</td><td>'+escapar(p.pelotao)+'</td><td>'+p.total+'</td></tr>').join('')+'</tbody></table></div>';}catch(e){mostrarToastFt('Ranking indisponível',e.message,'erro');}}
+    async function ocFtCarregarConsulta(){
+      const box=document.getElementById('ocFtConsulta');if(!box)return;
+      const re=document.getElementById('ocFtConsultaRe')?.value||'';box.innerHTML='<p>Carregando registros...</p>';
+      try{
+        const d=await ocFtApi('ocorrencias_listar',{re}),creditos=Object.fromEntries((d.creditosFF||[]).map(c=>[c.id,c]));
+        box.innerHTML='<div class="oc-ft-tabela"><table><thead><tr><th>Data</th><th>Natureza</th><th>BOPM</th><th>Ocorrência</th><th>FF</th><th>Ações</th></tr></thead><tbody>'+d.ocorrencias.map(o=>{
+          const c=creditos[o.id],ff=c?(c.gozadaEm?'Gozada em '+iccDataBR(c.gozadaEm):'Pendente'):o.ffDecisao||'PENDENTE';
+          let botoes='<button class="btn-page" onclick="ocFtDetalhe(\''+escaparAttr(o.id)+'\')">CONSULTAR</button>';
+          if(d.capacidades.validar&&o.status==='PENDENTE')botoes+='<button class="btn-primary-soft" onclick="ocFtDecidir(\''+o.id+'\',\'OCORRENCIA\',\'APROVAR\')">VALIDAR OCORRÊNCIA</button><button class="btn-page" onclick="ocFtDecidir(\''+o.id+'\',\'OCORRENCIA\',\'RECUSAR\')">RECUSAR</button>';
+          if(d.capacidades.validarFF&&o.status==='VALIDADA'&&o.ffDecisao==='PENDENTE')botoes+='<button class="btn-primary-soft" onclick="ocFtDecidir(\''+o.id+'\',\'FF\',\'APROVAR\')">CONCEDER FF</button><button class="btn-page" onclick="ocFtDecidir(\''+o.id+'\',\'FF\',\'RECUSAR\')">RECUSAR FF</button>';
+          return '<tr><td>'+iccDataBR(o.data)+'</td><td>'+escapar(o.natureza)+'</td><td>'+escapar(o.bopm)+'</td><td>'+escapar(o.status)+'</td><td>'+escapar(ff)+'</td><td><div class="oc-ft-acoes">'+botoes+'</div></td></tr>';
+        }).join('')+'</tbody></table></div><div id="ocFtDetalhe"></div>';
+      }catch(e){box.textContent=e.message;}
+    }
+    async function ocFtDetalhe(id){
+      try{const d=await ocFtApi('ocorrencias_detalhe',{id});const box=document.getElementById('ocFtDetalhe');
+        const pessoaLista=(titulo,lista)=>'<h3>'+titulo+'</h3><p>'+(lista||[]).map(p=>escapar(p.nome)+' — RG '+escapar(p.rg||'não informado')).join('<br>')+'</p>';
+        box.innerHTML='<section class="oc-ft-secao"><h2>BOPM '+escapar(d.bopm)+' — '+iccDataBR(d.data)+'</h2><p>'+escapar(d.natureza)+'</p><p>QTR: '+escapar(d.qtr)+' | QTH: '+escapar(d.qth)+'</p><p>BOPC: '+escapar(d.bopc)+' | DP: '+escapar(d.dp)+' | VTR: '+escapar(d.vtr)+'</p><h3>Equipe</h3><p>'+d.equipe.map(p=>escapar([p.posto,p.re,p.nomeGuerra||p.nome].join(' '))).join('<br>')+'</p><h3>Apoio</h3><p>'+escapar((d.apoio||[]).join(', '))+'</p>'+pessoaLista('Indiciados',d.indiciados)+pessoaLista('Sindicados',d.sindicados)+'<h3>Apreensão</h3><p style="white-space:pre-wrap">'+escapar(d.apreensao||'')+'</p><h3>Histórico</h3><p>'+(d.auditoria||[]).map(a=>escapar(a.acao)+' — '+escapar(a.nome)+' — '+escapar(iccHoraBR(a.dataHora))).join('<br>')+'</p></section>';box.scrollIntoView({behavior:'smooth',block:'start'});
+      }catch(e){mostrarToastFt('Consulta indisponível',e.message,'erro');}
+    }
+    async function ocFtDecidir(id,tipo,decisao){
+      let motivo='';if(decisao==='RECUSAR'){motivo=window.prompt('Motivo da recusa:');if(motivo===null)return;}
+      const sim=await confirmarToastFt('CONFIRMAR DECISÃO',tipo==='FF'?'A decisão será registrada para a Folga Flagrante de todos os integrantes da equipe.':'A validação atribui uma ocorrência no ranking a cada integrante da equipe.',{confirmar:'CONFIRMAR',cancelar:'VOLTAR'});if(!sim)return;
+      try{await ocFtApi('ocorrencias_validar',{id,tipo,decisao,motivo});mostrarToastFt('Decisão registrada','O registro foi atualizado.','sucesso');await ocFtCarregarConsulta();}catch(e){mostrarToastFt('Decisão não registrada',e.message,'erro');}
+    }
+    async function ocFtPrepararImportacao(input){
+      if(!input.files[0])return;try{
+        const d=JSON.parse(await input.files[0].text());if(!Array.isArray(d.ocorrencias)||d.versao!==1)throw new Error('Selecione o JSON preparado para esta importação.');OC_FT_IMPORTACAO=d;
+        const grupos=[...new Set((d.pendencias||[]).map(p=>p.bopm+'|'+p.data_original.trim()))];
+        document.getElementById('ocFtImportarPainel').innerHTML='<p>'+d.ocorrencias.length+' ocorrências preparadas. '+(d.pendencias||[]).length+' participações exigem a correção da data.</p>'+grupos.map((g,i)=>'<label>Data correta — BOPM '+escapar(g.split('|')[0])+' (original: '+escapar(g.split('|')[1])+')<input type="date" data-oc-correcao="'+i+'" data-oc-chave="'+escaparAttr(g)+'" required></label>').join('')+'<p id="ocFtImportarStatus" role="status"></p><button id="ocFtImportarBtn" class="btn-primary-soft" onclick="ocFtImportar()">IMPORTAR HISTÓRICO CONFIRMADO</button>';
+      }catch(e){mostrarToastFt('Arquivo não carregado',e.message,'erro');}
+    }
+    async function ocFtImportar(){
+      const d=OC_FT_IMPORTACAO;if(!d)return;const status=document.getElementById('ocFtImportarStatus'),btn=document.getElementById('ocFtImportarBtn');if(btn.disabled)return;
+      const correcoes=Array.from(document.querySelectorAll('[data-oc-correcao]'));if(correcoes.some(i=>!i.value)){status.textContent='Informe a data correta indicada antes de importar. Nenhum dado foi importado.';return;}
+      const confirma=await confirmarToastFt('IMPORTAR HISTÓRICO','Os registros serão importados como ocorrências validadas e FF concedidas. As datas de gozo serão preservadas. Confirma os dados e as datas corrigidas?',{confirmar:'IMPORTAR',cancelar:'VOLTAR'});if(!confirma)return;
+      btn.disabled=true;
+      try{
+        const mapa=new Map(d.ocorrencias.map(o=>[o.data+'|'+o.bopm,JSON.parse(JSON.stringify(o))]));
+        const fixes=Object.fromEntries(correcoes.map(i=>[i.dataset.ocChave,i.value]));
+        for(const p of d.pendencias||[]){const dt=fixes[p.bopm+'|'+p.data_original.trim()],key=dt+'|'+p.bopm;
+          if(!mapa.has(key)){const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(key));const hex=Array.from(new Uint8Array(bytes)).map(b=>b.toString(16).padStart(2,'0')).join('');mapa.set(key,{id:'LEG-'+hex.slice(0,24),data:dt,bopm:p.bopm,natureza:p.natureza,qth:p.qth,equipe:[],fontes:[]});}
+          const o=mapa.get(key);if(!o.equipe.some(x=>x.re===p.re))o.equipe.push({re:p.re,posto:p.posto||'',nome:p.nome||'',ffGozadaEm:''});o.fontes.push({aba:p.aba,linha:p.linha,data_original:p.data_original,data_corrigida:dt});
+        }
+        const itens=Array.from(mapa.values());let novos=0,ignorados=0;
+        for(let i=0;i<itens.length;i+=5){status.textContent='Importando '+(i+1)+' a '+Math.min(i+5,itens.length)+' de '+itens.length+'...';const r=await ocFtApi('ocorrencias_importar',{lote:JSON.stringify(itens.slice(i,i+5))});novos+=r.novos;ignorados+=r.ignorados;}
+        const resumo=await ocFtApi('ocorrencias_resumo_importacao');status.textContent='Concluído: '+novos+' ocorrências importadas; '+ignorados+' já existentes. Conferência do histórico: '+resumo.ocorrencias+' ocorrências, '+resumo.participacoes+' participações, '+resumo.gozadas+' FF já gozadas.';mostrarToastFt('Histórico importado',status.textContent,'sucesso');
+      }catch(e){status.textContent='Importação interrompida: '+e.message+' Os lotes já confirmados foram preservados. É possível repetir sem duplicar.';mostrarToastFt('Importação interrompida',e.message,'erro');}finally{btn.disabled=false;}
+    }
+    async function confirmarLancamentoFfControleFolgas_(select){
+      try{
+        const re=select.getAttribute('data-re'),dia=String(select.getAttribute('data-dia')).padStart(2,'0'),data=APP.dadosControleFolgas.competencia+'-'+dia;
+        const d=await ocFtApi('ocorrencias_prever_ff',{re,data});const c=d.selecionada;
+        const lista=d.pendentes.map(x=>'BOPM '+x.bopm+' — '+iccDataBR(x.data)).join('\n');
+        const sim=await confirmarToastFt('UTILIZAR FOLGA FLAGRANTE','Será utilizada a FF mais antiga disponível: BOPM '+c.bopm+' — '+iccDataBR(c.data)+'.\n\nFF pendentes:\n'+lista,{confirmar:'UTILIZAR ESTA FF',cancelar:'CANCELAR'});
+        if(sim)select.dataset.ffOcorrenciaId=c.id;return sim;
+      }catch(e){mostrarToastFt('FF indisponível',e.message,'erro');return false;}
     }
 
 
@@ -10809,6 +10938,15 @@ Banco de dados: Google Sheets.
       if (!select || select.disabled) return;
       const valorNovo = String(select.value || '').toUpperCase();
       const valorAnterior = String(select.getAttribute('data-valor-anterior') || '').toUpperCase();
+      if (valorNovo === 'FF' && valorAnterior !== 'FF') {
+        select.disabled=true;
+        confirmarLancamentoFfControleFolgas_(select).then(function(confirmado){
+          select.disabled=false;
+          if(!confirmado){select.value=valorAnterior;atualizarVisualCelulaControleFolgas(select,true);return;}
+          persistirCelulaControleFolgas_(select);
+        });
+        return;
+      }
       if (valorNovo === 'FM' && valorAnterior !== 'FM') {
         atualizarVisualCelulaControleFolgas(select, false);
         select.disabled = true;
@@ -10861,7 +10999,8 @@ Banco de dados: Google Sheets.
         competencia: APP.dadosControleFolgas.competencia,
         re: select.getAttribute('data-re'),
         dia: select.getAttribute('data-dia'),
-        valor: select.value
+        valor: select.value,
+        ffOcorrenciaId: select.dataset.ffOcorrenciaId || ''
       };
       enfileirarLancamentoFt_('salvar_controle_folgas', pedido).then(function(resp) {
         if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao salvar o lançamento.');
