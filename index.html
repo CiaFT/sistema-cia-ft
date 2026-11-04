@@ -10679,7 +10679,7 @@ Banco de dados: Google Sheets.
       ['ADM', '1º PEL', '2º PEL'].forEach(function(grupo) {
         const lista = efetivo.filter(function(pm) { return pm.pelotao === grupo; });
         if (!lista.length) return;
-        corpo += '<tr class="freq-group"><td colspan="' + (quantidadeDias + 3) + '">' + escapar(grupo) + '</td></tr>';
+        corpo += '<tr class="freq-group"><td colspan="' + (quantidadeDias + 3) + '">' + escapar(grupo) + (grupo === 'ADM' ? ' — SOMENTE CONSULTA · SALDOS PRESERVADOS' : '') + '</td></tr>';
         lista.forEach(function(pm) {
           const chave = normalizarReClienteFrequencia(pm.re);
           const reg = lancamentos[chave] || { dias: [] };
@@ -10693,6 +10693,9 @@ Banco de dados: Google Sheets.
               const atual = String((reg.dias || [])[dia - 1] || '');
               const classes = classesCelulaControleFolgas(atual, true);
               const bloqueado = !podeEditar || anteriorImplantacao;
+              if (grupo === 'ADM') {
+                return '<td class="freq-day freq-bloqueado" title="ADM: somente consulta. Saldo de folgas e dias trabalhados preservado."><div class="freq-select-wrap ' + classes + ' freq-bloqueado"><span class="freq-select-display">' + escapar(atual) + '</span></div></td>';
+              }
               return '<td class="freq-day ' + (anteriorImplantacao ? 'folga-dia-inativo' : '') + '"><div class="freq-select-wrap ' + classes + (bloqueado ? ' freq-bloqueado' : '') + '"><span class="freq-select-display" aria-hidden="true">' + escapar(atual) + '</span><select class="freq-native-select ' + classes + '" aria-label="Dia ' + dia + ' de ' + escapar(pm.nomeGuerra || '') + '" data-grupo="' + escaparAttr(grupo) + '" data-re="' + escaparAttr(pm.re || '') + '" data-dia="' + dia + '" data-valor-anterior="' + escaparAttr(atual) + '" onchange="salvarCelulaControleFolgas(this)" ' + (bloqueado ? 'disabled' : '') + '>' +
                 '<option value=""></option>' + opcoes.map(function(op) { return '<option value="' + escaparAttr(op) + '" ' + (atual === String(op) ? 'selected' : '') + '>' + escapar(op) + '</option>'; }).join('') +
                 '</select></div></td>';
@@ -17314,3 +17317,4 @@ Banco de dados: Google Sheets.
 </script>
 </body>
 </html>
+
