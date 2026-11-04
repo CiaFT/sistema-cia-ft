@@ -1,11 +1,17 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.3.8 — EAP
+SISTEMA CIA FT — PORTAL GITHUB V1.4 — OCORRÊNCIAS E FOLGAS FLAGRANTES
 Arquivo: index.html
 ============================================================
 
-VERSÃO V1.3.8 — EAP
+VERSÃO V1.4 — OCORRÊNCIAS E FOLGAS FLAGRANTES
+- Ranking com filtros anual, semestral, mensal e por pelotão.
+- Destaque discreto dos três primeiros colocados.
+- Consulta de FF aguardando decisão e aprovação/recusa exclusiva do Cmt Cia.
+- Histórico individual preserva datas de FF já gozadas, inclusive importadas.
+- Área de importação removida do formulário após a carga inicial.
+- Versão fixada em V1.4: alterar somente por determinação expressa do responsável.
 - Preserva a última versão encerrada do Controle de Frequência.
 - Preserva a implantação completa de Viaturas V1.2.6.
 - Corrige a leitura e a identificação funcional em Resenhas Enviadas.
@@ -36,7 +42,7 @@ VERSÃO V1.3.8 — EAP
 - Otimiza sessão, monitor de avisos e retentativas para reduzir carga e tempos de espera.
 
 Front-end externo hospedado no GitHub Pages.
-Backend/API: Apps Script API_FT.gs V1.3.8.
+Backend/API: Apps Script API_FT.gs existente + módulo OcorrenciasFT.gs do pacote V1.4.
 Banco de dados: Google Sheets.
 
 ============================================================
@@ -46,7 +52,7 @@ Banco de dados: Google Sheets.
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="cia-ft-build" content="FT-V138-20261006-GRAVACAO-CONFIAVEL-R7">
-  <title>Portal Força Tática • V1.3.8</title>
+  <title>Portal Força Tática • V1.4</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
 
@@ -6944,7 +6950,7 @@ Banco de dados: Google Sheets.
         <div id="loginAlerta" class="alerta"></div>
 
         <div class="footer">
-          Portal Força Tática • V1.3.8
+          Portal Força Tática • V1.4
         </div>
       </main>
 
