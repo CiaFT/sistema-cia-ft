@@ -7873,9 +7873,16 @@ Banco de dados: Google Sheets.
       const inclusao=id==='OCORRENCIAS_INCLUSAO';
       document.getElementById('appConteudo').innerHTML='<div class="page-wrap">'+ocFtTitulo(inclusao?'Inclusão de Ocorrência':'Ranking de Ocorrências')+'<div id="ocFtConteudo" class="modal-card">Carregando...</div></div>';
       try{
-        OC_FT_CATALOGOS=await ocFtApi('ocorrencias_catalogos');
-        if(!document.getElementById('ocFtConteudo'))return;
-        if(inclusao)ocFtRenderFormulario();else await ocFtRenderRanking();
+        if(inclusao){
+          OC_FT_CATALOGOS=await ocFtApi('ocorrencias_catalogos');
+          if(!document.getElementById('ocFtConteudo'))return;
+          ocFtRenderFormulario();
+        }else{
+          const painel=await ocFtApi('ocorrencias_painel_ranking',{ano:new Date().getFullYear()});
+          if(!document.getElementById('ocFtConteudo'))return;
+          OC_FT_CATALOGOS=painel.catalogos;
+          await ocFtRenderRanking(painel.ranking);
+        }
       }catch(e){const box=document.getElementById('ocFtConteudo');if(box)box.innerHTML='<p>'+escapar(e.message)+'</p><button class="btn-page" onclick="abrirSubpaginaOcorrencias(\''+id+'\')">TENTAR NOVAMENTE</button>';}
     }
     function ocFtOptionsEquipe(re) {
@@ -7916,19 +7923,23 @@ Banco de dados: Google Sheets.
       try{const r=await ocFtApi('ocorrencias_enviar',{requestId:OC_FT_REQUEST_ID,campos:JSON.stringify(f)});status.textContent='Ocorrência enviada. Protocolo: '+r.id;mostrarToastFt('Ocorrência enviada','Aguardando validação do Enc Adm ou Cmt Cia.','sucesso');OC_FT_REQUEST_ID=null;btn.textContent='ENVIADA';document.getElementById('ocFtForm').insertAdjacentHTML('beforeend',' <button type="button" class="btn-page" onclick="ocFtRenderFormulario()">NOVA OCORRÊNCIA</button>');}
       catch(e){status.textContent=e.message+' Se houve falha de conexão, tente novamente neste mesmo formulário para conservar o protocolo.';mostrarToastFt('Envio não confirmado',e.message,'erro');btn.disabled=false;}
     }
-    async function ocFtRenderRanking(){
+    async function ocFtRenderRanking(rankingInicial){
       const box=document.getElementById('ocFtConteudo'),ano=new Date().getFullYear();
       box.innerHTML='<div class="oc-ft-grid"><label>Ano<select id="ocFtAno" onchange="ocFtAtualizarRanking()"><option value="">Todos os anos</option>'+Array.from(new Set([2026,ano,ano-1])).sort((a,b)=>b-a).map(y=>'<option value="'+y+'" '+(y===ano?'selected':'')+'>'+y+'</option>').join('')+'</select></label></div><div id="ocFtRanking"></div><section class="oc-ft-secao"><h2>Histórico individual</h2><label>Policial<select id="ocFtConsultaRe" onchange="ocFtCarregarConsulta()">'+ocFtOptionsEquipe('')+'</select></label><div id="ocFtConsulta"></div></section>';
-      await ocFtAtualizarRanking();
+      if(Array.isArray(rankingInicial))ocFtMostrarRanking(rankingInicial);else await ocFtAtualizarRanking();
     }
-    async function ocFtAtualizarRanking(){try{const r=await ocFtApi('ocorrencias_ranking',{ano:document.getElementById('ocFtAno').value});document.getElementById('ocFtRanking').innerHTML='<div class="oc-ft-tabela"><table><thead><tr><th>Posição</th><th>Policial</th><th>Pel</th><th>Ocorrências validadas</th></tr></thead><tbody>'+r.ranking.map((p,i)=>'<tr><td>'+(i+1)+'º</td><td>'+escapar([p.posto,p.re,p.nomeGuerra||p.nome].join(' '))+'</td><td>'+escapar(p.pelotao)+'</td><td>'+p.total+'</td></tr>').join('')+'</tbody></table></div>';}catch(e){mostrarToastFt('Ranking indisponível',e.message,'erro');}}
+    function ocFtMostrarRanking(ranking){
+      const box=document.getElementById('ocFtRanking');if(!box)return;
+      box.innerHTML='<div class="oc-ft-tabela"><table><thead><tr><th>Posição</th><th>Policial</th><th>Pel</th><th>Ocorrências validadas</th></tr></thead><tbody>'+ranking.map((p,i)=>'<tr><td>'+(i+1)+'º</td><td>'+escapar([p.posto,p.re,p.nomeGuerra||p.nome].join(' '))+'</td><td>'+escapar(p.pelotao)+'</td><td>'+p.total+'</td></tr>').join('')+'</tbody></table></div>';
+    }
+    async function ocFtAtualizarRanking(){try{const r=await ocFtApi('ocorrencias_ranking',{ano:document.getElementById('ocFtAno').value});ocFtMostrarRanking(r.ranking);}catch(e){mostrarToastFt('Ranking indisponível',e.message,'erro');}}
     async function ocFtCarregarConsulta(){
       const box=document.getElementById('ocFtConsulta');if(!box)return;
       const re=document.getElementById('ocFtConsultaRe')?.value||'';box.innerHTML='<p>Carregando registros...</p>';
       try{
         const d=await ocFtApi('ocorrencias_listar',{re}),creditos=Object.fromEntries((d.creditosFF||[]).map(c=>[c.id,c]));
-        box.innerHTML='<div class="oc-ft-tabela"><table><thead><tr><th>Data</th><th>Natureza</th><th>BOPM</th><th>Ocorrência</th><th>FF</th><th>Ações</th></tr></thead><tbody>'+d.ocorrencias.map(o=>{
-          const c=creditos[o.id],ff=c?(c.gozadaEm?'Gozada em '+iccDataBR(c.gozadaEm):'Pendente'):o.ffDecisao||'PENDENTE';
+        box.innerHTML='<div class="oc-ft-tabela"><table><thead><tr><th>Data</th><th>Natureza</th><th>BOPM</th><th>Ocorrência</th><th>FF — decisão do Cmt Cia</th><th>Ações</th></tr></thead><tbody>'+d.ocorrencias.map(o=>{
+          const c=creditos[o.id],ff=c?(c.gozadaEm?'Gozada em '+iccDataBR(c.gozadaEm):'Pendente'):o.ffDecisao==='PENDENTE'?'AGUARDANDO CMT CIA':o.ffDecisao||'PENDENTE';
           let botoes='<button class="btn-page" onclick="ocFtDetalhe(\''+escaparAttr(o.id)+'\')">CONSULTAR</button>';
           if(d.capacidades.validar&&o.status==='PENDENTE')botoes+='<button class="btn-primary-soft" onclick="ocFtDecidir(\''+o.id+'\',\'OCORRENCIA\',\'APROVAR\')">VALIDAR OCORRÊNCIA</button><button class="btn-page" onclick="ocFtDecidir(\''+o.id+'\',\'OCORRENCIA\',\'RECUSAR\')">RECUSAR</button>';
           if(d.capacidades.validarFF&&o.status==='VALIDADA'&&o.ffDecisao==='PENDENTE')botoes+='<button class="btn-primary-soft" onclick="ocFtDecidir(\''+o.id+'\',\'FF\',\'APROVAR\')">CONCEDER FF</button><button class="btn-page" onclick="ocFtDecidir(\''+o.id+'\',\'FF\',\'RECUSAR\')">RECUSAR FF</button>';
@@ -7957,7 +7968,7 @@ Banco de dados: Google Sheets.
     async function ocFtImportar(){
       const d=OC_FT_IMPORTACAO;if(!d)return;const status=document.getElementById('ocFtImportarStatus'),btn=document.getElementById('ocFtImportarBtn');if(btn.disabled)return;
       const correcoes=Array.from(document.querySelectorAll('[data-oc-correcao]'));if(correcoes.some(i=>!i.value)){status.textContent='Informe a data correta indicada antes de importar. Nenhum dado foi importado.';return;}
-      const confirma=await confirmarToastFt('IMPORTAR HISTÓRICO','Os registros serão importados como ocorrências validadas e FF concedidas. As datas de gozo serão preservadas. Confirma os dados e as datas corrigidas?',{confirmar:'IMPORTAR',cancelar:'VOLTAR'});if(!confirma)return;
+      const confirma=await confirmarToastFt('IMPORTAR HISTÓRICO','Os registros entram no ranking como ocorrências validadas. As FF não gozadas aguardam aprovação do Cmt Cia. As datas de gozo serão preservadas. Confirma os dados e as datas corrigidas?',{confirmar:'IMPORTAR',cancelar:'VOLTAR'});if(!confirma)return;
       btn.disabled=true;
       try{
         const mapa=new Map(d.ocorrencias.map(o=>[o.data+'|'+o.bopm,JSON.parse(JSON.stringify(o))]));
