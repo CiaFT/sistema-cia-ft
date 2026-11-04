@@ -6874,7 +6874,14 @@ Banco de dados: Google Sheets.
     @media(max-width:700px){.eap-detalhes-grid{grid-template-columns:1fr}}
     .eap-modal-backdrop{position:fixed;inset:0;z-index:10020;background:rgba(15,23,42,.58);display:flex;align-items:center;justify-content:center;padding:14px}.eap-modal{width:min(920px,100%);max-height:92vh;overflow:auto;background:linear-gradient(180deg,#fff,#f8fafc);border:1px solid rgba(55,66,71,.18);border-radius:18px;padding:20px;color:#17202a;box-shadow:0 20px 70px rgba(15,23,42,.25)}.eap-modal h2{margin:0 0 6px;color:#374247}
     .eap-form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}.eap-form-grid .span2{grid-column:span 2}.eap-form-grid .span3{grid-column:1/-1}.eap-modal-actions{display:flex;justify-content:flex-end;gap:9px;flex-wrap:wrap}.eap-solicitacao{border:1px solid rgba(55,66,71,.14);border-radius:14px;padding:13px;margin:9px 0;background:linear-gradient(180deg,#fff,#f8fafc);color:#17202a}.eap-nota{color:#64748b;font-size:11px}.eap-reprovado{color:#991b1b;background:#fff1f2;border:1px solid rgba(185,28,28,.18);padding:10px 12px;border-radius:10px;margin:10px 0}@media(max-width:700px){.eap-form-grid{grid-template-columns:1fr}.eap-form-grid .span2,.eap-form-grid .span3{grid-column:auto}.eap-modal{padding:14px}.eap-barra,.eap-filtros{align-items:stretch}.eap-barra>* , .eap-filtros>*{width:100%}}
-</style>
+
+    /* ICC: status e ações ocupam linhas independentes dentro da célula. */
+    #appScreen .icc-assinatura-coluna{display:grid;gap:8px;min-width:0;justify-items:center;padding:4px 0}
+    #appScreen .icc-assinatura-status{line-height:1.5;max-width:100%;overflow-wrap:anywhere}
+    #appScreen .icc-assinatura-acoes{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;width:100%;max-width:230px;min-width:0}
+    #appScreen .icc-assinatura-acoes .icc-btn{position:static;display:block;float:none;transform:none;width:100%;min-width:0;height:auto;min-height:36px;margin:0;box-sizing:border-box;white-space:normal;overflow-wrap:anywhere;line-height:1.4}
+
+  </style>
 </head>
 
 <body>
@@ -7563,6 +7570,8 @@ Banco de dados: Google Sheets.
         ICC: { arquivo: './icone-icc.png?v=132-icc-r1', alt: 'ICC' },
         EAP: { arquivo: './icone-eap.png?v=138-eap-r1', alt: 'EAP' },
         OCORRENCIAS: { arquivo: './icone-ocorrencias.png?v=138-ocorrencias-r1', alt: 'Ocorrências' },
+        OCORRENCIAS_INCLUSAO: { arquivo: './icone-inclusao-ocorrencia.png?v=138-r1', alt: 'Inclusão de Ocorrência' },
+        OCORRENCIAS_RANKING: { arquivo: './icone-ranking-ocorrencias.png?v=138-r1', alt: 'Ranking de Ocorrências' },
         REVISTA_ARMARIO: { arquivo: './icone-revista-armario.png?v=131-rotinas-r3', alt: 'Revista de Armário' },
         PLANO_ANUAL_FERIAS: { arquivo: './icone-ferias.png?v=20260930-r2', alt: 'Plano Anual de Férias' }
       };
@@ -7662,6 +7671,11 @@ Banco de dados: Google Sheets.
 
       if (normalizarModuloCliente(id) === 'REVISTA_ARMARIO') {
         abrirRevistaArmario();
+        return;
+      }
+
+      if (['OCORRENCIAS_INCLUSAO', 'OCORRENCIAS_RANKING'].indexOf(normalizarModuloCliente(id)) !== -1) {
+        abrirSubpaginaOcorrencias(normalizarModuloCliente(id));
         return;
       }
 
@@ -7799,6 +7813,10 @@ Banco de dados: Google Sheets.
 
     function abrirOcorrencias() {
       window.scrollTo(0, 0);
+      const modulos = [
+        { id: 'OCORRENCIAS_INCLUSAO', titulo: 'Inclusão de Ocorrência', icone: '' },
+        { id: 'OCORRENCIAS_RANKING', titulo: 'Ranking de Ocorrências', icone: '' }
+      ];
       document.getElementById('appConteudo').innerHTML = `
         <div class="page-wrap">
           <div class="page-header">
@@ -7811,6 +7829,19 @@ Banco de dados: Google Sheets.
               <div class="page-actions"><button class="btn-page" onclick="abrirRotinasOperacionais()">VOLTAR</button></div>
             </div>
           </div>
+          <div class="menu-grid">${modulos.map(montarMenuCard).join('')}</div>
+        </div>`;
+    }
+
+    function abrirSubpaginaOcorrencias(id) {
+      const titulo = id === 'OCORRENCIAS_INCLUSAO' ? 'Inclusão de Ocorrência' : 'Ranking de Ocorrências';
+      window.scrollTo(0, 0);
+      document.getElementById('appConteudo').innerHTML = `
+        <div class="page-wrap">
+          <div class="page-header"><div class="page-header-row">
+            <div><div class="page-kicker">Ocorrências</div><h1>${escapar(titulo)}</h1></div>
+            <div class="page-actions"><button class="btn-page" onclick="abrirOcorrencias()">VOLTAR</button></div>
+          </div></div>
         </div>`;
     }
 
@@ -17114,7 +17145,7 @@ Banco de dados: Google Sheets.
           botoes += '<button type="button" class="icc-btn secundario" onclick="iccJustificarSupabase(\'' +
             escaparAttr(x.ciencia_id) + '\')">JUSTIFICAR AFASTAMENTO</button>';
         return '<tr><td>' + escapar(x.posto || '') + '</td><td>' + escapar(x.re || '') +
-          '</td><td>' + escapar(x.nome || '') + '</td><td>' + assinatura + botoes + '</td></tr>';
+          '</td><td>' + escapar(x.nome || '') + '</td><td><div class="icc-assinatura-coluna"><div class="icc-assinatura-status">' + assinatura + '</div>' + (botoes ? '<div class="icc-assinatura-acoes">' + botoes + '</div>' : '') + '</div></td></tr>';
       }).join('');
       const box = document.getElementById('iccConteudo');
       if (!box) return;
