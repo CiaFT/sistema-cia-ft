@@ -10694,7 +10694,7 @@ Banco de dados: Google Sheets.
               const classes = classesCelulaControleFolgas(atual, true);
               const bloqueado = !podeEditar || anteriorImplantacao;
               if (grupo === 'ADM') {
-                return '<td class="freq-day freq-bloqueado" title="ADM: somente consulta. Saldo de folgas e dias trabalhados preservado."><div class="freq-select-wrap ' + classes + ' freq-bloqueado"><span class="freq-select-display">' + escapar(atual) + '</span></div></td>';
+                return '<td class="freq-day" style="background:#fff"></td>';
               }
               return '<td class="freq-day ' + (anteriorImplantacao ? 'folga-dia-inativo' : '') + '"><div class="freq-select-wrap ' + classes + (bloqueado ? ' freq-bloqueado' : '') + '"><span class="freq-select-display" aria-hidden="true">' + escapar(atual) + '</span><select class="freq-native-select ' + classes + '" aria-label="Dia ' + dia + ' de ' + escapar(pm.nomeGuerra || '') + '" data-grupo="' + escaparAttr(grupo) + '" data-re="' + escaparAttr(pm.re || '') + '" data-dia="' + dia + '" data-valor-anterior="' + escaparAttr(atual) + '" onchange="salvarCelulaControleFolgas(this)" ' + (bloqueado ? 'disabled' : '') + '>' +
                 '<option value=""></option>' + opcoes.map(function(op) { return '<option value="' + escaparAttr(op) + '" ' + (atual === String(op) ? 'selected' : '') + '>' + escapar(op) + '</option>'; }).join('') +
