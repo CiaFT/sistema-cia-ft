@@ -6898,6 +6898,13 @@ Banco de dados: Google Sheets.
     #ocFtImportarPainel label{margin-top:10px}#ocFtImportarStatus,#ocFtEnvioStatus{white-space:pre-wrap;font-size:12px}
     @media(max-width:620px){.oc-ft-grid{grid-template-columns:1fr}.oc-ft-pessoa{grid-template-columns:minmax(0,1fr)}.oc-ft-pessoa button{justify-self:end}}
 
+
+    /* Ocorrências: VTR com meia largura, Equipe e Apoio lado a lado. */
+    #ocFtForm .oc-ft-vtr{width:calc((100% - 16px)/2);justify-self:start}
+    .oc-ft-equipe-apoio{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+    .oc-ft-equipe-apoio>section{min-width:0}
+    @media(max-width:620px){#ocFtForm .oc-ft-vtr{width:100%}.oc-ft-equipe-apoio{grid-template-columns:minmax(0,1fr);gap:0}}
+
 </style>
 </head>
 
@@ -7887,9 +7894,9 @@ Banco de dados: Google Sheets.
         '<label class="oc-ft-largo">QTH<input id="ocFtQth" maxlength="500" required placeholder="Endereço da ocorrência"></label>'+
         '<label>BOPM<input id="ocFtBopm" maxlength="60" required></label><label>BOPC<input id="ocFtBopc" maxlength="60"></label><label>DP<input id="ocFtDp" maxlength="100"></label>'+
         '<label class="oc-ft-largo">Natureza<input id="ocFtNatureza" maxlength="500" required></label>'+
-        '<label class="oc-ft-largo">VTR<select id="ocFtVtr" required><option value="">Selecione a viatura</option>'+c.viaturas.map(v=>'<option value="'+escaparAttr(v.prefixo)+'">'+escapar(v.prefixo)+(v.situacao?' — '+escapar(v.situacao):'')+'</option>').join('')+'</select></label></div>'+
-        '<section class="oc-ft-secao"><h2>Equipe</h2><div id="ocFtEquipe"></div><button type="button" class="btn-page" onclick="ocFtAdicionarEquipe()">ADICIONAR POLICIAL</button></section>'+
-        '<section class="oc-ft-secao"><h2>Apoio</h2><div id="ocFtApoio"></div><button type="button" class="btn-page" onclick="ocFtAdicionarApoio()">ADICIONAR VIATURA DE APOIO</button></section>'+
+        '<label class="oc-ft-largo oc-ft-vtr">VTR<select id="ocFtVtr" required><option value="">Selecione a viatura</option>'+c.viaturas.filter(v=>normalizarTexto(v.situacao||'').indexOf('DESCARG')===-1).map(v=>'<option value="'+escaparAttr(v.prefixo)+'">'+escapar(v.prefixo)+'</option>').join('')+'</select></label></div>'+
+        '<div class="oc-ft-equipe-apoio"><section class="oc-ft-secao"><h2>Equipe</h2><div id="ocFtEquipe"></div><button type="button" class="btn-page" onclick="ocFtAdicionarEquipe()">ADICIONAR POLICIAL</button></section>'+
+        '<section class="oc-ft-secao"><h2>Apoio</h2><div id="ocFtApoio"></div><button type="button" class="btn-page" onclick="ocFtAdicionarApoio()">ADICIONAR VIATURA DE APOIO</button></section></div>'+
         '<section class="oc-ft-secao"><h2>Indiciados</h2><div id="ocFtIndiciados"></div><button type="button" class="btn-page" onclick="ocFtAdicionarPessoa(\'indiciados\')">ADICIONAR INDICIADO</button></section>'+
         '<section class="oc-ft-secao"><h2>Sindicados</h2><div id="ocFtSindicados"></div><button type="button" class="btn-page" onclick="ocFtAdicionarPessoa(\'sindicados\')">ADICIONAR SINDICADO</button></section>'+
         '<section class="oc-ft-secao"><label>Apreensão<textarea id="ocFtApreensao" rows="6" maxlength="12000" placeholder="Descreva os itens apreendidos"></textarea></label></section>'+
