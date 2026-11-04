@@ -10676,7 +10676,7 @@ Banco de dados: Google Sheets.
       const podeEditar = !!(d.capacidades && d.capacidades.podeEditar);
       let corpo = '';
 
-      ['ADM', '1º PEL', '2º PEL'].forEach(function(grupo) {
+      ['1º PEL', '2º PEL', 'ADM'].forEach(function(grupo) {
         const lista = efetivo.filter(function(pm) { return pm.pelotao === grupo; });
         if (!lista.length) return;
         corpo += '<tr class="freq-group"><td colspan="' + (quantidadeDias + 3) + '">' + escapar(grupo) + (grupo === 'ADM' ? ' — SOMENTE CONSULTA · SALDOS PRESERVADOS' : '') + '</td></tr>';
