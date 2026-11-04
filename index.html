@@ -6913,6 +6913,14 @@ Banco de dados: Google Sheets.
     .oc-ft-top .oc-ft-posicao{font-weight:900;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;background:#fff;border:1px solid #d6c99e}
     #ocFtConteudo .oc-ft-ff-pendente{color:#b42318;border:1px solid #efb5af;background:#fff1f0;white-space:normal;font-size:11px}
 
+    /* V1.4 — consulta individual: centralização e cores de FF. */
+    #ocFtConsulta .oc-ft-consulta-individual th:nth-child(n+3),
+    #ocFtConsulta .oc-ft-consulta-individual td:nth-child(n+3){text-align:center;vertical-align:middle}
+    #ocFtConsulta .oc-ft-consulta-individual .oc-ft-acoes{justify-items:center}
+    #ocFtConsulta .oc-ft-consulta-individual .oc-ft-acoes button{max-width:100%;text-align:center}
+    #ocFtConsulta .oc-ft-consulta-individual td.oc-ft-ff-aguardando{background:#fff8df;color:#785b12}
+    #ocFtConsulta .oc-ft-consulta-individual td.oc-ft-ff-fruida{background:#eaf6ed;color:#23653a}
+
     /* Ocorrências: VTR com meia largura, Equipe e Apoio lado a lado. */
     #ocFtForm .oc-ft-vtr{width:calc((100% - 16px)/2);justify-self:start}
     .oc-ft-equipe-apoio{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
@@ -7941,7 +7949,7 @@ Banco de dados: Google Sheets.
     async function ocFtRenderRanking(rankingInicial){
       const box=document.getElementById('ocFtConteudo'),ano=new Date().getFullYear();OC_FT_FF_RE='';
       const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-      box.innerHTML='<div class="oc-ft-grid oc-ft-filtros"><label>Período<select id="ocFtPeriodo" onchange="ocFtMudarPeriodo()"><option value="ANUAL">Anual</option><option value="SEMESTRAL">Semestral</option><option value="MENSAL">Mensal</option></select></label><label>Ano<select id="ocFtAno" onchange="ocFtAtualizarRanking()">'+Array.from({length:Math.max(1,ano-2026+1)},(_,i)=>ano-i).map(y=>'<option value="'+y+'">'+y+'</option>').join('')+'</select></label><label id="ocFtSemestreLabel" hidden>Semestre<select id="ocFtSemestre" onchange="ocFtAtualizarRanking()"><option value="1">1º semestre</option><option value="2">2º semestre</option></select></label><label id="ocFtMesLabel" hidden>Mês<select id="ocFtMes" onchange="ocFtAtualizarRanking()">'+meses.map((m,i)=>'<option value="'+(i+1)+'" '+(i===new Date().getMonth()?'selected':'')+'>'+m+'</option>').join('')+'</select></label><label>Pelotão / grupo<select id="ocFtRankingPel" onchange="ocFtAtualizarRanking()"><option value="">Geral — Cia FT</option><option>1º PEL</option><option>2º PEL</option><option>ADM</option></select></label></div><p class="oc-ft-nota">Ranking e FF aguardando decisão seguem o período selecionado. O filtro de pelotão considera a lotação atual. FF já gozadas não entram nas pendências.</p><div id="ocFtRanking" aria-live="polite"></div><section id="ocFtFFPainel" class="oc-ft-secao" hidden></section><section class="oc-ft-secao"><h2>Histórico individual</h2><label>Policial<select id="ocFtConsultaRe" onchange="ocFtCarregarConsulta()">'+ocFtOptionsEquipe('')+'</select></label><div id="ocFtConsulta"></div></section>';
+      box.innerHTML='<div class="oc-ft-grid oc-ft-filtros"><label>Período<select id="ocFtPeriodo" onchange="ocFtMudarPeriodo()"><option value="ANUAL">Anual</option><option value="SEMESTRAL">Semestral</option><option value="MENSAL">Mensal</option></select></label><label>Ano<select id="ocFtAno" onchange="ocFtAtualizarRanking()">'+Array.from({length:Math.max(1,ano-2026+1)},(_,i)=>ano-i).map(y=>'<option value="'+y+'">'+y+'</option>').join('')+'</select></label><label id="ocFtSemestreLabel" hidden>Semestre<select id="ocFtSemestre" onchange="ocFtAtualizarRanking()"><option value="1">1º semestre</option><option value="2">2º semestre</option></select></label><label id="ocFtMesLabel" hidden>Mês<select id="ocFtMes" onchange="ocFtAtualizarRanking()">'+meses.map((m,i)=>'<option value="'+(i+1)+'" '+(i===new Date().getMonth()?'selected':'')+'>'+m+'</option>').join('')+'</select></label><label>Pelotão / grupo<select id="ocFtRankingPel" onchange="ocFtAtualizarRanking()"><option value="">Geral — Cia FT</option><option>1º PEL</option><option>2º PEL</option><option>ADM</option></select></label></div><p class="oc-ft-nota">Ranking e FF aguardando decisão seguem o período selecionado. O filtro de pelotão considera a lotação atual. FF já fruídas não entram nas pendências.</p><div id="ocFtRanking" aria-live="polite"></div><section id="ocFtFFPainel" class="oc-ft-secao" hidden></section><section class="oc-ft-secao"><h2>Histórico individual</h2><label>Policial<select id="ocFtConsultaRe" onchange="ocFtCarregarConsulta()">'+ocFtOptionsEquipe('')+'</select></label><div id="ocFtConsulta"></div></section>';
       if(Array.isArray(rankingInicial))ocFtMostrarRanking(rankingInicial);else await ocFtAtualizarRanking();
     }
     function ocFtMudarPeriodo(){const p=document.getElementById('ocFtPeriodo').value;document.getElementById('ocFtSemestreLabel').hidden=p!=='SEMESTRAL';document.getElementById('ocFtMesLabel').hidden=p!=='MENSAL';ocFtAtualizarRanking();}
@@ -7975,12 +7983,13 @@ Banco de dados: Google Sheets.
       const re=document.getElementById('ocFtConsultaRe')?.value||'';box.innerHTML='<p>Carregando registros...</p>';
       try{
         const d=await ocFtApi('ocorrencias_listar',{re}),creditos=Object.fromEntries((d.creditosFF||[]).map(c=>[c.id,c]));
-        box.innerHTML='<div class="oc-ft-tabela"><table><thead><tr><th>Data</th><th>Natureza</th><th>BOPM</th><th>Ocorrência</th><th>FF — decisão do Cmt Cia</th><th>Ações</th></tr></thead><tbody>'+d.ocorrencias.map(o=>{
-          const c=creditos[o.id],ff=c?(c.gozadaEm?'Gozada em '+iccDataBR(c.gozadaEm):'Pendente'):o.ffDecisao==='PENDENTE'?'AGUARDANDO CMT CIA':o.ffDecisao||'PENDENTE';
+        box.innerHTML='<div class="oc-ft-tabela"><table class="oc-ft-consulta-individual"><thead><tr><th>Data</th><th>Natureza</th><th>BOPM</th><th>Ocorrência</th><th>FF — decisão do Cmt Cia</th><th>Ações</th></tr></thead><tbody>'+d.ocorrencias.map(o=>{
+          const c=creditos[o.id],ff=c?(c.gozadaEm?'Fruída em '+iccDataBR(c.gozadaEm):'Pendente'):o.ffDecisao==='PENDENTE'?'AGUARDANDO CMT CIA':o.ffDecisao||'PENDENTE';
+          const classeFF=c?.gozadaEm?'oc-ft-ff-fruida':(!c&&o.ffDecisao==='PENDENTE'?'oc-ft-ff-aguardando':'');
           let botoes='<button class="btn-page" onclick="ocFtDetalhe(\''+escaparAttr(o.id)+'\')">CONSULTAR</button>';
           if(d.capacidades.validar&&o.status==='PENDENTE')botoes+='<button class="btn-primary-soft" onclick="ocFtDecidir(\''+o.id+'\',\'OCORRENCIA\',\'APROVAR\')">VALIDAR OCORRÊNCIA</button><button class="btn-page" onclick="ocFtDecidir(\''+o.id+'\',\'OCORRENCIA\',\'RECUSAR\')">RECUSAR</button>';
           if(d.capacidades.validarFF&&o.status==='VALIDADA'&&o.ffDecisao==='PENDENTE')botoes+='<button class="btn-primary-soft" onclick="ocFtDecidir(\''+o.id+'\',\'FF\',\'APROVAR\')">CONCEDER FF</button><button class="btn-page" onclick="ocFtDecidir(\''+o.id+'\',\'FF\',\'RECUSAR\')">RECUSAR FF</button>';
-          return '<tr><td>'+iccDataBR(o.data)+'</td><td>'+escapar(o.natureza)+'</td><td>'+escapar(o.bopm)+'</td><td>'+escapar(o.status)+'</td><td>'+escapar(ff)+'</td><td><div class="oc-ft-acoes">'+botoes+'</div></td></tr>';
+          return '<tr><td>'+iccDataBR(o.data)+'</td><td>'+escapar(o.natureza)+'</td><td>'+escapar(o.bopm)+'</td><td>'+escapar(o.status)+'</td><td class="'+classeFF+'">'+escapar(ff)+'</td><td><div class="oc-ft-acoes">'+botoes+'</div></td></tr>';
         }).join('')+'</tbody></table></div><div id="ocFtDetalhe"></div>';
       }catch(e){box.textContent=e.message;}
     }
