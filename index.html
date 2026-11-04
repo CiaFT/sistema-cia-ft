@@ -7562,6 +7562,7 @@ Banco de dados: Google Sheets.
         ROTINAS_OPERACIONAIS: { arquivo: './icone-rotinas-operacionais.png?v=131-rotinas-r2', alt: 'Rotinas Operacionais' },
         ICC: { arquivo: './icone-icc.png?v=132-icc-r1', alt: 'ICC' },
         EAP: { arquivo: './icone-eap.png?v=138-eap-r1', alt: 'EAP' },
+        OCORRENCIAS: { arquivo: './icone-ocorrencias.png?v=138-ocorrencias-r1', alt: 'Ocorrências' },
         REVISTA_ARMARIO: { arquivo: './icone-revista-armario.png?v=131-rotinas-r3', alt: 'Revista de Armário' },
         PLANO_ANUAL_FERIAS: { arquivo: './icone-ferias.png?v=20260930-r2', alt: 'Plano Anual de Férias' }
       };
@@ -7661,6 +7662,11 @@ Banco de dados: Google Sheets.
 
       if (normalizarModuloCliente(id) === 'REVISTA_ARMARIO') {
         abrirRevistaArmario();
+        return;
+      }
+
+      if (normalizarModuloCliente(id) === 'OCORRENCIAS') {
+        abrirOcorrencias();
         return;
       }
 
@@ -7764,6 +7770,13 @@ Banco de dados: Google Sheets.
         descricao: 'Programação anual e acompanhamento de EAP, TAF e TAT do efetivo.'
       });
 
+      modulos.push({
+        id: 'OCORRENCIAS',
+        titulo: 'OCORRÊNCIAS',
+        icone: '',
+        descricao: 'Lançamento de ocorrências, validação e ranking geral.'
+      });
+
       document.getElementById('appConteudo').innerHTML = `
         <div class="page-wrap">
           <div class="page-header">
@@ -7779,6 +7792,24 @@ Banco de dados: Google Sheets.
 
           <div class="menu-grid">
             ${modulos.map(montarMenuCard).join('') || '<div class="modal-card">Nenhuma rotina operacional liberada para seu perfil.</div>'}
+          </div>
+        </div>`;
+    }
+
+
+    function abrirOcorrencias() {
+      window.scrollTo(0, 0);
+      document.getElementById('appConteudo').innerHTML = `
+        <div class="page-wrap">
+          <div class="page-header">
+            <div class="page-header-row">
+              <div>
+                <div class="page-kicker">Rotinas Operacionais</div>
+                <h1>OCORRÊNCIAS</h1>
+                <p>Lançamento de ocorrências, validação e ranking geral.</p>
+              </div>
+              <div class="page-actions"><button class="btn-page" onclick="abrirRotinasOperacionais()">VOLTAR</button></div>
+            </div>
           </div>
         </div>`;
     }
