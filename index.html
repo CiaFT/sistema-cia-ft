@@ -6992,9 +6992,9 @@ Banco de dados: Google Sheets.
     .ft-avisos-leitura,.ft-avisos-ciencias{margin:12px 0}.ft-avisos-ciencias li{margin:6px 0}
   </style>
 <style>
-#appScreen .top-actions #dsCaixaFt{position:relative;display:inline-grid;place-items:center;min-width:40px;padding-inline:9px}
+#appScreen .top-actions #dsCaixaFt{position:relative;display:inline-grid;place-items:center;width:52px;min-width:52px;min-height:44px;padding:0}
 .ds-rotinas-par{display:grid;grid-column:span 2;grid-template-columns:repeat(2,minmax(0,1fr));gap:inherit}
-#dsCaixaFt img{display:block;object-fit:contain}
+#dsCaixaFt img{display:block;width:42px;height:42px;max-width:none;object-fit:contain}
 #dsCaixaFt span:not(:empty){position:absolute;top:-5px;right:-5px;min-width:16px;padding:1px 4px;border:1px solid #fff;border-radius:999px;background:#9f2936;color:#fff;font:700 10px/14px system-ui;text-align:center;pointer-events:none}
 #dsCorpoFt .ds-form-ft,#dsCorpoFt .ds-lista-ft,#dsCorpoFt .ds-grid-ft{display:grid;gap:12px}
 #dsCorpoFt .ds-grid-ft{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -7076,7 +7076,7 @@ Banco de dados: Google Sheets.
         </div>
 
         <div class="top-actions">
-          <button id="dsCaixaFt" type="button" class="btn btn-secondary" onclick="dsCaixaAbrirFt()" aria-label="Caixa de Entrada" title="Caixa de Entrada"><img src="./icone-caixa-entrada.png" alt="" width="22" height="22"><span aria-hidden="true"></span></button>
+          <button id="dsCaixaFt" type="button" class="btn btn-secondary" onclick="dsCaixaAbrirFt()" aria-label="Caixa de Entrada" title="Caixa de Entrada"><img src="./icone-caixa-entrada.png" alt="" width="42" height="42"><span aria-hidden="true"></span></button>
           <button class="btn btn-secondary" onclick="abrirHome()">INÍCIO</button>
           <button class="btn btn-secondary" onclick="sair()">SAIR</button>
         </div>
@@ -7228,11 +7228,11 @@ const dsEscFt=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>
 const dsDataFt=v=>String(v||'').replace(/^(\d{4})-(\d\d)-(\d\d)$/,'$3/$2/$1');
 const dsRpcFt=(acao,dados)=>rpcPlanoFerias('pmp118_ft',{p_acao:acao,p_dados:dados||{}});
 let dsContagemFt=0,dsMomentoFt=0,dsSessaoFt;
-setInterval(()=>{if(!document.hidden&&APP.usuario)void dsAtualizarCaixaFt();},60000);
+setInterval(()=>{if(!document.hidden&&APP.usuario)void dsAtualizarCaixaFt();},30000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&APP.usuario)void dsAtualizarCaixaFt();});
 async function dsAtualizarCaixaFt(forcar=false){
  const b=document.getElementById('dsCaixaFt'),g=APP.sessaoGeracao;
- if(!APP.usuario||!b||(!forcar&&dsSessaoFt===g&&Date.now()-dsMomentoFt<60000))return;
+ if(!APP.usuario||!b||(!forcar&&dsSessaoFt===g&&Date.now()-dsMomentoFt<30000))return;
  dsSessaoFt=g; dsMomentoFt=Date.now(); const seq=++dsContagemFt;
  try{const r=await dsRpcFt('contador');if(seq===dsContagemFt&&APP.usuario&&g===APP.sessaoGeracao){b.querySelector('span').textContent=r.total?(r.total>99?'99+':r.total):'';b.setAttribute('aria-label',r.total?'Caixa de Entrada: '+r.total+' pendência(s)':'Caixa de Entrada');}}catch(_){}
 }
