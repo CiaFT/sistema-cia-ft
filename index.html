@@ -6965,6 +6965,15 @@ Banco de dados: Google Sheets.
     .ft141-auditada .consulta-field label,.ft141-auditada .icc-campo label{font-size:13px}
     .ft141-auditada .consulta-field select,.ft141-auditada .consulta-field input,.ft141-auditada .icc-campo select{font-size:14px;min-height:42px}
     .ft141-auditada .resenha-loading,.ft141-auditada .icc-loading{font-size:14px;line-height:1.5}
+  
+    .ent-situacao{display:inline-block;padding:5px 9px;border-radius:8px;font-weight:800;line-height:1.3;background:#eef2f6;color:#344457}
+    .ent-situacao[data-tom="atencao"],.ent-tramite[data-tom="atencao"]{background:#fff5dc;color:#674301;border-color:#e9c16b}
+    .ent-situacao[data-tom="ok"]{background:#e8f5ed;color:#205638}.ent-situacao[data-tom="erro"]{background:#fceeee;color:#8d2424}
+    .ent-tramite{margin:12px 0;padding:14px;border:1px solid #cbd5e1;border-left-width:5px;border-radius:10px;background:#f5f7fa}
+    .ent-tramite h3{margin:0 0 8px;font-size:16px}.ent-tramite p{margin:5px 0;overflow-wrap:anywhere}.ent-tramite .ent-data{font-weight:800}
+    .ent-ficha-bloco[id="entDecisao"]{scroll-margin-top:110px}
+    .ent-timeline{list-style:none;padding:0;margin:0}.ent-timeline li{padding:7px 0;border-bottom:1px solid #e2e8f0;overflow-wrap:anywhere}.ent-timeline li:last-child{border:0}
+    .toast-ft-motivo{display:grid;gap:6px;margin-top:8px}.toast-ft-motivo textarea{width:100%;min-height:76px;box-sizing:border-box;padding:8px;font:inherit;border:1px solid #94a3b8;border-radius:8px;resize:vertical}
   </style>
 </head>
 
@@ -7969,8 +7978,27 @@ Banco de dados: Google Sheets.
         return '<div'+(String(texto||'').length>145?' class="ent-resposta-longa"':'')+'><strong>'+escapar(c.label)+'</strong><p>'+resposta+'</p></div>';
       }).join('')+'</div></details>').join('');
     }
-    async function entAdminListar(){const box=document.getElementById('entLista');box.textContent='Carregando candidaturas...';try{const d=await entAdminApi('entrevista_admin_listar');FT_ENT_ADMIN_CAP=d.podeAgendar;box.innerHTML='<div class="oc-ft-tabela ent-lista-tabela"><table><thead><tr><th>Protocolo</th><th>Policial / OPM</th><th>Interesse</th><th>Situação</th><th>Entrevista</th><th>Ações</th></tr></thead><tbody>'+d.fichas.map(r=>'<tr><td>'+escapar(r.protocolo)+'</td><td>'+escapar(r.re+' — '+r.nome)+(r.opm?'<small class="ent-opm">'+escapar(r.opm)+'</small>':'')+'</td><td>'+escapar(r.modalidade+' / '+r.pel)+'</td><td>'+escapar(r.status)+'</td><td>'+escapar(r.agenda?entDataBR(r.agenda.dia)+' '+r.agenda.hora:'—')+'</td><td><button class="btn-page" data-ent-id="'+escaparAttr(r.id)+'" onclick="entAdminDetalhe(this.dataset.entId)">ABRIR</button></td></tr>').join('')+(d.fichas.length?'':'<tr><td colspan="6">Nenhuma candidatura enviada.</td></tr>')+'</tbody></table></div>';}catch(e){box.textContent=e.message;}}
-    async function entAdminDetalhe(id){const box=document.getElementById('entDetalhe');box.textContent='Carregando ficha...';try{const d=await entAdminApi('entrevista_admin_detalhe',{id});FT_ENT_ADMIN_ATUAL=d.ficha;FT_ENT_ADMIN_CAP=d.podeAgendar;const f=d.ficha;box.innerHTML='<section class="oc-ft-secao"><div class="ent-ficha-topo"><h2>'+escapar(f.campos.nome)+' — '+escapar(f.protocolo)+'</h2><button class="btn-page" onclick="entAdminImprimir()">BAIXAR FICHA WORD PARA IMPRESSÃO</button></div><p>Situação: '+escapar(f.status)+'</p>'+(d.foto?'<img class="ent-foto" src="'+escaparAttr(d.foto)+'" alt="Foto do candidato">':'')+'<p class="oc-ft-nota">A foto e os dados são privados. O documento contém somente os campos da ficha oficial; as três perguntas de interesse ficam apenas nesta consulta.</p>' +entCamposPainel(d.campos,f.campos)+(f.agenda?'<section class="ent-ficha-secao ent-ficha-bloco"><h3>Agendamento atual</h3><p>'+escapar(entDataBR(f.agenda.dia)+' '+f.agenda.hora+' — '+f.agenda.local)+'</p></section>':'')+(f.remarcacao?'<section class="ent-ficha-secao ent-ficha-bloco"><h3>Pedido de remarcação</h3><p>'+escapar(f.remarcacao.motivo)+'</p><p>Disponibilidade: '+escapar(f.remarcacao.sugestao)+'</p></section>':'')+(d.podeAgendar?'<section class="ent-ficha-secao ent-ficha-bloco"><h3>Agendamento e decisão</h3><div class="oc-ft-grid"><label>Data<input id="entDia" type="date"></label><label>Horário<input id="entHora" type="time"></label><label>Local<input id="entLocal" maxlength="250" value="'+escaparAttr(f.agenda?.local||'Cia FT')+'"></label></div><label>Mensagem ao candidato / orientações<textarea id="entMensagem" maxlength="1000"></textarea></label><div class="oc-ft-acessos"><button class="btn-primary-soft" onclick="entAdminDecidir(\'AGENDAR\')">AGENDAR / REMARCAR</button>'+(f.remarcacao?'<button class="btn-page" onclick="entAdminDecidir(\'MANTER_AGENDA\')">MANTER AGENDAMENTO</button>':'')+(d.podeCorrigir?'<button class="btn-page" onclick="entAdminDecidir(\'CORRECAO\')">SOLICITAR CORREÇÃO DA FICHA</button>':'')+'<button class="btn-page" onclick="entAdminDecidir(\'ENCERRAR\')">RECUSAR / ENCERRAR CANDIDATURA</button></div><p class="oc-ft-nota">A mensagem será visível ao candidato. Não registre pareceres reservados de P2, SJD ou comando.</p></section>':'')+'<section class="ent-ficha-secao ent-ficha-bloco"><h3>Acompanhamento</h3>'+(f.historico||[]).map(h=>'<p>'+escapar(iccHoraBR(h.data))+' — '+escapar(h.acao)+'</p>').join('')+'</section></section>';box.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){box.textContent=e.message;}}
+    function entSituacaoVisual(status){
+      const mapa={
+        REMARCACAO_SOLICITADA:['Remarcação solicitada — ação necessária','atencao'],
+        ENVIADA:['Ficha enviada — aguarda análise','atencao'],
+        AGENDADA:['Entrevista agendada','neutro'],
+        CONFIRMADA:['Presença confirmada','ok'],
+        CORRECAO:['Aguardando correção do candidato','atencao'],
+        ENCERRADA:['Candidatura encerrada','erro']
+      };
+      const [rotulo,tom]=mapa[status]||[String(status||'—').replaceAll('_',' '),'neutro'];
+      return '<span class="ent-situacao" data-tom="'+tom+'">'+escapar(rotulo)+'</span>';
+    }
+    function entTramiteDestaque(f){
+      const a=f.agenda,r=f.status==='REMARCACAO_SOLICITADA'?f.remarcacao:null;
+      if(!a&&!r)return '';
+      return '<section class="ent-tramite" data-tom="'+(r?'atencao':'neutro')+'"><h3>'+(r?'Remarcação solicitada — ação necessária':'Agendamento atual')+'</h3>'+
+        (a?'<p class="ent-data">'+(r?'Agendamento vigente: ':'')+escapar(entDataBR(a.dia)+' às '+a.hora+' — '+a.local)+'</p>':'')+
+        (r?'<p><strong>Motivo:</strong> '+escapar(r.motivo||'—')+'</p><p><strong>Disponibilidade sugerida:</strong> '+escapar(r.sugestao||'—')+'</p><p>O agendamento vigente permanece até você remarcar ou manter a data.</p>':'')+'</section>';
+    }
+    async function entAdminListar(){const box=document.getElementById('entLista');box.textContent='Carregando candidaturas...';try{const d=await entAdminApi('entrevista_admin_listar');FT_ENT_ADMIN_CAP=d.podeAgendar;box.innerHTML='<div class="oc-ft-tabela ent-lista-tabela"><table><thead><tr><th>Protocolo</th><th>Policial / OPM</th><th>Interesse</th><th>Situação</th><th>Entrevista</th><th>Ações</th></tr></thead><tbody>'+d.fichas.slice().sort((a,b)=>Number(b.status==='REMARCACAO_SOLICITADA')-Number(a.status==='REMARCACAO_SOLICITADA')).map(r=>'<tr><td>'+escapar(r.protocolo)+'</td><td>'+escapar(r.re+' — '+r.nome)+(r.opm?'<small class="ent-opm">'+escapar(r.opm)+'</small>':'')+'</td><td>'+escapar(r.modalidade+' / '+r.pel)+'</td><td>'+entSituacaoVisual(r.status)+'</td><td>'+escapar(r.agenda?entDataBR(r.agenda.dia)+' '+r.agenda.hora:'—')+'</td><td><button class="btn-page" data-ent-id="'+escaparAttr(r.id)+'" onclick="entAdminDetalhe(this.dataset.entId)">'+(r.status==='REMARCACAO_SOLICITADA'?'REVISAR PEDIDO':'ABRIR')+'</button></td></tr>').join('')+(d.fichas.length?'':'<tr><td colspan="6">Nenhuma candidatura enviada.</td></tr>')+'</tbody></table></div>';}catch(e){box.textContent=e.message;}}
+    async function entAdminDetalhe(id){const box=document.getElementById('entDetalhe');box.textContent='Carregando ficha...';try{const d=await entAdminApi('entrevista_admin_detalhe',{id});FT_ENT_ADMIN_ATUAL=d.ficha;FT_ENT_ADMIN_CAP=d.podeAgendar;const f=d.ficha;box.innerHTML='<section class="oc-ft-secao"><div class="ent-ficha-topo"><h2>'+escapar(f.campos.nome)+' — '+escapar(f.protocolo)+'</h2><button class="btn-page" onclick="entAdminImprimir()">BAIXAR FICHA WORD PARA IMPRESSÃO</button></div><p>Situação: '+entSituacaoVisual(f.status)+'</p>'+entTramiteDestaque(f)+(d.foto?'<img class="ent-foto" src="'+escaparAttr(d.foto)+'" alt="Foto do candidato">':'')+'<p class="oc-ft-nota">A foto e os dados são privados. O documento contém somente os campos da ficha oficial; as três perguntas de interesse ficam apenas nesta consulta.</p>'+(d.podeAgendar?'<section id="entDecisao" class="ent-ficha-secao ent-ficha-bloco"><h3>Agendamento e decisão</h3><div class="oc-ft-grid"><label>Data<input id="entDia" type="date"></label><label>Horário<input id="entHora" type="time"></label><label>Local<input id="entLocal" maxlength="250" value="'+escaparAttr(f.agenda?.local||'Cia FT')+'"></label></div><label>Mensagem ao candidato / orientações<textarea id="entMensagem" maxlength="1000"></textarea></label><div class="oc-ft-acessos"><button class="btn-primary-soft" onclick="entAdminDecidir(\'AGENDAR\')">'+(f.status==='REMARCACAO_SOLICITADA'?'REGISTRAR NOVA DATA':'AGENDAR / REMARCAR')+'</button>'+(f.remarcacao?'<button class="btn-page" onclick="entAdminDecidir(\'MANTER_AGENDA\')">MANTER AGENDAMENTO</button>':'')+(d.podeCorrigir?'<button class="btn-page" onclick="entAdminDecidir(\'CORRECAO\')">SOLICITAR CORREÇÃO DA FICHA</button>':'')+'<button class="btn-page" onclick="entAdminDecidir(\'ENCERRAR\')">RECUSAR / ENCERRAR CANDIDATURA</button></div><p class="oc-ft-nota">A mensagem será visível ao candidato. Não registre pareceres reservados de P2, SJD ou comando.</p></section>':'')+'<section class="ent-ficha-secao ent-ficha-bloco"><h3>Acompanhamento</h3><ul class="ent-timeline">'+(f.historico||[]).slice().reverse().map(h=>'<li><strong>'+escapar(h.acao)+'</strong> — '+escapar(iccHoraBR(h.data))+'</li>').join('')+'</ul></section>'+entCamposPainel(d.campos,f.campos)+'</section>';box.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){box.textContent=e.message;}}
     async function entAdminDecidir(tipo){if(FT_ENT_ADMIN_BUSY)return;FT_ENT_ADMIN_BUSY=true;try{const f=FT_ENT_ADMIN_ATUAL;if(!f)throw new Error('Reabra a ficha.');const p={id:f.id,versao:f.versao,tipo,dia:document.getElementById('entDia').value,hora:document.getElementById('entHora').value,local:document.getElementById('entLocal').value,mensagem:document.getElementById('entMensagem').value};if(!await confirmarToastFt('CONFIRMAR AÇÃO',tipo==='CORRECAO'?'A ficha será reaberta, exigirá nova assinatura e qualquer agendamento atual será cancelado. O candidato verá sua mensagem.':'A decisão e a mensagem serão disponibilizadas ao candidato.',{confirmar:'CONFIRMAR',cancelar:'VOLTAR'}))return;await entAdminApi('entrevista_admin_decidir',p);mostrarToastFt('Registro atualizado','O candidato poderá acompanhar a alteração pela área externa.','sucesso');await entAdminListar();await entAdminDetalhe(f.id);}catch(e){mostrarToastFt('Não foi possível registrar',e.message,'erro');}finally{FT_ENT_ADMIN_BUSY=false;}}
     async function entAdminImprimir(){if(FT_ENT_ADMIN_BUSY)return;FT_ENT_ADMIN_BUSY=true;try{const d=await entAdminApi('entrevista_admin_word',{id:FT_ENT_ADMIN_ATUAL.id});const bytes=Uint8Array.from(atob(d.base64),c=>c.charCodeAt(0)),url=URL.createObjectURL(new Blob([bytes],{type:d.mime})),a=document.createElement('a');a.href=url;a.download=d.nome;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);mostrarToastFt('Ficha preparada','Abra no Word para imprimir ou salvar em PDF no modelo original.','sucesso');}catch(e){mostrarToastFt('Não foi possível gerar a ficha',e.message,'erro');}finally{FT_ENT_ADMIN_BUSY=false;}}
 
@@ -8104,7 +8132,7 @@ Banco de dados: Google Sheets.
     async function ocFtDecidirRanking(id,decisao){
       if(OC_FT_DECIDINDO)return;OC_FT_DECIDINDO=true;
       try{
-        let motivo='';if(decisao==='RECUSAR'){motivo=window.prompt('Motivo da recusa da FF:');if(motivo===null)return;if(motivo.trim().length<5){mostrarToastFt('Informe o motivo','Escreva ao menos cinco caracteres.','erro');return;}}
+        let motivo='';if(decisao==='RECUSAR'){motivo=await pedirMotivoToastFt('INFORMAR MOTIVO','Motivo da recusa da FF:');if(motivo===null)return;if(motivo.trim().length<5){mostrarToastFt('Informe o motivo','Escreva ao menos cinco caracteres.','erro');return;}}
         if(!await confirmarToastFt('CONFIRMAR DECISÃO','A decisão de FF vale para todos os integrantes da equipe desta ocorrência.',{confirmar:'CONFIRMAR',cancelar:'VOLTAR'}))return;
         await ocFtApi('ocorrencias_validar',{id,tipo:'FF',decisao,motivo});mostrarToastFt('Decisão registrada','FF atualizada para os integrantes da equipe.','sucesso');
         const pedido=++OC_FT_RANKING_PEDIDO;try{const r=await ocFtApi('ocorrencias_ranking',ocFtFiltrosRanking());if(pedido===OC_FT_RANKING_PEDIDO)ocFtMostrarRanking(r.ranking);}catch(e){mostrarToastFt('Decisão salva','Não foi possível atualizar o ranking. Atualize a página.','erro');}
@@ -8140,7 +8168,7 @@ Banco de dados: Google Sheets.
       }catch(e){mostrarToastFt('Consulta indisponível',e.message,'erro');}
     }
     async function ocFtDecidir(id,tipo,decisao){
-      let motivo='';if(decisao==='RECUSAR'){motivo=window.prompt('Motivo da recusa:');if(motivo===null)return;}
+      let motivo='';if(decisao==='RECUSAR'){motivo=await pedirMotivoToastFt('INFORMAR MOTIVO','Motivo da recusa:');if(motivo===null)return;}
       const sim=await confirmarToastFt('CONFIRMAR DECISÃO',tipo==='FF'?'A decisão será registrada para a Folga Flagrante de todos os integrantes da equipe.':'A validação atribui uma ocorrência no ranking a cada integrante da equipe.',{confirmar:'CONFIRMAR',cancelar:'VOLTAR'});if(!sim)return;
       try{await ocFtApi('ocorrencias_validar',{id,tipo,decisao,motivo});mostrarToastFt('Decisão registrada','O registro foi atualizado.','sucesso');await ocFtCarregarConsulta();}catch(e){mostrarToastFt('Decisão não registrada',e.message,'erro');}
     }
@@ -8265,7 +8293,7 @@ Banco de dados: Google Sheets.
     function filtrarEap(){if(!APP.dadosEap)return;const ativo=document.activeElement,id=ativo&&ativo.id,pos=ativo&&typeof ativo.selectionStart==='number'?ativo.selectionStart:null;document.getElementById('eapConteudo').innerHTML=montarConteudoEap(APP.dadosEap);const restaurar=id&&document.getElementById(id);if(restaurar){restaurar.focus();if(pos!==null&&typeof restaurar.setSelectionRange==='function')restaurar.setSelectionRange(pos,pos);}}
     function limparFiltrosEap(){const p=document.getElementById('eapFiltroPelotao'),r=document.getElementById('eapFiltroRe');if(p)p.value='';if(r)r.value='';filtrarEap();}
 
-    function abrirCicloEap(){const ano=Number(document.getElementById('eapAno').value);if(!confirm('Abrir o ciclo EAP '+ano+' para o efetivo atual? Os registros existentes serão preservados.'))return;const b=document.getElementById('eapAbrirCicloBtn');if(b)b.disabled=true;chamarApi('abrir_ciclo_eap',{ano:ano}).then(function(r){if(!r||!r.ok)throw new Error(r&&r.erro||'Falha ao abrir ciclo.');mostrarToastFt('Ciclo EAP aberto',r.dados.mensagem,'sucesso');carregarDadosEap(ano);}).catch(e=>mostrarToastFt('Não foi possível abrir o ciclo',e.message||String(e),'erro')).finally(()=>{if(b)b.disabled=false;});}
+    async function abrirCicloEap(){const ano=Number(document.getElementById('eapAno').value);if(!await confirmarToastFt('CONFIRMAR AÇÃO','Abrir o ciclo EAP '+ano+' para o efetivo atual? Os registros existentes serão preservados.'))return;const b=document.getElementById('eapAbrirCicloBtn');if(b)b.disabled=true;chamarApi('abrir_ciclo_eap',{ano:ano}).then(function(r){if(!r||!r.ok)throw new Error(r&&r.erro||'Falha ao abrir ciclo.');mostrarToastFt('Ciclo EAP aberto',r.dados.mensagem,'sucesso');carregarDadosEap(ano);}).catch(e=>mostrarToastFt('Não foi possível abrir o ciclo',e.message||String(e),'erro')).finally(()=>{if(b)b.disabled=false;});}
 
     function abrirEditorEap(re){const r=(APP.dadosEap&&APP.dadosEap.policiais||[]).find(x=>String(x.re)===String(re));if(!r)return;const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];const mesOpts='<option value="0">— selecione —</option>'+meses.map((m,i)=>'<option value="'+(i+1)+'" '+(Number(r.mes)===i+1?'selected':'')+'>'+m+'</option>').join('');const root=document.getElementById('eapModalRoot');root.innerHTML='<div class="eap-modal-backdrop" onclick="if(event.target===this)fecharModalEap()"><div class="eap-modal"><h2>Atualizar EAP — '+escapar(r.postoGrad)+' '+escapar(r.nomeCompleto)+'</h2><p>RE '+escapar(r.re)+' · '+escapar(r.pelotao)+' · Ciclo '+APP.eapAno+'</p>'+(r.statusTaf==='REPROVADO'?'<div class="eap-reprovado">TAF reprovado: programe uma nova turma/mês de EAP para a reapresentação e, depois, registre o novo resultado.</div>':'')+'<div class="eap-form-grid"><label>Turma EAP<input id="eapEditTurma" maxlength="80" value="'+escaparAttr(r.turma||'')+'" placeholder="Ex.: Turma 01"></label><label>Mês do EAP<select id="eapEditMes">'+mesOpts+'</select></label><label>Situação do EAP<select id="eapEditStatus"><option value="AGUARDANDO_TURMA">Aguardando turma</option><option value="PROGRAMADO">Programado</option><option value="CONCLUIDO">Concluído</option><option value="DISPENSADO">Dispensado por curso</option><option value="REAPRESENTACAO_TAF">Reapresentação TAF</option></select></label><label>Curso que dispensa<select id="eapEditCurso"><option value="">— não se aplica —</option><option value="CFSD">CFSd</option><option value="CFS">CFS</option><option value="CAS">CAS</option></select></label><label>Ano em que frequentou o curso<input id="eapEditCursoAno" type="number" min="2020" max="2100" value="'+escaparAttr(r.cursoDispensaAno||APP.eapAno)+'"></label><label>Data do EAP<input id="eapEditData" type="date" value="'+dataEapParaInput(r.dataEap)+'"></label><label>Boletim EAP<input id="eapEditBolEap" maxlength="120" value="'+escaparAttr(r.boletimEap||'')+'" placeholder="Referência, quando disponível"></label><label>Resultado TAF<select id="eapEditTaf"><option value="PENDENTE">Pendente</option><option value="APROVADO">Aprovado</option><option value="REPROVADO">Reprovado</option><option value="NAO_SE_APLICA">Não se aplica</option></select></label><label>Pontuação TAF<input id="eapEditPontos" type="number" min="0" step="1" oninput="atualizarConceitoTafEap()" onchange="atualizarConceitoTafEap()" value="'+escaparAttr(r.pontosTaf||'')+'"></label><label>Conceito TAF<input id="eapEditConceito" readonly maxlength="50" value="'+escaparAttr(r.conceitoTaf||'')+'"></label><label>Boletim TAF<input id="eapEditBolTaf" maxlength="120" value="'+escaparAttr(r.boletimTaf||'')+'" placeholder="Referência, quando disponível"></label><label>Data do TAF<input id="eapEditDataTaf" type="date" value="'+dataEapParaInput(r.dataTaf)+'"></label><label>Resultado TAT<select id="eapEditTat"><option value="PENDENTE">Pendente</option><option value="APROVADO">Aprovado</option><option value="REPROVADO">Reprovado</option><option value="NAO_SE_APLICA">Não se aplica</option></select></label><label>Boletim TAT<input id="eapEditBolTat" maxlength="120" value="'+escaparAttr(r.boletimTat||'')+'" placeholder="Referência, quando disponível"></label><label>Data do TAT<input id="eapEditDataTat" type="date" value="'+dataEapParaInput(r.dataTat)+'"></label><label class="span3">Observação<textarea id="eapEditObs" maxlength="500">'+escapar(r.observacao||'')+'</textarea></label></div><div class="eap-nota">Boletins podem ser informados quando publicados. Cada gravação preserva o estado anterior na trilha de auditoria.</div><div class="eap-modal-actions" style="margin-top:14px"><button class="btn-page" onclick="fecharModalEap()">CANCELAR</button><button class="btn-primary-soft" onclick="salvarRegistroEap(\''+escaparAttr(r.re)+'\')">SALVAR</button></div></div></div>';document.getElementById('eapEditStatus').value=r.statusEap||'AGUARDANDO_TURMA';document.getElementById('eapEditCurso').value=r.cursoDispensa||'';document.getElementById('eapEditCursoAno').value=r.cursoDispensaAno||APP.eapAno;document.getElementById('eapEditTaf').value=r.statusTaf||'PENDENTE';document.getElementById('eapEditTat').value=r.statusTat||'PENDENTE';atualizarConceitoTafEap();}
 
@@ -8290,7 +8318,7 @@ Banco de dados: Google Sheets.
 
     function abrirSolicitacaoEap(re){const r=(APP.dadosEap&&APP.dadosEap.policiais||[]).find(x=>String(x.re)===String(re));if(!r)return;const root=document.getElementById('eapModalRoot');root.innerHTML='<div class="eap-modal-backdrop" onclick="if(event.target===this)fecharModalEap()"><div class="eap-modal"><h2>Solicitar mudança de turma</h2><p>'+escapar(r.postoGrad)+' '+escapar(r.nomeCompleto)+' — RE '+escapar(r.re)+' — '+escapar(r.pelotao)+'</p><div class="eap-form-grid"><label>Nova turma<input id="eapReqTurma" maxlength="80" required></label><label>Mês<select id="eapReqMes"><option value="">— selecione —</option>'+['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'].map((m,i)=>'<option value="'+(i+1)+'">'+m+'</option>').join('')+'</select></label><label class="span3">Justificativa<textarea id="eapReqMotivo" maxlength="500" required></textarea></label></div><div class="eap-modal-actions"><button class="btn-page" onclick="fecharModalEap()">CANCELAR</button><button class="btn-primary-soft" onclick="enviarSolicitacaoEap(\''+escaparAttr(r.re)+'\')">ENVIAR SOLICITAÇÃO</button></div></div></div>';}
     function enviarSolicitacaoEap(re){const turma=document.getElementById('eapReqTurma').value,mes=Number(document.getElementById('eapReqMes').value),justificativa=document.getElementById('eapReqMotivo').value;chamarApi('solicitar_mudanca_eap',{ano:APP.eapAno,reAlvo:re,turmaSolicitada:turma,mesSolicitado:mes,justificativa:justificativa}).then(function(r){if(!r||!r.ok)throw new Error(r&&r.erro||'Não foi possível enviar.');fecharModalEap();mostrarToastFt('Solicitação enviada',r.dados.mensagem,'sucesso');carregarDadosEap(APP.eapAno);}).catch(e=>mostrarToastFt('Falha na solicitação',e.message||String(e),'erro'));}
-    function decidirSolicitacaoEap(id,decisao){let respostaAdmin='';if(decisao==='RECUSAR'){respostaAdmin=prompt('Informe o motivo da recusa:')||'';if(respostaAdmin.trim().length<3)return;}else if(!confirm('Aprovar e aplicar a mudança de turma solicitada?'))return;chamarApi('decidir_solicitacao_eap',{id:id,decisao:decisao,respostaAdmin:respostaAdmin}).then(function(r){if(!r||!r.ok)throw new Error(r&&r.erro||'Não foi possível decidir.');mostrarToastFt('Solicitação processada',r.dados.mensagem,'sucesso');carregarDadosEap(APP.eapAno);}).catch(e=>mostrarToastFt('Falha ao decidir',e.message||String(e),'erro'));}
+    async function decidirSolicitacaoEap(id,decisao){let respostaAdmin='';if(decisao==='RECUSAR'){respostaAdmin=await pedirMotivoToastFt('INFORMAR MOTIVO','Informe o motivo da recusa:')||'';if(respostaAdmin.trim().length<3)return;}else if(!await confirmarToastFt('CONFIRMAR AÇÃO','Aprovar e aplicar a mudança de turma solicitada?'))return;chamarApi('decidir_solicitacao_eap',{id:id,decisao:decisao,respostaAdmin:respostaAdmin}).then(function(r){if(!r||!r.ok)throw new Error(r&&r.erro||'Não foi possível decidir.');mostrarToastFt('Solicitação processada',r.dados.mensagem,'sucesso');carregarDadosEap(APP.eapAno);}).catch(e=>mostrarToastFt('Falha ao decidir',e.message||String(e),'erro'));}
 
     function abrirPlanoAnualFerias() {
       window.scrollTo(0, 0);
@@ -9424,7 +9452,7 @@ Banco de dados: Google Sheets.
     async function justificarAusenciaArmario(re){
       const dados=APP.dadosRevistaArmario;
       if(!dados||!dados.capacidades||!dados.capacidades.podeJustificar)return;
-      const motivo=window.prompt('Justifique o afastamento: LSV, Férias ou outro impedimento. Informe o período quando conhecido.');
+      const motivo=await pedirMotivoToastFt('INFORMAR MOTIVO','Justifique o afastamento: LSV, Férias ou outro impedimento. Informe o período quando conhecido.');
       if(motivo===null)return;
       if(motivo.trim().length<3||motivo.trim().length>300){mostrarToastFt('Motivo inválido','Informe de 3 a 300 caracteres.','erro');return;}
       try{
@@ -13042,6 +13070,22 @@ Banco de dados: Google Sheets.
     }
 
 
+    function pedirMotivoToastFt(titulo,texto){
+      return new Promise(function(resolve){
+        const anterior=document.activeElement;
+        let campo;
+        const aviso=criarToastFt({
+          titulo:titulo,texto:texto,tipo:'confirmacao',persistente:true,
+          acoes:[{rotulo:'CANCELAR',resultado:false},{rotulo:'CONTINUAR',resultado:true,primaria:true}],
+          aoResponder:function(ok){resolve(ok?campo.value:null);if(anterior?.isConnected)anterior.focus();}
+        });
+        const label=document.createElement('label');label.className='toast-ft-motivo';label.textContent='Motivo';
+        campo=document.createElement('textarea');campo.rows=3;label.appendChild(campo);
+        aviso.elemento.querySelector('.toast-ft-conteudo').appendChild(label);
+        setTimeout(()=>{if(aviso.elemento.isConnected&&aviso.elemento.classList.contains('visivel'))campo.focus();},40);
+      });
+    }
+
     function iniciarMonitorAvisosObrigatorios() {
       pararMonitorAvisosObrigatorios();
       if (!APP.usuario) return;
@@ -14565,7 +14609,7 @@ Banco de dados: Google Sheets.
         mostrarToastFt('Cadastro não localizado', 'Atualize a Consulta do Efetivo e tente novamente.');
         return false;
       }
-      if (!automatico && !confirm('Conferir e, se necessário, sincronizar o RE ' + reAlvoCompleto + ' com o Supabase?')) return false;
+      if (!automatico && !await confirmarToastFt('CONFIRMAR AÇÃO','Conferir e, se necessário, sincronizar o RE ' + reAlvoCompleto + ' com o Supabase?')) return false;
       if (btn) { btn.disabled = true; btn.textContent = 'VALIDANDO...'; }
 
       let requestId = '';
@@ -14597,7 +14641,7 @@ Banco de dados: Google Sheets.
         if (!validacao || validacao.ok !== true) {
           throw new Error(validacao && (validacao.message || validacao.error_code) || 'A validação M1 recusou os dados.');
         }
-        if (!automatico && !confirm('Pré-validação aprovada para ' + payload.re + ' — ' + payload.full_name + '. Confirmar a inclusão definitiva no Supabase?')) return false;
+        if (!automatico && !await confirmarToastFt('CONFIRMAR AÇÃO','Pré-validação aprovada para ' + payload.re + ' — ' + payload.full_name + '. Confirmar a inclusão definitiva no Supabase?')) return false;
 
         requestId = crypto.randomUUID();
         sessionStorage.setItem(chavePendente, requestId);
@@ -17594,7 +17638,7 @@ Banco de dados: Google Sheets.
     }
     async function iccAnularSupabase(assinaturaId) {
       if(!APP.iccSupabase||!APP.iccSupabase.pode_anular){mostrarToastFt('Acesso restrito','Somente Enc Adm e Gestor podem anular assinaturas.','erro');return;}
-      const motivo = window.prompt('Justificativa obrigatória para anular a assinatura (5 a 300 caracteres):');
+      const motivo = await pedirMotivoToastFt('INFORMAR MOTIVO','Justificativa obrigatória para anular a assinatura (5 a 300 caracteres):');
       if (motivo === null) return;
       if (motivo.trim().length < 5 || motivo.trim().length > 300) {
         mostrarToastFt('Justificativa inválida', 'Informe de 5 a 300 caracteres.', 'erro');
@@ -17611,7 +17655,7 @@ Banco de dados: Google Sheets.
     }
     async function iccJustificarSupabase(cienciaId) {
       if(!APP.iccSupabase||!APP.iccSupabase.pode_justificar)return;
-      const motivo = window.prompt('Justifique o afastamento: LSV, Férias ou outro impedimento. Informe o período quando conhecido.');
+      const motivo = await pedirMotivoToastFt('INFORMAR MOTIVO','Justifique o afastamento: LSV, Férias ou outro impedimento. Informe o período quando conhecido.');
       if (motivo === null) return;
       if (motivo.trim().length < 3 || motivo.trim().length > 300) {
         mostrarToastFt('Motivo inválido', 'Informe de 3 a 300 caracteres.', 'erro');
