@@ -6992,9 +6992,20 @@ Banco de dados: Google Sheets.
     .ft-avisos-leitura,.ft-avisos-ciencias{margin:12px 0}.ft-avisos-ciencias li{margin:6px 0}
   </style>
 <style>
-#dsCaixaFt img{object-fit:contain;vertical-align:middle}
+#appScreen .top-actions #dsCaixaFt{position:relative;display:inline-grid;place-items:center;min-width:40px;padding-inline:9px}
+.ds-rotinas-par{display:grid;grid-column:span 2;grid-template-columns:repeat(2,minmax(0,1fr));gap:inherit}
+#dsCaixaFt img{display:block;object-fit:contain}
+#dsCaixaFt span:not(:empty){position:absolute;top:-5px;right:-5px;min-width:16px;padding:1px 4px;border:1px solid #fff;border-radius:999px;background:#9f2936;color:#fff;font:700 10px/14px system-ui;text-align:center;pointer-events:none}
 #dsCorpoFt .ds-form-ft,#dsCorpoFt .ds-lista-ft,#dsCorpoFt .ds-grid-ft{display:grid;gap:12px}
-#dsCorpoFt .ds-grid-ft{grid-template-columns:repeat(2,minmax(0,1fr))}
+#dsCorpoFt .ds-grid-ft{grid-template-columns:repeat(3,minmax(0,1fr))}
+#dsCorpoFt .ds-form-ft{gap:16px}
+#dsCorpoFt .ds-form-ft label{display:grid;align-content:start;gap:6px;min-width:0;font-size:11px;font-weight:800;color:#374247}
+#dsCorpoFt .ds-form-ft :is(input,select,textarea){margin:0;min-width:0;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:10px;padding:10px;background:#fff;color:#17202a;font:inherit;font-size:13px;font-weight:500}
+#dsCorpoFt .ds-form-ft input[readonly]{background:#f1f5f9}
+#dsCorpoFt .ds-form-ft textarea{min-height:92px;resize:vertical}
+#dsCorpoFt .ds-form-ft :is(input,select,textarea):focus-visible{outline:2px solid #475569;outline-offset:2px}
+#dsCorpoFt .ds-form-acoes{display:flex;flex-wrap:wrap;gap:8px}
+#dsCorpoFt .ds-form-acoes button{max-width:100%;white-space:normal}
 #dsCorpoFt label{display:block}
 #dsCorpoFt :is(input,select,textarea){display:block;width:100%;margin:5px 0 10px}
 #dsCorpoFt .ds-item-ft{display:flex;gap:10px;justify-content:space-between;text-align:left;flex-wrap:wrap}
@@ -7003,7 +7014,7 @@ Banco de dados: Google Sheets.
 #dsCorpoFt [data-estado="NEGADO"]{background:#fde8e7}
 #dsCorpoFt [data-estado="AUTORIZADO"]{background:#e3f2e7}
 #dsCorpoFt li{margin-block:8px}
-@media(max-width:540px){#dsCaixaFt{font-size:0;padding-inline:8px}#dsCaixaFt span{font-size:11px}#dsCorpoFt .ds-grid-ft{grid-template-columns:1fr}}
+@media(max-width:540px){#dsCorpoFt .ds-grid-ft{grid-template-columns:1fr}}
 </style></head>
 
 <body>
@@ -7065,8 +7076,8 @@ Banco de dados: Google Sheets.
         </div>
 
         <div class="top-actions">
+          <button id="dsCaixaFt" type="button" class="btn btn-secondary" onclick="dsCaixaAbrirFt()" aria-label="Caixa de Entrada" title="Caixa de Entrada"><img src="./icone-caixa-entrada.png" alt="" width="22" height="22"><span aria-hidden="true"></span></button>
           <button class="btn btn-secondary" onclick="abrirHome()">INÍCIO</button>
-          <button id="dsCaixaFt" class="btn btn-secondary" onclick="dsCaixaAbrirFt()" aria-label="Caixa de Entrada"><img src="./icone-caixa-entrada.png" alt="" width="20" height="20"> CAIXA DE ENTRADA<span></span></button>
           <button class="btn btn-secondary" onclick="sair()">SAIR</button>
         </div>
       </div>
@@ -7223,7 +7234,7 @@ async function dsAtualizarCaixaFt(forcar=false){
  const b=document.getElementById('dsCaixaFt'),g=APP.sessaoGeracao;
  if(!APP.usuario||!b||(!forcar&&dsSessaoFt===g&&Date.now()-dsMomentoFt<60000))return;
  dsSessaoFt=g; dsMomentoFt=Date.now(); const seq=++dsContagemFt;
- try{const r=await dsRpcFt('contador');if(seq===dsContagemFt&&APP.usuario&&g===APP.sessaoGeracao)b.querySelector('span').textContent=r.total?' ('+r.total+')':'';}catch(_){}
+ try{const r=await dsRpcFt('contador');if(seq===dsContagemFt&&APP.usuario&&g===APP.sessaoGeracao){b.querySelector('span').textContent=r.total?(r.total>99?'99+':r.total):'';b.setAttribute('aria-label',r.total?'Caixa de Entrada: '+r.total+' pendência(s)':'Caixa de Entrada');}}catch(_){}
 }
 function dsPaginaFt(titulo,descricao,voltar){
  window.scrollTo(0,0);
@@ -7283,7 +7294,7 @@ async function dsPedidoFt(p=null){
  const r=await dsRpcFt('perfil');if(!h.isConnected)return;
  if(!r.pode_solicitar){h.textContent='Seu posto ou graduação segue outro trâmite de dispensa.';return;}
  if(!r.tem_visto){mostrarToastFt('Cadastre seu visto','Para enviar a primeira solicitação, salve uma foto da sua assinatura.','aviso');dsVistoFt(h,()=>dsPedidoFt(p));return;}
- h.innerHTML='<p><strong>'+dsEscFt([r.identidade.posto,r.identidade.re,r.identidade.nome].join(' '))+'</strong></p><p>46º BPM/M - Cia FT · SÃO PAULO · Pedido em '+dsEscFt(dsDataFt(p?.data_pedido||r.hoje))+'</p><form class="ds-form-ft"><div class="ds-grid-ft"><label>Nº de dias<input type="number" name="dias" min="1" max="5" step="1" required value="'+dsEscFt(p?.dias||1)+'"></label><label>Data de início<input type="date" name="inicio" required value="'+dsEscFt(p?.inicio)+'"></label></div><label>Motivo do afastamento<textarea name="motivo" rows="3" maxlength="160" required>'+dsEscFt(p?.motivo)+'</textarea></label>'+(r.escolher_sgt?'<label>Sargento do seu pelotão<select name="sgt" required><option value="">Selecione</option>'+r.sgts.map(s=>'<option value="'+dsEscFt(s.id)+'">'+dsEscFt(s.rotulo)+'</option>').join('')+'</select></label>':'')+'<div><button type="submit" class="btn-page btn-primary-soft">CONFIRMAR COM MEU VISTO E ENVIAR</button> <button type="button" class="btn-page">ATUALIZAR MEU VISTO</button></div></form>';
+ h.innerHTML='<form class="ds-form-ft"><div class="ds-grid-ft"><label>Data do pedido<input type="text" readonly value="'+dsEscFt(dsDataFt(p?.data_pedido||r.hoje))+'"></label><label>Nº de dias<input type="number" name="dias" min="1" max="5" step="1" required value="'+dsEscFt(p?.dias||1)+'"></label><label>Data de início<input type="date" name="inicio" required value="'+dsEscFt(p?.inicio)+'"></label></div><label>Motivo do afastamento<textarea name="motivo" rows="3" maxlength="160" required>'+dsEscFt(p?.motivo)+'</textarea></label>'+(r.escolher_sgt?'<label>Sargento do seu pelotão<select name="sgt" required><option value="">Selecione</option>'+r.sgts.map(s=>'<option value="'+dsEscFt(s.id)+'">'+dsEscFt(s.rotulo)+'</option>').join('')+'</select></label>':'')+'<div class="ds-form-acoes"><button type="submit" class="btn-page btn-primary-soft">CONFIRMAR COM MEU VISTO E ENVIAR</button> <button type="button" class="btn-page">ATUALIZAR MEU VISTO</button></div></form>';
  const f=h.querySelector('form');f.querySelector('[type=button]').onclick=()=>dsVistoFt(h,()=>dsPedidoFt(p));
  f.onsubmit=e=>{e.preventDefault();dsOperacaoFt(f.querySelector('[type=submit]'),async atual=>{
   const dados=Object.fromEntries(new FormData(f));
@@ -8188,7 +8199,7 @@ async function dsDetalharFt(id){
 
     function abrirRotinasOperacionais() {
       window.scrollTo(0, 0);
-      const modulos = [{id:"FORMULARIOS_PMESP",titulo:"FORMULÁRIOS PMESP",descricao:"Solicitação e acompanhamento de documentos oficiais."}];
+      const modulos = [];
       if (usuarioTemPermissaoCliente('COP', 'visualizar')) {
         modulos.push({
           id: 'COP',
@@ -8228,6 +8239,7 @@ async function dsDetalharFt(id){
         icone: '',
         descricao: 'Lançamento de ocorrências, validação e ranking geral.'
       });
+      modulos.push({id:"FORMULARIOS_PMESP",titulo:"FORMULÁRIOS PMESP",descricao:"Solicitação e acompanhamento de documentos oficiais."});
 
       document.getElementById('appConteudo').innerHTML = `
         <div class="page-wrap">
@@ -8243,7 +8255,8 @@ async function dsDetalharFt(id){
           </div>
 
           <div class="menu-grid">
-            ${modulos.map(montarMenuCard).join('') || '<div class="modal-card">Nenhuma rotina operacional liberada para seu perfil.</div>'}
+            ${modulos.slice(0,-2).map(montarMenuCard).join('')}
+            <div class="ds-rotinas-par">${modulos.slice(-2).map(montarMenuCard).join('')}</div>
           </div>
         </div>`;
     }
@@ -16618,7 +16631,7 @@ async function dsDetalharFt(id){
 
 
     function sair() {
-      ++dsContagemFt; dsMomentoFt=0; document.querySelector("#dsCaixaFt span").textContent="";
+      ++dsContagemFt; dsMomentoFt=0; document.querySelector("#dsCaixaFt span").textContent=""; document.getElementById("dsCaixaFt").setAttribute("aria-label","Caixa de Entrada");
       avisosCancelarAlertaFt();
       fecharVisualizadorPdfEscalaCiaFt();
       pararMonitorAvisosObrigatorios();
