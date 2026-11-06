@@ -6996,7 +6996,11 @@ Banco de dados: Google Sheets.
 .ds-rotinas-par{display:grid;grid-column:span 2;grid-template-columns:repeat(2,minmax(0,1fr));gap:inherit}
 #dsCaixaFt img{display:block;width:42px;height:42px;max-width:none;object-fit:contain}
 #dsCaixaFt span:not(:empty){position:absolute;top:-5px;right:-5px;min-width:16px;padding:1px 4px;border:1px solid #fff;border-radius:999px;background:#9f2936;color:#fff;font:700 10px/14px system-ui;text-align:center;pointer-events:none}
-#dsCorpoFt .ds-form-ft,#dsCorpoFt .ds-lista-ft,#dsCorpoFt .ds-grid-ft{display:grid;gap:12px}
+#dsCorpoFt .ds-form-ft,#dsCorpoFt .ds-lista-ft,.ds-caixa-abas,.ds-caixa-resumo{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.ds-caixa-resumo span{background:#f1f5f9;padding:7px 10px;border-radius:8px}
+.ds-caixa-abas .btn-page{white-space:normal}
+.ds-gestao-ft{margin:16px 0}
+#dsCorpoFt .ds-grid-ft{display:grid;gap:12px}
 #dsCorpoFt .ds-grid-ft{grid-template-columns:repeat(3,minmax(0,1fr))}
 #dsCorpoFt .ds-form-ft{gap:16px}
 #dsCorpoFt .ds-form-ft label{display:grid;align-content:start;gap:6px;min-width:0;font-size:11px;font-weight:800;color:#374247}
@@ -7223,7 +7227,7 @@ Banco de dados: Google Sheets.
 
 
 const dsEstadosFt={SGT:'Aguardando sargento',ENC:'Aguardando Enc Adm',P1:'Aguardando Secretaria/P1',CMT:'Aguardando Cmt Cia',CORRIGIR:'Devolvida para correção',NEGADO:'Não concedida',AUTORIZADO:'Autorizada pelo Cmt Cia'};
-const dsAcoesFt={criar:'Solicitação enviada',reenviar:'Solicitação corrigida e reenviada',conceder:'Parecer favorável / autorização',negar:'Não concessão',corrigir:'Devolução para correção',faz_jus:'Faz jus',nao_faz_jus:'Não faz jus'};
+const dsAcoesFt={excluir:'Excluída pelo Gestor',restaurar:'Restaurada pelo Gestor',reabrir:'Reaberta para nova revisão',criar:'Solicitação enviada',reenviar:'Solicitação corrigida e reenviada',conceder:'Parecer favorável / autorização',negar:'Não concessão',corrigir:'Devolução para correção',faz_jus:'Faz jus',nao_faz_jus:'Não faz jus'};
 const dsEscFt=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const dsDataFt=v=>String(v||'').replace(/^(\d{4})-(\d\d)-(\d\d)$/,'$3/$2/$1');
 const dsRpcFt=(acao,dados)=>rpcPlanoFerias('pmp118_ft',{p_acao:acao,p_dados:dados||{}});
@@ -7305,30 +7309,73 @@ async function dsPedidoFt(p=null){
  });};
  }catch(e){if(h.isConnected)h.textContent=e.message;}
 }
-async function dsCaixaAbrirFt(){
+let dsAbaCaixaFt='';
+async function dsCaixaAbrirFt(aba=dsAbaCaixaFt){
  if(!APP.usuario)return;
- const h=dsPaginaFt('Caixa de Entrada','Solicitações de dispensa e decisões que precisam da sua atenção.','abrirHome()');
- let offset=0;
+ const h=dsPaginaFt('Caixa de Entrada','Solicitações de dispensa, pendências e impressão.','abrirHome()');
+ let offset=0,req=0;
  const carregar=async()=>{
- h.textContent='Carregando…';
+ const seq=++req;
  try{
- const r=await dsRpcFt('caixa',{offset});if(!h.isConnected)return;
- h.innerHTML='<div class="ds-lista-ft">'+r.itens.map(x=>'<button type="button" class="btn-page ds-item-ft" data-id="'+dsEscFt(x.id)+'"><strong>'+dsEscFt(x.proprio?'Minha solicitação':[x.identidade.posto,x.identidade.re,x.identidade.guerra].join(' '))+'</strong><span>'+dsEscFt(dsEstadosFt[x.estado])+'</span></button>').join('')+(r.itens.length?'':'<p>Nenhuma solicitação nesta página.</p>')+'</div><div class="page-actions"><button class="btn-page" data-p="-50" '+(offset?'':'disabled')+'>ANTERIOR</button><button class="btn-page" data-p="50" '+(r.itens.length===50?'':'disabled')+'>PRÓXIMA</button><button class="btn-page" data-p="0">ATUALIZAR</button></div>';
+ const r=await dsRpcFt('caixa',aba?{offset,aba}:{offset});
+ if(!h.isConnected||seq!==req)return;
+ aba=r.aba;dsAbaCaixaFt=aba;
+ const abas=[['minhas','Minhas solicitações']];
+ if(r.administrativo)abas.push(['pendencias','Pendências administrativas'],['impressao','Autorizadas para impressão'],['historico','Histórico']);
+ if(r.analise&&!r.administrativo)abas.push(['analise','Para analisar']);
+ if(r.gestor)abas.push(['excluidas','Excluídas']);
+ h.innerHTML='<nav class="ds-caixa-abas" aria-label="Caixa de Entrada">'+abas.map(([k,v])=>'<button type="button" class="btn-page'+(k===aba?' btn-primary-soft':'')+'" data-aba="'+k+'" aria-pressed="'+(k===aba)+'">'+v+'</button>').join('')+'</nav>'+
+ (r.contagens?'<div class="ds-caixa-resumo"><span>Enc Adm: <strong>'+dsEscFt(r.contagens.enc)+'</strong></span><span>P/1: <strong>'+dsEscFt(r.contagens.p1)+'</strong></span><span>Autorizadas para impressão: <strong>'+dsEscFt(r.contagens.impressao)+'</strong></span></div>':'')+
+ '<div class="ds-lista-ft">'+r.itens.map(x=>'<button type="button" class="btn-page ds-item-ft" data-id="'+dsEscFt(x.id)+'"><span><strong>'+dsEscFt([x.identidade.posto,x.identidade.re,x.identidade.guerra].filter(Boolean).join(' '))+'</strong> · '+dsEscFt(dsDataFt(x.inicio))+' · '+dsEscFt(x.dias)+' dia(s)'+(x.proprio?' · Meu pedido':'')+'</span><span>'+dsEscFt(dsEstadosFt[x.estado])+(x.acao_adm?' · Você pode atuar':'')+'</span></button>').join('')+(r.itens.length?'':'<p>Nenhuma solicitação nesta aba.</p>')+'</div><div class="page-actions ds-caixa-abas"><button class="btn-page" data-p="-50" '+(offset?'':'disabled')+'>ANTERIOR</button><button class="btn-page" data-p="50" '+(r.itens.length===50?'':'disabled')+'>PRÓXIMA</button><button class="btn-page" data-p="0">ATUALIZAR</button></div>';
+ h.querySelectorAll('[data-aba]').forEach(b=>b.onclick=()=>{aba=b.dataset.aba;offset=0;carregar();});
  h.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>dsDetalharFt(b.dataset.id));
- h.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{offset+=Number(b.dataset.p);carregar();});
+ h.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{offset=Math.max(0,offset+Number(b.dataset.p));carregar();});
  dsAtualizarCaixaFt(true);
- }catch(e){if(h.isConnected)h.textContent=e.message;}
- };carregar();
+ }catch(e){if(h.isConnected&&seq===req){h.textContent=e.message;}}
+ };
+ h.textContent='Carregando…';
+ await carregar();
 }
 async function dsDetalharFt(id){
  const h=dsPaginaFt('Solicitação de dispensa','Dados, pareceres e histórico de tramitação.','dsCaixaAbrirFt()');
  h.textContent='Carregando…';
  try{
  const q=await dsRpcFt('detalhar',{id});if(!h.isConnected)return;
- h.innerHTML='<div class="ds-status-ft" data-estado="'+dsEscFt(q.estado)+'">'+dsEscFt(dsEstadosFt[q.estado])+'</div><p><strong>'+dsEscFt([q.identidade.posto,q.identidade.re,q.identidade.nome].join(' '))+'</strong></p><p>Pedido em '+dsEscFt(dsDataFt(q.data_pedido))+' · Início em '+dsEscFt(dsDataFt(q.inicio))+' · '+dsEscFt(q.dias)+' dia(s)</p><p><strong>Motivo:</strong> '+dsEscFt(q.motivo)+'</p><div class="ds-decisao-ft"></div><h2>Histórico</h2><ol>'+q.historico.map(x=>'<li><strong>'+dsEscFt(dsAcoesFt[x.acao])+'</strong> · '+dsEscFt([x.identidade.posto,x.identidade.guerra].join(' '))+' · '+dsEscFt(new Date(x.quando).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}))+(x.comentario?'<br>'+dsEscFt(x.comentario):'')+'</li>').join('')+'</ol>';
+ h.innerHTML='<div class="ds-status-ft" data-estado="'+dsEscFt(q.estado)+'">'+dsEscFt(dsEstadosFt[q.estado])+'</div><p><strong>'+dsEscFt([q.identidade.posto,q.identidade.re,q.identidade.nome].join(' '))+'</strong></p><p>Pedido em '+dsEscFt(dsDataFt(q.data_pedido))+' · Início em '+dsEscFt(dsDataFt(q.inicio))+' · '+dsEscFt(q.dias)+' dia(s)</p><p><strong>Motivo:</strong> '+dsEscFt(q.motivo)+'</p><div class="ds-decisao-ft"></div><h2>Histórico</h2><ol>'+q.historico.map(x=>'<li><strong>'+dsEscFt(dsAcoesFt[x.acao]||x.acao)+'</strong> · Revisão '+dsEscFt(x.revisao)+' · '+dsEscFt([x.identidade.posto,x.identidade.guerra].join(' '))+' · '+dsEscFt(new Date(x.quando).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}))+(x.comentario?'<br>'+dsEscFt(x.comentario):'')+'</li>').join('')+'</ol>';
  const d=h.querySelector('.ds-decisao-ft');
- if(q.proprio&&['CORRIGIR','NEGADO','AUTORIZADO'].includes(q.estado)&&!q.lido)dsRpcFt('ler',{id}).then(()=>dsAtualizarCaixaFt(true)).catch(()=>{});
- if(q.proprio&&q.estado==='CORRIGIR'){d.innerHTML='<button class="btn-page">CORRIGIR SOLICITAÇÃO</button>';d.querySelector('button').onclick=()=>dsPedidoFt(q);}
+ if(q.revisoes_anteriores?.length){
+  const revisoes=document.createElement('details');
+  revisoes.innerHTML='<summary>Revisões anteriormente autorizadas</summary><ul>'+q.revisoes_anteriores.map(v=>'<li><strong>Revisão '+dsEscFt(v.revisao)+'</strong> · Início em '+dsEscFt(dsDataFt(v.inicio))+' · '+dsEscFt(v.dias)+' dia(s)<br>'+dsEscFt(v.motivo)+'</li>').join('')+'</ul>';
+  h.appendChild(revisoes);
+ }
+ if(q.excluido_em){
+  d.textContent='Solicitação excluída. A tramitação e a impressão estão suspensas.';
+ }else if(q.proprio&&q.estado==='P1'){
+  d.textContent='Outro Aux Adm, Enc Adm ou Gestor deve preencher o P/1 do seu pedido.';
+ }
+ if(q.pode_excluir||q.pode_reabrir||q.pode_restaurar){
+  const box=document.createElement('div');box.className='ds-gestao-ft';
+  box.innerHTML='<details><summary>Gerenciar solicitação</summary>'+
+   (q.pode_restaurar?'':'<label>Motivo da ação <textarea maxlength="160" rows="2" placeholder="Ex.: solicitação de teste"></textarea></label>')+
+   '<div class="ds-form-acoes">'+
+   (q.pode_reabrir?'<button type="button" class="btn-page" data-gestao="reabrir">REABRIR PARA CORREÇÃO</button>':'')+
+   (q.pode_excluir?'<button type="button" class="btn-page" data-gestao="excluir">EXCLUIR SOLICITAÇÃO</button>':'')+
+   (q.pode_restaurar?'<button type="button" class="btn-page" data-gestao="restaurar">RESTAURAR SOLICITAÇÃO</button>':'')+
+   '</div></details>';
+  d.after(box);
+  box.querySelectorAll('[data-gestao]').forEach(b=>b.onclick=()=>dsOperacaoFt(b,async atual=>{
+   const acao=b.dataset.gestao,nota=box.querySelector('textarea')?.value.trim()||'';
+   if(acao!=='restaurar'&&!nota)throw Error('Informe o motivo da ação.');
+   const msg={excluir:'O pedido sairá das caixas de todos e não poderá ser impresso. Você pode restaurá-lo na aba Excluídas.',reabrir:'O pedido volta ao solicitante. Depois do reenvio com o visto atual, deverá tramitar e ser autorizado novamente.',restaurar:'O pedido voltará à fila correspondente ao seu estado.'};
+   if(!await confirmarToastFt(b.textContent,msg[acao])||!atual())return;
+   await dsRpcFt(acao,{id:q.id,versao:q.versao,nota});
+   if(!atual())return;
+   mostrarToastFt('Solicitação atualizada','A ação foi registrada no histórico.','sucesso');
+   dsCaixaAbrirFt(acao==='excluir'?'excluidas':'pendencias');
+  }));
+ }
+ if(!q.excluido_em&&q.proprio&&['CORRIGIR','NEGADO','AUTORIZADO'].includes(q.estado)&&!q.lido)dsRpcFt('ler',{id}).then(()=>dsAtualizarCaixaFt(true)).catch(()=>{});
+ if(!q.excluido_em&&q.proprio&&q.estado==='CORRIGIR'){d.innerHTML='<button class="btn-page">CORRIGIR SOLICITAÇÃO</button>';d.querySelector('button').onclick=()=>dsPedidoFt(q);}
  if(q.pode_imprimir){
   d.innerHTML='<div class="ds-form-acoes"><button type="button" class="btn-page btn-primary-soft">BAIXAR PMP-118</button></div><p class="oc-ft-nota">Imprima em uma página A4, em tamanho real (100%). A assinatura do Cmt Cia é feita no papel.</p>';
   const b=d.querySelector('button');
@@ -16652,7 +16699,7 @@ async function dsDetalharFt(id){
 
 
     function sair() {
-      ++dsContagemFt; dsMomentoFt=0; document.querySelector("#dsCaixaFt span").textContent=""; document.getElementById("dsCaixaFt").setAttribute("aria-label","Caixa de Entrada");
+      ++dsContagemFt; dsMomentoFt=0; dsAbaCaixaFt=''; document.querySelector("#dsCaixaFt span").textContent=""; document.getElementById("dsCaixaFt").setAttribute("aria-label","Caixa de Entrada");
       avisosCancelarAlertaFt();
       fecharVisualizadorPdfEscalaCiaFt();
       pararMonitorAvisosObrigatorios();
