@@ -7913,7 +7913,7 @@ Banco de dados: Google Sheets.
 
     let FT_ENT_ADMIN_ATUAL=null,FT_ENT_ADMIN_CAP=false,FT_ENT_ADMIN_BUSY=false;
     function entPodeGerir(){const r=normalizarTexto(APP.usuario?.perfilAcesso||'').replace(/[\s-]+/g,'_');return ['CMT_CIA','CMT_CIA_FT','COMANDANTE_CIA_FT','ENC_ADM','ENC_ADM_FT','ENCARREGADO_ADM_FT','ENCARREGADO_ADMINISTRATIVO','GESTOR','GESTOR_FT','GESTOR_TEC_FT','GESTOR_TECNICO_FT'].includes(r);}
-    function entAbrirPublico(){window.open(API_URL+'?action=entrevistas_publico','_blank','noopener,noreferrer');}
+    function entAbrirPublico(){window.open(new URL('candidatura-ft.html',window.location.href).href,'_blank','noopener,noreferrer');}
     async function entAdminApi(acao,p={}){if(!APP.sessaoApi)throw new Error('Faça login novamente para acessar as candidaturas.');if(!await aguardarPonteApiFt(8000))throw new Error('Conexão protegida ainda indisponível. Recarregue o portal e tente novamente.');const r=await chamadaPelaPonteApiFt(acao,Object.assign({},p,{sessao:APP.sessaoApi}),60000);if(!r?.ok)throw new Error(r?.erro||'Operação não confirmada.');return r.dados;}
     async function abrirEntrevistasFT(){
       if(!entPodeGerir()){abrirAcessoNegado('Candidaturas à Cia FT');return;}
