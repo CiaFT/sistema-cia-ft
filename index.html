@@ -6974,6 +6974,13 @@ Banco de dados: Google Sheets.
     .ent-ficha-bloco[id="entDecisao"]{scroll-margin-top:110px}
     .ent-timeline{list-style:none;padding:0;margin:0}.ent-timeline li{padding:7px 0;border-bottom:1px solid #e2e8f0;overflow-wrap:anywhere}.ent-timeline li:last-child{border:0}
     .toast-ft-motivo{display:grid;gap:6px;margin-top:8px}.toast-ft-motivo textarea{width:100%;min-height:76px;box-sizing:border-box;padding:8px;font:inherit;border:1px solid #94a3b8;border-radius:8px;resize:vertical}
+      #ftAvisos [hidden]{display:none!important}
+    .ft-aviso-item{margin:12px 0}.ft-aviso-item h3{margin:8px 0 4px}.ft-aviso-texto{white-space:pre-wrap;overflow-wrap:anywhere;margin:12px 0 16px}
+    .ft-avisos-botoes,.ft-avisos-alvos{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-start}
+    .ft-avisos-form{margin:12px 0;scroll-margin-top:110px}.ft-avisos-form label{display:grid;gap:6px;margin:10px 0}
+    .ft-avisos-form input,.ft-avisos-form textarea,.ft-avisos-form select{width:100%;padding:10px 12px;border:1px solid #cbd5e1;border-radius:12px;background:#fff;color:#17202a;font:inherit}
+    .ft-avisos-form :focus-visible{outline:2px solid #475569;outline-offset:2px}
+    .ft-avisos-leitura,.ft-avisos-ciencias{margin:12px 0}.ft-avisos-ciencias li{margin:6px 0}
   </style>
 </head>
 
@@ -7212,6 +7219,7 @@ Banco de dados: Google Sheets.
         </div>
       `;
       aplicarFotosSupabaseNosCards();
+      avisosVerificarInicioFt();
     }
 
     function montarCardPolicial(u) {
@@ -7613,6 +7621,162 @@ Banco de dados: Google Sheets.
     }
 
 
+    const FT_AVISOS = {toast:null,timer:null,consultando:false};
+    const FT_AVISOS_PUBLICOS = {GERAL:'Geral',COMANDO:'Cmt Pel / Cmt Equipe','1_PEL':'1º Pel','2_PEL':'2º Pel',ADM:'Adm'};
+    const FT_AVISOS_TRAMITES = {NORMAL:'NORMAL',URGENTE:'URGENTE',URGENTISSIMO:'URGENTÍSSIMO'};
+    async function avisosRpcFt(acao,dados){
+      const usuario=APP.usuario,geracao=APP.sessaoGeracao;
+      if(!usuario)throw new Error('Faça login para acessar os avisos.');
+      const r=await rpcPlanoFerias('avisos_cia_ft',{p_acao:acao,p_dados:dados||{}});
+      if(APP.usuario!==usuario||APP.sessaoGeracao!==geracao)throw new Error('A sessão foi alterada. Entre novamente.');
+      return r;
+    }
+    function avisosCancelarAlertaFt(){
+      clearTimeout(FT_AVISOS.timer);FT_AVISOS.timer=null;
+      if(FT_AVISOS.toast)FT_AVISOS.toast.fechar(false);
+      FT_AVISOS.toast=null;
+    }
+    function avisosVerificarInicioFt(){
+      clearTimeout(FT_AVISOS.timer);
+      const home=document.querySelector('#appConteudo .home-hero');
+      if(!home||!APP.usuario||FT_AVISOS.toast||FT_AVISOS.consultando)return;
+      if(document.querySelector('#toastFtObrigatorioOverlay .toast-ft')){
+        FT_AVISOS.timer=setTimeout(avisosVerificarInicioFt,1500);return;
+      }
+      FT_AVISOS.consultando=true;
+      avisosRpcFt('pendencias').then(d=>{
+        if(!home.isConnected||!APP.usuario)return;
+        const aviso=d.itens?.[0];if(!aviso)return;
+        if(document.querySelector('#toastFtObrigatorioOverlay .toast-ft')){
+          FT_AVISOS.timer=setTimeout(avisosVerificarInicioFt,1500);return;
+        }
+        FT_AVISOS.toast=criarToastFt({
+          titulo:'AVISOS CIA FT — '+(FT_AVISOS_TRAMITES[aviso.tramite]||'NOVO AVISO'),
+          texto:'Há uma mensagem direcionada a você: '+aviso.titulo+'. Ao clicar em Ciente, você registra o recebimento do alerta. A ciência da leitura é registrada na página do aviso.',
+          tipo:aviso.tramite==='NORMAL'?'info':'atencao',obrigatorio:true,persistente:true,bloquearFechamento:true,
+          acoes:[{rotulo:'CIENTE — ABRIR AVISOS',resultado:true,primaria:true}],
+          aoAcionar:async()=>{await avisosRpcFt('alerta',{id:aviso.id});return true;},
+          aoErro:e=>{
+            mostrarToastFt('Alerta não registrado',e.message,'erro');
+            if(/indisponível/i.test(e.message)){avisosCancelarAlertaFt();FT_AVISOS.timer=setTimeout(avisosVerificarInicioFt,350);}
+          },
+          aoResponder:ok=>{FT_AVISOS.toast=null;if(ok&&APP.usuario)abrirAvisosCiaFt();}
+        });
+      }).catch(()=>{/* A checagem de avisos não bloqueia os demais módulos. */}).finally(()=>{
+        FT_AVISOS.consultando=false;
+        if(APP.usuario&&document.querySelector('#appConteudo .home-hero')&&!home.isConnected)avisosVerificarInicioFt();
+      });
+    }
+    function abrirAvisosCiaFt(){
+      if(!APP.usuario)return;
+      window.scrollTo(0,0);
+      document.getElementById('appConteudo').innerHTML=`
+        <div class="page-wrap" id="ftAvisos">
+          <div class="page-header"><div class="page-header-row">
+            <div><div class="page-kicker">Comunicação interna</div><h1>Avisos Cia FT</h1>
+              <p>Comunicados da Companhia e registro de ciência.</p></div>
+            <div class="page-actions"><button type="button" class="btn-page" onclick="abrirHome()">VOLTAR</button></div>
+          </div></div>
+          <div class="modal-card"><div class="page-actions ft-avisos-botoes">
+            <button class="btn-page" type="button" onclick="avisosCarregarFt(false)">AVISOS ATIVOS</button>
+            <button class="btn-page" type="button" id="ftAvisosArquivo" hidden onclick="avisosCarregarFt(true)">ARQUIVADOS</button>
+            <button class="btn-primary-soft" type="button" id="ftAvisosNovo" hidden onclick="avisosComporFt()">NOVO AVISO</button>
+          </div></div>
+          <div id="ftAvisosForm" hidden></div><div id="ftAvisosLista" aria-live="polite"></div>
+        </div>`;
+      avisosCarregarFt(false);
+    }
+    async function avisosCarregarFt(arquivo=false,offset=0){
+      const lista=document.getElementById('ftAvisosLista');
+      if(!lista)return;
+      const req=String(Number(lista.dataset.req||0)+1);lista.dataset.req=req;
+      lista.innerHTML='<div class="resenha-loading">Carregando avisos...</div>';
+      try{
+        const d=await avisosRpcFt(arquivo?'arquivo':'listar',{offset});
+        if(!lista.isConnected||lista.dataset.req!==req)return;
+        document.getElementById('ftAvisosNovo').hidden=!d.pode_publicar;
+        document.getElementById('ftAvisosArquivo').hidden=!d.pode_arquivar;
+        const itens=d.itens||[];
+        lista.innerHTML='<div class="section-title"><h2>'+(arquivo?'Avisos arquivados':'Avisos ativos')+'</h2></div>'+
+          (itens.map(x=>{
+            const id=escaparAttr(x.id),tramite=escapar(FT_AVISOS_TRAMITES[x.tramite]||x.tramite);
+            const recibos=Array.isArray(x.ciencias)&&x.ciencias.length?'<details class="ft-avisos-ciencias"><summary>Ciências de leitura — '+x.ciencias.filter(c=>c.leitura_em).length+' de '+x.ciencias.length+'</summary><ul>'+x.ciencias.map(c=>'<li>'+escapar(c.re+' — '+c.nome)+'<br><small>Alerta: '+escapar(c.alerta_em?iccHoraBR(c.alerta_em):'Pendente')+' · Leitura: '+escapar(c.leitura_em?iccHoraBR(c.leitura_em):'Pendente')+'</small></li>').join('')+'</ul></details>':'';
+            return '<article class="modal-card ft-aviso-item" data-aviso="'+id+'"><div class="ft-avisos-meta"><span class="ent-situacao" data-tom="'+(x.tramite==='URGENTISSIMO'?'erro':x.tramite==='URGENTE'?'atencao':'neutro')+'">'+tramite+'</span> · '+escapar(FT_AVISOS_PUBLICOS[x.publico]||x.publico)+(x.direcionado?' · <strong>Direcionado a você</strong>':'')+'</div><h3>'+escapar(x.titulo)+'</h3><p class="oc-ft-nota">'+escapar(x.autor+' · '+iccHoraBR(x.criado_em))+(arquivo?' · Arquivado em '+escapar(iccHoraBR(x.arquivado_em)):'')+'</p><div class="ft-aviso-texto">'+escapar(x.mensagem)+'</div>'+
+              (x.direcionado?'<div class="ft-avisos-leitura">'+(x.leitura_em?'<span class="ent-situacao" data-tom="ok">Ciência em '+escapar(iccHoraBR(x.leitura_em))+'</span>':arquivo?'Ciência de leitura não registrada':'<button type="button" class="btn-primary-soft" onclick="avisosAcaoFt(this,\'leitura\')">REGISTRAR CIÊNCIA DA LEITURA</button>')+'</div>':'')+recibos+
+              (!arquivo&&d.pode_arquivar?'<button type="button" class="btn-page" onclick="avisosAcaoFt(this,\'arquivar\')">ENCERRAR E ARQUIVAR</button>':'')+'</article>';
+          }).join('')||'<div class="modal-card">Nenhum aviso '+(arquivo?'arquivado':'disponível')+'.</div>')+
+          '<div class="page-actions ft-avisos-botoes">'+(offset>0?'<button class="btn-page" onclick="avisosCarregarFt('+arquivo+','+(offset-50)+')">ANTERIORES</button>':'')+(itens.length===50?'<button class="btn-page" onclick="avisosCarregarFt('+arquivo+','+(offset+50)+')">MAIS AVISOS</button>':'')+'</div>';
+      }catch(e){
+        if(lista.isConnected&&lista.dataset.req===req){
+          lista.innerHTML='<div class="modal-card">'+escapar(e.message)+'</div>';
+          mostrarToastFt('Avisos indisponíveis',e.message,'erro');
+        }
+      }
+    }
+    async function avisosComporFt(){
+      const area=document.getElementById('ftAvisosForm');
+      if(!area||area.dataset.abrindo==='1')return;
+      if(!area.hidden){area.scrollIntoView({block:'start'});return;}
+      area.dataset.abrindo='1';
+      try{
+        const d=await avisosRpcFt('efetivo');if(!area.isConnected)return;
+        area.innerHTML=`<form class="modal-card ft-avisos-form" onsubmit="avisosPublicarFt(event)">
+          <h2>Novo aviso</h2>
+          <label>Título<input name="titulo" required minlength="3" maxlength="120"></label>
+          <div class="oc-ft-grid"><label>Tramitação<select name="tramite">${Object.entries(FT_AVISOS_TRAMITES).map(([k,v])=>'<option value="'+k+'">'+escapar(v)+'</option>').join('')}</select></label>
+          <label>Quem pode ler<select name="publico">${Object.entries(FT_AVISOS_PUBLICOS).map(([k,v])=>'<option value="'+k+'">'+escapar(v)+'</option>').join('')}</select></label></div>
+          <label>Mensagem<textarea name="mensagem" required minlength="3" maxlength="5000" rows="7"></textarea></label>
+          <label>Destinatário principal<select name="policial" onchange="avisosAdicionarFt(this)">
+            <option value="">Selecionar policial…</option>
+            ${(d.itens||[]).map(x=>'<option value="'+escaparAttr(x.id)+'">'+escapar([x.posto,x.re,x.nome].filter(Boolean).join(' '))+'</option>').join('')}
+          </select></label>
+          <div class="ft-avisos-alvos" aria-live="polite"></div>
+          <p class="oc-ft-nota">Selecione um de cada vez para adicionar vários destinatários. Eles recebem um alerta e registram ciência de leitura, mesmo se estiverem fora do público escolhido.</p>
+          <div class="page-actions ft-avisos-botoes"><button type="submit" class="btn-primary-soft">PUBLICAR AVISO</button><button class="btn-page" type="button" onclick="this.closest('#ftAvisosForm').hidden=true">CANCELAR</button></div>
+        </form>`;
+        area.hidden=false;area.querySelector('input').focus();
+      }catch(e){if(area.isConnected)mostrarToastFt('Não foi possível abrir o formulário',e.message,'erro');}
+      finally{delete area.dataset.abrindo;}
+    }
+    function avisosAdicionarFt(select){
+      const opt=select.selectedOptions[0];if(!opt?.value)return;
+      const area=select.form.querySelector('.ft-avisos-alvos');
+      const chip=document.createElement('button');chip.type='button';chip.className='btn-page';chip.dataset.id=opt.value;
+      chip.textContent=opt.textContent+' ×';chip.setAttribute('aria-label','Remover '+opt.textContent);
+      chip.onclick=()=>{opt.disabled=false;chip.remove();select.focus();};
+      area.appendChild(chip);opt.disabled=true;select.value='';
+    }
+    async function avisosPublicarFt(e){
+      e.preventDefault();const form=e.currentTarget;if(form.dataset.enviando)return;
+      form.dataset.enviando='1';
+      try{
+        if(!await confirmarToastFt('PUBLICAR AVISO','A mensagem ficará disponível para o público e os destinatários selecionados.'))return;
+        if(!form.isConnected)return;
+        const data=new FormData(form);
+        const dados={titulo:data.get('titulo').trim(),mensagem:data.get('mensagem').trim(),tramite:data.get('tramite'),publico:data.get('publico'),destinatarios:[...form.querySelectorAll('[data-id]')].map(x=>x.dataset.id)};
+        const chave=JSON.stringify(dados);if(form.dataset.ultDados!==chave){form.dataset.ultDados=chave;form.dataset.avisoId=crypto.randomUUID();}
+        dados.id=form.dataset.avisoId;
+        await avisosRpcFt('publicar',dados);
+        if(!form.isConnected)return;
+        const area=form.parentElement;area.replaceChildren();area.hidden=true;
+        mostrarToastFt('Aviso publicado','A publicação foi registrada.','sucesso');await avisosCarregarFt(false);
+      }catch(err){if(form.isConnected)mostrarToastFt('Publicação não confirmada',err.message,'erro');}
+      finally{delete form.dataset.enviando;}
+    }
+    async function avisosAcaoFt(botao,acao){
+      if(botao.disabled)return;
+      botao.disabled=true;
+      try{
+        const id=botao.closest('[data-aviso]').dataset.aviso;
+        if(!await confirmarToastFt(acao==='arquivar'?'ENCERRAR E ARQUIVAR':'REGISTRAR CIÊNCIA',acao==='arquivar'?'O aviso sairá da lista ativa. O histórico de ciências será preservado.':'Confirma que leu este aviso?'))return;
+        if(!botao.isConnected)return;
+        await avisosRpcFt(acao,{id});
+        if(!botao.isConnected)return;
+        mostrarToastFt(acao==='arquivar'?'Aviso arquivado':'Ciência registrada','A operação foi confirmada.','sucesso');await avisosCarregarFt(false);
+      }catch(e){if(botao.isConnected)mostrarToastFt('Operação não confirmada',e.message,'erro');}
+      finally{botao.disabled=false;}
+    }
+
     function montarMenusHome() {
       /*
        * V1.2.4 — Regra crítica:
@@ -7642,6 +7806,7 @@ Banco de dados: Google Sheets.
         });
         menus.splice(indicePainel >= 0 ? indicePainel + 1 : menus.length, 0, cardRotinas);
       }
+      if(!menus.some(m=>m.id==='AVISOS_CIA_FT'))menus.push({id:'AVISOS_CIA_FT',titulo:'AVISOS CIA FT',descricao:'Comunicados da Companhia e ciência de leitura.'});
       if(entPodeGerir())menus.push({id:"ENTREVISTAS_FT",titulo:"CANDIDATURAS À CIA FT",icone:"📋",descricao:"Consulta de fichas, impressão e agendamento de entrevistas."});
       return menus;
     }
@@ -7652,6 +7817,7 @@ Banco de dados: Google Sheets.
       const iconeMenu = menu.id === 'MEUS_DADOS' ? '🪪' : (menu.icone || '•');
       const moduloMenu = normalizarModuloCliente(menu.id);
       const imagensMenu = {
+        AVISOS_CIA_FT: { arquivo: './icone-avisos-ft.png', alt: 'Avisos Cia FT' },
         MEUS_DADOS: { arquivo: './icone-meus-dados.png?v=1211-ft1408r1', alt: 'Meus Dados' },
         PAINEL_ADMINISTRATIVO: { arquivo: './icone-painel-administrativo.png?v=1211-ft1408r1', alt: 'Painel Administrativo' },
         CONSULTA_EFETIVO: { arquivo: './icone-consulta-efetivo.png?v=1211-ft1408r1', alt: 'Consulta Efetivo' },
@@ -7689,6 +7855,7 @@ Banco de dados: Google Sheets.
 
 
     function abrirModulo(id) {
+      if(id==='AVISOS_CIA_FT'){abrirAvisosCiaFt();return;}
       if(id==='ENTREVISTAS_FT'){abrirEntrevistasFT();return;}
       window.scrollTo(0, 0);
 
@@ -16277,6 +16444,7 @@ Banco de dados: Google Sheets.
 
 
     function sair() {
+      avisosCancelarAlertaFt();
       fecharVisualizadorPdfEscalaCiaFt();
       pararMonitorAvisosObrigatorios();
       APP.sessaoGeracao = Number(APP.sessaoGeracao || 0) + 1;
