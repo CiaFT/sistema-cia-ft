@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.4 — OCORRÊNCIAS E FOLGAS FLAGRANTES
+SISTEMA CIA FT — PORTAL GITHUB V1.4.1 — OCORRÊNCIAS E FOLGAS FLAGRANTES
 Arquivo: index.html
 ============================================================
 
-VERSÃO V1.4 — OCORRÊNCIAS E FOLGAS FLAGRANTES
+VERSÃO V1.4.1 — DESEMPENHO E PADRÃO VISUAL
 - Ranking com filtros anual, semestral, mensal e por pelotão.
 - Destaque discreto dos três primeiros colocados.
 - Consulta de FF aguardando decisão e aprovação/recusa exclusiva do Cmt Cia.
 - Histórico individual preserva datas de FF já gozadas, inclusive importadas.
 - Área de importação removida do formulário após a carga inicial.
-- Versão fixada em V1.4: alterar somente por determinação expressa do responsável.
+- Versão fixada em V1.4.1: alterar somente por determinação expressa do responsável.
 - Preserva a última versão encerrada do Controle de Frequência.
 - Preserva a implantação completa de Viaturas V1.2.6.
 - Corrige a leitura e a identificação funcional em Resenhas Enviadas.
@@ -52,7 +52,7 @@ Banco de dados: Google Sheets.
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="cia-ft-build" content="FT-V138-20261006-GRAVACAO-CONFIAVEL-R7">
-  <title>Portal Força Tática • V1.4</title>
+  <title>Portal Força Tática • V1.4.1</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
 
@@ -6959,7 +6959,13 @@ Banco de dados: Google Sheets.
     .oc-ft-equipe-apoio>section{min-width:0}
     @media(max-width:620px){#ocFtForm .oc-ft-vtr{width:100%}.oc-ft-equipe-apoio{grid-template-columns:minmax(0,1fr);gap:0}}
 
-</style>
+    .ft141-auditada .page-header h1{font-size:clamp(21px,3vw,26px);line-height:1.2}
+    .ft141-auditada .page-header p{font-size:14px;line-height:1.5}
+    .ft141-auditada .consulta-card-header h2,.ft141-auditada .icc-card-header h2{font-size:18px;line-height:1.3}
+    .ft141-auditada .consulta-field label,.ft141-auditada .icc-campo label{font-size:13px}
+    .ft141-auditada .consulta-field select,.ft141-auditada .consulta-field input,.ft141-auditada .icc-campo select{font-size:14px;min-height:42px}
+    .ft141-auditada .resenha-loading,.ft141-auditada .icc-loading{font-size:14px;line-height:1.5}
+  </style>
 </head>
 
 <body>
@@ -6991,7 +6997,7 @@ Banco de dados: Google Sheets.
         <div id="loginAlerta" class="alerta"></div>
 
         <div class="footer">
-          Portal Força Tática • V1.4
+          Portal Força Tática • V1.4.1
         </div>
       </main>
 
@@ -8913,7 +8919,7 @@ Banco de dados: Google Sheets.
       APP.pdfIccCache = null;
       APP.iccMiniaturaToken = Number(APP.iccMiniaturaToken || 0) + 1;
       document.getElementById('appConteudo').innerHTML = `
-        <div class="page-wrap">
+        <div class="page-wrap ft141-auditada">
           <div class="page-header">
             <div class="page-header-row">
               <div>
@@ -11253,7 +11259,7 @@ Banco de dados: Google Sheets.
     function abrirEscalasEFolgas(telaInicial) {
       window.scrollTo(0, 0);
       document.getElementById('appConteudo').innerHTML = `
-        <div class="page-wrap">
+        <div class="page-wrap ft141-auditada">
           <div class="page-header">
             <div class="page-header-row">
               <div>
@@ -11645,9 +11651,9 @@ Banco de dados: Google Sheets.
       const proporcaoX = paginas.scrollWidth > paginas.clientWidth ? (paginas.scrollLeft + paginas.clientWidth / 2) / paginas.scrollWidth : .5;
       const proporcaoY = paginas.scrollHeight > paginas.clientHeight ? (paginas.scrollTop + paginas.clientHeight / 2) / paginas.scrollHeight : 0;
       paginas.setAttribute('aria-busy', 'true');
-      paginas.innerHTML = '<div class="ef-pdf-loading">Gerando todas as páginas em alta definição...<br><small>Zoom ' + Math.round(zoom * 100) + '%</small></div>';
+      paginas.innerHTML = '<div class="ef-pdf-loading">Preparando a primeira página…<br><small>Zoom ' + Math.round(zoom * 100) + '%</small></div>';
       try {
-        const fragmento = document.createDocumentFragment();
+        const carregando = paginas.firstElementChild;
         for (let numeroPagina = 1; numeroPagina <= pdf.numPages; numeroPagina++) {
           if (tokenRender !== APP.pdfRenderToken || !document.getElementById('efPdfModal')) return;
           const pagina = await pdf.getPage(numeroPagina);
@@ -11669,7 +11675,7 @@ Banco de dados: Google Sheets.
           canvas.style.width = Math.ceil(viewport.width) + 'px';
           canvas.style.height = Math.ceil(viewport.height) + 'px';
           bloco.appendChild(canvas);
-          fragmento.appendChild(bloco);
+
           const tarefaRender = pagina.render({
             canvasContext: contexto,
             viewport: viewport,
@@ -11678,7 +11684,11 @@ Banco de dados: Google Sheets.
           APP.pdfRenderTaskEscalaCiaFt = tarefaRender;
           try {
             await tarefaRender.promise;
+            if (tokenRender !== APP.pdfRenderToken || !paginas.isConnected) return;
             aplicarMarcaDaguaPdfEscalaCiaFt(canvas, contexto);
+            if (carregando?.isConnected) carregando.remove();
+            paginas.appendChild(bloco);
+            if (numeroPagina === 1) await new Promise(function(resolve) { setTimeout(resolve, 0); });
           } catch (erroRender) {
             if (tokenRender !== APP.pdfRenderToken || erroRender && erroRender.name === 'RenderingCancelledException') return;
             throw erroRender;
@@ -11687,12 +11697,16 @@ Banco de dados: Google Sheets.
           }
         }
         if (tokenRender !== APP.pdfRenderToken || !document.getElementById('efPdfModal')) return;
-        paginas.replaceChildren(fragmento);
+
         paginas.scrollLeft = Math.max(0, proporcaoX * paginas.scrollWidth - paginas.clientWidth / 2);
         paginas.scrollTop = Math.max(0, proporcaoY * paginas.scrollHeight - paginas.clientHeight / 2);
       } catch (erro) {
         if (tokenRender !== APP.pdfRenderToken || !document.getElementById('efPdfModal')) return;
-        paginas.innerHTML = '<div class="ef-pdf-loading">Não foi possível renderizar todas as páginas deste PDF.<br>' + escapar(erro && erro.message ? erro.message : erro) + '</div>';
+        const aviso = document.createElement('div');
+        aviso.className = 'ef-pdf-loading';
+        aviso.textContent = 'Não foi possível renderizar todas as páginas: ' + String(erro?.message || erro);
+        if (paginas.querySelector('.ef-pdf-page')) paginas.appendChild(aviso);
+        else paginas.replaceChildren(aviso);
       } finally {
         if (tokenRender === APP.pdfRenderToken && paginas) paginas.removeAttribute('aria-busy');
       }
@@ -13920,7 +13934,7 @@ Banco de dados: Google Sheets.
       window.scrollTo(0, 0);
 
       document.getElementById('appConteudo').innerHTML = `
-        <div class="page-wrap">
+        <div class="page-wrap ft141-auditada">
           <div class="page-header">
             <div class="page-header-row">
               <div>
@@ -13966,21 +13980,40 @@ Banco de dados: Google Sheets.
           login: APP.credenciais.login,
           senha: APP.credenciais.senha
         }, { semCache: true })
-        .then(async function(resp) {
+        .then(function(resp) {
           if (!resp || !resp.ok) {
             throw new Error(resp && resp.erro ? resp.erro : 'Falha ao carregar Consulta do Efetivo.');
           }
           APP.dadosConsultaEfetivo = resp.dados || {};
-          try {
-            const fotos = await carregarFotosSupabaseAssinadas(false);
-            (APP.dadosConsultaEfetivo.efetivo || []).forEach(function(pm) {
-              pm.fotoSupabaseUrl = fotos[chaveREFotoSupabase(pm.re)] || '';
-            });
-          } catch (erroFoto) {
-            console.warn('Consulta de fotos Supabase indisponível; mantendo as fotos atuais.', erroFoto);
-          }
           return APP.dadosConsultaEfetivo;
         });
+    }
+
+    function hidratarFotosConsultaFt141(dados, alvo) {
+      if (!dados || !alvo) return;
+      carregarFotosSupabaseAssinadas(false).then(function(fotos) {
+        if (!alvo.isConnected || APP.dadosConsultaEfetivo !== dados) return;
+        (dados.efetivo || []).forEach(function(pm) {
+          pm.fotoSupabaseUrl = fotos[chaveREFotoSupabase(pm.re)] || '';
+        });
+        alvo.querySelectorAll('.consulta-pm-card[data-re-login]').forEach(function(card) {
+          const url = fotos[chaveREFotoSupabase(card.dataset.reLogin)];
+          const btn = card.querySelector('.consulta-foto-btn');
+          if (!url || !btn) return;
+          const anterior = btn.querySelector('.consulta-foto');
+          const img = anterior?.tagName === 'IMG' ? anterior : document.createElement('img');
+          if (img.getAttribute('src') === url) return;
+          img.className = (anterior?.className || 'consulta-foto').replace(/\bsem-foto\b/g,'').trim();
+          img.alt = anterior?.alt || 'Foto do policial';
+          img.loading = 'lazy';
+          img.decoding = 'async';
+          img.src = url;
+          if (img !== anterior) {
+            img.onerror = function(){fallbackFotoConsulta(img,card.className.replace('consulta-pm-card','').trim());};
+            btn.replaceChildren(img);
+          }
+        });
+      }).catch(function() { /* As fotos legadas e os cartões continuam disponíveis. */ });
     }
 
     function renderizarConsultaEfetivo() {
@@ -14065,6 +14098,7 @@ Banco de dados: Google Sheets.
       }
       filtrados.sort(ordenarConsultaEfetivoHierarquiaReal);
       alvo.innerHTML = filtrados.map(montarCardConsultaPm).join('');
+      hidratarFotosConsultaFt141(dados, alvo);
     }
 
     function ordenarConsultaEfetivoHierarquiaReal(a, b) {
