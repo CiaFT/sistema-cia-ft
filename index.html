@@ -7713,6 +7713,17 @@ Banco de dados: Google Sheets.
         }
       }
     }
+    function avisosOrdemHierarquicaFt(itens){
+      return (itens||[]).map(x=>{
+        const posto=x.posto||x.codigo_posto||'';
+        const abreviado=normalizarTexto(posto)
+          .replace(/SUB[ _-]*TENENTE/g,'SUBTEN').replace(/TENENTE[ _-]*CORONEL/g,'TEN CEL')
+          .replace(/CORONEL/g,'CEL').replace(/CAPITAO/g,'CAP').replace(/TENENTE/g,'TEN')
+          .replace(/ASPIRANTE/g,'ASP').replace(/SARGENTO/g,'SGT').replace(/CABO/g,'CB').replace(/SOLDADO/g,'SD');
+        const postoGrad=pesoHierarquiaConsultaCliente({postoGrad:abreviado})?abreviado:(x.codigo_posto||abreviado);
+        return {...x,postoGrad,nomeGuerra:x.nome||''};
+      }).sort(ordenarConsultaEfetivoHierarquiaReal);
+    }
     async function avisosComporFt(){
       const area=document.getElementById('ftAvisosForm');
       if(!area||area.dataset.abrindo==='1')return;
@@ -7728,7 +7739,7 @@ Banco de dados: Google Sheets.
           <label>Mensagem<textarea name="mensagem" required minlength="3" maxlength="5000" rows="7"></textarea></label>
           <label>Destinatário principal<select name="policial" onchange="avisosAdicionarFt(this)">
             <option value="">Selecionar policial…</option>
-            ${(d.itens||[]).map(x=>'<option value="'+escaparAttr(x.id)+'">'+escapar([x.posto,x.re,x.nome].filter(Boolean).join(' '))+'</option>').join('')}
+            ${avisosOrdemHierarquicaFt(d.itens).map(x=>'<option value="'+escaparAttr(x.id)+'">'+escapar([x.posto,x.re,x.nome].filter(Boolean).join(' '))+'</option>').join('')}
           </select></label>
           <div class="ft-avisos-alvos" aria-live="polite"></div>
           <p class="oc-ft-nota">Selecione um de cada vez para adicionar vários destinatários. Eles recebem um alerta e registram ciência de leitura, mesmo se estiverem fora do público escolhido.</p>
