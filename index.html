@@ -7914,7 +7914,27 @@ Banco de dados: Google Sheets.
     let FT_ENT_ADMIN_ATUAL=null,FT_ENT_ADMIN_CAP=false,FT_ENT_ADMIN_BUSY=false;
     function entPodeGerir(){const r=normalizarTexto(APP.usuario?.perfilAcesso||'').replace(/[\s-]+/g,'_');return ['CMT_CIA','CMT_CIA_FT','COMANDANTE_CIA_FT','ENC_ADM','ENC_ADM_FT','ENCARREGADO_ADM_FT','ENCARREGADO_ADMINISTRATIVO','GESTOR','GESTOR_FT','GESTOR_TEC_FT','GESTOR_TECNICO_FT'].includes(r);}
     function entAbrirPublico(){window.open(new URL('candidatura-ft.html',window.location.href).href,'_blank','noopener,noreferrer');}
-    async function entAdminApi(acao,p={}){if(!APP.sessaoApi)throw new Error('Faça login novamente para acessar as candidaturas.');if(!await aguardarPonteApiFt(8000))throw new Error('Conexão protegida ainda indisponível. Recarregue o portal e tente novamente.');const r=await chamadaPelaPonteApiFt(acao,Object.assign({},p,{sessao:APP.sessaoApi}),60000);if(!r?.ok)throw new Error(r?.erro||'Operação não confirmada.');return r.dados;}
+    async function entAdminApi(acao,p={}){
+      if(!APP.sessaoApi)throw new Error('Faça login novamente para acessar as candidaturas.');
+      const params=Object.assign({},p,{sessao:APP.sessaoApi});
+      iniciarPonteApiFt();
+      let r;
+      if(await aguardarPonteApiFt(4000)){
+        r=await chamadaPelaPonteApiFt(acao,params,60000);
+      }else{
+        // Sem iframe disponível: o mesmo WebApp recebe a sessão no corpo, nunca na URL.
+        try{
+          const resp=await fetch(API_URL,{method:'POST',credentials:'omit',cache:'no-store',
+            headers:{'Content-Type':'text/plain;charset=UTF-8'},
+            body:JSON.stringify(Object.assign({},params,{action:acao})),
+            signal:AbortSignal.timeout(60000)});
+          if(!resp.ok)throw new Error('HTTP '+resp.status);
+          r=await resp.json();
+        }catch(_){throw new Error('Não foi possível confirmar a operação no servidor de candidaturas. Atualize a lista antes de repetir uma decisão.');}
+      }
+      if(!r?.ok)throw new Error(r?.erro||'Operação não confirmada.');
+      return r.dados;
+    }
     async function abrirEntrevistasFT(){
       if(!entPodeGerir()){abrirAcessoNegado('Candidaturas à Cia FT');return;}
       document.getElementById('appConteudo').innerHTML='<div class="page-wrap"><div class="page-header"><h1>CANDIDATURAS À CIA FT</h1><p>Análise e agendamento. Tramitação formal preservada em papel.</p><button class="btn-page" onclick="abrirHome()">VOLTAR AO INÍCIO</button></div><div class="modal-card"><button class="btn-page" onclick="entAdminListar()">ATUALIZAR LISTA</button><div id="entLista"></div><div id="entDetalhe"></div></div></div>';await entAdminListar();
