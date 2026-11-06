@@ -7329,7 +7329,28 @@ async function dsDetalharFt(id){
  const d=h.querySelector('.ds-decisao-ft');
  if(q.proprio&&['CORRIGIR','NEGADO','AUTORIZADO'].includes(q.estado)&&!q.lido)dsRpcFt('ler',{id}).then(()=>dsAtualizarCaixaFt(true)).catch(()=>{});
  if(q.proprio&&q.estado==='CORRIGIR'){d.innerHTML='<button class="btn-page">CORRIGIR SOLICITAÇÃO</button>';d.querySelector('button').onclick=()=>dsPedidoFt(q);}
- if(q.estado==='AUTORIZADO')d.innerHTML='<p>A impressão do PMP-118 está bloqueada nesta homologação.</p>';
+ if(q.pode_imprimir){
+  d.innerHTML='<div class="ds-form-acoes"><button type="button" class="btn-page btn-primary-soft">BAIXAR PMP-118</button></div><p class="oc-ft-nota">Imprima em uma página A4, em tamanho real (100%). A assinatura do Cmt Cia é feita no papel.</p>';
+  const b=d.querySelector('button');
+  b.onclick=()=>dsOperacaoFt(b,async atual=>{
+   const cfg=configPlanoFerias(),url=String(cfg.url||APPFT_FERIAS_SUPABASE_URL).replace(/\/$/,'');
+   const key=cfg.anonKey||window.APPFT_SUPABASE_ANON_KEY||APPFT_FERIAS_SUPABASE_ANON_KEY;
+   const jwt=await tokenPlanoFerias();
+   if(!atual())return;
+   if(!jwt)throw Error('Entre novamente para imprimir.');
+   const r=await fetch(url+'/functions/v1/pmp118-impressao',{method:'POST',headers:{apikey:key,Authorization:'Bearer '+jwt,'Content-Type':'application/json'},body:JSON.stringify({id:q.id})});
+   if(!r.ok||!r.headers.get('Content-Type')?.includes('application/pdf')){
+    const erro=await r.json().catch(()=>null);
+    throw Error(erro?.error||'Não foi possível baixar o PMP-118.');
+   }
+   const pdf=await r.blob();
+   if(!atual())return;
+   const link=document.createElement('a'),obj=URL.createObjectURL(pdf);
+   link.href=obj;link.download='PMP-118-'+q.id.slice(0,8)+'.pdf';
+   document.body.appendChild(link);link.click();link.remove();
+   setTimeout(()=>URL.revokeObjectURL(obj),10000);
+  });
+ }
  if(!q.tarefa)return;
  const op=q.estado==='P1'?{faz_jus:'FAZ JUS',nao_faz_jus:'NÃO FAZ JUS'}:q.estado==='CMT'?{conceder:'AUTORIZAR',negar:'NÃO AUTORIZAR'}:{conceder:'PELA CONCESSÃO',negar:'PELA NÃO CONCESSÃO'};
  op.corrigir='DEVOLVER PARA CORREÇÃO';
