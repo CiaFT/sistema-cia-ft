@@ -7341,7 +7341,7 @@ async function dsDetalharFt(id){
  h.textContent='Carregando…';
  try{
  const q=await dsRpcFt('detalhar',{id});if(!h.isConnected)return;
- h.innerHTML='<div class="ds-status-ft" data-estado="'+dsEscFt(q.estado)+'">'+dsEscFt(dsEstadosFt[q.estado])+'</div><p><strong>'+dsEscFt([q.identidade.posto,q.identidade.re,q.identidade.nome].join(' '))+'</strong></p><p>Pedido em '+dsEscFt(dsDataFt(q.data_pedido))+' · Início em '+dsEscFt(dsDataFt(q.inicio))+' · '+dsEscFt(q.dias)+' dia(s)</p><p><strong>Motivo:</strong> '+dsEscFt(q.motivo)+'</p><div class="ds-decisao-ft"></div><h2>Histórico</h2><ol>'+q.historico.map(x=>'<li><strong>'+dsEscFt(dsAcoesFt[x.acao]||x.acao)+'</strong> · Revisão '+dsEscFt(x.revisao)+' · '+dsEscFt([x.identidade.posto,x.identidade.guerra].join(' '))+' · '+dsEscFt(new Date(x.quando).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}))+(x.comentario?'<br>'+dsEscFt(x.comentario):'')+'</li>').join('')+'</ol>';
+ h.innerHTML='<div class="ds-status-ft" data-estado="'+dsEscFt(q.estado)+'">'+dsEscFt(dsEstadosFt[q.estado])+'</div><p><strong>'+dsEscFt([q.identidade.posto,q.identidade.re,q.identidade.nome].join(' '))+'</strong></p><p>Pedido em '+dsEscFt(dsDataFt(q.data_pedido))+' · Início em '+dsEscFt(dsDataFt(q.inicio))+' · '+dsEscFt(q.dias)+' dia(s)</p><p><strong>Motivo:</strong> '+dsEscFt(q.motivo)+'</p><div class="ds-decisao-ft"></div><h2>Histórico</h2><ol>'+q.historico.map(x=>'<li><strong>'+dsEscFt(dsAcoesFt[x.acao]||x.acao)+'</strong> · Revisão '+dsEscFt(x.revisao)+' · '+dsEscFt([x.identidade.posto,x.identidade.guerra].join(' '))+(x.identidade.sob_autorizacao_cmt===true?' · Gestor, sob autorização do Cmt Cia FT':'')+' · '+dsEscFt(new Date(x.quando).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}))+(x.comentario?'<br>'+dsEscFt(x.comentario):'')+'</li>').join('')+'</ol>';
  const d=h.querySelector('.ds-decisao-ft');
  if(q.revisoes_anteriores?.length){
   const revisoes=document.createElement('details');
@@ -7410,8 +7410,9 @@ async function dsDetalharFt(id){
  const acao=b.dataset.acao,nota=d.querySelector('textarea').value.trim();
  if(acao==='corrigir'&&!nota)throw Error('Indique o que o solicitante precisa corrigir.');
  const aviso=acao==='negar'?'A não concessão encerra a tramitação.':q.estado==='CMT'?'Sua decisão será registrada no Portal. A assinatura será feita no papel.':acao==='corrigir'?'O pedido volta para o solicitante.':'Seu visto será vinculado a esta etapa.';
- if(!await confirmarToastFt(b.textContent,aviso)||!atual())return;
- await dsRpcFt(acao,{id,versao:q.versao,nota});if(!atual())return;
+ const delegada=q.decisao_cmt_delegada===true;
+ if(!await confirmarToastFt(b.textContent,delegada?aviso+' Confirma que está realizando esta ação como Gestor, sob autorização do Cmt Cia FT?':aviso)||!atual())return;
+ await dsRpcFt(acao,{id,versao:q.versao,nota,autorizacaoCmt:delegada?'SIM':''});if(!atual())return;
  mostrarToastFt('Tramitação registrada','A decisão foi salva na solicitação.','sucesso');dsCaixaAbrirFt();
  });}finally{ativo=false;}
  });
@@ -8585,8 +8586,10 @@ async function dsDetalharFt(id){
       if(OC_FT_DECIDINDO)return;OC_FT_DECIDINDO=true;
       try{
         let motivo='';if(decisao==='RECUSAR'){motivo=await pedirMotivoToastFt('INFORMAR MOTIVO','Motivo da recusa da FF:');if(motivo===null)return;if(motivo.trim().length<5){mostrarToastFt('Informe o motivo','Escreva ao menos cinco caracteres.','erro');return;}}
-        if(!await confirmarToastFt('CONFIRMAR DECISÃO','A decisão de FF vale para todos os integrantes da equipe desta ocorrência.',{confirmar:'CONFIRMAR',cancelar:'VOLTAR'}))return;
-        await ocFtApi('ocorrencias_validar',{id,tipo:'FF',decisao,motivo});mostrarToastFt('Decisão registrada','FF atualizada para os integrantes da equipe.','sucesso');
+        const delegada=OC_FT_CATALOGOS?.capacidades?.ffDelegada===true;
+        const aviso='A decisão de FF vale para todos os integrantes da equipe desta ocorrência.';
+        if(!await confirmarToastFt('CONFIRMAR DECISÃO',delegada?aviso+' Confirma que está atuando como Gestor, sob autorização do Cmt Cia FT?':aviso,{confirmar:'CONFIRMAR',cancelar:'VOLTAR'}))return;
+        await ocFtApi('ocorrencias_validar',{id,tipo:'FF',decisao,motivo,autorizacaoCmt:delegada?'SIM':''});mostrarToastFt('Decisão registrada','FF atualizada para os integrantes da equipe.','sucesso');
         const pedido=++OC_FT_RANKING_PEDIDO;try{const r=await ocFtApi('ocorrencias_ranking',ocFtFiltrosRanking());if(pedido===OC_FT_RANKING_PEDIDO)ocFtMostrarRanking(r.ranking);}catch(e){mostrarToastFt('Decisão salva','Não foi possível atualizar o ranking. Atualize a página.','erro');}
         await ocFtRecarregarPainelFF();
       }catch(e){mostrarToastFt('Decisão não registrada',e.message,'erro');}finally{OC_FT_DECIDINDO=false;}
@@ -8621,8 +8624,10 @@ async function dsDetalharFt(id){
     }
     async function ocFtDecidir(id,tipo,decisao){
       let motivo='';if(decisao==='RECUSAR'){motivo=await pedirMotivoToastFt('INFORMAR MOTIVO','Motivo da recusa:');if(motivo===null)return;}
-      const sim=await confirmarToastFt('CONFIRMAR DECISÃO',tipo==='FF'?'A decisão será registrada para a Folga Flagrante de todos os integrantes da equipe.':'A validação atribui uma ocorrência no ranking a cada integrante da equipe.',{confirmar:'CONFIRMAR',cancelar:'VOLTAR'});if(!sim)return;
-      try{await ocFtApi('ocorrencias_validar',{id,tipo,decisao,motivo});mostrarToastFt('Decisão registrada','O registro foi atualizado.','sucesso');await ocFtCarregarConsulta();}catch(e){mostrarToastFt('Decisão não registrada',e.message,'erro');}
+      const delegada=tipo==='FF'&&OC_FT_CATALOGOS?.capacidades?.ffDelegada===true;
+      const aviso=tipo==='FF'?'A decisão será registrada para a Folga Flagrante de todos os integrantes da equipe.':decisao==='RECUSAR'?'O registro da ocorrência será recusado.':'A validação atribui uma ocorrência no ranking a cada integrante da equipe.';
+      const sim=await confirmarToastFt('CONFIRMAR DECISÃO',delegada?aviso+' Confirma que está atuando como Gestor, sob autorização do Cmt Cia FT?':aviso,{confirmar:'CONFIRMAR',cancelar:'VOLTAR'});if(!sim)return;
+      try{await ocFtApi('ocorrencias_validar',{id,tipo,decisao,motivo,autorizacaoCmt:delegada?'SIM':''});mostrarToastFt('Decisão registrada','O registro foi atualizado.','sucesso');await ocFtCarregarConsulta();}catch(e){mostrarToastFt('Decisão não registrada',e.message,'erro');}
     }
     async function ocFtPrepararImportacao(input){
       if(!input.files[0])return;try{
