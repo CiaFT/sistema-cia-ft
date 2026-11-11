@@ -8062,11 +8062,10 @@ async function fcGestaoFt(box){
   <form class="oc-ft-grid" id="fcFormFt"><label>Policial<select name="re" required><option value="">Selecione</option>${r.efetivo.map(p=>'<option value="'+e(p.re)+'">'+e([p.posto,p.re,p.nomeGuerra||p.nome,p.pelotao].filter(Boolean).join(' · '))+'</option>').join('')}</select></label>
   <label>Quantidade de dias<input name="quantidade" type="number" min="1" max="365" step="1" value="1" required></label>
   <label class="oc-ft-largo">Motivo da concessão<textarea name="motivo" maxlength="400" required rows="2"></textarea></label>
-  <div class="ep-acoes oc-ft-largo"><button class="btn-page btn-primary-soft" type="submit">CONCEDER FC</button><button class="btn-page" type="button" id="fcAgendaAdmFt">AGENDA DE FC DA ADM</button></div></form>
-  <h3>Folgas aprovadas para baixa</h3><p>Registre o gozo depois de conferir que a folga foi utilizada.</p>
+  <div class="ep-acoes oc-ft-largo"><button class="btn-page btn-primary-soft" type="submit">CONCEDER FC</button></div></form>
+  <h3>Folgas do pelotão aprovadas para baixa</h3><p>Registre o gozo depois de conferir que a folga foi utilizada.</p>
   <div class="ds-lista-ft">${r.pedidos.length?r.pedidos.map(p=>'<div class="modal-card"><strong>'+e(p.nome)+'</strong> · '+e(p.pel)+' · '+e(dsDataFt(p.data))+' <div class="ep-acoes"><button type="button" class="btn-page" data-fc-gozo="'+e(p.id)+'">REGISTRAR GOZO</button><button type="button" class="btn-page" data-fc-devolver="'+e(p.id)+'">DEVOLVER CRÉDITO</button></div></div>').join(''):'<p>Nenhuma FC aprovada com data de gozo até hoje.</p>'}</div>
   <details><summary>Concessões recentes</summary><div class="ds-lista-ft">${(r.concessoes||[]).map(c=>'<div class="modal-card"><strong>'+e(c.nome)+'</strong> · '+e(dsDataFt(c.data))+' · '+e(c.quantidade)+' dia(s)<br>'+e(c.motivo)+'<br><small>Concedido por '+e(c.autor)+'</small></div>').join('')||'<p>Nenhuma concessão registrada.</p>'}</div></details></section>`;
-  box.querySelector('#fcAgendaAdmFt').onclick=()=>epAbrirFt('ADM','','abrirEscalasEFolgas(\'folgas\')');
   const f=box.querySelector('#fcFormFt');
   f.oninput=()=>{delete f.dataset.fcId;};
   const atualizar=()=>carregarDadosEscalasFolgas('folgas',true);
@@ -8099,43 +8098,51 @@ async function fcGestaoFt(box){
 function epGrupoClienteFt(){const v=normalizarTexto(APP.usuario?.pelotao||'');return /1|PRIMEIRO/.test(v)?'1º PEL':/2|SEGUNDO/.test(v)?'2º PEL':/^(ADM|ADMIN)/.test(v)?'ADM':'';}
 function epGestorClienteFt(){return ['GESTOR','GESTOR_FT','GESTOR_TEC_FT','GESTOR_TECNICO_FT'].includes(normalizarTexto(APP.usuario?.perfilAcesso||'').replace(/[\s-]+/g,'_'));}
 function epAvancaFt(d,n){return new Date(Date.parse(d+'T00:00:00Z')+86400000*n).toISOString().slice(0,10);}
-async function epAbrirFt(pel=epGrupoClienteFt()||(epGestorClienteFt()?'1º PEL':''),data='',voltar='abrirHome()'){
- const adm=pel==='ADM';
- const h=dsPaginaFt(adm?'Folgas Compensatórias · ADM':'Espaço do Pel',adm?'Solicitações de FC nas datas abertas pela gestão.':'Solicitações de folga e calendário do pelotão.',voltar);
+function epAbrirFt(){
+ const grupo=epGrupoClienteFt(),pel=['1º PEL','2º PEL'].includes(grupo)?grupo:epGestorClienteFt()?'1º PEL':'';
+ if(!pel){abrirAcessoNegado('Espaço do Pel');return;}
+ const h=dsPaginaFt('Espaço do Pel','Solicitações de folga e calendário do pelotão.','abrirHome()');
+ epRenderAgendaFt(h,pel,'',false);
+}
+async function epRenderAgendaFt(h,pel,data,adm){
+ const req=String(Number(h.dataset.epReq||0)+1);
+ h.dataset.epReq=req;
  h.textContent='Carregando…';
  try{
-  const r=await ocFtApi('espaco_pel_dados',{pel,data,semSaldo:'1'});if(!h.isConnected)return;
+  const chamada=(acao,params)=>ocFtApi((adm?'fc_adm_':'espaco_pel_')+acao,params);
+  const r=await chamada('dados',{pel,data,semSaldo:adm?'0':'1'});if(!h.isConnected||h.dataset.epReq!==req)return;
   const dias=r.dias.filter(d=>d.servico&&!d.operacao&&d.vagas>0);
   const e=dsEscFt,fmt=dsDataFt;
-  h.innerHTML=`<div class="page-actions ep-acoes"><button data-sem="-7" class="btn-page">SEMANA ANTERIOR</button><button data-sem="7" class="btn-page">PRÓXIMA SEMANA</button>${r.gestor?'<label>Pelotão <select id="epGrupoFt"><option>1º PEL</option><option>2º PEL</option><option>ADM</option></select></label>':''}</div>
+  h.innerHTML=`<div class="page-actions ep-acoes"><button data-sem="-7" class="btn-page">SEMANA ANTERIOR</button><button data-sem="7" class="btn-page">PRÓXIMA SEMANA</button>${r.gestor&&!adm?'<label>Pelotão <select id="epGrupoFt"><option>1º PEL</option><option>2º PEL</option></select></label>':''}</div>
   <h2>${e(r.pel)} · ${e(fmt(r.semana))} a ${e(fmt(r.fim))}</h2><p>Pedidos até ${e(fmt(r.limite.slice(0,10)))} às 10h (Brasília).</p>
   <div class="ep-dias">${r.dias.map(d=>`<div><strong>${e(fmt(d.data))}</strong><br>${d.operacao?'Operação — sem folgas':d.servico?e(d.confirmadas)+' de '+e(d.vagas)+' vaga(s) confirmada(s)':adm?'Data fechada':'Sem serviço'}${r.gerencia?'<br><button type="button" class="btn-page" data-config="'+e(d.data)+'">AJUSTAR</button>':''}</div>`).join('')}</div>
   ${r.proprio===r.pel?'<div id="epSaldoFt"></div>':''}
-  <div id="epConfigFt"></div><h2>${r.gerencia?'Pedidos do pelotão':'Meus pedidos'}</h2>
+  <div id="epConfigFt"></div><h2>${r.gerencia?(adm?'Pedidos de FC da ADM':'Pedidos do pelotão'):'Meus pedidos'}</h2>
   <div class="ds-lista-ft">${r.pedidos.length?r.pedidos.map(p=>`<div class="modal-card"><strong>${e(p.nome)}</strong> · ${e(fmt(p.data))} · ${epTiposFt[p.tipo]} · ${e(p.estado)}${p.motivo?' · '+e(p.motivo):''}
   ${['PENDENTE','APROVADA'].includes(p.estado)&&p.foraEscala?'<p>Data fora da escala atual do pelotão. O pedido precisa ser revisto.</p>':''}
-  ${p.estado==='PENDENTE'&&r.gerencia&&!p.meu?`<div class="ep-acoes">${p.foraEscala?'':`<button data-id="${e(p.id)}" data-decisao="APROVADA" class="btn-page">APROVAR</button>`}<button data-id="${e(p.id)}" data-decisao="RECUSADA" class="btn-page">RECUSAR</button></div>`:((p.estado==='PENDENTE'&&p.meu&&r.aberto)||(p.estado==='APROVADA'&&r.gerencia&&!p.meu))?`<button data-id="${e(p.id)}" data-decisao="CANCELADA" class="btn-page">CANCELAR</button>`:''}</div>`).join(''):'<p>Nenhum pedido nesta semana.</p>'}</div>`;
+  ${p.estado==='PENDENTE'&&r.gerencia&&!p.meu?`<div class="ep-acoes">${p.foraEscala?'':`<button data-id="${e(p.id)}" data-decisao="APROVADA" class="btn-page">APROVAR</button>`}<button data-id="${e(p.id)}" data-decisao="RECUSADA" class="btn-page">RECUSAR</button></div>`:((p.estado==='PENDENTE'&&p.meu&&r.aberto)||(p.estado==='APROVADA'&&r.gerencia&&!p.meu))?`<button data-id="${e(p.id)}" data-decisao="CANCELADA" class="btn-page">CANCELAR</button>`:''}</div>`).join(''):'<p>Nenhum pedido nesta semana.</p>'}</div>
+  ${!adm&&!r.gerencia?`<h2>Folgas solicitadas pelos colegas</h2><div class="ds-lista-ft">${(r.pedidosColegas||[]).map(p=>`<div class="modal-card"><strong>${e(p.nome)}</strong> · ${e(fmt(p.data))} · ${e(p.estado)}</div>`).join('')||'<p>Nenhum pedido de colega nesta semana.</p>'}</div>`:''}`;
   const recarregar=()=>{
    if(APP.dadosEscalasFolgas)APP.dadosEscalasFolgas.carregadoFolgas=false;
-   epAbrirFt(r.pel,r.semana,voltar);
+   epRenderAgendaFt(h,r.pel,r.semana,adm);
   };
-  h.querySelectorAll('[data-sem]').forEach(b=>b.onclick=()=>epAbrirFt(r.pel,epAvancaFt(r.semana,Number(b.dataset.sem)),voltar));
-  const g=h.querySelector('#epGrupoFt');if(g){g.value=r.pel;g.onchange=()=>epAbrirFt(g.value,r.semana,voltar);}
+  h.querySelectorAll('[data-sem]').forEach(b=>b.onclick=()=>epRenderAgendaFt(h,r.pel,epAvancaFt(r.semana,Number(b.dataset.sem)),adm));
+  const g=h.querySelector('#epGrupoFt');if(g){g.value=r.pel;g.onchange=()=>epRenderAgendaFt(h,g.value,r.semana,adm);}
   const saldoBox=h.querySelector('#epSaldoFt');
   if(saldoBox){
    const renderSaldo=saldo=>{
     const tipos=adm?['FC']:['FM','FF','FC'];
-    saldoBox.innerHTML=`<p>Disponíveis para solicitar: <strong>${tipos.map(t=>e(Number(saldo[t]||0))+' '+t).join(' · ')}</strong></p>
+    saldoBox.innerHTML=`${adm?'<p>Saldo total de FC: <strong>'+e(Number(saldo.FCTotal||0))+'</strong> dia(s). A baixa ocorre na aprovação.</p>':''}<p>Disponíveis para solicitar: <strong>${tipos.map(t=>e(Number(saldo[t]||0))+' '+t).join(' · ')}</strong></p>
     ${tipos.filter(t=>!saldo[t]).map(t=>'<p>Não possui '+epTiposFt[t]+' para fruição.</p>').join('')}
     ${!r.aberto?'<p>Prazo de pedidos encerrado para esta semana.</p>':dias.length&&tipos.some(t=>saldo[t]>0)?`<form id="epPedirFt" class="ep-acoes"><label>Data <select name="data" required><option value="">Selecione</option>${dias.map(d=>'<option value="'+e(d.data)+'">'+e(fmt(d.data))+'</option>').join('')}</select></label><label>Tipo <select name="tipo" required>${tipos.filter(t=>saldo[t]>0).map(t=>'<option value="'+t+'">'+epTiposFt[t]+'</option>').join('')}</select></label><button class="btn-page btn-primary-soft">SOLICITAR FOLGA</button></form>`:''}`;
     const f=h.querySelector('#epPedirFt');if(f)f.onsubmit=ev=>{ev.preventDefault();dsOperacaoFt(f.querySelector('button'),async atual=>{
-     await ocFtApi('espaco_pel_pedir',{pel:r.pel,...Object.fromEntries(new FormData(f))});if(atual()){mostrarToastFt('Pedido enviado',adm?'Aguarde a análise do Enc Adm ou do Gestor.':'Aguarde a análise do Sgt do Pel.','sucesso');recarregar();}
+     await chamada('pedir',{pel:r.pel,...Object.fromEntries(new FormData(f))});if(atual()){mostrarToastFt('Pedido enviado',adm?'Aguarde a análise do Enc Adm ou do Gestor.':'Aguarde a análise do Sgt do Pel.','sucesso');recarregar();}
     });};
    };
    const consultarSaldo=async()=>{
     saldoBox.innerHTML='<p role="status">Conferindo saldo de folgas…</p>';
     try{
-     const saldo=await ocFtApi('espaco_pel_saldo',{pel:r.pel,data:r.semana});
+     const saldo=await chamada('saldo',{pel:r.pel,data:r.semana});
      if(saldoBox.isConnected)renderSaldo(saldo);
     }catch(err){
      if(!saldoBox.isConnected)return;
@@ -8149,7 +8156,9 @@ async function epAbrirFt(pel=epGrupoClienteFt()||(epGestorClienteFt()?'1º PEL':
    const p=r.pedidos.find(x=>x.id===b.dataset.id),decisao=b.dataset.decisao;
    const motivo=(decisao==='RECUSADA'||p.estado==='APROVADA'&&decisao==='CANCELADA')?await pedirMotivoToastFt(b.textContent,'Informe o motivo.'):'';if(motivo===null||!atual())return;
    if(!await confirmarToastFt(b.textContent,'Confirma a ação para '+p.nome+' em '+fmt(p.data)+'?')||!atual())return;
-   await ocFtApi('espaco_pel_decidir',{pel:r.pel,data:p.data,id:p.id,decisao,motivo});if(atual())recarregar();
+   const retorno=await chamada('decidir',{pel:r.pel,data:p.data,id:p.id,decisao,motivo});
+   if(atual()){if(retorno.baixaAutomatica)mostrarToastFt('FC aprovada','Um dia foi descontado automaticamente do saldo de FC.','sucesso');recarregar();}
+
   }));
   h.querySelectorAll('[data-config]').forEach(b=>b.onclick=()=>{
    const d=r.dias.find(x=>x.data===b.dataset.config),box=h.querySelector('#epConfigFt');
@@ -8158,10 +8167,10 @@ async function epAbrirFt(pel=epGrupoClienteFt()||(epGestorClienteFt()?'1º PEL':
     const op=form.elements.operacao.checked,servico=form.elements.servico.checked;
     if((op||!servico)&&!await confirmarToastFt('ALTERAR DIA','Os pedidos pendentes e aprovados deste dia serão cancelados. Saldos não serão baixados por esta ação.'))return;
     if(!atual())return;
-    await ocFtApi('espaco_pel_configurar',{pel:r.pel,data:d.data,operacao:String(op),servico:String(servico),vagas:form.elements.vagas.value,confirmar:'SIM'});if(atual())recarregar();
+    await chamada('configurar',{pel:r.pel,data:d.data,operacao:String(op),servico:String(servico),vagas:form.elements.vagas.value,confirmar:'SIM'});if(atual())recarregar();
    });};
   });
- }catch(err){if(h.isConnected)h.textContent=err.message;}
+ }catch(err){if(h.isConnected&&h.dataset.epReq===req)h.textContent=err.message;}
 }
 function epChaveReFt(v){return String(v||'').replace(/\D/g,'').slice(0,6);}
 async function epBuscarResenhaFt(pel,data){
@@ -8242,7 +8251,8 @@ function epMesclarResenhaFt(payload,auto){
         });
         menus.splice(indicePainel >= 0 ? indicePainel + 1 : menus.length, 0, cardRotinas);
       }
-      if(epGrupoClienteFt()||epGestorClienteFt())menus.push({id:'ESPACO_PEL',titulo:epGrupoClienteFt()==='ADM'&&!epGestorClienteFt()?'FOLGAS COMPENSATÓRIAS · ADM':'ESPAÇO DO PEL',descricao:'Solicite folgas e acompanhe o calendário da sua lotação.'});
+      if(['1º PEL','2º PEL'].includes(epGrupoClienteFt())||epGestorClienteFt())menus.push({id:'ESPACO_PEL',titulo:'ESPAÇO DO PEL',descricao:'Solicite folgas e acompanhe os pedidos do pelotão.'});
+      if(fcPodeAbrirAdmClienteFt()&&!menus.some(m=>ehModuloEscalasAdm(m.id)))menus.push({id:'ESCALAS_ADM',titulo:'ESCALAS ADM',descricao:'Acesse a agenda de folga compensatória da ADM.'});
       if(!menus.some(m=>m.id==='AVISOS_CIA_FT'))menus.push({id:'AVISOS_CIA_FT',titulo:'AVISOS CIA FT',descricao:'Comunicados da Companhia e ciência de leitura.'});
       if(entPodeGerir())menus.push({id:"ENTREVISTAS_FT",titulo:"CANDIDATURAS À CIA FT",icone:"📋",descricao:"Consulta de fichas, impressão e agendamento de entrevistas."});
       return menus;
@@ -8328,7 +8338,7 @@ function epMesclarResenhaFt(payload,auto){
       }
 
       if (ehModuloEscalasAdm(id)) {
-        if (!usuarioTemPermissaoCliente('ESCALAS_ADM', 'visualizar')) {
+        if (!usuarioTemPermissaoCliente('ESCALAS_ADM', 'visualizar')&&!fcPodeAbrirAdmClienteFt()) {
           abrirAcessoNegado('Escalas ADM');
           return;
         }
@@ -12174,7 +12184,7 @@ function epMesclarResenhaFt(payload,auto){
         <div class="ef-section-head"><div><h2>Folgas Pendentes</h2><p>Consulte os dias trabalhados e os saldos de folgas.</p></div><div class="page-actions">
         ${fcPodeGerirClienteFt()?'<button type="button" class="btn-page" id="fcGerirFt">GERIR FOLGAS COMPENSATÓRIAS</button>':''}
         <button type="button" onclick="renderizarMenuEscalasFolgas()">VOLTAR ÀS OPÇÕES</button></div></div>
-        <div class="ef-scope-note">Escopo de visualização aplicado: <strong>${escapar(escopo)}</strong>. A coluna de FC mostra o saldo livre para novos pedidos.</div>
+        <div class="ef-scope-note">Escopo de visualização aplicado: <strong>${escapar(escopo)}</strong>. Na ADM, a coluna de FC mostra o saldo após as aprovações. Nos pelotões, mostra o saldo livre para novos pedidos.</div>
         <div id="fcGestaoCorpoFt" hidden></div>
         <div class="ef-table-wrap"><table class="ef-table"><colgroup><col class="ef-col-pm"><col class="ef-col-saldo"><col class="ef-col-saldo"><col class="ef-col-saldo"><col class="ef-col-saldo"></colgroup><thead><tr><th>GRAD • RE • NOME GUERRA</th><th>DIAS TRABALHADOS</th><th>FOLGA MENSAL</th><th>FOLGA FLAGRANTE</th><th>FOLGA COMPENSATÓRIA</th></tr></thead><tbody>${corpo || '<tr><td colspan="5">Nenhum policial disponível para o escopo deste usuário.</td></tr>'}</tbody></table></div>`;
       const acao=box.querySelector('#fcGerirFt'),gestao=box.querySelector('#fcGestaoCorpoFt');
@@ -13921,6 +13931,10 @@ function epMesclarResenhaFt(payload,auto){
      * ESCALAS ADM — V1.2.5
      * ============================================================ */
 
+    function fcPodeAbrirAdmClienteFt(){
+      return epGrupoClienteFt()==='ADM'||fcPodeGerirClienteFt();
+    }
+
     function abrirEscalasAdm() {
       window.scrollTo(0, 0);
 
@@ -13939,16 +13953,34 @@ function epMesclarResenhaFt(payload,auto){
             </div>
           </div>
 
+          ${fcPodeAbrirAdmClienteFt()?`<section class="adm-card" style="margin-bottom:14px">
+            <div class="adm-card-header"><h2>Folga Compensatória · ADM</h2><p>Solicite FC nas datas abertas. O saldo é baixado na aprovação pelo Enc Adm ou Gestor.</p></div>
+            <div class="adm-card-body"><button type="button" class="btn-page" id="fcAdmAbrir" aria-expanded="false" aria-controls="fcAdmAgenda">ABRIR AGENDA DE FC</button>
+            <div id="fcAdmAgenda" hidden></div></div>
+          </section>`:''}
           <div id="escalasAdmConteudo">
             <div class="resenha-loading">Carregando semana de referência, tipos de escala e escalas já enviadas...</div>
           </div>
         </div>
       `;
 
+      const botaoFC=document.getElementById('fcAdmAbrir');
+      if(botaoFC)botaoFC.onclick=()=>{
+        const agenda=document.getElementById('fcAdmAgenda');
+        agenda.hidden=!agenda.hidden;
+        botaoFC.setAttribute('aria-expanded',String(!agenda.hidden));
+        if(!agenda.hidden)epRenderAgendaFt(agenda,'ADM','',true);
+      };
+      const conteudo=document.getElementById('escalasAdmConteudo');
+      if(!usuarioTemPermissaoCliente('ESCALAS_ADM','visualizar')){
+        conteudo.textContent='';
+        return;
+      }
       carregarDadosEscalasAdm()
-        .then(renderizarEscalasAdm)
+        .then(()=>{if(conteudo.isConnected)renderizarEscalasAdm();})
         .catch(function(err) {
-          document.getElementById('escalasAdmConteudo').innerHTML = `
+          if(!conteudo.isConnected)return;
+          conteudo.innerHTML = `
             <div class="adm-card">
               <div class="adm-card-header">
                 <h2>Não foi possível carregar Escalas ADM</h2>
@@ -17090,7 +17122,7 @@ function epMesclarResenhaFt(payload,auto){
 
     function acaoApiSomenteLeitura(action) {
       const acao = normalizarTexto(action || '').replace(/[^A-Z0-9]/g, '');
-      return acao === 'LOGIN' || acao === 'PING' || ['ESPACOPELDADOS','ESPACOPELSALDO','ESPACOPELRESENHA','FOLGACOMPGESTAO'].includes(acao) || acao.indexOf('DADOS') === 0 || acao.indexOf('CONSULT') === 0 || acao.indexOf('HISTORICO') === 0 || acao.indexOf('BAIXAR') === 0 || acao.indexOf('GERARPDF') === 0;
+      return acao === 'LOGIN' || acao === 'PING' || ['ESPACOPELDADOS','ESPACOPELSALDO','ESPACOPELRESENHA','FOLGACOMPGESTAO','FCADMDADOS'].includes(acao) || acao.indexOf('DADOS') === 0 || acao.indexOf('CONSULT') === 0 || acao.indexOf('HISTORICO') === 0 || acao.indexOf('BAIXAR') === 0 || acao.indexOf('GERARPDF') === 0;
     }
 
 
