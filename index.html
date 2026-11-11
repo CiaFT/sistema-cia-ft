@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.4.1 — OCORRÊNCIAS E FOLGAS FLAGRANTES
+SISTEMA CIA FT — PORTAL GITHUB V1.4.2 — OCORRÊNCIAS E FOLGAS FLAGRANTES
 Arquivo: index.html
 ============================================================
 
-VERSÃO V1.4.1 — DESEMPENHO E PADRÃO VISUAL
+VERSÃO V1.4.2 — DESEMPENHO E PADRÃO VISUAL
 - Ranking com filtros anual, semestral, mensal e por pelotão.
 - Destaque discreto dos três primeiros colocados.
 - Consulta de FF aguardando decisão e aprovação/recusa exclusiva do Cmt Cia.
 - Histórico individual preserva datas de FF já gozadas, inclusive importadas.
 - Área de importação removida do formulário após a carga inicial.
-- Versão fixada em V1.4.1: alterar somente por determinação expressa do responsável.
+- Versão fixada em V1.4.2: alterar somente por determinação expressa do responsável.
 - Preserva a última versão encerrada do Controle de Frequência.
 - Preserva a implantação completa de Viaturas V1.2.6.
 - Corrige a leitura e a identificação funcional em Resenhas Enviadas.
@@ -52,7 +52,7 @@ Banco de dados: Google Sheets.
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="cia-ft-build" content="FT-V138-20261006-GRAVACAO-CONFIAVEL-R7">
-  <title>Portal Força Tática • V1.4.1</title>
+  <title>Portal Força Tática • V1.4.2</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
 
@@ -7019,7 +7019,14 @@ Banco de dados: Google Sheets.
 #dsCorpoFt [data-estado="AUTORIZADO"]{background:#e3f2e7}
 #dsCorpoFt li{margin-block:8px}
 @media(max-width:540px){#dsCorpoFt .ds-grid-ft{grid-template-columns:1fr}}
-</style></head>
+</style><style>
+.ep-dias{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:8px;margin:14px 0}
+.ep-dias>div{padding:10px;border:1px solid #cbd5e1;border-radius:8px}
+.ep-acoes{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}
+#dsCorpoFt .ep-acoes label{display:flex;gap:6px;align-items:center}
+#dsCorpoFt .ep-acoes input,#dsCorpoFt .ep-acoes select{width:auto;margin:0}
+</style>
+</head>
 
 <body>
 
@@ -7050,7 +7057,7 @@ Banco de dados: Google Sheets.
         <div id="loginAlerta" class="alerta"></div>
 
         <div class="footer">
-          Portal Força Tática • V1.4.1
+          Portal Força Tática • V1.4.2
         </div>
       </main>
 
@@ -8027,6 +8034,98 @@ async function dsDetalharFt(id){
       finally{botao.disabled=false;}
     }
 
+const epTiposFt={FM:'Folga Mensal',FF:'Folga Flagrante',DS:'Dispensa Serviço'};
+function epGrupoClienteFt(){const v=normalizarTexto(APP.usuario?.pelotao||'');return /1|PRIMEIRO/.test(v)?'1º PEL':/2|SEGUNDO/.test(v)?'2º PEL':'';}
+function epGestorClienteFt(){return ['GESTOR','GESTOR_FT','GESTOR_TEC_FT','GESTOR_TECNICO_FT'].includes(normalizarTexto(APP.usuario?.perfilAcesso||'').replace(/[\s-]+/g,'_'));}
+function epAvancaFt(d,n){return new Date(Date.parse(d+'T00:00:00Z')+86400000*n).toISOString().slice(0,10);}
+async function epAbrirFt(pel=epGrupoClienteFt()||(epGestorClienteFt()?'1º PEL':''),data=''){
+ const h=dsPaginaFt('Espaço do Pel','Solicitações de folga e calendário do pelotão.','abrirHome()');
+ h.textContent='Carregando…';
+ try{
+  const r=await ocFtApi('espaco_pel_dados',{pel,data});if(!h.isConnected)return;
+  const dias=r.dias.filter(d=>d.servico&&!d.operacao&&d.vagas>0);
+  const e=dsEscFt,fmt=dsDataFt;
+  h.innerHTML=`<div class="page-actions ep-acoes"><button data-sem="-7" class="btn-page">SEMANA ANTERIOR</button><button data-sem="7" class="btn-page">PRÓXIMA SEMANA</button>${r.gestor?'<label>Pelotão <select id="epGrupoFt"><option>1º PEL</option><option>2º PEL</option></select></label>':''}</div>
+  <h2>${e(r.pel)} · ${e(fmt(r.semana))} a ${e(fmt(r.fim))}</h2><p>Pedidos até ${e(fmt(r.limite.slice(0,10)))} às 10h (Brasília).</p>
+  <div class="ep-dias">${r.dias.map(d=>`<div><strong>${e(fmt(d.data))}</strong><br>${d.operacao?'Operação — sem folgas':d.servico?e(d.confirmadas)+' de '+e(d.vagas)+' vaga(s) confirmada(s)':'Sem serviço'}${r.gerencia?'<br><button type="button" class="btn-page" data-config="'+e(d.data)+'">AJUSTAR</button>':''}</div>`).join('')}</div>
+  ${r.proprio===r.pel?`<p>Disponíveis para solicitar: <strong>${e(r.saldo.FM)} FM · ${e(r.saldo.FF)} FF</strong></p>${!r.saldo.FM?'<p>Não possui Folga Mensal para fruição.</p>':''}${!r.saldo.FF?'<p>Não possui Folga Flagrante para fruição.</p>':''}` : ''}
+  ${r.proprio===r.pel&&r.aberto&&dias.length&&(r.saldo.FM||r.saldo.FF)?`<form id="epPedirFt" class="ep-acoes"><label>Data <select name="data" required><option value="">Selecione</option>${dias.map(d=>'<option value="'+e(d.data)+'">'+e(fmt(d.data))+'</option>').join('')}</select></label><label>Tipo <select name="tipo" required>${['FM','FF'].filter(t=>r.saldo[t]>0).map(t=>'<option value="'+t+'">'+epTiposFt[t]+'</option>').join('')}</select></label><button class="btn-page btn-primary-soft">SOLICITAR FOLGA</button></form>`:r.proprio===r.pel&&!r.aberto?'<p>Prazo de pedidos encerrado para esta semana.</p>':''}
+  <div id="epConfigFt"></div><h2>${r.gerencia?'Pedidos do pelotão':'Meus pedidos'}</h2>
+  <div class="ds-lista-ft">${r.pedidos.length?r.pedidos.map(p=>`<div class="modal-card"><strong>${e(p.nome)}</strong> · ${e(fmt(p.data))} · ${epTiposFt[p.tipo]} · ${e(p.estado)}${p.motivo?' · '+e(p.motivo):''}
+  ${p.estado==='PENDENTE'&&r.gerencia&&!p.meu?`<div class="ep-acoes"><button data-id="${e(p.id)}" data-decisao="APROVADA" class="btn-page">APROVAR</button><button data-id="${e(p.id)}" data-decisao="RECUSADA" class="btn-page">RECUSAR</button></div>`:((p.estado==='PENDENTE'&&p.meu&&r.aberto)||(p.estado==='APROVADA'&&r.gerencia&&!p.meu))?`<button data-id="${e(p.id)}" data-decisao="CANCELADA" class="btn-page">CANCELAR</button>`:''}</div>`).join(''):'<p>Nenhum pedido nesta semana.</p>'}</div>`;
+  const recarregar=()=>epAbrirFt(r.pel,r.semana);
+  h.querySelectorAll('[data-sem]').forEach(b=>b.onclick=()=>epAbrirFt(r.pel,epAvancaFt(r.semana,Number(b.dataset.sem))));
+  const g=h.querySelector('#epGrupoFt');if(g){g.value=r.pel;g.onchange=()=>epAbrirFt(g.value,r.semana);}
+  const f=h.querySelector('#epPedirFt');if(f)f.onsubmit=ev=>{ev.preventDefault();dsOperacaoFt(f.querySelector('button'),async atual=>{
+   await ocFtApi('espaco_pel_pedir',{pel:r.pel,...Object.fromEntries(new FormData(f))});if(atual()){mostrarToastFt('Pedido enviado','Aguarde a análise do Sgt do Pel.','sucesso');recarregar();}
+  });};
+  h.querySelectorAll('[data-decisao]').forEach(b=>b.onclick=()=>dsOperacaoFt(b,async atual=>{
+   const p=r.pedidos.find(x=>x.id===b.dataset.id),decisao=b.dataset.decisao;
+   const motivo=(decisao==='RECUSADA'||p.estado==='APROVADA'&&decisao==='CANCELADA')?await pedirMotivoToastFt(b.textContent,'Informe o motivo.'):'';if(motivo===null||!atual())return;
+   if(!await confirmarToastFt(b.textContent,'Confirma a ação para '+p.nome+' em '+fmt(p.data)+'?')||!atual())return;
+   await ocFtApi('espaco_pel_decidir',{pel:r.pel,data:p.data,id:p.id,decisao,motivo});if(atual())recarregar();
+  }));
+  h.querySelectorAll('[data-config]').forEach(b=>b.onclick=()=>{
+   const d=r.dias.find(x=>x.data===b.dataset.config),box=h.querySelector('#epConfigFt');
+   box.innerHTML='<form class="ep-acoes"><strong>Ajuste · '+e(fmt(d.data))+'</strong><label><input type="checkbox" name="servico" '+(d.servico?'checked':'')+'> Serviço</label><label><input type="checkbox" name="operacao" '+(d.operacao?'checked':'')+'> Operação (zero vagas)</label><label>Vagas <input type="number" name="vagas" min="0" max="50" required value="'+e(d.vagas)+'"></label><button class="btn-page">SALVAR DIA</button></form>';
+   const form=box.querySelector('form');form.onsubmit=ev=>{ev.preventDefault();dsOperacaoFt(form.querySelector('button'),async atual=>{
+    const op=form.elements.operacao.checked,servico=form.elements.servico.checked;
+    if((op||!servico)&&!await confirmarToastFt('ALTERAR DIA','Os pedidos pendentes e aprovados deste dia serão cancelados. Saldos não serão baixados por esta ação.'))return;
+    if(!atual())return;
+    await ocFtApi('espaco_pel_configurar',{pel:r.pel,data:d.data,operacao:String(op),servico:String(servico),vagas:form.elements.vagas.value,confirmar:'SIM'});if(atual())recarregar();
+   });};
+  });
+ }catch(err){if(h.isConnected)h.textContent=err.message;}
+}
+function epChaveReFt(v){return String(v||'').replace(/\D/g,'').slice(0,6);}
+async function epBuscarResenhaFt(pel,data){
+ const [folgas,ds]=await Promise.allSettled([ocFtApi('espaco_pel_resenha',{pel,data}),rpcPlanoFerias('ft_ds_resenha_v142',{p_pel:pel,p_data:data})]);
+ if(folgas.status!=='fulfilled')throw folgas.reason;
+ return {itens:[...(ds.status==='fulfilled'?ds.value:[]),...(folgas.value.itens||[])],semDS:ds.status!=='fulfilled'};
+}
+async function epPreviaResenhaFt(){
+ const alvo=document.getElementById('epPreviaResenha'),pel=document.getElementById('resenhaPelotao')?.value,data=document.getElementById('resenhaDataEscala')?.value;
+ if(!alvo)return;
+ const req=String((Number(alvo.dataset.req)||0)+1);alvo.dataset.req=req;
+ if(!pel||!data){alvo.textContent='Escolha o pelotão e a data para ver as folgas e dispensas automáticas.';return;}
+ alvo.textContent='Consultando folgas e dispensas…';
+ try{
+  const r=await epBuscarResenhaFt(pel,data);if(!alvo.isConnected||alvo.dataset.req!==req)return;
+  alvo.innerHTML=(r.semDS?'<p>DS automática indisponível. Confira e lance manualmente, se necessário.</p>':'')+
+   (r.itens.length?'<ul>'+r.itens.map(x=>'<li>'+dsEscFt(x.nome)+' · '+dsEscFt(epTiposFt[x.tipo])+'</li>').join('')+'</ul>':'<p>Nenhuma ausência automática encontrada.</p>');
+ }catch(err){if(alvo.isConnected&&alvo.dataset.req===req)alvo.textContent=err.message;}
+}
+function epMesclarResenhaFt(payload,auto){
+ const itens=payload.itens,grupos=new Map();
+ for(const i of itens){
+  if(i.tipo!=='FOLGA_DISPENSA')continue;
+  const k=String(i.grupo),g=grupos.get(k)||{};
+  g[normalizarTexto(i.campo)]=i;grupos.set(k,g);
+ }
+ const existe=new Map();
+ for(const g of grupos.values()){
+  const re=epChaveReFt(g.POLICIAL?.valorTecnico);
+  if(re&&g.TIPO)existe.set(re,normalizarTexto(g.TIPO.valor));
+ }
+ let n=Math.max(0,...Array.from(grupos.keys()).map(Number).filter(Number.isFinite));
+ for(const a of auto){
+  const re=epChaveReFt(a.re),tipo=epTiposFt[a.tipo];
+  if(!re||!tipo)continue;
+  const escalado=itens.some(i=>['FT','ROCAM'].includes(i.tipo)&&epChaveReFt(i.valorTecnico)===re);
+  if(escalado)throw Error(a.nome+' consta em equipe e também tem '+tipo+' na data.');
+  if(existe.has(re)){
+   if(existe.get(re)!==normalizarTexto(tipo))throw Error(a.nome+' tem uma ausência de outro tipo lançada. Confira as folgas e dispensas.');
+   continue;
+  }
+  n++;
+  const linha=(campo,valor,valorTecnico=valor)=>itens.push({tipo:'FOLGA_DISPENSA',grupo:String(n),campo,valor,valorTecnico,origemPelAuto:true});
+  linha('Policial',a.nome,a.re);linha('Tipo',tipo);
+  if(a.tipo==='FF'){linha('Data de referência',a.referencia);linha('BOPM',a.bopm);}
+  existe.set(re,normalizarTexto(tipo));
+ }
+ return payload;
+}
+
     function montarMenusHome() {
       /*
        * V1.2.4 — Regra crítica:
@@ -8056,6 +8155,7 @@ async function dsDetalharFt(id){
         });
         menus.splice(indicePainel >= 0 ? indicePainel + 1 : menus.length, 0, cardRotinas);
       }
+      if(epGrupoClienteFt()||epGestorClienteFt())menus.push({id:'ESPACO_PEL',titulo:'ESPAÇO DO PEL',icone:'📅',descricao:'Solicite folgas e acompanhe o calendário do pelotão.'});
       if(!menus.some(m=>m.id==='AVISOS_CIA_FT'))menus.push({id:'AVISOS_CIA_FT',titulo:'AVISOS CIA FT',descricao:'Comunicados da Companhia e ciência de leitura.'});
       if(entPodeGerir())menus.push({id:"ENTREVISTAS_FT",titulo:"CANDIDATURAS À CIA FT",icone:"📋",descricao:"Consulta de fichas, impressão e agendamento de entrevistas."});
       return menus;
@@ -8108,6 +8208,7 @@ async function dsDetalharFt(id){
 
     function abrirModulo(id) {
       if(id==="FORMULARIOS_PMESP"){dsFormulariosFt();return;}
+      if(id==="ESPACO_PEL"){epAbrirFt();return;}
       if(id==="DISPENSA_PMP118"){dsPedidoFt();return;}
       if(id==='AVISOS_CIA_FT'){abrirAvisosCiaFt();return;}
       if(id==='ENTREVISTAS_FT'){abrirEntrevistasFT();return;}
@@ -12620,12 +12721,14 @@ async function dsDetalharFt(id){
                   <div class="resenha-divider-title">Folgas e Dispensas</div>
                 </div>
 
+                <div class="resenha-alerta"><strong>Folgas e dispensas automáticas</strong><div id="epPreviaResenha" aria-live="polite"></div></div>
                 <div id="folgasDispensasWrap" class="resenha-equipes-wrap">
                   ${registroFolgaDispensaBox(1)}
                 </div>
 
                 <div class="resenha-actions">
                   <button type="button" class="resenha-action-btn" onclick="adicionarFolgaDispensa()">ADICIONAR FOLGA/DISPENSA</button>
+                  ${epCorrecaoResenhaFt() ? '<button type="button" class="resenha-action-btn" onclick="epAdicionarUrgenciaFt()">LANÇAR FOLGA URGENTE</button>' : ''}
                   <button type="button" class="resenha-action-btn" onclick="removerFolgaDispensa()">REMOVER FOLGA/DISPENSA</button>
                 </div>
 
@@ -12666,6 +12769,8 @@ async function dsDetalharFt(id){
       `;
 
       preencherPadroesResenha(u);
+      for(const id of ['resenhaPelotao','resenhaDataEscala'])document.getElementById(id)?.addEventListener('change',epPreviaResenhaFt);
+      void epPreviaResenhaFt();
       instalarEventosResenha();
       atualizarDisponibilidadeResenha();
     }
@@ -12767,6 +12872,21 @@ async function dsDetalharFt(id){
     }
 
 
+    function epCorrecaoResenhaFt(){
+      return normalizarTexto(APP.resenhaEdicao?.cabecalho?.status||'').replace(/_/g,' ')==='CORRECAO SOLICITADA';
+    }
+    function epAdicionarUrgenciaFt(){
+      if(!epCorrecaoResenhaFt())return;
+      adicionarFolgaDispensa();
+      const box=document.querySelector('#folgasDispensasWrap [data-tipo="FOLGA_DISPENSA"]:last-child');
+      if(!box)return;
+      const tipo=box.querySelector('select[name$="_tipo"]');
+      Array.from(tipo.options).forEach(o=>{if(o.value&&!/FOLGA (MENSAL|FLAGRANTE)/.test(normalizarTexto(o.value)))o.remove();});
+      const campo=box.querySelector('.ep-urgencia-resenha');
+      if(campo){campo.hidden=false;box.dataset.urgencia='1';}
+      box.scrollIntoView({block:'nearest'});
+      box.querySelector('select[name$="_pm"]').focus();
+    }
     function registroFolgaDispensaBox(numero) {
       return `
         <div class="resenha-equipe-box" data-tipo="FOLGA_DISPENSA" data-numero="${numero}">
@@ -12792,6 +12912,10 @@ async function dsDetalharFt(id){
               <label>BOPM</label>
               <input type="text" name="folga${numero}_bopm" placeholder="BOPM">
             </div>
+            ${(epCorrecaoResenhaFt()||APP.resenhaEdicao?.payload?.urgenciasPel?.length)?`<div class="resenha-mini-field full ep-urgencia-resenha" hidden>
+              <label>Motivo da urgência</label>
+              <textarea name="folga${numero}_urgencia" maxlength="160" placeholder="O saldo será conferido no reenvio."></textarea>
+            </div>`:''}
             <div class="resenha-mini-field full">
               <label>Observação</label>
               <textarea name="folga${numero}_obs" placeholder="Observação, se necessária"></textarea>
@@ -12926,6 +13050,8 @@ async function dsDetalharFt(id){
 
       const exigeData = tipo.includes('ORGANICA') || tipo.includes('COMPENSATORIA') || tipo.includes('FLAGRANTE');
       const exigeBopm = tipo.includes('FLAGRANTE');
+      const urgencia=box.querySelector('.ep-urgencia-resenha'),motivo=urgencia?.querySelector('textarea');
+      if(urgencia)urgencia.hidden=!(box.dataset.urgencia==='1'||motivo.value||epCorrecaoResenhaFt()&&/FOLGA (MENSAL|FLAGRANTE)/.test(tipo));
 
       if (dataBox) {
         dataBox.classList.toggle('campo-oculto', !exigeData);
@@ -12938,13 +13064,13 @@ async function dsDetalharFt(id){
       }
 
       if (data) {
-        data.required = exigeData;
+        data.required = exigeData&&!exigeBopm;
         if (!exigeData) data.value = '';
       }
 
       if (bopm) {
-        bopm.required = exigeBopm;
-        bopm.placeholder = exigeBopm ? 'BOPM obrigatório' : 'BOPM';
+        bopm.required = false;
+        bopm.placeholder = exigeBopm ? 'Conferido pelo sistema no envio' : 'BOPM';
         if (!exigeBopm) bopm.value = '';
       }
     }
@@ -13073,7 +13199,7 @@ async function dsDetalharFt(id){
         FOLGA_DISPENSA: ['folgasDispensasWrap', registroFolgaDispensaBox, 40],
         AFASTAMENTO: ['afastamentosWrap', registroAfastamentoBox, 40]
       };
-      const itens = Array.isArray(payload.itens) ? payload.itens : [];
+      const itens = Array.isArray(payload.itens) ? payload.itens.filter(x=>!x.origemPelAuto) : [];
       Object.keys(tipoWraps).forEach(function(tipo) {
         const relacionados = itens.filter(function(item) { return normalizarTexto(item.tipo || '') === tipo; });
         const maiorGrupo = relacionados.reduce(function(maior, item) { return Math.max(maior, Number(item.grupo || 1)); }, 1);
@@ -13113,11 +13239,13 @@ async function dsDetalharFt(id){
           controle.appendChild(opcao);
         }
         controle.value = valorTecnico;
+        if(controle.name?.endsWith('_urgencia'))box.querySelector('.ep-urgencia-resenha').hidden=false;
       });
       instalarEventosResenha();
       atualizarDisponibilidadeResenha();
       const botao = document.querySelector('.resenha-submit');
       if (botao) botao.textContent = 'SALVAR ALTERAÇÕES E REENVIAR';
+      void epPreviaResenhaFt();
     }
 
 
@@ -13191,13 +13319,22 @@ async function dsDetalharFt(id){
         btn.textContent = edicaoAtual ? 'SALVANDO ALTERAÇÕES...' : 'ENVIANDO...';
       }
 
-      chamarApi(edicaoAtual ? 'editar_resenha_escala' : 'enviar_resenha_escala', {
+      Promise.resolve().then(async function(){
+        if(!payload.pelotao||!payload.dataEscala)throw new Error('Informe o pelotão e a data da escala.');
+        const integracao=await epBuscarResenhaFt(payload.pelotao,payload.dataEscala);
+        if(!form?.isConnected)return null;
+        if(integracao.semDS&&!await confirmarToastFt('DS AUTOMÁTICA INDISPONÍVEL','Confirma o envio depois de conferir as dispensas manualmente?'))return null;
+        if(!form.isConnected||payload.pelotao!==document.getElementById('resenhaPelotao').value||payload.dataEscala!==document.getElementById('resenhaDataEscala').value)return null;
+        epMesclarResenhaFt(payload,integracao.itens);
+        return chamarApi(edicaoAtual ? 'editar_resenha_escala' : 'enviar_resenha_escala', {
           login: APP.credenciais.login,
           senha: APP.credenciais.senha,
           id: edicaoAtual && edicaoAtual.cabecalho && edicaoAtual.cabecalho.id || '',
           payload: JSON.stringify(payload)
+        });
         })
         .then(function(resp) {
+          if (resp===null)return;
           if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao enviar resenha.');
           if (edicaoAtual) {
             APP.resenhaEdicao = null;
@@ -13293,13 +13430,8 @@ async function dsDetalharFt(id){
           erros.push('Folga/Dispensa ' + numero + ': Folga Orgânica ou Compensatória exige Data de referência.');
         }
 
-        if (tipo.includes('FLAGRANTE')) {
-          if (!data || !data.value) {
-            erros.push('Folga/Dispensa ' + numero + ': Folga Flagrante exige Data de referência.');
-          }
-          if (!bopm || !String(bopm.value || '').trim()) {
-            erros.push('Folga/Dispensa ' + numero + ': Folga Flagrante exige BOPM.');
-          }
+        if(box.dataset.urgencia==='1'&&String(box.querySelector('[name$="_urgencia"]')?.value||'').trim().length<5){
+          erros.push('Folga/Dispensa '+numero+': informe o motivo da urgência.');
         }
       });
 
