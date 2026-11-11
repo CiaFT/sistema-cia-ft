@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- Nova tentativa de publicação V1.4.2 -->
 <!--
 ============================================================
 SISTEMA CIA FT — PORTAL GITHUB V1.4.2 — OCORRÊNCIAS E FOLGAS FLAGRANTES
@@ -8043,23 +8042,42 @@ async function epAbrirFt(pel=epGrupoClienteFt()||(epGestorClienteFt()?'1º PEL':
  const h=dsPaginaFt('Espaço do Pel','Solicitações de folga e calendário do pelotão.','abrirHome()');
  h.textContent='Carregando…';
  try{
-  const r=await ocFtApi('espaco_pel_dados',{pel,data});if(!h.isConnected)return;
+  const r=await ocFtApi('espaco_pel_dados',{pel,data,semSaldo:'1'});if(!h.isConnected)return;
   const dias=r.dias.filter(d=>d.servico&&!d.operacao&&d.vagas>0);
   const e=dsEscFt,fmt=dsDataFt;
   h.innerHTML=`<div class="page-actions ep-acoes"><button data-sem="-7" class="btn-page">SEMANA ANTERIOR</button><button data-sem="7" class="btn-page">PRÓXIMA SEMANA</button>${r.gestor?'<label>Pelotão <select id="epGrupoFt"><option>1º PEL</option><option>2º PEL</option></select></label>':''}</div>
   <h2>${e(r.pel)} · ${e(fmt(r.semana))} a ${e(fmt(r.fim))}</h2><p>Pedidos até ${e(fmt(r.limite.slice(0,10)))} às 10h (Brasília).</p>
   <div class="ep-dias">${r.dias.map(d=>`<div><strong>${e(fmt(d.data))}</strong><br>${d.operacao?'Operação — sem folgas':d.servico?e(d.confirmadas)+' de '+e(d.vagas)+' vaga(s) confirmada(s)':'Sem serviço'}${r.gerencia?'<br><button type="button" class="btn-page" data-config="'+e(d.data)+'">AJUSTAR</button>':''}</div>`).join('')}</div>
-  ${r.proprio===r.pel?`<p>Disponíveis para solicitar: <strong>${e(r.saldo.FM)} FM · ${e(r.saldo.FF)} FF</strong></p>${!r.saldo.FM?'<p>Não possui Folga Mensal para fruição.</p>':''}${!r.saldo.FF?'<p>Não possui Folga Flagrante para fruição.</p>':''}` : ''}
-  ${r.proprio===r.pel&&r.aberto&&dias.length&&(r.saldo.FM||r.saldo.FF)?`<form id="epPedirFt" class="ep-acoes"><label>Data <select name="data" required><option value="">Selecione</option>${dias.map(d=>'<option value="'+e(d.data)+'">'+e(fmt(d.data))+'</option>').join('')}</select></label><label>Tipo <select name="tipo" required>${['FM','FF'].filter(t=>r.saldo[t]>0).map(t=>'<option value="'+t+'">'+epTiposFt[t]+'</option>').join('')}</select></label><button class="btn-page btn-primary-soft">SOLICITAR FOLGA</button></form>`:r.proprio===r.pel&&!r.aberto?'<p>Prazo de pedidos encerrado para esta semana.</p>':''}
+  ${r.proprio===r.pel?'<div id="epSaldoFt"></div>':''}
   <div id="epConfigFt"></div><h2>${r.gerencia?'Pedidos do pelotão':'Meus pedidos'}</h2>
   <div class="ds-lista-ft">${r.pedidos.length?r.pedidos.map(p=>`<div class="modal-card"><strong>${e(p.nome)}</strong> · ${e(fmt(p.data))} · ${epTiposFt[p.tipo]} · ${e(p.estado)}${p.motivo?' · '+e(p.motivo):''}
-  ${p.estado==='PENDENTE'&&r.gerencia&&!p.meu?`<div class="ep-acoes"><button data-id="${e(p.id)}" data-decisao="APROVADA" class="btn-page">APROVAR</button><button data-id="${e(p.id)}" data-decisao="RECUSADA" class="btn-page">RECUSAR</button></div>`:((p.estado==='PENDENTE'&&p.meu&&r.aberto)||(p.estado==='APROVADA'&&r.gerencia&&!p.meu))?`<button data-id="${e(p.id)}" data-decisao="CANCELADA" class="btn-page">CANCELAR</button>`:''}</div>`).join(''):'<p>Nenhum pedido nesta semana.</p>'}</div>`;
+  ${['PENDENTE','APROVADA'].includes(p.estado)&&p.foraEscala?'<p>Data fora da escala atual do pelotão. O pedido precisa ser revisto.</p>':''}
+  ${p.estado==='PENDENTE'&&r.gerencia&&!p.meu?`<div class="ep-acoes">${p.foraEscala?'':`<button data-id="${e(p.id)}" data-decisao="APROVADA" class="btn-page">APROVAR</button>`}<button data-id="${e(p.id)}" data-decisao="RECUSADA" class="btn-page">RECUSAR</button></div>`:((p.estado==='PENDENTE'&&p.meu&&r.aberto)||(p.estado==='APROVADA'&&r.gerencia&&!p.meu))?`<button data-id="${e(p.id)}" data-decisao="CANCELADA" class="btn-page">CANCELAR</button>`:''}</div>`).join(''):'<p>Nenhum pedido nesta semana.</p>'}</div>`;
   const recarregar=()=>epAbrirFt(r.pel,r.semana);
   h.querySelectorAll('[data-sem]').forEach(b=>b.onclick=()=>epAbrirFt(r.pel,epAvancaFt(r.semana,Number(b.dataset.sem))));
   const g=h.querySelector('#epGrupoFt');if(g){g.value=r.pel;g.onchange=()=>epAbrirFt(g.value,r.semana);}
-  const f=h.querySelector('#epPedirFt');if(f)f.onsubmit=ev=>{ev.preventDefault();dsOperacaoFt(f.querySelector('button'),async atual=>{
-   await ocFtApi('espaco_pel_pedir',{pel:r.pel,...Object.fromEntries(new FormData(f))});if(atual()){mostrarToastFt('Pedido enviado','Aguarde a análise do Sgt do Pel.','sucesso');recarregar();}
-  });};
+  const saldoBox=h.querySelector('#epSaldoFt');
+  if(saldoBox){
+   const renderSaldo=saldo=>{
+    saldoBox.innerHTML=`<p>Disponíveis para solicitar: <strong>${e(saldo.FM)} FM · ${e(saldo.FF)} FF</strong></p>${!saldo.FM?'<p>Não possui Folga Mensal para fruição.</p>':''}${!saldo.FF?'<p>Não possui Folga Flagrante para fruição.</p>':''}
+  ${r.proprio===r.pel&&r.aberto&&dias.length&&(saldo.FM||saldo.FF)?`<form id="epPedirFt" class="ep-acoes"><label>Data <select name="data" required><option value="">Selecione</option>${dias.map(d=>'<option value="'+e(d.data)+'">'+e(fmt(d.data))+'</option>').join('')}</select></label><label>Tipo <select name="tipo" required>${['FM','FF'].filter(t=>saldo[t]>0).map(t=>'<option value="'+t+'">'+epTiposFt[t]+'</option>').join('')}</select></label><button class="btn-page btn-primary-soft">SOLICITAR FOLGA</button></form>`:r.proprio===r.pel&&!r.aberto?'<p>Prazo de pedidos encerrado para esta semana.</p>':''}`;
+    const f=h.querySelector('#epPedirFt');if(f)f.onsubmit=ev=>{ev.preventDefault();dsOperacaoFt(f.querySelector('button'),async atual=>{
+     await ocFtApi('espaco_pel_pedir',{pel:r.pel,...Object.fromEntries(new FormData(f))});if(atual()){mostrarToastFt('Pedido enviado','Aguarde a análise do Sgt do Pel.','sucesso');recarregar();}
+    });};
+   };
+   const consultarSaldo=async()=>{
+    saldoBox.innerHTML='<p role="status">Conferindo saldo de FM e FF…</p>';
+    try{
+     const saldo=await ocFtApi('espaco_pel_saldo',{pel:r.pel,data:r.semana});
+     if(saldoBox.isConnected)renderSaldo(saldo);
+    }catch(err){
+     if(!saldoBox.isConnected)return;
+     saldoBox.innerHTML='<p role="status">'+e(err.message||'Não foi possível conferir o saldo de folgas.')+'</p><button type="button" class="btn-page">TENTAR CONSULTAR SALDO NOVAMENTE</button>';
+     saldoBox.querySelector('button').onclick=consultarSaldo;
+    }
+   };
+   if(r.saldo)renderSaldo(r.saldo);else consultarSaldo();
+  }
   h.querySelectorAll('[data-decisao]').forEach(b=>b.onclick=()=>dsOperacaoFt(b,async atual=>{
    const p=r.pedidos.find(x=>x.id===b.dataset.id),decisao=b.dataset.decisao;
    const motivo=(decisao==='RECUSADA'||p.estado==='APROVADA'&&decisao==='CANCELADA')?await pedirMotivoToastFt(b.textContent,'Informe o motivo.'):'';if(motivo===null||!atual())return;
@@ -8156,7 +8174,7 @@ function epMesclarResenhaFt(payload,auto){
         });
         menus.splice(indicePainel >= 0 ? indicePainel + 1 : menus.length, 0, cardRotinas);
       }
-      if(epGrupoClienteFt()||epGestorClienteFt())menus.push({id:'ESPACO_PEL',titulo:'ESPAÇO DO PEL',icone:'📅',descricao:'Solicite folgas e acompanhe o calendário do pelotão.'});
+      if(epGrupoClienteFt()||epGestorClienteFt())menus.push({id:'ESPACO_PEL',titulo:'ESPAÇO DO PEL',descricao:'Solicite folgas e acompanhe o calendário do pelotão.'});
       if(!menus.some(m=>m.id==='AVISOS_CIA_FT'))menus.push({id:'AVISOS_CIA_FT',titulo:'AVISOS CIA FT',descricao:'Comunicados da Companhia e ciência de leitura.'});
       if(entPodeGerir())menus.push({id:"ENTREVISTAS_FT",titulo:"CANDIDATURAS À CIA FT",icone:"📋",descricao:"Consulta de fichas, impressão e agendamento de entrevistas."});
       return menus;
@@ -8170,6 +8188,7 @@ function epMesclarResenhaFt(payload,auto){
       const imagensMenu = {
         FORMULARIOS_PMESP: {arquivo:"./icone-formularios-pmesp.png",alt:"Formulários PMESP"},
         DISPENSA_PMP118: {arquivo:"./icone-formularios-pmesp.png",alt:"Dispensa de Serviço"},
+        ESPACO_PEL: { arquivo: './icone-espaco-pel.png', alt: 'Espaço do Pelotão' },
         AVISOS_CIA_FT: { arquivo: './icone-avisos-ft.png', alt: 'Avisos Cia FT' },
         MEUS_DADOS: { arquivo: './icone-meus-dados.png?v=1211-ft1408r1', alt: 'Meus Dados' },
         PAINEL_ADMINISTRATIVO: { arquivo: './icone-painel-administrativo.png?v=1211-ft1408r1', alt: 'Painel Administrativo' },
@@ -16995,7 +17014,7 @@ function epMesclarResenhaFt(payload,auto){
 
     function acaoApiSomenteLeitura(action) {
       const acao = normalizarTexto(action || '').replace(/[^A-Z0-9]/g, '');
-      return acao === 'LOGIN' || acao === 'PING' || acao.indexOf('DADOS') === 0 || acao.indexOf('CONSULT') === 0 || acao.indexOf('HISTORICO') === 0 || acao.indexOf('BAIXAR') === 0 || acao.indexOf('GERARPDF') === 0;
+      return acao === 'LOGIN' || acao === 'PING' || ['ESPACOPELDADOS','ESPACOPELSALDO','ESPACOPELRESENHA'].includes(acao) || acao.indexOf('DADOS') === 0 || acao.indexOf('CONSULT') === 0 || acao.indexOf('HISTORICO') === 0 || acao.indexOf('BAIXAR') === 0 || acao.indexOf('GERARPDF') === 0;
     }
 
 
