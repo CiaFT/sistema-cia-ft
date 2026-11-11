@@ -7023,6 +7023,9 @@ Banco de dados: Google Sheets.
 .ep-dias{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:8px;margin:14px 0}
 .ep-dias>div{padding:10px;border:1px solid #cbd5e1;border-radius:8px}
 .ep-acoes{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}
+#fcGestaoCorpoFt{margin:12px 0}
+#fcFormFt label{display:grid;gap:6px;font-size:11px;font-weight:800;color:#374247;min-width:0}
+#fcFormFt input,#fcFormFt select,#fcFormFt textarea{width:100%;min-width:0;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:10px;padding:10px;background:#fff;color:#17202a;font:inherit;font-size:12px}
 #dsCorpoFt .ep-acoes label{display:flex;gap:6px;align-items:center}
 #dsCorpoFt .ep-acoes input,#dsCorpoFt .ep-acoes select{width:auto;margin:0}
 </style>
@@ -8034,39 +8037,103 @@ async function dsDetalharFt(id){
       finally{botao.disabled=false;}
     }
 
-const epTiposFt={FM:'Folga Mensal',FF:'Folga Flagrante',DS:'Dispensa Serviço'};
-function epGrupoClienteFt(){const v=normalizarTexto(APP.usuario?.pelotao||'');return /1|PRIMEIRO/.test(v)?'1º PEL':/2|SEGUNDO/.test(v)?'2º PEL':'';}
+const epTiposFt={FM:'Folga Mensal',FF:'Folga Flagrante',FC:'Folga Compensatória',DS:'Dispensa Serviço'};
+function fcPodeGerirClienteFt(){
+ return epGestorClienteFt()||['ENC_ADM','ENC_ADM_FT','ENCARREGADO_ADM_FT','ENCARREGADO_ADMINISTRATIVO'].includes(normalizarTexto(APP.usuario?.perfilAcesso||'').replace(/[\s-]+/g,'_'));
+}
+async function fcExecutarClienteFt(botao,tarefa){
+ if(botao.disabled)return;
+ const sessao=APP.sessaoGeracao;
+ const atual=()=>APP.usuario&&sessao===APP.sessaoGeracao&&botao.isConnected;
+ botao.disabled=true;
+ try{await tarefa(atual);}
+ catch(err){if(atual())mostrarToastFt('Folga compensatória',err.message||String(err),'erro');}
+ finally{if(atual())botao.disabled=false;}
+}
+async function fcGestaoFt(box){
+ if(!box||!fcPodeGerirClienteFt())return;
+ box.innerHTML='<p role="status">Carregando gestão de folgas compensatórias…</p>';
+ try{
+  const r=await ocFtApi('folga_comp_gestao');
+  if(!box.isConnected)return;
+  const e=dsEscFt;
+  box.innerHTML=`<section class="modal-card"><h3>Conceder folga compensatória</h3>
+  <p>Informe a quantidade a creditar e o motivo. Ex.: “Eleição — serviço extraordinário nos dois turnos”.</p>
+  <form class="oc-ft-grid" id="fcFormFt"><label>Policial<select name="re" required><option value="">Selecione</option>${r.efetivo.map(p=>'<option value="'+e(p.re)+'">'+e([p.posto,p.re,p.nomeGuerra||p.nome,p.pelotao].filter(Boolean).join(' · '))+'</option>').join('')}</select></label>
+  <label>Quantidade de dias<input name="quantidade" type="number" min="1" max="365" step="1" value="1" required></label>
+  <label class="oc-ft-largo">Motivo da concessão<textarea name="motivo" maxlength="400" required rows="2"></textarea></label>
+  <div class="ep-acoes oc-ft-largo"><button class="btn-page btn-primary-soft" type="submit">CONCEDER FC</button><button class="btn-page" type="button" id="fcAgendaAdmFt">AGENDA DE FC DA ADM</button></div></form>
+  <h3>Folgas aprovadas para baixa</h3><p>Registre o gozo depois de conferir que a folga foi utilizada.</p>
+  <div class="ds-lista-ft">${r.pedidos.length?r.pedidos.map(p=>'<div class="modal-card"><strong>'+e(p.nome)+'</strong> · '+e(p.pel)+' · '+e(dsDataFt(p.data))+' <div class="ep-acoes"><button type="button" class="btn-page" data-fc-gozo="'+e(p.id)+'">REGISTRAR GOZO</button><button type="button" class="btn-page" data-fc-devolver="'+e(p.id)+'">DEVOLVER CRÉDITO</button></div></div>').join(''):'<p>Nenhuma FC aprovada com data de gozo até hoje.</p>'}</div>
+  <details><summary>Concessões recentes</summary><div class="ds-lista-ft">${(r.concessoes||[]).map(c=>'<div class="modal-card"><strong>'+e(c.nome)+'</strong> · '+e(dsDataFt(c.data))+' · '+e(c.quantidade)+' dia(s)<br>'+e(c.motivo)+'<br><small>Concedido por '+e(c.autor)+'</small></div>').join('')||'<p>Nenhuma concessão registrada.</p>'}</div></details></section>`;
+  box.querySelector('#fcAgendaAdmFt').onclick=()=>epAbrirFt('ADM','','abrirEscalasEFolgas(\'folgas\')');
+  const f=box.querySelector('#fcFormFt');
+  f.oninput=()=>{delete f.dataset.fcId;};
+  const atualizar=()=>carregarDadosEscalasFolgas('folgas',true);
+  f.onsubmit=ev=>{ev.preventDefault();const b=f.querySelector('[type=submit]');fcExecutarClienteFt(b,async atual=>{
+   const pedido=Object.fromEntries(new FormData(f)), nome=f.elements.re.selectedOptions[0]?.textContent;
+   pedido.motivo=pedido.motivo.trim();
+   if(!pedido.motivo)throw Error('Informe o motivo da concessão.');
+   if(!await confirmarToastFt('CONCEDER FOLGA COMPENSATÓRIA',pedido.quantidade+' dia(s) para '+nome+'.')||!atual())return;
+   pedido.id=f.dataset.fcId||(f.dataset.fcId=crypto.randomUUID());
+   const resp=await ocFtApi('folga_comp_conceder',pedido);
+   if(atual()){mostrarToastFt('FC concedida',resp.quantidade+' dia(s) creditado(s).','sucesso');await atualizar();}
+  });};
+  box.querySelectorAll('[data-fc-gozo]').forEach(b=>b.onclick=()=>fcExecutarClienteFt(b,async atual=>{
+   const p=r.pedidos.find(p=>p.id===b.dataset.fcGozo);
+   if(!p||!await confirmarToastFt('REGISTRAR GOZO DE FC','Confirma o gozo de '+p.nome+' em '+dsDataFt(p.data)+'?')||!atual())return;
+   await ocFtApi('folga_comp_gozo',{id:p.id});
+   if(atual()){mostrarToastFt('Gozo registrado','A folga compensatória foi baixada.','sucesso');await atualizar();}
+  }));
+  box.querySelectorAll('[data-fc-devolver]').forEach(b=>b.onclick=()=>fcExecutarClienteFt(b,async atual=>{
+   const p=r.pedidos.find(p=>p.id===b.dataset.fcDevolver);
+   if(!p)return;
+   const motivo=await pedirMotivoToastFt('DEVOLVER CRÉDITO DE FC','Informe por que '+p.nome+' não gozou a FC de '+dsDataFt(p.data)+'.');
+   if(motivo===null||!atual())return;
+   await ocFtApi('folga_comp_devolver',{id:p.id,motivo});
+   if(atual()){mostrarToastFt('Crédito devolvido','A FC voltou ao saldo disponível do policial.','sucesso');await atualizar();}
+  }));
+ }catch(err){if(box.isConnected)box.textContent=err.message||String(err);}
+}
+
+function epGrupoClienteFt(){const v=normalizarTexto(APP.usuario?.pelotao||'');return /1|PRIMEIRO/.test(v)?'1º PEL':/2|SEGUNDO/.test(v)?'2º PEL':/^(ADM|ADMIN)/.test(v)?'ADM':'';}
 function epGestorClienteFt(){return ['GESTOR','GESTOR_FT','GESTOR_TEC_FT','GESTOR_TECNICO_FT'].includes(normalizarTexto(APP.usuario?.perfilAcesso||'').replace(/[\s-]+/g,'_'));}
 function epAvancaFt(d,n){return new Date(Date.parse(d+'T00:00:00Z')+86400000*n).toISOString().slice(0,10);}
-async function epAbrirFt(pel=epGrupoClienteFt()||(epGestorClienteFt()?'1º PEL':''),data=''){
- const h=dsPaginaFt('Espaço do Pel','Solicitações de folga e calendário do pelotão.','abrirHome()');
+async function epAbrirFt(pel=epGrupoClienteFt()||(epGestorClienteFt()?'1º PEL':''),data='',voltar='abrirHome()'){
+ const adm=pel==='ADM';
+ const h=dsPaginaFt(adm?'Folgas Compensatórias · ADM':'Espaço do Pel',adm?'Solicitações de FC nas datas abertas pela gestão.':'Solicitações de folga e calendário do pelotão.',voltar);
  h.textContent='Carregando…';
  try{
   const r=await ocFtApi('espaco_pel_dados',{pel,data,semSaldo:'1'});if(!h.isConnected)return;
   const dias=r.dias.filter(d=>d.servico&&!d.operacao&&d.vagas>0);
   const e=dsEscFt,fmt=dsDataFt;
-  h.innerHTML=`<div class="page-actions ep-acoes"><button data-sem="-7" class="btn-page">SEMANA ANTERIOR</button><button data-sem="7" class="btn-page">PRÓXIMA SEMANA</button>${r.gestor?'<label>Pelotão <select id="epGrupoFt"><option>1º PEL</option><option>2º PEL</option></select></label>':''}</div>
+  h.innerHTML=`<div class="page-actions ep-acoes"><button data-sem="-7" class="btn-page">SEMANA ANTERIOR</button><button data-sem="7" class="btn-page">PRÓXIMA SEMANA</button>${r.gestor?'<label>Pelotão <select id="epGrupoFt"><option>1º PEL</option><option>2º PEL</option><option>ADM</option></select></label>':''}</div>
   <h2>${e(r.pel)} · ${e(fmt(r.semana))} a ${e(fmt(r.fim))}</h2><p>Pedidos até ${e(fmt(r.limite.slice(0,10)))} às 10h (Brasília).</p>
-  <div class="ep-dias">${r.dias.map(d=>`<div><strong>${e(fmt(d.data))}</strong><br>${d.operacao?'Operação — sem folgas':d.servico?e(d.confirmadas)+' de '+e(d.vagas)+' vaga(s) confirmada(s)':'Sem serviço'}${r.gerencia?'<br><button type="button" class="btn-page" data-config="'+e(d.data)+'">AJUSTAR</button>':''}</div>`).join('')}</div>
+  <div class="ep-dias">${r.dias.map(d=>`<div><strong>${e(fmt(d.data))}</strong><br>${d.operacao?'Operação — sem folgas':d.servico?e(d.confirmadas)+' de '+e(d.vagas)+' vaga(s) confirmada(s)':adm?'Data fechada':'Sem serviço'}${r.gerencia?'<br><button type="button" class="btn-page" data-config="'+e(d.data)+'">AJUSTAR</button>':''}</div>`).join('')}</div>
   ${r.proprio===r.pel?'<div id="epSaldoFt"></div>':''}
   <div id="epConfigFt"></div><h2>${r.gerencia?'Pedidos do pelotão':'Meus pedidos'}</h2>
   <div class="ds-lista-ft">${r.pedidos.length?r.pedidos.map(p=>`<div class="modal-card"><strong>${e(p.nome)}</strong> · ${e(fmt(p.data))} · ${epTiposFt[p.tipo]} · ${e(p.estado)}${p.motivo?' · '+e(p.motivo):''}
   ${['PENDENTE','APROVADA'].includes(p.estado)&&p.foraEscala?'<p>Data fora da escala atual do pelotão. O pedido precisa ser revisto.</p>':''}
   ${p.estado==='PENDENTE'&&r.gerencia&&!p.meu?`<div class="ep-acoes">${p.foraEscala?'':`<button data-id="${e(p.id)}" data-decisao="APROVADA" class="btn-page">APROVAR</button>`}<button data-id="${e(p.id)}" data-decisao="RECUSADA" class="btn-page">RECUSAR</button></div>`:((p.estado==='PENDENTE'&&p.meu&&r.aberto)||(p.estado==='APROVADA'&&r.gerencia&&!p.meu))?`<button data-id="${e(p.id)}" data-decisao="CANCELADA" class="btn-page">CANCELAR</button>`:''}</div>`).join(''):'<p>Nenhum pedido nesta semana.</p>'}</div>`;
-  const recarregar=()=>epAbrirFt(r.pel,r.semana);
-  h.querySelectorAll('[data-sem]').forEach(b=>b.onclick=()=>epAbrirFt(r.pel,epAvancaFt(r.semana,Number(b.dataset.sem))));
-  const g=h.querySelector('#epGrupoFt');if(g){g.value=r.pel;g.onchange=()=>epAbrirFt(g.value,r.semana);}
+  const recarregar=()=>{
+   if(APP.dadosEscalasFolgas)APP.dadosEscalasFolgas.carregadoFolgas=false;
+   epAbrirFt(r.pel,r.semana,voltar);
+  };
+  h.querySelectorAll('[data-sem]').forEach(b=>b.onclick=()=>epAbrirFt(r.pel,epAvancaFt(r.semana,Number(b.dataset.sem)),voltar));
+  const g=h.querySelector('#epGrupoFt');if(g){g.value=r.pel;g.onchange=()=>epAbrirFt(g.value,r.semana,voltar);}
   const saldoBox=h.querySelector('#epSaldoFt');
   if(saldoBox){
    const renderSaldo=saldo=>{
-    saldoBox.innerHTML=`<p>Disponíveis para solicitar: <strong>${e(saldo.FM)} FM · ${e(saldo.FF)} FF</strong></p>${!saldo.FM?'<p>Não possui Folga Mensal para fruição.</p>':''}${!saldo.FF?'<p>Não possui Folga Flagrante para fruição.</p>':''}
-  ${r.proprio===r.pel&&r.aberto&&dias.length&&(saldo.FM||saldo.FF)?`<form id="epPedirFt" class="ep-acoes"><label>Data <select name="data" required><option value="">Selecione</option>${dias.map(d=>'<option value="'+e(d.data)+'">'+e(fmt(d.data))+'</option>').join('')}</select></label><label>Tipo <select name="tipo" required>${['FM','FF'].filter(t=>saldo[t]>0).map(t=>'<option value="'+t+'">'+epTiposFt[t]+'</option>').join('')}</select></label><button class="btn-page btn-primary-soft">SOLICITAR FOLGA</button></form>`:r.proprio===r.pel&&!r.aberto?'<p>Prazo de pedidos encerrado para esta semana.</p>':''}`;
+    const tipos=adm?['FC']:['FM','FF','FC'];
+    saldoBox.innerHTML=`<p>Disponíveis para solicitar: <strong>${tipos.map(t=>e(Number(saldo[t]||0))+' '+t).join(' · ')}</strong></p>
+    ${tipos.filter(t=>!saldo[t]).map(t=>'<p>Não possui '+epTiposFt[t]+' para fruição.</p>').join('')}
+    ${!r.aberto?'<p>Prazo de pedidos encerrado para esta semana.</p>':dias.length&&tipos.some(t=>saldo[t]>0)?`<form id="epPedirFt" class="ep-acoes"><label>Data <select name="data" required><option value="">Selecione</option>${dias.map(d=>'<option value="'+e(d.data)+'">'+e(fmt(d.data))+'</option>').join('')}</select></label><label>Tipo <select name="tipo" required>${tipos.filter(t=>saldo[t]>0).map(t=>'<option value="'+t+'">'+epTiposFt[t]+'</option>').join('')}</select></label><button class="btn-page btn-primary-soft">SOLICITAR FOLGA</button></form>`:''}`;
     const f=h.querySelector('#epPedirFt');if(f)f.onsubmit=ev=>{ev.preventDefault();dsOperacaoFt(f.querySelector('button'),async atual=>{
-     await ocFtApi('espaco_pel_pedir',{pel:r.pel,...Object.fromEntries(new FormData(f))});if(atual()){mostrarToastFt('Pedido enviado','Aguarde a análise do Sgt do Pel.','sucesso');recarregar();}
+     await ocFtApi('espaco_pel_pedir',{pel:r.pel,...Object.fromEntries(new FormData(f))});if(atual()){mostrarToastFt('Pedido enviado',adm?'Aguarde a análise do Enc Adm ou do Gestor.':'Aguarde a análise do Sgt do Pel.','sucesso');recarregar();}
     });};
    };
    const consultarSaldo=async()=>{
-    saldoBox.innerHTML='<p role="status">Conferindo saldo de FM e FF…</p>';
+    saldoBox.innerHTML='<p role="status">Conferindo saldo de folgas…</p>';
     try{
      const saldo=await ocFtApi('espaco_pel_saldo',{pel:r.pel,data:r.semana});
      if(saldoBox.isConnected)renderSaldo(saldo);
@@ -8139,7 +8206,8 @@ function epMesclarResenhaFt(payload,auto){
   n++;
   const linha=(campo,valor,valorTecnico=valor)=>itens.push({tipo:'FOLGA_DISPENSA',grupo:String(n),campo,valor,valorTecnico,origemPelAuto:true});
   linha('Policial',a.nome,a.re);linha('Tipo',tipo);
-  if(a.tipo==='FF'){linha('Data de referência',a.referencia);linha('BOPM',a.bopm);}
+  if(a.tipo==='FF'||a.tipo==='FC')linha('Data de referência',a.referencia);
+  if(a.tipo==='FF')linha('BOPM',a.bopm);
   existe.set(re,normalizarTexto(tipo));
  }
  return payload;
@@ -8174,7 +8242,7 @@ function epMesclarResenhaFt(payload,auto){
         });
         menus.splice(indicePainel >= 0 ? indicePainel + 1 : menus.length, 0, cardRotinas);
       }
-      if(epGrupoClienteFt()||epGestorClienteFt())menus.push({id:'ESPACO_PEL',titulo:'ESPAÇO DO PEL',descricao:'Solicite folgas e acompanhe o calendário do pelotão.'});
+      if(epGrupoClienteFt()||epGestorClienteFt())menus.push({id:'ESPACO_PEL',titulo:epGrupoClienteFt()==='ADM'&&!epGestorClienteFt()?'FOLGAS COMPENSATÓRIAS · ADM':'ESPAÇO DO PEL',descricao:'Solicite folgas e acompanhe o calendário da sua lotação.'});
       if(!menus.some(m=>m.id==='AVISOS_CIA_FT'))menus.push({id:'AVISOS_CIA_FT',titulo:'AVISOS CIA FT',descricao:'Comunicados da Companhia e ciência de leitura.'});
       if(entPodeGerir())menus.push({id:"ENTREVISTAS_FT",titulo:"CANDIDATURAS À CIA FT",icone:"📋",descricao:"Consulta de fichas, impressão e agendamento de entrevistas."});
       return menus;
@@ -12096,16 +12164,24 @@ function epMesclarResenhaFt(payload,auto){
           const folgaFlagrante = Number(pm.folgaFlagrante || 0);
           const folgaCompensatoria = Number(pm.folgaCompensatoria || 0);
           return '<tr><td class="ef-pm"><strong>' + escapar([pm.postoGrad, pm.nomeGuerra].filter(Boolean).join(' ')) + '</strong><small>RE ' + escapar(pm.re || '') + '</small></td>' +
-            '<td class="ef-num ' + classeSaldoFolgaPendente(folgaMensal) + '">' + folgaMensal + '</td>' +
             '<td class="ef-num ' + classeDiasTrabalhadosPendente(diasTrabalhados) + '">' + diasTrabalhados + '</td>' +
+            '<td class="ef-num ' + classeSaldoFolgaPendente(folgaMensal) + '">' + folgaMensal + '</td>' +
             '<td class="ef-num ' + classeSaldoFolgaPendente(folgaFlagrante) + '">' + folgaFlagrante + '</td>' +
             '<td class="ef-num ' + classeSaldoFolgaPendente(folgaCompensatoria) + '">' + folgaCompensatoria + '</td></tr>';
         }).join('');
       });
       box.innerHTML = `
-        <div class="ef-section-head"><div><h2>Folgas Pendentes</h2><p>Saldos atualizados a partir do Controle de Folgas.</p></div><button type="button" onclick="renderizarMenuEscalasFolgas()">VOLTAR ÀS OPÇÕES</button></div>
-        <div class="ef-scope-note">Escopo de visualização aplicado: <strong>${escapar(escopo)}</strong>. Folgas Flagrantes e Compensatórias permanecem inicialmente zeradas.</div>
-        <div class="ef-table-wrap"><table class="ef-table"><colgroup><col class="ef-col-pm"><col class="ef-col-saldo"><col class="ef-col-saldo"><col class="ef-col-saldo"><col class="ef-col-saldo"></colgroup><thead><tr><th>GRAD • RE • NOME GUERRA</th><th>FOLGA MENSAL</th><th>DIAS TRABALHADOS</th><th>FOLGA FLAGRANTE</th><th>FOLGA COMPENSATÓRIA</th></tr></thead><tbody>${corpo || '<tr><td colspan="5">Nenhum policial disponível para o escopo deste usuário.</td></tr>'}</tbody></table></div>`;
+        <div class="ef-section-head"><div><h2>Folgas Pendentes</h2><p>Consulte os dias trabalhados e os saldos de folgas.</p></div><div class="page-actions">
+        ${fcPodeGerirClienteFt()?'<button type="button" class="btn-page" id="fcGerirFt">GERIR FOLGAS COMPENSATÓRIAS</button>':''}
+        <button type="button" onclick="renderizarMenuEscalasFolgas()">VOLTAR ÀS OPÇÕES</button></div></div>
+        <div class="ef-scope-note">Escopo de visualização aplicado: <strong>${escapar(escopo)}</strong>. A coluna de FC mostra o saldo livre para novos pedidos.</div>
+        <div id="fcGestaoCorpoFt" hidden></div>
+        <div class="ef-table-wrap"><table class="ef-table"><colgroup><col class="ef-col-pm"><col class="ef-col-saldo"><col class="ef-col-saldo"><col class="ef-col-saldo"><col class="ef-col-saldo"></colgroup><thead><tr><th>GRAD • RE • NOME GUERRA</th><th>DIAS TRABALHADOS</th><th>FOLGA MENSAL</th><th>FOLGA FLAGRANTE</th><th>FOLGA COMPENSATÓRIA</th></tr></thead><tbody>${corpo || '<tr><td colspan="5">Nenhum policial disponível para o escopo deste usuário.</td></tr>'}</tbody></table></div>`;
+      const acao=box.querySelector('#fcGerirFt'),gestao=box.querySelector('#fcGestaoCorpoFt');
+      if(acao)acao.onclick=()=>{
+        gestao.hidden=!gestao.hidden;acao.setAttribute('aria-expanded',String(!gestao.hidden));
+        if(!gestao.hidden)fcGestaoFt(gestao);
+      };
     }
 
 
@@ -17014,7 +17090,7 @@ function epMesclarResenhaFt(payload,auto){
 
     function acaoApiSomenteLeitura(action) {
       const acao = normalizarTexto(action || '').replace(/[^A-Z0-9]/g, '');
-      return acao === 'LOGIN' || acao === 'PING' || ['ESPACOPELDADOS','ESPACOPELSALDO','ESPACOPELRESENHA'].includes(acao) || acao.indexOf('DADOS') === 0 || acao.indexOf('CONSULT') === 0 || acao.indexOf('HISTORICO') === 0 || acao.indexOf('BAIXAR') === 0 || acao.indexOf('GERARPDF') === 0;
+      return acao === 'LOGIN' || acao === 'PING' || ['ESPACOPELDADOS','ESPACOPELSALDO','ESPACOPELRESENHA','FOLGACOMPGESTAO'].includes(acao) || acao.indexOf('DADOS') === 0 || acao.indexOf('CONSULT') === 0 || acao.indexOf('HISTORICO') === 0 || acao.indexOf('BAIXAR') === 0 || acao.indexOf('GERARPDF') === 0;
     }
 
 
