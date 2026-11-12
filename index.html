@@ -4813,6 +4813,9 @@ Banco de dados: Google Sheets.
     .meus-dados-ferias-nota { display:block; margin-top:4px; font-size:11px; line-height:1.4; color:#475569; }
     .meus-dados-ferias-nota:empty { display:none; }
     .resenha-cal { display:grid; gap:14px; }
+    .resenha-cal-outra-data { display:flex; gap:8px; align-items:end; flex-wrap:wrap; }
+    .resenha-cal-outra-data label { display:grid; gap:4px; font-size:12px; font-weight:800; }
+    .resenha-cal-outra-data input { min-height:44px; padding:6px 9px; border:1px solid #d4dbe0; border-radius:10px; font:inherit; }
     .resenha-cal-semana { display:grid; gap:7px; min-width:0; }
     .resenha-cal-semana h3 { margin:0; font-size:13px; color:#374247; }
     .resenha-cal-dias { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:7px; }
@@ -13617,7 +13620,9 @@ function epMesclarResenhaFt(payload,auto){
         if(!Array.isArray(dias)||dias.length!==28)throw new Error('A consulta por calendário ainda não está disponível nesta implantação.');
         const nomes=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
         const diaBR=d=>dataISOParaBR(d);
-        host.innerHTML='<div class="resenha-cal"><p class="resenha-alerta" style="margin:0">As situações exibidas correspondem às resenhas visíveis para o seu perfil.</p>'+Array.from({length:4},(_,semana)=>{
+        host.innerHTML='<div class="resenha-cal"><p class="resenha-alerta" style="margin:0">As situações exibidas correspondem às resenhas visíveis para o seu perfil. O prazo de envio não impede lançamentos pendentes.</p>'+
+          '<form class="resenha-cal-outra-data" data-outra-data><label>Outra data (inclusive de semanas anteriores)<input type="date" name="data" required></label>'+
+          '<button type="submit" class="btn-page">ABRIR DATA</button><span role="status" data-outra-status></span></form>'+Array.from({length:4},(_,semana)=>{
           const grupo=dias.slice(semana*7,semana*7+7);
           return '<section class="resenha-cal-semana"><h3>'+(!semana?'Semana em andamento':'Semana '+(semana+1))+
             ' · '+escapar(diaBR(grupo[0].data))+' a '+escapar(diaBR(grupo[6].data))+'</h3><div class="resenha-cal-dias">'+grupo.map(d=>{
@@ -13635,6 +13640,28 @@ function epMesclarResenhaFt(payload,auto){
                 '<span class="pel">'+escapar(lotacao.join(' / ') || 'Sem pelotão de serviço')+'</span></button>';
             }).join('')+'</div></section>';
         }).join('')+'</div>';
+        const formData=host.querySelector('[data-outra-data]');
+        formData.onsubmit=async e=>{
+          e.preventDefault();
+          const data=formData.elements.namedItem('data').value;
+          if(!/^\d{4}-\d{2}-\d{2}$/.test(data))return;
+          const btn=formData.querySelector('button'), msg=formData.querySelector('[data-outra-status]');
+          btn.disabled=true;msg.textContent='Consultando…';
+          try{
+            let dia=dias.find(x=>x.data===data);
+            if(!dia){
+              const r=await chamarApi('dados_resenhas_enviadas',{
+                login:APP.credenciais.login,senha:APP.credenciais.senha,calendario:'1',dataCalendario:data
+              },{semCache:true});
+              if(!r?.ok)throw new Error(r?.erro || 'Não foi possível consultar esta data.');
+              dia=r.dados?.dias?.find(x=>x.data===data);
+              if(!dia)throw new Error('A implantação atual ainda não consulta datas fora do calendário.');
+            }
+            if(atual() && formData.isConnected)abrirDiaCalendarioResenhaFt_(dia,btn);
+            msg.textContent='';
+          }catch(err){if(formData.isConnected)msg.textContent=err.message || String(err);}
+          finally{btn.disabled=false;}
+        };
         host.onclick=e=>{
           const btn=e.target.closest('button[data-dia]');
           const dia=btn && dias.find(d=>d.data===btn.dataset.dia);
@@ -13676,11 +13703,11 @@ function epMesclarResenhaFt(payload,auto){
       return payload && typeof payload==='object' ? {cabecalho:registro.cabecalho,payload} : null;
     }
 
-    async function montarEdicaoOverlayResenhaFt_(overlay,edicao,data,pel){
+    async function montarEdicaoOverlayResenhaFt_(overlay,edicao,data,pel,avisos){
       await carregarDadosResenha();
       if(!overlay.ativo())return;
       APP.resenhaEdicao=edicao;
-      renderizarFormularioResenha(data && pel ? {data,pel} : null);
+      renderizarFormularioResenha(data && pel ? {data,pel,avisos} : null);
       if(edicao)prepararFormularioEdicaoResenha(edicao);
     }
 
@@ -13688,7 +13715,8 @@ function epMesclarResenhaFt(payload,auto){
       const overlay=resenhaOverlayFt_('Resenha de '+dataISOParaBR(dia.data),btn);
       if(!overlay)return;
       const {d,corpo}=overlay;
-      const planos=dia.planos.filter(p=>p.id || p.enviar || p.servico);
+      const disponiveis=dia.planos.filter(p=>p.id || p.enviar);
+      const planos=disponiveis.length ? disponiveis : dia.planos.filter(p=>p.servico);
       const ativo=overlay.ativo;
       const abrir=async plano=>{
         corpo.textContent='Carregando resenha e permissões…';
@@ -13708,10 +13736,13 @@ function epMesclarResenhaFt(payload,auto){
             void carregarCalendarioResenhaFt_();return;
           }
           if(!plano.enviar){
-            corpo.textContent=dia.fechado?'Semana em andamento. Não há resenha disponível para consulta neste dia.':'Não há resenha disponível para envio pelo seu perfil neste pelotão.';
+            corpo.textContent='Não há resenha registrada para este pelotão nesta data, e seu perfil não tem permissão para enviar por ele.';
             return;
           }
-          await montarEdicaoOverlayResenhaFt_(overlay,null,dia.data,plano.pel);
+          const avisos=[];
+          if(dia.atrasada)avisos.push('O prazo já passou. Você ainda pode enviar a resenha pendente.');
+          if(!plano.servico)avisos.push('Não há serviço regular previsto para este pelotão nesta data. Use este lançamento se houver uma escala a registrar.');
+          await montarEdicaoOverlayResenhaFt_(overlay,null,dia.data,plano.pel,avisos);
         }catch(e){if(ativo())corpo.textContent=e.message || String(e);}
       };
       if(planos.length===1){void abrir(planos[0]);return;}
@@ -13720,7 +13751,8 @@ function epMesclarResenhaFt(payload,auto){
       const opcoes=corpo.querySelector('.resenha-cal-opcoes');
       planos.forEach(p=>{
         const botao=document.createElement('button');botao.type='button';botao.className='btn-page';
-        botao.textContent=p.pel;botao.onclick=()=>abrir(p);opcoes.appendChild(botao);
+        botao.textContent=p.pel+(p.id?' · Ver resenha':p.enviar?(p.servico?' · Enviar':' · Enviar fora da escala'):' · Sem envio');
+        botao.onclick=()=>abrir(p);opcoes.appendChild(botao);
       });
       opcoes.querySelector('button')?.focus();
     }
@@ -13806,6 +13838,7 @@ function epMesclarResenhaFt(payload,auto){
           <div class="resenha-card">
             <div class="resenha-card-body">
               <form id="formResenhaEscala">
+                ${contexto?.avisos?.length ? '<div class="resenha-alerta" style="margin:0 0 12px">'+escapar(contexto.avisos.join(' '))+'</div>' : ''}
                 ${edicao ? '<div class="resenha-edicao-banner" style="margin:0 0 14px;padding:12px 14px;border:1px solid #d5a928;background:#fff8df;border-radius:12px;color:#4f4218"><strong>Correção da resenha ' + escapar(edicao.cabecalho && edicao.cabecalho.id || '') + '</strong><br>Última decisão: ' + escapar(edicao.cabecalho && edicao.cabecalho.justificativaAnalise || 'Aguardando aprovação.') + '</div>' : ''}
                 <div class="resenha-form-grid escala-topo">
                   <div class="resenha-form-field">
