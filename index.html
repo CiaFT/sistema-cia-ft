@@ -8274,7 +8274,6 @@ function epMesclarResenhaFt(payload,auto){
         menus.splice(indicePainel >= 0 ? indicePainel + 1 : menus.length, 0, cardRotinas);
       }
       if(['1º PEL','2º PEL'].includes(epGrupoClienteFt())||epGestorClienteFt())menus.push({id:'ESPACO_PEL',titulo:'ESPAÇO DO PEL',descricao:'Solicite folgas e acompanhe os pedidos do pelotão.'});
-      if(fcPodeAbrirAdmClienteFt()&&!menus.some(m=>ehModuloEscalasAdm(m.id)))menus.push({id:'ESCALAS_ADM',titulo:'ESCALAS ADM',descricao:'Acesse a agenda de folga compensatória da ADM.'});
       if(!menus.some(m=>m.id==='AVISOS_CIA_FT'))menus.push({id:'AVISOS_CIA_FT',titulo:'AVISOS CIA FT',descricao:'Comunicados da Companhia e ciência de leitura.'});
       if(entPodeGerir())menus.push({id:"ENTREVISTAS_FT",titulo:"CANDIDATURAS À CIA FT",icone:"📋",descricao:"Consulta de fichas, impressão e agendamento de entrevistas."});
       return menus;
@@ -8360,7 +8359,7 @@ function epMesclarResenhaFt(payload,auto){
       }
 
       if (ehModuloEscalasAdm(id)) {
-        if (!usuarioTemPermissaoCliente('ESCALAS_ADM', 'visualizar')&&!fcPodeAbrirAdmClienteFt()) {
+        if (!usuarioTemPermissaoCliente('ESCALAS_ADM', 'visualizar')) {
           abrirAcessoNegado('Escalas ADM');
           return;
         }
@@ -14091,10 +14090,6 @@ function epMesclarResenhaFt(payload,auto){
      * ESCALAS ADM — V1.2.5
      * ============================================================ */
 
-    function fcPodeAbrirAdmClienteFt(){
-      return epGrupoClienteFt()==='ADM'||fcPodeGerirClienteFt();
-    }
-
     function abrirEscalasAdm() {
       window.scrollTo(0, 0);
 
@@ -14113,29 +14108,13 @@ function epMesclarResenhaFt(payload,auto){
             </div>
           </div>
 
-          ${fcPodeAbrirAdmClienteFt()?`<section class="adm-card" style="margin-bottom:14px">
-            <div class="adm-card-header"><h2>Folga Compensatória · ADM</h2><p>Solicite FC nas datas abertas. O saldo é baixado na aprovação pelo Enc Adm ou Gestor.</p></div>
-            <div class="adm-card-body"><button type="button" class="btn-page" id="fcAdmAbrir" aria-expanded="false" aria-controls="fcAdmAgenda">ABRIR AGENDA DE FC</button>
-            <div id="fcAdmAgenda" hidden></div></div>
-          </section>`:''}
           <div id="escalasAdmConteudo">
             <div class="resenha-loading">Carregando semana de referência, tipos de escala e escalas já enviadas...</div>
           </div>
         </div>
       `;
 
-      const botaoFC=document.getElementById('fcAdmAbrir');
-      if(botaoFC)botaoFC.onclick=()=>{
-        const agenda=document.getElementById('fcAdmAgenda');
-        agenda.hidden=!agenda.hidden;
-        botaoFC.setAttribute('aria-expanded',String(!agenda.hidden));
-        if(!agenda.hidden)epRenderAgendaFt(agenda,'ADM','',true);
-      };
       const conteudo=document.getElementById('escalasAdmConteudo');
-      if(!usuarioTemPermissaoCliente('ESCALAS_ADM','visualizar')){
-        conteudo.textContent='';
-        return;
-      }
       carregarDadosEscalasAdm()
         .then(()=>{if(conteudo.isConnected)renderizarEscalasAdm();})
         .catch(function(err) {
@@ -14201,7 +14180,8 @@ function epMesclarResenhaFt(payload,auto){
                 ${admInfo('Policial', [u.postoGrad, u.nomeGuerra].filter(Boolean).join(' '))}
                 ${admInfo('Perfil APP', u.perfilAcesso || '-')}
                 ${admInfo('Semana de referência', semana.referencia || '-')}
-                ${admInfo('Prazo de envio', 'Sexta-feira até às 13h')}
+                  ${admInfo('Prazo de envio', 'Sexta-feira até às 13h')}
+                  ${epGrupoClienteFt()==='ADM'?admInfo('Saldo disponível de FC',Number(dados.saldoFC||0)+' dia(s)'):''}
                 ${admInfo('Escopo de visualização', permissao.escopo || '-')}
               </div>
 
@@ -14211,7 +14191,7 @@ function epMesclarResenhaFt(payload,auto){
           <div class="adm-card">
             <div class="adm-card-header">
               <h2>Minha escala administrativa</h2>
-              <p>Preencha a semana seguinte. O sistema grava uma linha na aba ESCALAS_ADM com decisão inicial PENDENTE.</p>
+              <p>Preencha os dias da semana seguinte. A Folga Compensatória só é descontada quando a escala é aprovada.</p>
             </div>
 
             <div class="adm-card-body">
@@ -14254,6 +14234,7 @@ function epMesclarResenhaFt(payload,auto){
     function escalaAdmPodeSerEditadaPeloUsuario(item) {
       if (!item) return true;
 
+      if(normalizarTexto(item.decisao)==='APROVADA'&&admTemFCFt(item))return false;
       const podeEditarModulo = usuarioTemPermissaoCliente('ESCALAS_ADM', 'editar') || usuarioTemPermissaoCliente('ESCALAS_ADM', 'aprovar');
       if (podeEditarModulo) return true;
 
@@ -14314,7 +14295,7 @@ function epMesclarResenhaFt(payload,auto){
           </div>
 
           <select id="adm_${escaparAttr(dia.chave)}_tipo" class="select-ft select-ft-real select-adm-dia-v124" style="appearance:none;-webkit-appearance:none;width:100%;min-height:54px;border:1px solid rgba(55,66,71,.18);border-radius:22px;padding:14px 48px 14px 16px;background:linear-gradient(180deg,#ffffff,#f7fafc);color:#17202a;-webkit-text-fill-color:#17202a;font-size:14px;font-weight:850;line-height:1.25;box-shadow:0 10px 24px rgba(15,23,42,.08);outline:none;;min-height:56px;border-radius:18px;padding-left:14px;padding-right:44px;" onchange="atualizarDiaEscalaAdm('${escaparAttr(dia.chave)}')"${disabled}>
-            ${optionsTiposEscalaAdm()}
+            ${optionsTiposEscalaAdm(dia)}
           </select>
 
           <input id="adm_${escaparAttr(dia.chave)}_horario" class="campo-oculto" type="text" placeholder="das 07h00 às 18h00"${disabled}>
@@ -14325,13 +14306,31 @@ function epMesclarResenhaFt(payload,auto){
     }
 
 
-    function optionsTiposEscalaAdm() {
-      const dados = APP.dadosEscalasAdm || {};
-      const tipos = dados.tiposEscalaAdm || ['EXPEDIENTE', 'JM', 'FOLGA', 'DISPENSA', 'AFASTAMENTO', 'OUTROS'];
-
-      return '<option value="">Selecione</option>' + tipos.map(function(tipo) {
-        return `<option value="${escaparAttr(tipo)}">${escapar(tipo)}</option>`;
-      }).join('');
+    function admTipoFt(v){return normalizarTexto(v||'').replace(/[.]/g,'').replace(/\s+/g,' ').trim();}
+    function admDiaFCFt(v){return ['FC','FOLGA COMPENSATORIA'].includes(admTipoFt(v));}
+    function admTemFCFt(item){return ['seg','ter','qua','qui','sex','sab','dom'].some(k=>admDiaFCFt(item[k]));}
+    function admFcLegadaFt(dia){
+      return (APP.dadosEscalasAdm?.datasFCLegadas||[]).includes(dia?.dataISO);
+    }
+    function optionsTiposEscalaAdm(dia) {
+      const dados=APP.dadosEscalasAdm||{};
+      const tipos=(dados.tiposEscalaAdm||['EXPEDIENTE','JM','FOLGA','DS','AFASTAMENTO','OUTROS'])
+        .filter(v=>!['AF REG','FERIAS','LP','FC','FOLGA COMPENSATORIA'].includes(admTipoFt(v)));
+      let i=tipos.findIndex(v=>admTipoFt(v)==='DS');
+      if(i<0)i=tipos.findIndex(v=>['DISPENSA','DISPENSA SERVICO','DISPENSA DE SERVICO'].includes(admTipoFt(v)));
+      if(i<0){tipos.push('DS');i=tipos.length-1;}
+      tipos.splice(i+1,0,'FÉRIAS','LP');
+      if(dia&&(Number(dados.saldoFC||0)>0||admFcLegadaFt(dia)))tipos.push('FOLGA COMPENSATÓRIA');
+      return '<option value="">Selecione</option>'+tipos.map(v=>'<option value="'+escaparAttr(v)+'">'+escapar(v)+'</option>').join('');
+    }
+    function admPreencherTipoFt(select,tipo){
+      if(!select)return;
+      if(tipo&&!Array.from(select.options).some(o=>o.value===tipo)){
+        const opt=document.createElement('option');
+        opt.value=tipo;opt.textContent=tipo+' (já registrado)';opt.hidden=true;
+        select.appendChild(opt);
+      }
+      select.value=tipo;
     }
 
 
@@ -14352,7 +14351,7 @@ function epMesclarResenhaFt(payload,auto){
         const horarioEl = document.getElementById('adm_' + dia.chave + '_horario');
         const detalheEl = document.getElementById('adm_' + dia.chave + '_detalhe');
 
-        if (tipoEl) tipoEl.value = partes.tipo;
+        admPreencherTipoFt(tipoEl,partes.tipo);
         atualizarDiaEscalaAdm(dia.chave);
         if (horarioEl) horarioEl.value = partes.horario || '';
         if (detalheEl) detalheEl.value = partes.detalhe || '';
@@ -14375,7 +14374,7 @@ function epMesclarResenhaFt(payload,auto){
         return { tipo: 'EXPEDIENTE', horario: texto, detalhe: '' };
       }
 
-      return { tipo: texto, horario: '', detalhe: '' };
+      return { tipo: admDiaFCFt(texto)?'FOLGA COMPENSATÓRIA':admTipoFt(texto)==='FERIAS'?'FÉRIAS':texto, horario: '', detalhe: '' };
     }
 
 
@@ -14497,6 +14496,8 @@ function epMesclarResenhaFt(payload,auto){
         payload[dia.chave] = tipo;
       });
 
+      const fcNovas=dias.filter(d=>admDiaFCFt(payload[d.chave])&&!admFcLegadaFt(d)).length;
+      if(fcNovas>Number(dados.saldoFC||0))erros.push('Os dias selecionados de FC excedem seu saldo disponível.');
       const obsEl = document.getElementById('escalaAdmObservacoes');
       payload.observacoes = String(obsEl ? obsEl.value : '').trim();
 
@@ -14738,11 +14739,11 @@ function epMesclarResenhaFt(payload,auto){
 
           <textarea id="admJust_${escaparAttr(chaveAnalise)}" class="adm-analise-justificativa" placeholder="Justificativa da análise, quando necessária"></textarea>
 
-          <div class="adm-analise-actions">
+          ${admTemFCFt(item)&&APP.dadosEscalasAdm?.podeAnalisarFC!==true?'<p class="adm-alerta">A análise de escalas com FC é restrita ao Enc Adm ou ao Gestor.</p>':`<div class="adm-analise-actions">
             <button type="button" class="adm-analise-btn aprovar" onclick="analisarEscalaAdm('${escaparAttr(idEscala)}','${escaparAttr(linhaEscala)}','APROVADA')">APROVAR</button>
             <button type="button" class="adm-analise-btn recusar" onclick="analisarEscalaAdm('${escaparAttr(idEscala)}','${escaparAttr(linhaEscala)}','RECUSADA')">RECUSAR</button>
             <button type="button" class="adm-analise-btn corrigir" onclick="analisarEscalaAdm('${escaparAttr(idEscala)}','${escaparAttr(linhaEscala)}','CORREÇÃO SOLICITADA')">SOLICITAR CORREÇÃO</button>
-          </div>
+          </div>`}
         </div>
       `;
     }
@@ -17566,8 +17567,9 @@ function epMesclarResenhaFt(payload,auto){
         const tipoEl = document.getElementById('hist_' + k + '_tipo');
         const horarioEl = document.getElementById('hist_' + k + '_horario');
         const detalheEl = document.getElementById('hist_' + k + '_detalhe');
-        if (tipoEl) tipoEl.value = partes.tipo;
+        admPreencherTipoFt(tipoEl,partes.tipo);
         atualizarDiaHistoricoEscalaAdm(k);
+        if(tipoEl&&admDiaFCFt(item[k]))tipoEl.disabled=true;
         if (horarioEl) horarioEl.value = partes.horario || '';
         if (detalheEl) detalheEl.value = partes.detalhe || '';
       });
