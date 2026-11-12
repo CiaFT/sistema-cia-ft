@@ -6894,16 +6894,47 @@ Banco de dados: Google Sheets.
     .oc-ft-grid .oc-ft-largo{grid-column:1/-1}
     .oc-ft-indices form .page-actions{margin-top:12px}
     .oc-ft-indices [hidden]{display:none!important}
-    .oc-ft-indices .oc-ft-tabela table{font-size:inherit}
-    .oc-ft-indices .oc-ft-tabela tbody th{background:#f2f5f7;color:#17202a;font-weight:650}
-    .oc-ft-indices .oc-ft-tabela td{vertical-align:top}
-    .oc-ft-indices .oc-ft-tabela small{display:block;color:#47586a;margin-top:4px}
-    .oc-ft-indices-paineis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-    .oc-ft-indices-lista,.oc-ft-indices-meses{list-style:none;padding:0;margin:0;display:grid;gap:6px}
-    .oc-ft-indices-lista li,.oc-ft-indices-meses li{display:flex;justify-content:space-between;gap:12px;padding:8px 10px;border:1px solid #dbe1e7;border-radius:10px;background:#f7f9fa}
+    .oc-ft-indices-kpis,.oc-ft-indices-paineis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .oc-ft-indices-kpis{grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr))}
+    .oc-ft-indices-kpi,.oc-ft-indices-painel{min-width:0;padding:14px;border:1px solid #dbe1e7;border-radius:14px;background:#fff}
+    .oc-ft-indices-kpi{background:linear-gradient(180deg,#f7f9fb 0,#fff 72%)}
+    .oc-ft-indices-kpi h3{margin:0 0 10px;color:#17202a;font-size:14px;line-height:1.35}
+    .oc-ft-indices-kpi dl{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:0}
+    .oc-ft-indices-kpi dl>div{min-width:0;border-top:1px solid #dbe1e7;padding:8px 4px 0}
+    .oc-ft-indices-kpi dt{color:#47586a;font-size:11px;font-weight:700}
+    .oc-ft-indices-kpi dd{margin:3px 0 0;color:#17202a;font-size:17px;font-weight:800;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+    .oc-ft-indices-kpi dl>div:first-child dd{font-size:20px}
+    .oc-ft-indices-kpi dd small{display:block;font-size:10px;color:#47586a;font-weight:500;line-height:1.3;margin-top:4px}
+    .oc-ft-indices-lista,.oc-ft-indices-meses{list-style:none;padding:0;margin:0;display:grid;gap:9px}
+    .oc-ft-indices-lista li{display:grid;grid-template-columns:1fr auto;gap:5px 8px;align-items:center;color:#17202a;font-size:12px}
     .oc-ft-indices-lista span{overflow-wrap:anywhere}
-    .oc-ft-indices-meses{grid-template-columns:repeat(auto-fit,minmax(106px,1fr))}
-    @media(max-width:620px){.oc-ft-indices-paineis{grid-template-columns:1fr}.oc-ft-indices .oc-ft-tabela table{font-size:.85em}}
+    .oc-ft-indices-faixa{display:block;grid-column:1/-1;height:5px;background:#e6ebef;border-radius:9px;overflow:hidden}
+    .oc-ft-indices-faixa i{display:block;height:100%;background:#455760;border-radius:inherit}
+    .oc-ft-indices-grafico .oc-ft-indices-legenda{display:flex;flex-wrap:wrap;gap:8px 16px;margin:0 0 12px;color:#47586a;font-size:12px}
+    .oc-ft-indices-legenda span{display:flex;align-items:center;gap:6px}
+    .oc-ft-indices-legenda i{width:10px;height:10px;border-radius:3px;background:#374247}
+    .oc-ft-indices-legenda .anterior i,.oc-ft-indices-grafico .anterior .oc-ft-indices-barra{background:#a3b4c3}
+    .oc-ft-indices-meses{grid-template-columns:repeat(var(--meses),minmax(0,1fr));gap:6px}
+    .oc-ft-indices-meses li{min-width:0;display:grid;grid-template-rows:1fr auto;gap:6px;text-align:center;font-size:11px}
+    .oc-ft-indices-colunas{height:150px;display:flex;justify-content:center;gap:4px;border-bottom:1px solid #dbe1e7;background:repeating-linear-gradient(to top,transparent 0,transparent 36px,#edf1f4 36px,#edf1f4 37px)}
+    .oc-ft-indices-serie{width:min(24px,46%);height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px}
+    .oc-ft-indices-serie strong{font-size:11px;color:#17202a;line-height:1}
+    .oc-ft-indices-barra{background:#374247;border-radius:4px 4px 0 0;display:block;width:100%;height:var(--v)}
+    .oc-ft-indices-meses time{font-weight:700;color:#47586a}
+    @media(max-width:740px){
+      .oc-ft-indices-meses{grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px 12px}
+      .oc-ft-indices-meses li{grid-template-columns:28px 1fr;grid-template-rows:auto;align-items:center;gap:8px;text-align:left}
+      .oc-ft-indices-meses time{grid-column:1;grid-row:1}
+      .oc-ft-indices-colunas{grid-column:2;grid-row:1;min-height:22px;height:auto;background:none;border:0;flex-direction:column;gap:4px}
+      .oc-ft-indices-serie{width:100%;height:auto;display:grid;grid-template-columns:1fr 24px;justify-content:initial;align-items:center;gap:4px}
+      .oc-ft-indices-serie strong{grid-column:2;grid-row:1;text-align:right}
+      .oc-ft-indices-barra{grid-column:1;grid-row:1;width:var(--v);height:7px;border-radius:4px}
+    }
+    @media(max-width:560px){.oc-ft-indices-paineis{grid-template-columns:1fr}}
+    .oc-ft-indices-meses time{grid-row:2}
+    .oc-ft-indices-colunas{grid-row:1}
+    .oc-ft-indices-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+    @media(max-width:740px){.oc-ft-indices-meses time{grid-row:1}}
     #ocFtConteudo label{display:grid;gap:6px;min-width:0;font-size:11px;font-weight:800;color:#374247}
     #ocFtConteudo input,#ocFtConteudo select,#ocFtConteudo textarea{width:100%;min-width:0;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:10px;padding:10px;background:#fff;color:#17202a;font:inherit;font-size:12px}
     .oc-ft-responsavel{background:#f1f5f9;border:1px solid #dbe1e7;border-radius:12px;padding:12px;margin-bottom:16px;color:#374247;font-size:12px}
@@ -8730,7 +8761,7 @@ function epMesclarResenhaFt(payload,auto){
     ];
     function ocFtCamposIndicadores(d={}){
       const num=(k,rotulo,peso=false)=>'<label>'+rotulo+'<input name="ocInd_'+k+'" inputmode="'+(peso?'decimal':'numeric')+'" maxlength="'+(peso?12:5)+'" pattern="'+(peso?'[0-9]{1,8}([.,][0-9]{1,3})?':'[0-9]{1,5}')+'" value="'+escaparAttr(d[k]??'')+'"></label>';
-      return '<section class="oc-ft-secao"><h2>Dados para Índices Criminais</h2><p class="oc-ft-nota">Informe 0 quando não houver. Deixe em branco apenas se o dado for desconhecido. No campo de drogas, informe o peso total em gramas, sem separador de milhar (ex.: 1250,5).</p><div class="oc-ft-grid">'+
+      return '<section class="oc-ft-secao"><h2>Dados para Índices Criminais</h2><p class="oc-ft-nota">Informe 0 quando não houver. Deixe em branco apenas se o dado for desconhecido. No campo de drogas, informe o peso total em gramas, sem separador de milhar (ex.: 1250,5). No painel, o flagrante é apurado pelo DP registrado, com exceção das ocorrências de captura.</p><div class="oc-ft-grid">'+
         '<label>Região / bairro<input name="ocInd_regiao" maxlength="100" placeholder="Somente o nome do bairro ou região" value="'+escaparAttr(d.regiao||'')+'"></label>'+
         '<label>Houve flagrante?<select name="ocInd_flagrante"><option value="">Não informado</option><option value="1"'+(d.flagrante===1?' selected':'')+'>Sim</option><option value="0"'+(d.flagrante===0?' selected':'')+'>Não</option></select></label>'+
         num('presas','Pessoas presas')+num('procurados','Procurados capturados')+num('drogasGramas','Drogas apreendidas (g)',true)+num('armas','Armas apreendidas')+'</div></section>';
@@ -8788,24 +8819,40 @@ function epMesclarResenhaFt(payload,auto){
       const p=r.periodo,d=r.atual,fmt=new Intl.NumberFormat('pt-BR'),peso=new Intl.NumberFormat('pt-BR',{maximumFractionDigits:6});
       const faixa=x=>escapar(iccDataBR(x.inicio))+' a '+escapar(iccDataBR(x.fim));
       if(p.futuro)return '<section class="oc-ft-secao"><p>O período de '+faixa(p)+' ainda não começou.</p></section>';
+      const metricas=[['total','Ocorrências atendidas'],...OC_FT_INDICES_METRICAS,['capturas','Ocorrências de captura']];
       const resumo=(dados,periodo,titulo)=>'<section class="oc-ft-secao"><h2>'+titulo+' · '+faixa(periodo)+'</h2>'+
-        (dados.grupos.geral.total?'<div class="oc-ft-tabela"><table><thead><tr><th scope="col">Indicador</th><th scope="col">Geral</th><th scope="col">1º Pel</th><th scope="col">2º Pel</th></tr></thead><tbody>'+
-        [['total','Ocorrências atendidas'],...OC_FT_INDICES_METRICAS].map(([k,t])=>'<tr><th scope="row">'+t+'</th>'+['geral','pel1','pel2'].map(g=>{
-          const grupo=dados.grupos[g],i=grupo.indicadores[k];
-          if(!i)return '<td><strong>'+fmt.format(grupo.total)+'</strong></td>';
-          if(!grupo.total)return '<td>— <small>Sem registros</small></td>';
-          if(!i.informadas)return '<td>— <small>Não informado</small></td>';
-          const v=k==='drogasGramas'?peso.format(i.valor/1e6)+' kg':fmt.format(i.valor);
-          return '<td><strong>'+v+'</strong>'+(i.informadas<grupo.total?'<small>'+fmt.format(i.informadas)+' de '+fmt.format(grupo.total)+' informadas</small>':'')+'</td>';
-        }).join('')+'</tr>').join('')+'</tbody></table></div>'+
-        '<p class="oc-ft-nota">Geral também inclui outros grupos'+(dados.semPel?' e '+fmt.format(dados.semPel)+' ocorrência(s) sem pelotão informado':'')+'. Flagrantes contam ocorrências; pessoas presas e procurados são contagens informadas separadamente.</p>':'<p>Nenhuma ocorrência validada neste período.</p>')+'</section>';
-      const lista=(itens,vazio)=>itens.length?'<ol class="oc-ft-indices-lista">'+itens.map(x=>'<li><span>'+escapar(x.nome)+'</span><strong>'+fmt.format(x.total)+'</strong></li>').join('')+'</ol>':'<p>'+vazio+'</p>';
-      const cards=dados=>dados.grupos.geral.total?'<div class="oc-ft-indices-paineis"><section class="oc-ft-secao"><h2>Top 5 · Naturezas</h2>'+lista(dados.naturezas,'Sem naturezas informadas.')+
+        (dados.grupos.geral.total?'<div class="oc-ft-indices-kpis">'+metricas.map(([k,t])=>'<article class="oc-ft-indices-kpi"><h3>'+t+'</h3><dl>'+
+          [['geral','Geral'],['pel1','1º Pel'],['pel2','2º Pel']].map(([g,rotulo])=>{
+            const grupo=dados.grupos[g],i=grupo.indicadores[k];
+            let valor='—',nota='';
+            if(!i)valor=fmt.format(k==='capturas'?grupo.capturas||0:grupo.total);
+            else if(!grupo.total)nota='Sem registros';
+            else if(!i.informadas)nota='Não informado';
+            else {
+              valor=k==='drogasGramas'?peso.format(i.valor/1e6)+' kg':fmt.format(i.valor);
+              if(i.informadas<grupo.total)nota=fmt.format(i.informadas)+' de '+fmt.format(grupo.total)+' informadas';
+            }
+            return '<div><dt>'+rotulo+'</dt><dd>'+valor+(nota?'<small>'+nota+'</small>':'')+'</dd></div>';
+          }).join('')+'</dl></article>').join('')+'</div>'+
+          '<p class="oc-ft-nota">Geral inclui outros grupos'+(dados.semPel?' e '+fmt.format(dados.semPel)+' ocorrência(s) sem pelotão identificado':'')+
+          '. '+(dados.pelPelaEquipe?fmt.format(dados.pelPelaEquipe)+' ocorrência(s) com pelotão identificado pela equipe. ':'')+'Flagrantes: apresentação no DP, exceto ocorrências de captura. Pessoas presas: indiciados e sindicados, sem repetir a mesma pessoa no registro, quando não houver total informado. Ocorrências de captura e pessoas procuradas capturadas são contagens diferentes.</p>':
+          '<p>Nenhuma ocorrência validada neste período.</p>')+'</section>';
+      const lista=(itens,vazio)=>itens.length?'<ol class="oc-ft-indices-lista">'+itens.map(x=>
+        '<li><span>'+escapar(x.nome)+'</span><strong>'+fmt.format(x.total)+'</strong><span class="oc-ft-indices-faixa" aria-hidden="true"><i style="width:'+Math.round(x.total/itens[0].total*100)+'%"></i></span></li>'
+      ).join('')+'</ol>':'<p>'+vazio+'</p>';
+      const cards=dados=>dados.grupos.geral.total?'<div class="oc-ft-indices-paineis"><section class="oc-ft-secao oc-ft-indices-painel"><h2>Top 5 · Naturezas</h2>'+lista(dados.naturezas,'Sem naturezas informadas.')+
         (dados.semNatureza?'<p class="oc-ft-nota">'+fmt.format(dados.semNatureza)+' ocorrência(s) sem natureza informada.</p>':'')+'</section>'+
-        '<section class="oc-ft-secao"><h2>'+(dados.regioesLideres.length>1?'Regiões empatadas em primeiro':'Região com mais ocorrências')+'</h2>'+lista(dados.regioesLideres,'Sem região informada no período.')+
-        '<p class="oc-ft-nota">Região informada em '+fmt.format(dados.grupos.geral.total-dados.semRegiao)+' de '+fmt.format(dados.grupos.geral.total)+' ocorrências.</p></section></div>':'';
-      const tendencia=d.grupos.geral.total&&d.tendencia.length>1?'<section class="oc-ft-secao"><h2>Ocorrências por mês</h2><ul class="oc-ft-indices-meses">'+d.tendencia.map(x=>'<li><span>'+escapar(x.mes.slice(5)+'/'+x.mes.slice(0,4))+'</span><strong>'+fmt.format(x.total)+'</strong></li>').join('')+'</ul></section>':'';
-      return resumo(d,p,'Período consultado')+cards(d)+tendencia+(r.anterior?resumo(r.anterior,p.anterior,'Mesmo período do ano anterior')+cards(r.anterior):'<p class="oc-ft-nota">O comparativo anual fica disponível a partir de 2027, usando 2026 como primeira base.</p>');
+        '<section class="oc-ft-secao oc-ft-indices-painel"><h2>'+(dados.regioesLideres.length>1?'Regiões empatadas em primeiro':'Região com mais ocorrências')+'</h2>'+lista(dados.regioesLideres,'Sem região identificada no período.')+
+        '<p class="oc-ft-nota">Região identificada em '+fmt.format(dados.grupos.geral.total-dados.semRegiao)+' de '+fmt.format(dados.grupos.geral.total)+' ocorrências.</p></section></div>':'';
+      const anterior=r.anterior?r.anterior.tendencia:[];
+      const max=Math.max(1,...d.tendencia.map(x=>x.total),...anterior.map(x=>x.total));
+      const meses=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+      const serie=(x,classe)=>'<span class="oc-ft-indices-serie '+classe+'"><strong><span class="oc-ft-indices-sr">'+escapar(x.mes.slice(0,4))+': </span>'+fmt.format(x.total)+'</strong><i class="oc-ft-indices-barra" aria-hidden="true" style="--v:'+(x.total?Math.max(1,Math.round(x.total/max*86)):0)+'%"></i></span>';
+      const tendencia=(d.tendencia.length>1&&(d.grupos.geral.total||r.anterior?.grupos.geral.total))?
+        '<section class="oc-ft-secao oc-ft-indices-painel oc-ft-indices-grafico"><h2>Ocorrências por mês</h2><p class="oc-ft-indices-legenda"><span><i aria-hidden="true"></i>'+p.ano+'</span>'+
+        (p.anterior?'<span class="anterior"><i aria-hidden="true"></i>'+p.anterior.ano+'</span>':'')+'</p><ul class="oc-ft-indices-meses" style="--meses:'+d.tendencia.length+'">'+
+        d.tendencia.map(x=>{const mes=x.mes.slice(5),prev=anterior.find(a=>a.mes.slice(5)===mes);return '<li><time datetime="'+escaparAttr(x.mes)+'">'+meses[Number(mes)-1]+'</time><div class="oc-ft-indices-colunas">'+serie(x,'atual')+(prev?serie(prev,'anterior'):'')+'</div></li>';}).join('')+'</ul></section>':'';
+      return resumo(d,p,'Período consultado')+tendencia+cards(d)+(r.anterior?resumo(r.anterior,p.anterior,'Mesmo período do ano anterior')+cards(r.anterior):'<p class="oc-ft-nota">O comparativo fica disponível a partir de 2027, usando 2026 como primeira base.</p>');
     }
 
     function ocFtRenderFormulario(){
