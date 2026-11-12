@@ -7756,7 +7756,6 @@ async function dsDetalharFt(id){
         : '👤';
 
       const classeHierarquia = classeVisualHierarquia(u.postoGrad);
-      const ferias = montarTextoFerias(u);
       const eap = valorCampo(u, ['eap', 'EAP', 'eapPeriodo', 'periodoEap']);
 
       document.getElementById('appConteudo').innerHTML = `
@@ -7809,11 +7808,7 @@ async function dsDetalharFt(id){
                         ${dadosItem('RG', valorCampo(u, ['rg', 'RG']))}
                         ${dadosItem('Data de nascimento', valorCampo(u, ['dataNascimento', 'nascimento', 'dtNascimento']))}
                         ${dadosItem('Data de entrada na Cia FT', valorCampo(u, ['dataEntrada', 'entradaCiaFt', 'entrada', 'dataEntradaCia']))}
-                        <div class="dados-item" id="meusDadosFeriasFt" aria-live="polite">
-                          <small>Férias</small>
-                          <strong>${escapar(ferias || '-')}</strong>
-                          <span class="meus-dados-ferias-nota" data-ferias-paf></span>
-                        </div>
+                        ${montarCampoFeriasPafFt_(u,'meusDadosFeriasFt','dados-item')}
                         ${dadosItem('EAP', eap)}
                       </div>
                     </div>
@@ -7871,62 +7866,75 @@ async function dsDetalharFt(id){
           </div>
         </div>
       `;
-      void carregarFeriasMeusDadosFt_(u);
+      void carregarFeriasPafCardFt_(u,document.getElementById('meusDadosFeriasFt'));
     }
 
 
-    function meusDadosDiaFeriasFt_(valor){
-      const s=String(valor ?? '').trim();
-      const br=s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-      const iso=br ? br[3]+'-'+br[2]+'-'+br[1] : (/^\d{4}-\d{2}-\d{2}$/.test(s) ? s : '');
+    function diaFeriasCardFt_(valor){
+      const texto=String(valor ?? '').trim();
+      const br=texto.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      const iso=br?br[3]+'-'+br[2].padStart(2,'0')+'-'+br[1].padStart(2,'0') : (/^\d{4}-\d{2}-\d{2}$/.test(texto)?texto:'');
       const ms=Date.parse(iso+'T00:00:00Z');
       return Number.isFinite(ms) && new Date(ms).toISOString().slice(0,10)===iso ? ms/86400000 : null;
     }
 
-    function meusDadosSituacaoFerias2026Ft_(u,hoje){
-      const integral=valorCampo(u,['ferias30','ferias','feriasAj','feriasAJ']);
-      const parte1=valorCampo(u,['ferias15a','ferias1','feriasAk','feriasAK']);
-      const parte2=valorCampo(u,['ferias15b','ferias2','feriasAl','feriasAL']);
-      const inicio=meusDadosDiaFeriasFt_;
-      const diaHoje=inicio(hoje);
-      if(diaHoje===null)return 'incerto';
-      const eh2026=v=>v!==null && new Date(v*86400000).getUTCFullYear()===2026;
-      const datas=[inicio(parte1),inicio(parte2)].filter(eh2026).sort((a,b)=>a-b);
-      if(datas.some(d=>diaHoje<=d+14))return 'pendente';
-      if(integral){
-        const d=inicio(integral);
-        if(!eh2026(d))return 'incerto';
-        if(diaHoje<=d+29)return 'pendente';
-        return parte1 || parte2 ? 'incerto' : 'terminou';
-      }
-      if(datas.length===2 && datas[1]>=datas[0]+15)return 'terminou';
-      return 'incerto';
+    function feriasLegadasPendentesCardFt_(u,hoje,ano){
+      const tipos=[
+        [valorCampo(u,['ferias30','ferias','feriasAj','feriasAJ']),30],
+        [valorCampo(u,['ferias15a','ferias1','feriasAk','feriasAK']),15],
+        [valorCampo(u,['ferias15b','ferias2','feriasAl','feriasAL']),15]
+      ];
+      return tipos.some(([valor,dias])=>{
+        const inicio=diaFeriasCardFt_(valor);
+        return inicio!==null && new Date(inicio*86400000).getUTCFullYear()<=ano && inicio+dias-1>=hoje;
+      });
     }
 
-    async function carregarFeriasMeusDadosFt_(u){
-      const campo=document.getElementById('meusDadosFeriasFt'),geracao=APP.sessaoGeracao;
+    function selecionarFeriasPafCardFt_(u,resposta){
+      const hoje=diaFeriasCardFt_(resposta?.hoje_sp);
+      if(hoje===null || !Array.isArray(resposta.periodos))throw new Error('Datas do PAF indisponíveis.');
+      const ano=Number(resposta.hoje_sp.slice(0,4)), porAno=new Map();
+      for(const p of resposta.periodos){
+        const ini=diaFeriasCardFt_(p?.inicio),fim=diaFeriasCardFt_(p?.fim),a=Number(p?.ano);
+        if(ini===null || fim===null || fim<ini || ![ano-1,ano,ano+1].includes(a))continue;
+        if(!porAno.has(a))porAno.set(a,[]);
+        porAno.get(a).push({...p,ini,fimDia:fim});
+      }
+      const atual=porAno.get(ano) || [], anterior=porAno.get(ano-1) || [];
+      const anteriorEmCurso=anterior.filter(p=>p.ini<=hoje && p.fimDia>=hoje);
+      const diasLegados=feriasLegadasPendentesCardFt_(u,hoje,ano);
+      const textoLegado=montarTextoFerias(u) || '—';
+      const exibir=(a,periodos)=>{
+        const br=d=>new Date(d*86400000).toISOString().slice(0,10).split('-').reverse().join('/');
+        return 'PAF '+a+': '+periodos.slice().sort((x,y)=>x.ini-y.ini).map(p=>
+          br(p.ini)+' a '+br(p.fimDia)+(p.sobrestado?' (sobrestado)':'')).join(' • ');
+      };
+      if(anteriorEmCurso.length)return {valor:exibir(ano-1,anteriorEmCurso)};
+      if(atual.some(p=>p.fimDia>=hoje))return {valor:exibir(ano,atual)};
+      if(!atual.length && diasLegados)return {valor:textoLegado};
+      if(porAno.has(ano+1))return {valor:exibir(ano+1,porAno.get(ano+1))};
+      if(atual.length)return {valor:exibir(ano,atual),nota:'PAF '+(ano+1)+' ainda sem período validado.'};
+      return {valor:textoLegado,nota:'Sem período validado no PAF '+ano+' ou '+(ano+1)+'.'};
+    }
+
+    function montarCampoFeriasPafFt_(u,id,classe){
+      return '<div class="'+classe+'" id="'+id+'" aria-live="polite"><small>Férias</small><strong>'+
+        escapar(montarTextoFerias(u) || '—')+'</strong><span class="meus-dados-ferias-nota" data-ferias-paf></span></div>';
+    }
+
+    async function carregarFeriasPafCardFt_(u,campo,reConsulta=null){
       if(!campo)return;
-      const atual=()=>campo.isConnected && APP.usuario===u && APP.sessaoGeracao===geracao;
+      const geracao=APP.sessaoGeracao,usuario=APP.usuario;
+      const atual=()=>campo.isConnected && APP.usuario===usuario && APP.sessaoGeracao===geracao;
       const nota=campo.querySelector('[data-ferias-paf]');
       try{
-        const r=await rpcPlanoFerias('ft_meus_dados_ferias_2027_v1',{});
+        const r=await rpcPlanoFerias('ft_consultar_ferias_paf_anual_v1',reConsulta===null?{}:{p_re:reConsulta});
         if(!atual())return;
-        if(r?.ano!==2027 || !Array.isArray(r.periodos))throw new Error('Dados de férias indisponíveis.');
-        const formatar=d=>String(d).split('-').reverse().join('/');
-        const datas=r.periodos.filter(p=>meusDadosDiaFeriasFt_(p?.inicio)!==null && meusDadosDiaFeriasFt_(p?.fim)!==null)
-          .map(p=>formatar(p.inicio)+' a '+formatar(p.fim)+(p.sobrestado?' (sobrestado)':''));
-        const texto=datas.length?datas.join(' • '):'Sem período validado no PAF 2027.';
-        const situacao=meusDadosSituacaoFerias2026Ft_(u,r.hoje_sp);
-        const valor=campo.querySelector('strong');
-        if(situacao==='terminou'){
-          valor.textContent=datas.length?'PAF 2027: '+texto:texto;
-        }else if(situacao==='incerto' && datas.length){
-          // Cadastro incompleto: não esconde a previsão confirmada nem presume fruição.
-          if(montarTextoFerias(u))nota.textContent='PAF 2027: '+texto;
-          else valor.textContent='PAF 2027: '+texto;
-        }
+        const texto=selecionarFeriasPafCardFt_(u,r);
+        campo.querySelector('strong').textContent=texto.valor;
+        nota.textContent=texto.nota || '';
       }catch(_){
-        if(atual())nota.textContent='Não foi possível consultar o PAF 2027.';
+        if(atual())nota.textContent='Não foi possível consultar as datas do PAF.';
       }
     }
 
@@ -16204,6 +16212,9 @@ function epMesclarResenhaFt(payload,auto){
       modal.onclick = function(evt) {
         if (evt.target === modal) fecharCardConsultaEfetivo();
       };
+      if (/^\d{6}$/.test(alvoLogin)) {
+        void carregarFeriasPafCardFt_(alvo,modal.querySelector('#consultaFeriasPafFt'),alvoLogin);
+      }
     }
 
 
@@ -16490,9 +16501,7 @@ function epMesclarResenhaFt(payload,auto){
           ${consultaDetail('RG', pm.rg)}
           ${consultaDetail('Nascimento', pm.dataNascimento)}
           ${consultaDetail('Entrada Cia FT', pm.entradaCia || pm.dataEntrada)}
-          ${consultaDetail('Férias 30 dias', pm.ferias30)}
-          ${consultaDetail('Férias 15 dias 1', pm.ferias15a)}
-          ${consultaDetail('Férias 15 dias 2', pm.ferias15b)}
+          ${montarCampoFeriasPafFt_(pm,'consultaFeriasPafFt','consulta-detail')}
           ${consultaDetail('EAP', pm.eap)}
           ${consultaDetail('Perfil APP', pm.perfilAcesso)}
           ${consultaDetail('Endereço', pm.endereco)}
