@@ -6892,6 +6892,9 @@ Banco de dados: Google Sheets.
     /* Ocorrências: formulários e tabelas seguem a paleta do portal. */
     .oc-ft-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
     .oc-ft-grid .oc-ft-largo{grid-column:1/-1}
+    .paf-dias-pendentes{color:#8d2424}
+    .paf-fruicao-campo{display:grid;gap:4px;min-width:136px}
+    .paf-fruicao-campo input{font:inherit;border:1px solid #cbd5e1;border-radius:8px;background:#fff;padding:6px}
     .oc-ft-indices form .page-actions{margin-top:12px}
     .oc-ft-indices [hidden]{display:none!important}
     .oc-ft-indices-kpis,.oc-ft-indices-paineis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
@@ -7528,6 +7531,12 @@ async function dsDetalharFt(id){
       `;
       aplicarFotosSupabaseNosCards();
       avisosVerificarInicioFt();
+      const status=document.querySelector('.pm-profile-card .pm-main-info .status');
+      if(status&&normalizarTexto(u.status)==='APTO'){
+        ocFtApi('ocorrencias_paf_status').then(function(r){
+          if(status.isConnected&&APP.usuario===u&&r.ferias)status.textContent='FÉRIAS';
+        }).catch(function(){});
+      }
     }
 
     function montarCardPolicial(u) {
@@ -8242,18 +8251,18 @@ function epChaveReFt(v){return String(v||'').replace(/\D/g,'').slice(0,6);}
 async function epBuscarResenhaFt(pel,data){
  const [folgas,ds]=await Promise.allSettled([ocFtApi('espaco_pel_resenha',{pel,data}),rpcPlanoFerias('ft_ds_resenha_v142',{p_pel:pel,p_data:data})]);
  if(folgas.status!=='fulfilled')throw folgas.reason;
- return {itens:[...(ds.status==='fulfilled'?ds.value:[]),...(folgas.value.itens||[])],semDS:ds.status!=='fulfilled'};
+ return {itens:[...(ds.status==='fulfilled'?ds.value:[]),...(folgas.value.itens||[])],ferias:folgas.value.ferias||[],semDS:ds.status!=='fulfilled'};
 }
 async function epPreviaResenhaFt(){
  const alvo=document.getElementById('epPreviaResenha'),pel=document.getElementById('resenhaPelotao')?.value,data=document.getElementById('resenhaDataEscala')?.value;
  if(!alvo)return;
  const req=String((Number(alvo.dataset.req)||0)+1);alvo.dataset.req=req;
  if(!pel||!data){alvo.textContent='Escolha o pelotão e a data para ver as folgas e dispensas automáticas.';return;}
- alvo.textContent='Consultando folgas e dispensas…';
+ alvo.textContent='Consultando folgas, dispensas e férias…';
  try{
   const r=await epBuscarResenhaFt(pel,data);if(!alvo.isConnected||alvo.dataset.req!==req)return;
   alvo.innerHTML=(r.semDS?'<p>DS automática indisponível. Confira e lance manualmente, se necessário.</p>':'')+
-   (r.itens.length?'<ul>'+r.itens.map(x=>'<li>'+dsEscFt(x.nome)+' · '+dsEscFt(epTiposFt[x.tipo])+'</li>').join('')+'</ul>':'<p>Nenhuma ausência automática encontrada.</p>');
+   (r.itens.length||r.ferias.length?'<ul>'+[...r.itens,...r.ferias].map(x=>'<li>'+dsEscFt(x.nome)+' · '+dsEscFt(x.tipo==='FERIAS'?'Férias — Afastamentos':epTiposFt[x.tipo])+'</li>').join('')+'</ul>':'<p>Nenhuma ausência automática encontrada.</p>');
  }catch(err){if(alvo.isConnected&&alvo.dataset.req===req)alvo.textContent=err.message;}
 }
 function epMesclarResenhaFt(payload,auto){
@@ -9568,7 +9577,7 @@ function epMesclarResenhaFt(payload,auto){
       return !!(aIni && aFim && bIni && bFim && aIni <= bFim && bIni <= aFim);
     }
 
-    async function carregarPlanoAnualFerias() {
+    async function carregarPlanoAnualFerias(anoFruicao) {
       const aviso = document.getElementById('feriasAviso');
       const conteudo = document.getElementById('feriasConteudo');
       if (!aviso || !conteudo) return;
@@ -9576,7 +9585,8 @@ function epMesclarResenhaFt(payload,auto){
       aviso.innerHTML = '<h2>Carregando ciclo e disponibilidade...</h2><p>Consultando datas, bloqueios e solicitações do ciclo.</p>';
       conteudo.innerHTML = '';
       try {
-        const dados = await rpcPlanoFerias('appft_ferias_listar', { p_ano_fruicao: null });
+        const dados = await rpcPlanoFerias('ft_paf_fruicao_listar_v2', { p_ano_fruicao: anoFruicao?Number(anoFruicao):null });
+        if(!conteudo.isConnected)return;
         window.APPFT_FERIAS_DADOS = dados || {};
         renderizarPlanoAnualFerias(dados || {});
       } catch (erro) {
@@ -9617,6 +9627,35 @@ function epMesclarResenhaFt(payload,auto){
       }
     }
 
+    function pafCampoFruicaoFt(p,campo,hoje){
+      const inicio=campo==='INICIO_REAL',valor=inicio?p.inicio_real:p.sobrestamento;
+      const permitido=inicio?p.editar_inicio:p.editar_sobrestamento;
+      if(!permitido)return valor?escaparFerias(dataFeriasBR(valor)):'—';
+      const id=String(p.id||'');
+      if(!/^[a-f0-9-]{36}$/i.test(id))return '—';
+      const nome=inicio?'Início real':'Último dia gozado';
+      return '<div class="paf-fruicao-campo"><input type="date" aria-label="'+nome+' — período '+escaparAttr(p.sequencia)+'" '+
+        (inicio?'':' min="'+escaparAttr(p.inicio_vigente||p.inicio)+'" max="'+escaparAttr(hoje)+'"')+
+        ' value="'+escaparAttr(valor||'')+'" data-periodo="'+id+'" data-campo="'+campo+'" onchange="pafSalvarFruicaoFt(this,this.dataset.periodo,this.dataset.campo)">'+
+        (inicio?'<small>Previsto: '+escaparFerias(dataFeriasBR(p.inicio))+'</small>':'<small>Último dia gozado</small>')+'</div>';
+    }
+    async function pafSalvarFruicaoFt(input,id,campo){
+      const ano=window.APPFT_FERIAS_DADOS?.ciclo?.ano_fruição;
+      if(!input.value||!input.reportValidity())return;
+      const valor=input.value;
+      input.disabled=true;
+      try{
+        await rpcPlanoFerias('ft_paf_fruicao_salvar_v2',{p_periodo:id,p_campo:campo,p_data:valor});
+        APP.apiCache={};
+        APP.dadosConsultaEfetivo=null;
+        mostrarToastFt('PAF atualizado',campo==='INICIO_REAL'?'Início real registrado.':'Sobrestamento registrado.','ok');
+        if(input.isConnected)await carregarPlanoAnualFerias(ano);
+      }catch(e){
+        mostrarToastFt('Alteração não registrada',e.message,'erro');
+        if(input.isConnected)await carregarPlanoAnualFerias(ano);
+      }finally{input.disabled=false;}
+    }
+
     function renderizarPlanoAnualFerias(dados) {
       const aviso = document.getElementById('feriasAviso');
       const conteudo = document.getElementById('feriasConteudo');
@@ -9641,13 +9680,17 @@ function epMesclarResenhaFt(payload,auto){
       const linhasBloqueio = janelas.map(function(j) {
         return '<li>' + escaparFerias(dataFeriasBR(j.inicio)) + ' a ' + escaparFerias(dataFeriasBR(j.fim)) + ' — ' + escaparFerias(j.motivo) + '</li>';
       }).join('');
-      const linhasAgenda = solicitacoes.flatMap(function(s) {
-        const periodos = Array.isArray(s.periodos) ? s.periodos : [];
-        return periodos.map(function(p) {
-          return '<tr><td><strong>' + escaparFerias(s.graduacao) + ' ' + escaparFerias(s.nome) + '</strong></td>' +
-            '<td>' + escaparFerias(s.modalidade) + '</td>' +
-            '<td>' + escaparFerias(dataFeriasBR(p.inicio)) + ' a ' + escaparFerias(dataFeriasBR(p.fim)) + '<br><small>' + escaparFerias(p.dias) + ' dias corridos</small></td>' +
-            '<td>' + escaparFerias(p.status || s.status) + (p.motivo ? '<br><small>' + escaparFerias(p.motivo) + '</small>' : '') + '</td></tr>';
+      const encerrado=ciclo&&ciclo.status==='ENCERRADO';
+      const linhasAgenda=solicitacoes.flatMap(function(s){
+        const periodos=Array.isArray(s.periodos)?s.periodos:[];
+        const pendentes=periodos.reduce((acc,p)=>acc+(Number(p.dias_pendentes)||0),0);
+        return periodos.map(function(p,i){
+          return '<tr>'+(i===0?'<td rowspan="'+periodos.length+'"><strong>'+escaparFerias(s.graduacao)+' '+escaparFerias(s.nome)+'</strong>'+
+            (pendentes?'<br><strong class="paf-dias-pendentes">'+pendentes+(pendentes===1?' dia pendente':' dias pendentes')+'</strong>':'')+'</td>'+
+            '<td rowspan="'+periodos.length+'">'+escaparFerias(s.modalidade)+'</td>':'')+
+            '<td>'+escaparFerias(dataFeriasBR(p.inicio))+' a '+escaparFerias(dataFeriasBR(p.fim))+'<br><small>'+escaparFerias(p.dias)+' dias corridos</small></td>'+
+            '<td>'+escaparFerias(p.status||s.status)+(p.motivo?'<br><small>'+escaparFerias(p.motivo)+'</small>':'')+'</td>'+
+            (encerrado?'<td>'+pafCampoFruicaoFt(p,'INICIO_REAL',dados.hoje_sp)+'</td><td>'+pafCampoFruicaoFt(p,'SOBRESTAMENTO',dados.hoje_sp)+'</td>':'')+'</tr>';
         });
       }).join('');
 
@@ -9694,9 +9737,10 @@ function epMesclarResenhaFt(payload,auto){
         </section>
         <section class="ferias-panel">
           <div class="ferias-panel-head"><h2>Previsão de Férias do efetivo</h2><p>Períodos informados e situação atual das solicitações.</p>
+            ${(dados.anos_fruicao||[]).length>1?'<div class="ferias-field"><label for="pafAnoConsulta">Ano de fruição</label><select id="pafAnoConsulta" onchange="carregarPlanoAnualFerias(this.value)">'+dados.anos_fruicao.map(y=>'<option value="'+Number(y)+'"'+(Number(y)===Number(ano)?' selected':'')+'>'+Number(y)+'</option>').join('')+'</select></div>':''}
             ${usuarioPodeExportarPlanoFerias() ? '<div class="ferias-actions"><button class="btn-page" type="button" onclick="imprimirPlanoAnualFerias(this)" ' + (ciclo && ciclo.status === 'ENCERRADO' ? '' : 'disabled title="Disponível após o encerramento do prazo"') + '>PDF / IMPRIMIR PAF</button></div>' + (ciclo && ciclo.status === 'ENCERRADO' ? '' : '<p style="margin-top:8px">A relação para impressão será liberada ao encerrar o ciclo.</p>') : ''}
           </div>
-          <div class="ferias-panel-body">${linhasAgenda ? '<div class="ferias-agenda-wrap"><table class="ferias-agenda"><thead><tr><th>Policial</th><th>Modalidade</th><th>Período previsto</th><th>Situação</th></tr></thead><tbody>' + linhasAgenda + '</tbody></table></div>' : '<div class="ferias-empty">Ainda não há períodos informados.</div>'}</div>
+          <div class="ferias-panel-body">${linhasAgenda ? '<div class="ferias-agenda-wrap"><table class="ferias-agenda"><thead><tr><th>Policial</th><th>Modalidade</th><th>Período previsto</th><th>Situação</th>'+(encerrado?'<th>Início Real</th><th>Sobrestamento</th>':'')+'</tr></thead><tbody>' + linhasAgenda + '</tbody></table></div>' : '<div class="ferias-empty">Ainda não há períodos informados.</div>'}</div>
         </section>`;
       if (aberto) atualizarCamposPlanoFerias(defaultDates);
       if (usuarioPodeConfigurarPlanoFerias()) adicionarJanelaPlanoFerias();
@@ -11716,7 +11760,8 @@ function epMesclarResenhaFt(payload,auto){
               const dia = inicioDia + indice;
               const atual = String((reg.dias || [])[dia - 1] || '');
               const classeVisual = classesCelulaFrequencia(grupo, atual);
-              return '<td class="freq-day"><div class="freq-select-wrap ' + classeVisual + (podeEditar ? '' : ' freq-bloqueado') + '"><span class="freq-select-display" aria-hidden="true">' + escapar(atual) + '</span><select class="freq-native-select ' + classeVisual + '" aria-label="Dia ' + dia + ' de ' + escapar(pm.nomeGuerra || '') + '" data-grupo="' + escaparAttr(grupo) + '" data-re="' + escaparAttr(pm.re || '') + '" data-dia="' + dia + '" data-valor-anterior="' + escaparAttr(atual) + '" onchange="salvarCelulaFrequencia(this)" ' + (podeEditar ? '' : 'disabled') + '>' +
+              const automatico=(reg.diasPaf||[]).includes(dia),editarDia=podeEditar&&!automatico;
+              return '<td class="freq-day"><div class="freq-select-wrap ' + classeVisual + (editarDia ? '' : ' freq-bloqueado') + '"><span class="freq-select-display" aria-hidden="true">' + escapar(atual) + '</span><select class="freq-native-select ' + classeVisual + '" aria-label="Dia ' + dia + ' de ' + escapar(pm.nomeGuerra || '') + '" data-grupo="' + escaparAttr(grupo) + '" data-re="' + escaparAttr(pm.re || '') + '" data-dia="' + dia + '" data-valor-anterior="' + escaparAttr(atual) + '" onchange="salvarCelulaFrequencia(this)" ' + (editarDia ? '' : 'disabled') + '>' +
                 '<option value=""></option>' + opcoes.map(function(op) { return '<option value="' + escaparAttr(op) + '" ' + (atual === String(op) ? 'selected' : '') + '>' + escapar(op) + '</option>'; }).join('') +
                 '</select></div></td>';
             }).join('') +
@@ -15406,7 +15451,7 @@ function epMesclarResenhaFt(payload,auto){
                   ${escapar(nome || pm.nomeCompleto || '-')}
                 </button>
               </h3>
-              <span class="consulta-status">${escapar(pm.status || '-')}</span>
+              <span class="consulta-status">${escapar(pm.statusOperacionalPaf || pm.status || '-')}</span>
             </div>
             <div class="consulta-detalhes">
               ${consultaDetail('RE', pm.re)}
@@ -15782,7 +15827,7 @@ function epMesclarResenhaFt(payload,auto){
       return `
         <div class="consulta-modal-grid">
           ${consultaDetail('RE', pm.re)}
-          ${consultaDetail('Status', pm.status)}
+          ${consultaDetail('Status', pm.statusOperacionalPaf || pm.status)}
           ${consultaDetail('Nome completo', pm.nomeCompleto)}
           ${consultaDetail('Nome de guerra', pm.nomeGuerra)}
           ${consultaDetail('Pelotão', pm.pelotao)}
@@ -17481,7 +17526,7 @@ function epMesclarResenhaFt(payload,auto){
 
     function acaoApiSomenteLeitura(action) {
       const acao = normalizarTexto(action || '').replace(/[^A-Z0-9]/g, '');
-      return acao === 'LOGIN' || acao === 'PING' || ['ESPACOPELDADOS','ESPACOPELSALDO','ESPACOPELRESENHA','FOLGACOMPGESTAO','FCADMDADOS','OCORRENCIASINDICES'].includes(acao) || acao.indexOf('DADOS') === 0 || acao.indexOf('CONSULT') === 0 || acao.indexOf('HISTORICO') === 0 || acao.indexOf('BAIXAR') === 0 || acao.indexOf('GERARPDF') === 0;
+      return acao === 'LOGIN' || acao === 'PING' || ['ESPACOPELDADOS','ESPACOPELSALDO','ESPACOPELRESENHA','FOLGACOMPGESTAO','FCADMDADOS','OCORRENCIASINDICES','OCORRENCIASPAFSTATUS'].includes(acao) || acao.indexOf('DADOS') === 0 || acao.indexOf('CONSULT') === 0 || acao.indexOf('HISTORICO') === 0 || acao.indexOf('BAIXAR') === 0 || acao.indexOf('GERARPDF') === 0;
     }
 
 
