@@ -6773,6 +6773,9 @@ Banco de dados: Google Sheets.
     .paf-excecao-form [role="alert"] { color:#9b2424; margin:0; }
     .paf-excecao-form [role="alert"]:empty { display:none; }
     #appScreen .paf-acao .paf-excecao-acao { margin:4px 0; }
+    #appScreen .paf-programar-ciclo > summary { cursor:pointer; }
+    #appScreen .paf-programar-ciclo > summary strong { font-size:14px; }
+    #appScreen .paf-programar-ciclo:not([open]) > summary { border-bottom:0; }
     #appScreen .paf-timeline { margin-bottom:16px; padding:14px; min-width:0; border:1px solid #dbe1e7; border-radius:14px; background:#f8fafc; color:#17202a; }
     #appScreen .paf-timeline-head { display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:12px; margin-bottom:10px; }
     #appScreen .paf-timeline-head h3 { margin:0 0 4px; font-size:15px; }
@@ -9653,6 +9656,38 @@ function epMesclarResenhaFt(payload,auto){
       return !!(aIni && aFim && bIni && bFim && aIni <= bFim && bIni <= aFim);
     }
 
+    function pafEstadoCicloFt_(ciclo,agora=Date.now()){
+      if(!ciclo) return {encerrado:false,aberto:false};
+      const status=String(ciclo.status || '').toUpperCase();
+      const prazo=Date.parse(ciclo.prazo_final);
+      const encerrou=status==='ENCERRADO' || (Number.isFinite(prazo) && agora>prazo);
+      return {encerrado:encerrou,aberto:!encerrou && Number.isFinite(prazo) && ['ABERTO','REABERTO'].includes(status)};
+    }
+
+    function pafAnoProgramacaoFt_(ciclo,ano,encerrado){
+      return Number(ano)+(ciclo && encerrado ? 1 : 0);
+    }
+
+    async function pafEncerrarCicloFt_(botao){
+      const dados=window.APPFT_FERIAS_DADOS;
+      const ciclo=dados?.ciclo;
+      if(!usuarioPodeConfigurarPlanoFerias() || !pafEstadoCicloFt_(ciclo).aberto || botao.disabled) return;
+      const ano=Number(ciclo.ano_fruição);
+      if(!Number.isInteger(ano)) return;
+      botao.disabled=true;
+      try{
+        const confirmou=await confirmarToastFt('Encerrar ciclo do PAF '+ano,
+          'O formulário ficará fechado para novos pedidos e alterações dos policiais. As solicitações já enviadas serão preservadas. Confirma?');
+        if(!confirmou || !botao.isConnected || window.APPFT_FERIAS_DADOS!==dados) return;
+        const r=await rpcPlanoFerias('ft_paf_encerrar_ciclo_v1',{p_ano_fruicao:ano});
+        if(r?.status!=='ENCERRADO') throw new Error('O Supabase não confirmou o encerramento.');
+        APP.apiCache={};
+        mostrarToastFt('Ciclo encerrado',r.ja_encerrado?'O ciclo já estava encerrado.':'O ciclo foi encerrado e as solicitações foram preservadas.','ok');
+        if(botao.isConnected && window.APPFT_FERIAS_DADOS===dados) await carregarPlanoAnualFerias(ano);
+      }catch(e){mostrarToastFt('Ciclo não encerrado',e.message || 'Tente novamente.','erro');}
+      finally{botao.disabled=false;}
+    }
+
     async function carregarPlanoAnualFerias(anoFruicao) {
       const aviso = document.getElementById('feriasAviso');
       const conteudo = document.getElementById('feriasConteudo');
@@ -9665,7 +9700,7 @@ function epMesclarResenhaFt(payload,auto){
         if(!conteudo.isConnected)return;
         const u=APP.usuario || {};
         const papel=String(u.perfilAcesso || u.roleCode || u.role_code || '').toUpperCase();
-        if(dados?.ciclo?.status==='ENCERRADO' && papel.includes('GESTOR')){
+        if(pafEstadoCicloFt_(dados?.ciclo).encerrado && papel.includes('GESTOR')){
           dados.pode_excecao_paf=(await rpcPlanoFerias('ft_paf_pode_excecao_v1',{}).catch(()=>false))===true;
           if(!conteudo.isConnected)return;
         }
@@ -10015,13 +10050,13 @@ function epMesclarResenhaFt(payload,auto){
       const indisponiveis = Array.isArray(dados.periodos_indisponiveis) ? dados.periodos_indisponiveis : [];
       const solicitacoes = Array.isArray(dados.solicitacoes_visiveis) ? dados.solicitacoes_visiveis : [];
       const minha = dados.minha_solicitacao || null;
-      const aberto = ciclo && ['ABERTO', 'REABERTO'].includes(String(ciclo.status || '').toUpperCase()) && Date.now() <= Date.parse(ciclo.prazo_final);
+      const {aberto,encerrado} = pafEstadoCicloFt_(ciclo);
       const ano = ciclo && ciclo.ano_fruição || new Date().getFullYear() + 1;
 
       if (!ciclo) {
         aviso.innerHTML = '<h2>Nenhum ciclo configurado</h2><p>O comando precisa configurar o ano de fruição e o prazo final antes da abertura do formulário.</p>';
       } else {
-        aviso.innerHTML = '<h2>Plano de Férias ' + escaparFerias(ano) + ' — ' + escaparFerias(ciclo.status) + '</h2>' +
+        aviso.innerHTML = '<h2>Plano de Férias ' + escaparFerias(ano) + ' — ' + escaparFerias(encerrado?'ENCERRADO':ciclo.status) + '</h2>' +
           '<p>Preenchimento a partir de ' + escaparFerias(dataFeriasBR(String(ciclo.inicio_preenchimento || '').slice(0,10))) +
           ' • prazo final: ' + escaparFerias(dataFeriasBR(String(ciclo.prazo_final || '').slice(0,10))) +
           ' • períodos contados em dias corridos; datas finais inclusivas.</p>';
@@ -10030,7 +10065,6 @@ function epMesclarResenhaFt(payload,auto){
       const linhasBloqueio = janelas.map(function(j) {
         return '<li>' + escaparFerias(dataFeriasBR(j.inicio)) + ' a ' + escaparFerias(dataFeriasBR(j.fim)) + ' — ' + escaparFerias(j.motivo) + '</li>';
       }).join('');
-      const encerrado=ciclo&&ciclo.status==='ENCERRADO';
       const linhasAgenda=solicitacoes.flatMap(function(s,indice){
         const periodos=Array.isArray(s.periodos)?s.periodos:[];
         const ajuste=pafPodeAjustarFt(s,periodos,encerrado);
@@ -10050,17 +10084,22 @@ function epMesclarResenhaFt(payload,auto){
       const minhaPeriodos = minha && Array.isArray(minha.periodos) ? minha.periodos : [];
       const defaultMode = minha && minha.modalidade || '30_DIAS';
       const defaultDates = minhaPeriodos.map(function(p) { return p.inicio || ''; });
+      const anoProgramacao=pafAnoProgramacaoFt_(ciclo,ano,encerrado);
       const adminHtml = usuarioPodeConfigurarPlanoFerias() ? `
-        <section class="ferias-panel">
-          <div class="ferias-panel-head"><h2>Configuração administrativa do ciclo ${escaparFerias(ano)}</h2><p>Defina o prazo final e eventuais janelas adicionais de bloqueio.</p></div>
-          <form id="feriasAdminForm" class="ferias-panel-body" onsubmit="configurarCicloPlanoFerias(event)">
+        <section class="ferias-panel paf-admin-ciclo">
+          ${aberto?'<div class="ferias-panel-head"><div class="ferias-actions"><button type="button" class="btn-page" onclick="pafEncerrarCicloFt_(this)">ENCERRAR CICLO '+escaparFerias(ano)+'</button></div></div>':''}
+          <details class="paf-programar-ciclo">
+            <summary class="ferias-panel-head"><strong>Programar novo ciclo</strong></summary>
+            <form id="feriasAdminForm" class="ferias-panel-body" onsubmit="configurarCicloPlanoFerias(event)">
+            <div class="ferias-field"><label for="feriasAdminAno">Ano de fruição</label><input type="number" id="feriasAdminAno" min="1901" max="9998" step="1" value="${anoProgramacao}" required></div>
             <div class="ferias-inline-note">O ciclo começa automaticamente em 25/09 do ano anterior. Para 2027, o bloqueio de 01 a 15 de fevereiro é aplicado pelo servidor.</div>
-            <div class="ferias-field"><label for="feriasAdminPrazo">Data limite para preenchimento</label><input id="feriasAdminPrazo" type="date" min="${Number(ano)-1}-09-25" required></div>
+            <div class="ferias-field"><label for="feriasAdminPrazo">Data limite para preenchimento</label><input id="feriasAdminPrazo" type="date" required></div>
             <div><div class="ferias-field"><label>Janelas adicionais proibidas (opcionais)</label></div><div id="feriasAdminJanelas" data-proximo="0"></div>
               <div class="ferias-actions"><button class="btn-page" type="button" onclick="adicionarJanelaPlanoFerias()">ADICIONAR JANELA</button></div></div>
             <div class="ferias-field"><label for="feriasAdminJustificativa">Justificativa/observação</label><textarea id="feriasAdminJustificativa" rows="2"></textarea></div>
-            <div class="ferias-actions"><button class="ferias-primary" type="submit">CONFIGURAR CICLO ${escaparFerias(ano)}</button></div>
-          </form>
+            <div class="ferias-actions"><button class="ferias-primary" type="submit">PROGRAMAR CICLO</button></div>
+            </form>
+          </details>
         </section>` : '';
       conteudo.innerHTML = `${adminHtml}
         <section class="ferias-panel">
@@ -10091,7 +10130,7 @@ function epMesclarResenhaFt(payload,auto){
         <section class="ferias-panel">
           <div class="ferias-panel-head"><h2>Previsão de Férias do efetivo</h2><p>Períodos informados e situação atual das solicitações.</p>
             ${(dados.anos_fruicao||[]).length>1?'<div class="ferias-field"><label for="pafAnoConsulta">Ano de fruição</label><select id="pafAnoConsulta" onchange="carregarPlanoAnualFerias(this.value)">'+dados.anos_fruicao.map(y=>'<option value="'+Number(y)+'"'+(Number(y)===Number(ano)?' selected':'')+'>'+Number(y)+'</option>').join('')+'</select></div>':''}
-            ${usuarioPodeExportarPlanoFerias() ? '<div class="ferias-actions"><button class="btn-page" type="button" onclick="imprimirPlanoAnualFerias(this)" ' + (ciclo && ciclo.status === 'ENCERRADO' ? '' : 'disabled title="Disponível após o encerramento do prazo"') + '>PDF / IMPRIMIR PAF</button></div>' + (ciclo && ciclo.status === 'ENCERRADO' ? '' : '<p style="margin-top:8px">A relação para impressão será liberada ao encerrar o ciclo.</p>') : ''}
+            ${usuarioPodeExportarPlanoFerias() ? '<div class="ferias-actions"><button class="btn-page" type="button" onclick="imprimirPlanoAnualFerias(this)" ' + (encerrado ? '' : 'disabled title="Disponível após o encerramento do prazo"') + '>PDF / IMPRIMIR PAF</button></div>' + (encerrado ? '' : '<p style="margin-top:8px">A relação para impressão será liberada ao encerrar o ciclo.</p>') : ''}
           </div>
           <div class="ferias-panel-body"><section class="paf-timeline" id="pafLinhaTempoFt" aria-labelledby="pafLinhaTempoTituloFt"></section>${linhasAgenda ? '<div class="ferias-agenda-wrap"><table class="ferias-agenda'+(encerrado?' paf-com-acoes':'')+'"><thead><tr><th>Policial</th><th>Modalidade</th><th>Período previsto</th><th>Situação</th>'+(encerrado?'<th>Início real</th><th>Sobrestamento</th><th>Ação</th>':'')+'</tr></thead><tbody>' + linhasAgenda + '</tbody></table></div>' : '<div class="ferias-empty">Ainda não há períodos informados.</div>'}</div>
         </section>`;
@@ -10112,7 +10151,7 @@ function epMesclarResenhaFt(payload,auto){
         return;
       }
       const ciclo = (window.APPFT_FERIAS_DADOS || {}).ciclo;
-      if (!ciclo || ciclo.status !== 'ENCERRADO') {
+      if (!pafEstadoCicloFt_(ciclo).encerrado) {
         mostrarToastFt('Ciclo em andamento','A impressão será liberada após o encerramento do ciclo.','atencao');
         return;
       }
@@ -10190,9 +10229,11 @@ function epMesclarResenhaFt(payload,auto){
       if(event)event.preventDefault();
       if(!usuarioPodeConfigurarPlanoFerias()){mostrarToastFt('Configuração não permitida','Seu perfil não está habilitado para configurar o ciclo.','erro');return;}
       const dados=window.APPFT_FERIAS_DADOS||{};
-      const ano=Number((dados.ciclo&&dados.ciclo.ano_fruição)||new Date().getFullYear()+1);
+      const ano=Number(document.getElementById('feriasAdminAno')?.value);
+      if(!Number.isInteger(ano)||ano<1901||ano>9998){mostrarToastFt('Ano inválido','Informe o ano de fruição do ciclo.','atencao');return;}
       const prazo=document.getElementById('feriasAdminPrazo')?.value||'';
       if(!prazo){mostrarToastFt('Prazo obrigatório','Informe a data limite de preenchimento.','atencao');return;}
+      if(prazo<String(ano-1)+'-09-25'){mostrarToastFt('Prazo inválido','O prazo não pode ser anterior à abertura do ciclo em 25/09 do ano anterior.','atencao');return;}
       const janelas=[];
       for(const bloco of document.querySelectorAll('#feriasAdminJanelas .feriasJanelaConfig')){
         const inicio=bloco.querySelector('[data-campo="inicio"]').value;
@@ -10203,8 +10244,13 @@ function epMesclarResenhaFt(payload,auto){
         janelas.push({data_inicio:inicio,data_fim:fim,motivo:motivo});
       }
       const botao=document.querySelector('#feriasAdminForm button[type="submit"]');
-      if(botao){botao.disabled=true;botao.textContent='CONFIGURANDO...';}
+      if(botao?.disabled)return;
+      if(botao){botao.disabled=true;botao.textContent='PROGRAMANDO...';}
       try{
+        if(pafEstadoCicloFt_(dados.ciclo).encerrado && ano===Number(dados.ciclo?.ano_fruição)){
+          if(!await confirmarToastFt('Alterar ciclo encerrado','Você selecionou o ciclo encerrado de '+ano+'. Confirma a alteração da programação desse ciclo?') ||
+            !botao?.isConnected || window.APPFT_FERIAS_DADOS!==dados) return;
+        }
         await rpcPlanoFerias('appft_ferias_admin_configurar_ciclo',{
           p_ano_fruicao:ano,
           p_prazo_final:prazo+'T23:59:59-03:00',
@@ -10212,9 +10258,9 @@ function epMesclarResenhaFt(payload,auto){
           p_justificativa:(document.getElementById('feriasAdminJustificativa')?.value||'').trim()||null
         });
         mostrarToastFt('Ciclo configurado','O ciclo '+ano+' foi configurado.','sucesso');
-        await carregarPlanoAnualFerias();
+        await carregarPlanoAnualFerias(ano);
       }catch(erro){mostrarToastFt('Ciclo não configurado',erro&&erro.message||'Não foi possível configurar o ciclo.','erro');}
-      finally{if(botao){botao.disabled=false;botao.textContent='CONFIGURAR CICLO '+ano;}}
+      finally{if(botao){botao.disabled=false;botao.textContent='PROGRAMAR CICLO';}}
     }
 
     function atualizarCamposPlanoFerias(datasIniciais) {
