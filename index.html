@@ -6937,6 +6937,12 @@ Banco de dados: Google Sheets.
     #ocFtPainelFF .oc-ft-acoes{justify-items:center}
     .oc-ft-dialogo{border:1px solid #dbe1e7;border-radius:16px;padding:20px;width:min(860px,90vw);max-height:85vh;overflow:auto;color:#17202a;background:white}
     .oc-ft-dialogo::backdrop{background:rgba(15,23,42,.45)}.oc-ft-dialogo-topo{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .oc-ft-dialogo-acoes{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .oc-ft-dialogo [hidden]{display:none!important}
+    .oc-ft-retificacao{padding:12px;background:#f1f5f9;border:1px solid #dbe1e7;border-radius:10px;margin:14px 0}
+    .oc-ft-retificacao label{display:grid;gap:5px;margin:10px 0;font-size:12px;font-weight:700}
+    .oc-ft-retificacao select,.oc-ft-retificacao textarea{box-sizing:border-box;width:100%;max-width:100%;padding:9px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#17202a;font:inherit}
+    .oc-ft-retificacao-erro{color:#963e37}
     @media(max-width:620px){.oc-ft-indicadores{grid-template-columns:repeat(2,minmax(0,1fr))}.oc-ft-dialogo{box-sizing:border-box;padding:14px;width:94vw}}
 
     /* V1.4 — proporção e alinhamento do ranking. */
@@ -8849,16 +8855,69 @@ function epMesclarResenhaFt(payload,auto){
       }catch(e){if(atual())box.textContent=e.message;}
     }
     async function ocFtDetalhe(id){
-      let dialog=document.getElementById('ocFtDialogo');if(dialog)dialog.remove();
-      dialog=document.createElement('dialog');dialog.id='ocFtDialogo';dialog.className='oc-ft-dialogo';
-      dialog.innerHTML='<div class="oc-ft-dialogo-topo"><strong>Detalhes da ocorrência</strong><button class="btn-page" onclick="document.getElementById(\'ocFtDialogo\').close()">FECHAR</button></div><div id="ocFtDetalheModal">Carregando...</div>';
-      document.body.appendChild(dialog);dialog.addEventListener('close',()=>dialog.remove(),{once:true});dialog.showModal();await ocFtDetalheConteudo(id);
+      const anterior=document.getElementById('ocFtDialogo');if(anterior)anterior.remove();
+      const dialog=document.createElement('dialog');dialog.id='ocFtDialogo';dialog.className='oc-ft-dialogo';
+      dialog.setAttribute('aria-labelledby','ocFtTituloDetalhes');
+      dialog.innerHTML='<div class="oc-ft-dialogo-topo"><strong id="ocFtTituloDetalhes">Detalhes da ocorrência</strong><div class="oc-ft-dialogo-acoes"><button type="button" class="btn-primary-soft" data-oc-retificar hidden>RETIFICAR OCORRÊNCIA</button><button type="button" class="btn-page" data-oc-fechar>FECHAR</button></div></div><p data-oc-retificacao-msg role="status" hidden></p><div id="ocFtRetificacao" hidden></div><div id="ocFtDetalheModal">Carregando...</div>';
+      const fechar=dialog.querySelector('[data-oc-fechar]');
+      fechar.addEventListener('click',()=>dialog.close());
+      dialog.addEventListener('cancel',event=>{if(fechar.disabled)event.preventDefault();});
+      document.body.appendChild(dialog);dialog.addEventListener('close',()=>dialog.remove(),{once:true});dialog.showModal();
+      try{
+        const d=await ocFtApi('ocorrencias_detalhe',{id});
+        if(dialog.open&&dialog.isConnected)ocFtMostrarDetalhe(dialog,d);
+      }catch(e){if(dialog.open&&dialog.isConnected)dialog.querySelector('#ocFtDetalheModal').textContent=e.message;}
     }
-    async function ocFtDetalheConteudo(id){
-      try{const d=await ocFtApi('ocorrencias_detalhe',{id});const box=document.getElementById('ocFtDetalheModal');if(!box)return;
-        const pessoaLista=(titulo,lista)=>'<h3>'+titulo+'</h3><p>'+(lista||[]).map(p=>escapar(p.nome)+' — RG '+escapar(p.rg||'não informado')).join('<br>')+'</p>';
-        box.innerHTML='<section class="oc-ft-secao"><h2>BOPM '+escapar(d.bopm)+' — '+iccDataBR(d.data)+'</h2><p>'+escapar(d.natureza)+'</p><p>QTR: '+escapar(d.qtr)+' | QTH: '+escapar(d.qth)+'</p><p>BOPC: '+escapar(d.bopc)+' | DP: '+escapar(d.dp)+' | VTR: '+escapar(d.vtr)+'</p><h3>Equipe</h3><p>'+d.equipe.map(p=>escapar([p.posto,p.re,p.nomeGuerra||p.nome].join(' '))).join('<br>')+'</p><h3>Apoio</h3><p>'+escapar((d.apoio||[]).join(', '))+'</p>'+pessoaLista('Indiciados',d.indiciados)+pessoaLista('Sindicados',d.sindicados)+'<h3>Breve Histórico</h3><p style="white-space:pre-wrap;overflow-wrap:anywhere">'+escapar(d.apreensao||'Não informado.')+'</p><h3>Histórico do registro</h3><p>'+(d.auditoria||[]).map(a=>escapar(a.acao)+' — '+escapar(a.nome)+' — '+escapar(iccHoraBR(a.dataHora))).join('<br>')+'</p></section>';
-      }catch(e){mostrarToastFt('Consulta indisponível',e.message,'erro');}
+    function ocFtMostrarDetalhe(dialog,d){
+      const box=dialog.querySelector('#ocFtDetalheModal'),botao=dialog.querySelector('[data-oc-retificar]');
+      botao.hidden=d.podeRetificar!==true;
+      botao.setAttribute('aria-controls','ocFtRetificacao');
+      botao.setAttribute('aria-expanded','false');
+      botao.onclick=d.podeRetificar===true?()=>ocFtFormularioRetificacao(dialog,d):null;
+      const pessoaLista=(titulo,lista)=>'<h3>'+titulo+'</h3><p>'+(lista||[]).map(p=>escapar(p.nome)+' — RG '+escapar(p.rg||'não informado')).join('<br>')+'</p>';
+      box.innerHTML='<section class="oc-ft-secao"><h2>BOPM '+escapar(d.bopm)+' — '+iccDataBR(d.data)+'</h2><p>'+escapar(d.natureza)+'</p><p>QTR: '+escapar(d.qtr)+' | QTH: '+escapar(d.qth)+'</p><p>BOPC: '+escapar(d.bopc)+' | DP: '+escapar(d.dp)+' | VTR: '+escapar(d.vtr)+'</p><h3>Equipe</h3><p>'+(d.equipe||[]).map(p=>escapar([p.posto,p.re,p.nomeGuerra||p.nome].join(' '))).join('<br>')+'</p><h3>Apoio</h3><p>'+escapar((d.apoio||[]).join(', '))+'</p>'+pessoaLista('Indiciados',d.indiciados)+pessoaLista('Sindicados',d.sindicados)+'<h3>Breve Histórico</h3><p style="white-space:pre-wrap;overflow-wrap:anywhere">'+escapar(d.apreensao||'Não informado.')+'</p><h3>Histórico do registro</h3><p>'+(d.auditoria||[]).map(a=>escapar(a.acao)+' — '+escapar(a.nome)+' — '+escapar(iccHoraBR(a.dataHora))).join('<br>')+'</p></section>';
+    }
+    function ocFtFormularioRetificacao(dialog,d){
+      const painel=dialog.querySelector('#ocFtRetificacao'),retificar=dialog.querySelector('[data-oc-retificar]'),fechar=dialog.querySelector('[data-oc-fechar]');
+      const aviso=dialog.querySelector('[data-oc-retificacao-msg]');
+      if(!painel.hidden){painel.querySelector('select')?.focus();return;}
+      aviso.hidden=true;
+      const chave=re=>String(re||'').trim().split('-')[0].replace(/\D/g,'').slice(0,6);
+      const equipe=new Set((d.equipe||[]).map(p=>chave(p.re)));
+      const efetivo=(OC_FT_CATALOGOS?.efetivo||[]).filter(p=>!equipe.has(chave(p.re)));
+      painel.hidden=false;retificar.setAttribute('aria-expanded','true');
+      if(!efetivo.length){painel.innerHTML='<p>Nenhum integrante do efetivo está disponível para inclusão.</p>';return;}
+      painel.innerHTML='<form class="oc-ft-retificacao"><strong>Incluir policial na equipe</strong><p class="oc-ft-nota">A retificação fica registrada no histórico. A decisão da FF continua com o Cmt Cia.</p><label>Policial<select name="re" required><option value="">Selecione pelo RE ou nome</option>'+efetivo.map(p=>'<option value="'+escaparAttr(p.re)+'">'+escapar([p.re,p.posto,p.nomeGuerra||p.nome].filter(Boolean).join(' — '))+'</option>').join('')+'</select></label><label>Motivo da retificação<textarea name="motivo" rows="3" required minlength="5" maxlength="500"></textarea></label><div class="oc-ft-dialogo-acoes"><button type="submit" class="btn-primary-soft">SALVAR RETIFICAÇÃO</button><button type="button" class="btn-page" data-oc-cancelar>CANCELAR</button></div><p class="oc-ft-retificacao-erro" role="alert" data-oc-erro hidden></p></form>';
+      const form=painel.querySelector('form'),cancelar=painel.querySelector('[data-oc-cancelar]'),salvar=form.querySelector('[type="submit"]'),erro=form.querySelector('[data-oc-erro]');
+      const limpar=()=>{painel.hidden=true;painel.textContent='';retificar.setAttribute('aria-expanded','false');};
+      cancelar.onclick=()=>{limpar();retificar.focus();};
+      form.elements.re.focus();
+      form.onsubmit=async event=>{
+        event.preventDefault();
+        if(salvar.disabled)return;
+        const motivo=form.elements.motivo.value.trim(),re=form.elements.re.value;
+        if(motivo.length<5||!re){erro.hidden=false;erro.textContent='Selecione o policial e informe um motivo com ao menos 5 caracteres.';return;}
+        erro.hidden=true;
+        salvar.disabled=cancelar.disabled=retificar.disabled=fechar.disabled=true;
+        try{
+          const atualizado=await ocFtApi('ocorrencias_retificar',{id:d.id,re,motivo});
+          if(!dialog.open||!dialog.isConnected)return;
+          limpar();ocFtMostrarDetalhe(dialog,atualizado);
+          aviso.textContent='Retificação registrada. O policial foi incluído na equipe.';aviso.hidden=false;
+          if(document.getElementById('ocFtRanking')){
+            void ocFtAtualizarRanking();
+            if(OC_FT_PAINEL_DADOS&&document.getElementById('ocFtFFPeriodo')?.value!=='RANKING')void ocFtRecarregarPainelFF();
+          }
+        }catch(e){
+          if(!dialog.open||!dialog.isConnected)return;
+          if(/^Retificação bloqueada:/.test(e.message)){
+            limpar();retificar.hidden=true;
+            aviso.textContent=e.message;aviso.hidden=false;
+          }else{
+            erro.textContent=e.message;erro.hidden=false;
+          }
+        }finally{salvar.disabled=cancelar.disabled=retificar.disabled=fechar.disabled=false;}
+      };
     }
     async function ocFtDecidir(id,tipo,decisao){
       let motivo='';if(decisao==='RECUSAR'){motivo=await pedirMotivoToastFt('INFORMAR MOTIVO','Motivo da recusa:');if(motivo===null)return;}
