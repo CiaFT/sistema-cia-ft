@@ -8251,19 +8251,37 @@ function epChaveReFt(v){return String(v||'').replace(/\D/g,'').slice(0,6);}
 async function epBuscarResenhaFt(pel,data){
  const [folgas,ds]=await Promise.allSettled([ocFtApi('espaco_pel_resenha',{pel,data}),rpcPlanoFerias('ft_ds_resenha_v142',{p_pel:pel,p_data:data})]);
  if(folgas.status!=='fulfilled')throw folgas.reason;
- return {itens:[...(ds.status==='fulfilled'?ds.value:[]),...(folgas.value.itens||[])],ferias:folgas.value.ferias||[],semDS:ds.status!=='fulfilled'};
+ return {itens:[...(ds.status==='fulfilled'?ds.value:[]),...(folgas.value.itens||[])],ferias:Array.isArray(folgas.value.ferias)?folgas.value.ferias:null,semDS:ds.status!=='fulfilled'};
 }
 async function epPreviaResenhaFt(){
- const alvo=document.getElementById('epPreviaResenha'),pel=document.getElementById('resenhaPelotao')?.value,data=document.getElementById('resenhaDataEscala')?.value;
- if(!alvo)return;
- const req=String((Number(alvo.dataset.req)||0)+1);alvo.dataset.req=req;
- if(!pel||!data){alvo.textContent='Escolha o pelotão e a data para ver as folgas e dispensas automáticas.';return;}
- alvo.textContent='Consultando folgas, dispensas e férias…';
+ const folgas=document.getElementById('epPreviaResenha'),ferias=document.getElementById('epPreviaFerias'),pel=document.getElementById('resenhaPelotao')?.value,data=document.getElementById('resenhaDataEscala')?.value;
+ if(!folgas||!ferias)return;
+ const req=String((Number(folgas.dataset.req)||0)+1);folgas.dataset.req=req;
+ const atual=()=>folgas.isConnected&&ferias.isConnected&&folgas.dataset.req===req;
+ if(!pel||!data){
+  folgas.textContent='Escolha o pelotão e a data para ver as folgas e dispensas automáticas.';
+  ferias.textContent='Escolha o pelotão e a data para consultar as férias do PAF.';
+  return;
+ }
+ folgas.textContent='Consultando folgas e dispensas…';
+ ferias.textContent='Consultando férias do PAF…';
  try{
-  const r=await epBuscarResenhaFt(pel,data);if(!alvo.isConnected||alvo.dataset.req!==req)return;
-  alvo.innerHTML=(r.semDS?'<p>DS automática indisponível. Confira e lance manualmente, se necessário.</p>':'')+
-   (r.itens.length||r.ferias.length?'<ul>'+[...r.itens,...r.ferias].map(x=>'<li>'+dsEscFt(x.nome)+' · '+dsEscFt(x.tipo==='FERIAS'?'Férias — Afastamentos':epTiposFt[x.tipo])+'</li>').join('')+'</ul>':'<p>Nenhuma ausência automática encontrada.</p>');
- }catch(err){if(alvo.isConnected&&alvo.dataset.req===req)alvo.textContent=err.message;}
+  const r=await epBuscarResenhaFt(pel,data);if(!atual())return;
+  folgas.innerHTML=(r.semDS?'<p>DS automática indisponível. Confira e lance manualmente, se necessário.</p>':'')+
+   (r.itens.length?'<ul>'+r.itens.map(x=>'<li>'+dsEscFt(x.nome)+' · '+dsEscFt(epTiposFt[x.tipo])+'</li>').join('')+'</ul>':'<p>'+(r.semDS?'Nenhuma folga automática encontrada.':'Nenhuma folga ou dispensa automática encontrada.')+'</p>');
+  if(r.ferias===null){
+   ferias.textContent='O servidor não retornou a lista de férias. Confira se a Etapa 2 foi publicada no Apps Script.';
+  }else if(r.ferias.length){
+   ferias.innerHTML='<ul>'+r.ferias.map(x=>'<li>'+dsEscFt(x.nome)+' · Férias</li>').join('')+'</ul>'+
+    '<p>O servidor inclui essas férias ao salvar a resenha. Não é necessário repetir nos campos manuais abaixo.</p>';
+  }else{
+   ferias.textContent='Nenhum afastamento por férias elegível para esta data e este pelotão. O PAF precisa ter um período válido em solicitação validada ou encerrada.';
+  }
+ }catch(err){
+  if(!atual())return;
+  folgas.textContent=err.message;
+  ferias.textContent='Não foi possível confirmar as férias do PAF para esta data.';
+ }
 }
 function epMesclarResenhaFt(payload,auto){
  const itens=payload.itens,grupos=new Map();
@@ -9689,7 +9707,8 @@ function epMesclarResenhaFt(payload,auto){
             (pendentes?'<br><strong class="paf-dias-pendentes">'+pendentes+(pendentes===1?' dia pendente':' dias pendentes')+'</strong>':'')+'</td>'+
             '<td rowspan="'+periodos.length+'">'+escaparFerias(s.modalidade)+'</td>':'')+
             '<td>'+escaparFerias(dataFeriasBR(p.inicio))+' a '+escaparFerias(dataFeriasBR(p.fim))+'<br><small>'+escaparFerias(p.dias)+' dias corridos</small></td>'+
-            '<td>'+escaparFerias(p.status||s.status)+(p.motivo?'<br><small>'+escaparFerias(p.motivo)+'</small>':'')+'</td>'+
+            '<td><strong>Período: '+escaparFerias(p.status||'—')+'</strong><br><small>Solicitação: '+escaparFerias(s.status||'—')+'</small>'+
+            (p.motivo?'<br><small>'+escaparFerias(p.motivo)+'</small>':'')+'</td>'+
             (encerrado?'<td>'+pafCampoFruicaoFt(p,'INICIO_REAL',dados.hoje_sp)+'</td><td>'+pafCampoFruicaoFt(p,'SOBRESTAMENTO',dados.hoje_sp)+'</td>':'')+'</tr>';
         });
       }).join('');
@@ -13223,6 +13242,8 @@ function epMesclarResenhaFt(payload,auto){
                 <div class="resenha-form-grid" style="margin-top:12px;">
                   <div class="resenha-divider-title">Afastamentos</div>
                 </div>
+
+                <div class="resenha-alerta"><strong>Férias do PAF — inclusão automática</strong><div id="epPreviaFerias" aria-live="polite"></div></div>
 
                 <div id="afastamentosWrap" class="resenha-equipes-wrap">
                   ${registroAfastamentoBox(1)}
