@@ -6921,6 +6921,10 @@ Banco de dados: Google Sheets.
     #ocFtConsulta .oc-ft-consulta-individual td.oc-ft-ff-aguardando{background:#fff8df;color:#785b12}
     #ocFtConsulta .oc-ft-consulta-individual td.oc-ft-ff-fruida{background:#eaf6ed;color:#23653a}
 
+    #ocFtConsulta .oc-ft-resumo-validacao{margin-top:14px;padding:10px 12px;border:1px solid #ead799;border-radius:10px;background:#fff8df;color:#785b12}
+    #ocFtConsulta .oc-ft-linha-pendente td{background:#fffcf0}
+    #ocFtConsulta .oc-ft-linha-pendente td:first-child{box-shadow:inset 4px 0 #cf9a27}
+    #ocFtConsulta .oc-ft-pendente-etiqueta{display:inline-block;border:1px solid #ead799;border-radius:999px;background:#fff8df;color:#785b12;font-weight:700;padding:4px 8px}
     .oc-ft-acessos{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
     .oc-ft-indicadores{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}
     #ocFtConteudo .oc-ft-indicador{border:1px solid #dbe1e7;border-radius:12px;padding:12px;font:inherit;font-size:12px;cursor:pointer;display:grid;gap:6px;text-align:center}
@@ -8703,9 +8707,9 @@ function epMesclarResenhaFt(payload,auto){
         '<section class="oc-ft-secao"><h2>Apoio</h2><div id="ocFtApoio"></div><button type="button" class="btn-page" onclick="ocFtAdicionarApoio()">ADICIONAR VIATURA DE APOIO</button></section></div>'+
         '<section class="oc-ft-secao"><h2>Indiciados</h2><div id="ocFtIndiciados"></div><button type="button" class="btn-page" onclick="ocFtAdicionarPessoa(\'indiciados\')">ADICIONAR INDICIADO</button></section>'+
         '<section class="oc-ft-secao"><h2>Sindicados</h2><div id="ocFtSindicados"></div><button type="button" class="btn-page" onclick="ocFtAdicionarPessoa(\'sindicados\')">ADICIONAR SINDICADO</button></section>'+
-        '<section class="oc-ft-secao"><label>Apreensão<textarea id="ocFtApreensao" rows="6" maxlength="12000" placeholder="Descreva os itens apreendidos"></textarea></label></section>'+
+        '<section class="oc-ft-secao"><label>Breve Histórico<textarea id="ocFtBreveHistorico" rows="8" maxlength="12000" required aria-describedby="ocFtBreveHistoricoAjuda" placeholder="Cole aqui o histórico da resenha da ocorrência."></textarea></label><p id="ocFtBreveHistoricoAjuda" class="oc-ft-nota">Copie o histórico da resenha da ocorrência, incluindo as apreensões quando houver.</p></section>'+
         '<p id="ocFtEnvioStatus" role="status"></p><button id="ocFtEnviarBtn" class="btn-primary-soft" type="submit">ENVIAR OCORRÊNCIA</button></form>'+
-        '<section class="oc-ft-secao"><h2>Consulta de ocorrências</h2><button class="btn-page" onclick="ocFtCarregarConsulta()">CONSULTAR REGISTROS / VALIDAÇÃO</button><div id="ocFtConsulta"></div></section>';
+        '<section class="oc-ft-secao"><h2>Consulta de ocorrências</h2><button class="btn-page" onclick="ocFtCarregarConsulta()">CONSULTAR REGISTROS / VALIDAÇÃO</button><div id="ocFtConsulta" aria-live="polite"></div></section>';
       for(let i=0;i<5;i++)ocFtAdicionarEquipe();for(let i=0;i<3;i++){ocFtAdicionarApoio();ocFtAdicionarPessoa('indiciados');}ocFtAdicionarPessoa('sindicados');
     }
     async function ocFtEnviar(event){
@@ -8713,7 +8717,9 @@ function epMesclarResenhaFt(payload,auto){
       if(btn.disabled)return;
       const val=id=>document.getElementById(id).value.trim();
       const pessoas=tipo=>Array.from(document.querySelectorAll('[data-oc-pessoa="'+tipo+'"]')).map(row=>({nome:row.querySelector('[data-oc-nome]').value.trim(),rg:row.querySelector('[data-oc-rg]').value.trim()})).filter(p=>p.nome||p.rg);
-      const f={pel:val('ocFtPel'),data:val('ocFtData'),qtr:val('ocFtQtr'),qth:val('ocFtQth'),bopm:val('ocFtBopm'),bopc:val('ocFtBopc'),dp:val('ocFtDp'),natureza:val('ocFtNatureza'),vtr:val('ocFtVtr'),equipe:Array.from(document.querySelectorAll('[data-oc-equipe]')).map(x=>x.value).filter(Boolean),apoio:Array.from(document.querySelectorAll('[data-oc-apoio]')).map(x=>x.value.trim()).filter(Boolean),indiciados:pessoas('indiciados'),sindicados:pessoas('sindicados'),apreensao:val('ocFtApreensao')};
+      // Mantém o campo da API existente para gravar o texto sem alterar o Apps Script.
+      const f={pel:val('ocFtPel'),data:val('ocFtData'),qtr:val('ocFtQtr'),qth:val('ocFtQth'),bopm:val('ocFtBopm'),bopc:val('ocFtBopc'),dp:val('ocFtDp'),natureza:val('ocFtNatureza'),vtr:val('ocFtVtr'),equipe:Array.from(document.querySelectorAll('[data-oc-equipe]')).map(x=>x.value).filter(Boolean),apoio:Array.from(document.querySelectorAll('[data-oc-apoio]')).map(x=>x.value.trim()).filter(Boolean),indiciados:pessoas('indiciados'),sindicados:pessoas('sindicados'),apreensao:val('ocFtBreveHistorico')};
+      if(!f.apreensao){document.getElementById('ocFtBreveHistorico').focus();mostrarToastFt('Breve Histórico obrigatório','Cole o histórico da resenha da ocorrência.','erro');return;}
       if(!f.equipe.length){mostrarToastFt('Equipe obrigatória','Selecione ao menos um policial da equipe.','erro');return;}
       btn.disabled=true;status.textContent='Enviando. Aguarde a confirmação.';
       try{const r=await ocFtApi('ocorrencias_enviar',{requestId:OC_FT_REQUEST_ID,campos:JSON.stringify(f)});status.textContent='Ocorrência enviada. Protocolo: '+r.id;mostrarToastFt('Ocorrência enviada','Aguardando validação do Enc Adm ou Cmt Cia.','sucesso');OC_FT_REQUEST_ID=null;btn.textContent='ENVIADA';document.getElementById('ocFtForm').insertAdjacentHTML('beforeend',' <button type="button" class="btn-page" onclick="ocFtRenderFormulario()">NOVA OCORRÊNCIA</button>');}
@@ -8793,21 +8799,54 @@ function epMesclarResenhaFt(payload,auto){
         await ocFtRecarregarPainelFF();
       }catch(e){mostrarToastFt('Decisão não registrada',e.message,'erro');}finally{OC_FT_DECIDINDO=false;}
     }
+    function ocFtRegistrosConsulta(ocorrencias){
+      const pendentes=[],validadas=[];
+      (ocorrencias||[]).forEach(o=>{
+        if(o.ffDecisao==='RECUSADA')return;
+        if(o.status==='PENDENTE')pendentes.push(o);
+        if(o.status==='VALIDADA'&&(o.ffDecisao==='PENDENTE'||o.ffDecisao==='APROVADA'||o.ffAprovada===true))validadas.push(o);
+      });
+      return {pendentes,validadas};
+    }
     async function ocFtCarregarConsulta(){
       if(document.getElementById('ocFtPainelFF'))return ocFtSelecionarFF();
       const box=document.getElementById('ocFtConsulta');if(!box)return;
-      const re=document.getElementById('ocFtConsultaRe')?.value||'';box.innerHTML='<p>Carregando registros...</p>';
+      const pedido=String(Number(box.dataset.pedido||0)+1);
+      box.dataset.pedido=pedido;
+      const atual=()=>box.isConnected&&box.dataset.pedido===pedido;
+      const re=document.getElementById('ocFtConsultaRe')?.value||'';
+      box.innerHTML='<p>Carregando registros...</p>';
       try{
-        const d=await ocFtApi('ocorrencias_listar',{re}),creditos=Object.fromEntries((d.creditosFF||[]).map(c=>[c.id,c]));
-        box.innerHTML='<div class="oc-ft-tabela"><table class="oc-ft-consulta-individual"><thead><tr><th>Data</th><th>Natureza</th><th>BOPM</th><th>Ocorrência</th><th>FF — decisão do Cmt Cia</th><th>Ações</th></tr></thead><tbody>'+d.ocorrencias.map(o=>{
-          const c=creditos[o.id],ff=c?(c.gozadaEm?'Fruída em '+iccDataBR(c.gozadaEm):'Pendente'):o.ffDecisao==='PENDENTE'?'AGUARDANDO CMT CIA':o.ffDecisao||'PENDENTE';
-          const classeFF=c?.gozadaEm?'oc-ft-ff-fruida':(!c&&o.ffDecisao==='PENDENTE'?'oc-ft-ff-aguardando':'');
-          let botoes='<button class="btn-page" onclick="ocFtDetalhe(\''+escaparAttr(o.id)+'\')">CONSULTAR</button>';
-          if(d.capacidades.validar&&o.status==='PENDENTE')botoes+='<button class="btn-primary-soft" onclick="ocFtDecidir(\''+o.id+'\',\'OCORRENCIA\',\'APROVAR\')">VALIDAR OCORRÊNCIA</button><button class="btn-page" onclick="ocFtDecidir(\''+o.id+'\',\'OCORRENCIA\',\'RECUSAR\')">RECUSAR</button>';
-          if(d.capacidades.validarFF&&o.status==='VALIDADA'&&o.ffDecisao==='PENDENTE')botoes+='<button class="btn-primary-soft" onclick="ocFtDecidir(\''+o.id+'\',\'FF\',\'APROVAR\')">CONCEDER FF</button><button class="btn-page" onclick="ocFtDecidir(\''+o.id+'\',\'FF\',\'RECUSAR\')">RECUSAR FF</button>';
-          return '<tr><td>'+iccDataBR(o.data)+'</td><td>'+escapar(o.natureza)+'</td><td>'+escapar(o.bopm)+'</td><td>'+escapar(o.status)+'</td><td class="'+classeFF+'">'+escapar(ff)+'</td><td><div class="oc-ft-acoes">'+botoes+'</div></td></tr>';
-        }).join('')+'</tbody></table></div><div id="ocFtDetalhe"></div>';
-      }catch(e){box.textContent=e.message;}
+        const d=await ocFtApi('ocorrencias_listar',{re});
+        if(!atual())return;
+        const creditos=Object.fromEntries((d.creditosFF||[]).map(c=>[c.id,c]));
+        const {pendentes,validadas}=ocFtRegistrosConsulta(d.ocorrencias),cap=d.capacidades||{};
+        const lista=pendentes.concat(validadas);
+        const n=pendentes.length;
+        const resumo=n?'<p class="oc-ft-resumo-validacao"><strong>'+n+' '+(n===1?'ocorrência aguarda':'ocorrências aguardam')+' validação.</strong> Confira os registros destacados no topo.</p>':'<p class="oc-ft-nota">Nenhuma ocorrência aguarda validação.</p>';
+        const nota='<p class="oc-ft-nota">Esta consulta exibe pendências de validação e ocorrências validadas com FF aprovada ou aguardando o Cmt Cia.</p>';
+        if(!lista.length){box.innerHTML=resumo+nota;return;}
+        box.innerHTML=resumo+nota+'<div class="oc-ft-tabela"><table class="oc-ft-consulta-individual"><thead><tr><th>Data</th><th>Natureza</th><th>BOPM</th><th>Ocorrência</th><th>FF — decisão do Cmt Cia</th><th>Ações</th></tr></thead><tbody>'+lista.map(o=>{
+          const pendente=o.status==='PENDENTE',c=creditos[o.id];
+          const aprovada=o.ffDecisao==='APROVADA'||o.ffAprovada===true;
+          const ff=pendente?'Após a validação':c?.gozadaEm?'Fruída em '+iccDataBR(c.gozadaEm):aprovada?'Aprovada':'Aguardando Cmt Cia';
+          const classeFF=pendente?'':c?.gozadaEm?'oc-ft-ff-fruida':aprovada?'oc-ft-sit-disponivel':'oc-ft-ff-aguardando';
+          const id=escaparAttr(o.id);
+          const botao=(texto,classe,acao,tipo,decisao)=>'<button type="button" class="'+classe+'" data-oc-id="'+id+'"'+(tipo?' data-oc-tipo="'+tipo+'" data-oc-decisao="'+decisao+'"':'')+' data-oc-acao="'+acao+'">'+texto+'</button>';
+          let botoes=botao('CONSULTAR','btn-page','detalhe');
+          if(cap.validar&&pendente)botoes+=botao('VALIDAR OCORRÊNCIA','btn-primary-soft','decidir','OCORRENCIA','APROVAR')+botao('RECUSAR','btn-page','decidir','OCORRENCIA','RECUSAR');
+          if(cap.validarFF&&!pendente&&o.ffDecisao==='PENDENTE')botoes+=botao('CONCEDER FF','btn-primary-soft','decidir','FF','APROVAR')+botao('RECUSAR FF','btn-page','decidir','FF','RECUSAR');
+          const situacao=pendente?'<span class="oc-ft-pendente-etiqueta">Aguardando validação</span>':'Validada';
+          return '<tr'+(pendente?' class="oc-ft-linha-pendente"':'')+'><td>'+iccDataBR(o.data)+'</td><td>'+escapar(o.natureza)+'</td><td>'+escapar(o.bopm)+'</td><td>'+situacao+'</td><td class="'+classeFF+'">'+escapar(ff)+'</td><td><div class="oc-ft-acoes">'+botoes+'</div></td></tr>';
+        }).join('')+'</tbody></table></div>';
+        box.querySelectorAll('button[data-oc-acao]').forEach(botao=>{
+          botao.addEventListener('click',()=>{
+            const {ocAcao,ocId,ocTipo,ocDecisao}=botao.dataset;
+            if(ocAcao==='detalhe')ocFtDetalhe(ocId);
+            else ocFtDecidir(ocId,ocTipo,ocDecisao);
+          });
+        });
+      }catch(e){if(atual())box.textContent=e.message;}
     }
     async function ocFtDetalhe(id){
       let dialog=document.getElementById('ocFtDialogo');if(dialog)dialog.remove();
@@ -8818,7 +8857,7 @@ function epMesclarResenhaFt(payload,auto){
     async function ocFtDetalheConteudo(id){
       try{const d=await ocFtApi('ocorrencias_detalhe',{id});const box=document.getElementById('ocFtDetalheModal');if(!box)return;
         const pessoaLista=(titulo,lista)=>'<h3>'+titulo+'</h3><p>'+(lista||[]).map(p=>escapar(p.nome)+' — RG '+escapar(p.rg||'não informado')).join('<br>')+'</p>';
-        box.innerHTML='<section class="oc-ft-secao"><h2>BOPM '+escapar(d.bopm)+' — '+iccDataBR(d.data)+'</h2><p>'+escapar(d.natureza)+'</p><p>QTR: '+escapar(d.qtr)+' | QTH: '+escapar(d.qth)+'</p><p>BOPC: '+escapar(d.bopc)+' | DP: '+escapar(d.dp)+' | VTR: '+escapar(d.vtr)+'</p><h3>Equipe</h3><p>'+d.equipe.map(p=>escapar([p.posto,p.re,p.nomeGuerra||p.nome].join(' '))).join('<br>')+'</p><h3>Apoio</h3><p>'+escapar((d.apoio||[]).join(', '))+'</p>'+pessoaLista('Indiciados',d.indiciados)+pessoaLista('Sindicados',d.sindicados)+'<h3>Apreensão</h3><p style="white-space:pre-wrap">'+escapar(d.apreensao||'')+'</p><h3>Histórico</h3><p>'+(d.auditoria||[]).map(a=>escapar(a.acao)+' — '+escapar(a.nome)+' — '+escapar(iccHoraBR(a.dataHora))).join('<br>')+'</p></section>';
+        box.innerHTML='<section class="oc-ft-secao"><h2>BOPM '+escapar(d.bopm)+' — '+iccDataBR(d.data)+'</h2><p>'+escapar(d.natureza)+'</p><p>QTR: '+escapar(d.qtr)+' | QTH: '+escapar(d.qth)+'</p><p>BOPC: '+escapar(d.bopc)+' | DP: '+escapar(d.dp)+' | VTR: '+escapar(d.vtr)+'</p><h3>Equipe</h3><p>'+d.equipe.map(p=>escapar([p.posto,p.re,p.nomeGuerra||p.nome].join(' '))).join('<br>')+'</p><h3>Apoio</h3><p>'+escapar((d.apoio||[]).join(', '))+'</p>'+pessoaLista('Indiciados',d.indiciados)+pessoaLista('Sindicados',d.sindicados)+'<h3>Breve Histórico</h3><p style="white-space:pre-wrap;overflow-wrap:anywhere">'+escapar(d.apreensao||'Não informado.')+'</p><h3>Histórico do registro</h3><p>'+(d.auditoria||[]).map(a=>escapar(a.acao)+' — '+escapar(a.nome)+' — '+escapar(iccHoraBR(a.dataHora))).join('<br>')+'</p></section>';
       }catch(e){mostrarToastFt('Consulta indisponível',e.message,'erro');}
     }
     async function ocFtDecidir(id,tipo,decisao){
