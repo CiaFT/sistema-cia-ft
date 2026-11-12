@@ -5845,6 +5845,9 @@ Banco de dados: Google Sheets.
       font-weight:950;
     }
     .freq-select-wrap.freq-bloqueado{background:#eef2f6}
+    .freq-table .freq-select-wrap.freq-paf-auto .freq-select-display::after{
+      content:"";position:absolute;right:2px;top:2px;width:4px;height:4px;border-radius:50%;background:#365e80;
+    }
     .freq-select-wrap.freq-bloqueado.freq-destaque{background:#f7e9ed}
 
     #appScreen .freq-table .freq-select-wrap select.freq-native-select{
@@ -6761,10 +6764,26 @@ Banco de dados: Google Sheets.
     #appScreen .ferias-validacao.erro { color: #b42318; }
     #appScreen .ferias-rules { margin: 0; padding-left: 18px; color: #475569; font-size: 10.5px; line-height: 1.6; }
     #appScreen .ferias-agenda-wrap { overflow: auto; border: 1px solid #dbe1e7; border-radius: 14px; }
-    #appScreen .ferias-agenda { width: 100%; min-width: 600px; border-collapse: collapse; font-size: 10px; }
-    #appScreen .ferias-agenda th { position: sticky; top: 0; z-index: 1; background: #374247; color: #fff; padding: 10px 9px; text-align: left; font-size: 9px; font-weight: 950; letter-spacing: .25px; text-transform: uppercase; }
-    #appScreen .ferias-agenda td { border-top: 1px solid #e2e8f0; padding: 9px; color: #17202a; line-height: 1.4; vertical-align: top; }
-    #appScreen .ferias-agenda tbody tr:nth-child(even) td { background: #f8fafc; }
+    #appScreen .ferias-agenda { width: 100%; min-width: 690px; border-collapse: collapse; font-size: 13px; }
+    #appScreen .ferias-agenda.paf-com-acoes { min-width: 980px; }
+    #appScreen .ferias-agenda.paf-com-acoes th:nth-child(1) { width: 19%; }
+    #appScreen .ferias-agenda.paf-com-acoes th:nth-child(2) { width: 9%; }
+    #appScreen .ferias-agenda.paf-com-acoes th:nth-child(3) { width: 17%; }
+    #appScreen .ferias-agenda.paf-com-acoes th:nth-child(4) { width: 15%; }
+    #appScreen .ferias-agenda.paf-com-acoes th:nth-child(5),
+    #appScreen .ferias-agenda.paf-com-acoes th:nth-child(6) { width: 13%; }
+    #appScreen .ferias-agenda.paf-com-acoes th:nth-child(7) { width: 14%; }
+    #appScreen .ferias-agenda th { position: sticky; top: 0; z-index: 1; background: #374247; color: #fff; padding: 12px 10px; text-align: left; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+    #appScreen .ferias-agenda td { border-top: 1px solid #e2e8f0; padding: 11px 10px; color: #17202a; line-height: 1.45; vertical-align: top; }
+    #appScreen .ferias-agenda .paf-faixa td { background: #f8fafc; }
+    #appScreen .ferias-agenda small { font-size: 11px; }
+    #appScreen .ferias-agenda .paf-data { white-space: nowrap; font-variant-numeric: tabular-nums; }
+    #appScreen .ferias-agenda .paf-acao { width: 140px; }
+    #appScreen .ferias-agenda .paf-acao .btn-page { white-space: normal; }
+    #appScreen .paf-situacao { display: inline-block; border-radius: 7px; padding: 3px 7px; background: #eef2f6; color: #344457; font-size: 11px; }
+    #appScreen .paf-situacao[data-tom="ok"] { background: #e8f5ed; color: #205638; }
+    #appScreen .paf-situacao[data-tom="ajuste"] { background: #fff5dc; color: #674301; }
+
     #appScreen .ferias-empty { border: 1px dashed #cbd5e1; border-radius: 12px; padding: 13px; color: #64748b; font-size: 10.5px; text-align: center; }
     #appScreen .feriasJanelaConfig { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; margin: 10px 0; }
     #appScreen .feriasJanelaConfig .ferias-field:last-of-type { grid-column: 1 / -1; }
@@ -9674,14 +9693,23 @@ function epMesclarResenhaFt(payload,auto){
       }finally{input.disabled=false;}
     }
 
+    function pafPodeAjustarFt(s,periodos,encerrado){
+      return encerrado&&usuarioPodeConfigurarPlanoFerias()&&s.status==='AJUSTE_NECESSARIO'&&
+        periodos.some(p=>p.status==='AJUSTE_NECESSARIO')&&periodos.every(p=>['VALIDO','AJUSTE_NECESSARIO'].includes(p.status));
+    }
+    function pafInputAjusteFt(p){
+      return '<div class="paf-fruicao-campo"><input type="date" aria-label="Início real do período '+escaparAttr(p.sequencia)+'" data-paf-ajuste="'+escaparAttr(p.id)+'"'+
+        (p.status==='AJUSTE_NECESSARIO'?' required':'')+'><small>'+(p.status==='AJUSTE_NECESSARIO'?'Informe a nova data':'Opcional, se mudar')+'</small></div>';
+    }
     function pafBotaoValidarFt(s,periodos,encerrado){
       const id=String(s.solicitacao_id||'');
       const qtd=s.modalidade==='30_DIAS'?1:s.modalidade==='2X15_DIAS'?2:0;
-      if(!encerrado||!usuarioPodeConfigurarPlanoFerias()||s.status!=='ENVIADA'||!qtd||
-        periodos.length!==qtd||periodos.some(p=>p.status!=='VALIDO')||
+      if(!encerrado||!usuarioPodeConfigurarPlanoFerias()||!qtd||periodos.length!==qtd||
         !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id))return '';
-      return '<br><button type="button" class="btn-page" data-pedido="'+id+
-        '" onclick="pafValidarSolicitacaoFt(this)">VALIDAR SOLICITAÇÃO</button>';
+      const ajuste=pafPodeAjustarFt(s,periodos,encerrado);
+      if(!ajuste&&(s.status!=='ENVIADA'||periodos.some(p=>p.status!=='VALIDO')))return '';
+      return '<button type="button" class="btn-page" data-pedido="'+id+
+        '" onclick="pafValidarSolicitacaoFt(this)">'+(ajuste?'AJUSTAR E VALIDAR':'VALIDAR SOLICITAÇÃO')+'</button>';
     }
 
     async function pafValidarSolicitacaoFt(botao){
@@ -9689,12 +9717,27 @@ function epMesclarResenhaFt(payload,auto){
       const s=dados?.solicitacoes_visiveis?.find(x=>x.solicitacao_id===id);
       if(!s||botao.disabled)return;
       const ano=dados.ciclo?.ano_fruição;
-      const datas=s.periodos.map(p=>dataFeriasBR(p.inicio)+' a '+dataFeriasBR(p.fim)).join('; ');
+      const ajuste=s.status==='AJUSTE_NECESSARIO',inicios={};
+      if(ajuste){
+        const linhas=botao.closest('table').querySelectorAll('tr[data-paf-pedido="'+id+'"]');
+        for(const linha of linhas){
+          const campo=linha.querySelector('[data-paf-ajuste]');
+          if(!campo)continue;
+          if(!campo.reportValidity())return;
+          if(campo.value)inicios[campo.dataset.pafAjuste]=campo.value;
+        }
+        if(s.periodos.some(p=>p.status==='AJUSTE_NECESSARIO'&&!inicios[p.id])){
+          mostrarToastFt('Informe o início real','Preencha todos os períodos que precisam de ajuste.','atencao');return;
+        }
+      }
+      const datas=s.periodos.map(p=>inicios[p.id]?'Novo início: '+dataFeriasBR(inicios[p.id]):
+        dataFeriasBR(p.inicio_vigente||p.inicio)+' (mantido)').join('; ');
       botao.disabled=true;
       try{
         if(!await confirmarToastFt('Validar solicitação do PAF',
           'Confirma a aprovação do PAF de '+s.nome+' para '+datas+'? Os períodos passam a alimentar a Resenha e a Frequência.')||!botao.isConnected)return;
-        await rpcPlanoFerias('ft_paf_validar_solicitacao_v2',{p_solicitacao:id});
+        if(ajuste)await rpcPlanoFerias('ft_paf_ajustar_validar_v2',{p_solicitacao:id,p_inicios:inicios});
+        else await rpcPlanoFerias('ft_paf_validar_solicitacao_v2',{p_solicitacao:id});
         APP.apiCache={};
         APP.dadosConsultaEfetivo=null;
         mostrarToastFt('PAF atualizado','Solicitação validada.','ok');
@@ -9729,18 +9772,19 @@ function epMesclarResenhaFt(payload,auto){
         return '<li>' + escaparFerias(dataFeriasBR(j.inicio)) + ' a ' + escaparFerias(dataFeriasBR(j.fim)) + ' — ' + escaparFerias(j.motivo) + '</li>';
       }).join('');
       const encerrado=ciclo&&ciclo.status==='ENCERRADO';
-      const linhasAgenda=solicitacoes.flatMap(function(s){
+      const linhasAgenda=solicitacoes.flatMap(function(s,indice){
         const periodos=Array.isArray(s.periodos)?s.periodos:[];
+        const ajuste=pafPodeAjustarFt(s,periodos,encerrado);
         const pendentes=periodos.reduce((acc,p)=>acc+(Number(p.dias_pendentes)||0),0);
         return periodos.map(function(p,i){
-          return '<tr>'+(i===0?'<td rowspan="'+periodos.length+'"><strong>'+escaparFerias(s.graduacao)+' '+escaparFerias(s.nome)+'</strong>'+
+          return '<tr class="'+(indice%2?'paf-faixa':'')+'" data-paf-pedido="'+escaparAttr(s.solicitacao_id||'')+'">'+(i===0?'<td rowspan="'+periodos.length+'"><strong>'+escaparFerias(s.graduacao)+' '+escaparFerias(s.nome)+'</strong>'+
             (pendentes?'<br><strong class="paf-dias-pendentes">'+pendentes+(pendentes===1?' dia pendente':' dias pendentes')+'</strong>':'')+'</td>'+
-            '<td rowspan="'+periodos.length+'">'+escaparFerias(s.modalidade)+'</td>':'')+
-            '<td>'+escaparFerias(dataFeriasBR(p.inicio))+' a '+escaparFerias(dataFeriasBR(p.fim))+'<br><small>'+escaparFerias(p.dias)+' dias corridos</small></td>'+
-            '<td><strong>Período: '+escaparFerias(p.status||'—')+'</strong><br><small>Solicitação: '+escaparFerias(s.status||'—')+'</small>'+
-            (p.motivo?'<br><small>'+escaparFerias(p.motivo)+'</small>':'')+
-            (i===0?pafBotaoValidarFt(s,periodos,encerrado):'')+'</td>'+
-            (encerrado?'<td>'+pafCampoFruicaoFt(p,'INICIO_REAL',dados.hoje_sp)+'</td><td>'+pafCampoFruicaoFt(p,'SOBRESTAMENTO',dados.hoje_sp)+'</td>':'')+'</tr>';
+            '<td rowspan="'+periodos.length+'">'+escaparFerias(s.modalidade==='30_DIAS'?'30 dias':s.modalidade==='2X15_DIAS'?'2 × 15 dias':s.modalidade)+'</td>':'')+
+            '<td><span class="paf-data">'+escaparFerias(dataFeriasBR(p.inicio))+' a '+escaparFerias(dataFeriasBR(p.fim))+'</span><br><small>'+escaparFerias(p.dias)+' dias corridos</small></td>'+
+            '<td><strong class="paf-situacao" data-tom="'+(p.status==='AJUSTE_NECESSARIO'?'ajuste':p.status==='VALIDO'?'ok':'')+'">'+escaparFerias(String(p.status||'—').replaceAll('_',' '))+'</strong><br><small>Solicitação: '+escaparFerias(String(s.status||'—').replaceAll('_',' '))+'</small>'+
+            (p.motivo?'<br><small>'+escaparFerias(p.motivo)+'</small>':'')+'</td>'+
+            (encerrado?'<td>'+(ajuste?pafInputAjusteFt(p):pafCampoFruicaoFt(p,'INICIO_REAL',dados.hoje_sp))+'</td><td>'+pafCampoFruicaoFt(p,'SOBRESTAMENTO',dados.hoje_sp)+'</td>'+
+              (i===0?'<td class="paf-acao" rowspan="'+periodos.length+'">'+(pafBotaoValidarFt(s,periodos,encerrado)||'—')+'</td>':''):'')+'</tr>';
         });
       }).join('');
 
@@ -9790,7 +9834,7 @@ function epMesclarResenhaFt(payload,auto){
             ${(dados.anos_fruicao||[]).length>1?'<div class="ferias-field"><label for="pafAnoConsulta">Ano de fruição</label><select id="pafAnoConsulta" onchange="carregarPlanoAnualFerias(this.value)">'+dados.anos_fruicao.map(y=>'<option value="'+Number(y)+'"'+(Number(y)===Number(ano)?' selected':'')+'>'+Number(y)+'</option>').join('')+'</select></div>':''}
             ${usuarioPodeExportarPlanoFerias() ? '<div class="ferias-actions"><button class="btn-page" type="button" onclick="imprimirPlanoAnualFerias(this)" ' + (ciclo && ciclo.status === 'ENCERRADO' ? '' : 'disabled title="Disponível após o encerramento do prazo"') + '>PDF / IMPRIMIR PAF</button></div>' + (ciclo && ciclo.status === 'ENCERRADO' ? '' : '<p style="margin-top:8px">A relação para impressão será liberada ao encerrar o ciclo.</p>') : ''}
           </div>
-          <div class="ferias-panel-body">${linhasAgenda ? '<div class="ferias-agenda-wrap"><table class="ferias-agenda"><thead><tr><th>Policial</th><th>Modalidade</th><th>Período previsto</th><th>Situação</th>'+(encerrado?'<th>Início Real</th><th>Sobrestamento</th>':'')+'</tr></thead><tbody>' + linhasAgenda + '</tbody></table></div>' : '<div class="ferias-empty">Ainda não há períodos informados.</div>'}</div>
+          <div class="ferias-panel-body">${linhasAgenda ? '<div class="ferias-agenda-wrap"><table class="ferias-agenda'+(encerrado?' paf-com-acoes':'')+'"><thead><tr><th>Policial</th><th>Modalidade</th><th>Período previsto</th><th>Situação</th>'+(encerrado?'<th>Início real</th><th>Sobrestamento</th><th>Ação</th>':'')+'</tr></thead><tbody>' + linhasAgenda + '</tbody></table></div>' : '<div class="ferias-empty">Ainda não há períodos informados.</div>'}</div>
         </section>`;
       if (aberto) atualizarCamposPlanoFerias(defaultDates);
       if (usuarioPodeConfigurarPlanoFerias()) adicionarJanelaPlanoFerias();
@@ -11651,7 +11695,7 @@ function epMesclarResenhaFt(payload,auto){
             ${itemLegendaFrequencia('1', 'Entre 8 horas e inferior a 12 horas')}
             ${itemLegendaFrequencia('2', '12 horas ou mais')}
             ${itemLegendaFrequencia('3', '18 horas e igual ou inferior a 24 horas')}
-            ${itemLegendaFrequencia('F', 'Férias')}
+            ${itemLegendaFrequencia('F', 'Férias. O ponto azul indica um lançamento automático do PAF; onde a edição for permitida, um código manual tem prioridade.')}
             ${itemLegendaFrequencia('LP', 'Licença-prêmio')}
             ${itemLegendaFrequencia('CV', 'Convalescença médica')}
             ${itemLegendaFrequencia('TS', 'Licença para tratamento de saúde')}
@@ -11808,10 +11852,12 @@ function epMesclarResenhaFt(payload,auto){
             '<td class="freq-pm"><strong>' + escapar([pm.postoGrad, pm.nomeGuerra].filter(Boolean).join(' ')) + '</strong><small>RE ' + escapar(pm.re || '') + '</small></td>' +
             Array.from({length:quantidadeDias}, function(_, indice) {
               const dia = inicioDia + indice;
-              const atual = String((reg.dias || [])[dia - 1] || '');
+              const atual = String((reg.dias || [])[dia - 1] ?? '');
               const classeVisual = classesCelulaFrequencia(grupo, atual);
-              const automatico=(reg.diasPaf||[]).includes(dia),editarDia=podeEditar&&!automatico;
-              return '<td class="freq-day"><div class="freq-select-wrap ' + classeVisual + (editarDia ? '' : ' freq-bloqueado') + '"><span class="freq-select-display" aria-hidden="true">' + escapar(atual) + '</span><select class="freq-native-select ' + classeVisual + '" aria-label="Dia ' + dia + ' de ' + escapar(pm.nomeGuerra || '') + '" data-grupo="' + escaparAttr(grupo) + '" data-re="' + escaparAttr(pm.re || '') + '" data-dia="' + dia + '" data-valor-anterior="' + escaparAttr(atual) + '" onchange="salvarCelulaFrequencia(this)" ' + (editarDia ? '' : 'disabled') + '>' +
+              const automatico = (reg.diasPaf || []).includes(dia);
+              const rotulo = 'Dia ' + dia + ' de ' + (pm.nomeGuerra || '');
+              const descricao = automatico ? rotulo + ' — férias automáticas do PAF' : rotulo;
+              return '<td class="freq-day"><div class="freq-select-wrap ' + classeVisual + (automatico ? ' freq-paf-auto' : '') + (podeEditar ? '' : ' freq-bloqueado') + '" title="' + escaparAttr(descricao) + '"><span class="freq-select-display" aria-hidden="true">' + escapar(atual) + '</span><select class="freq-native-select ' + classeVisual + '" data-freq-rotulo="' + escaparAttr(rotulo) + '" aria-label="' + escaparAttr(descricao) + '" data-grupo="' + escaparAttr(grupo) + '" data-re="' + escaparAttr(pm.re || '') + '" data-dia="' + dia + '" data-valor-anterior="' + escaparAttr(atual) + '" onchange="salvarCelulaFrequencia(this)" ' + (podeEditar ? '' : 'disabled') + '>' +
                 '<option value=""></option>' + opcoes.map(function(op) { return '<option value="' + escaparAttr(op) + '" ' + (atual === String(op) ? 'selected' : '') + '>' + escapar(op) + '</option>'; }).join('') +
                 '</select></div></td>';
             }).join('') +
@@ -11866,6 +11912,12 @@ function epMesclarResenhaFt(payload,auto){
     }
 
 
+    function lerCelulaFrequencia_(dados, pedido) {
+      const reg = dados.lancamentos?.[normalizarReClienteFrequencia(pedido.re)];
+      const dia = Number(pedido.dia);
+      return { valor: String(reg?.dias?.[dia - 1] ?? ''), automatico: !!reg?.diasPaf?.includes(dia) };
+    }
+
     function salvarCelulaFrequencia(select) {
       if (!select || select.disabled) return;
       const wrap = select.closest('.freq-select-wrap');
@@ -11882,9 +11934,23 @@ function epMesclarResenhaFt(payload,auto){
         dia: select.getAttribute('data-dia'),
         valor: select.value
       };
-      enfileirarLancamentoFt_('salvar_frequencia', pedido).then(function(resp) {
+      const tela = APP.dadosControleFrequencia;
+      return enfileirarLancamentoFt_('salvar_frequencia', pedido).then(function(resp) {
         if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao salvar o lançamento.');
+        if (APP.dadosControleFrequencia !== tela) return;
         const dados = resp.dados || {};
+        const celula = dados.celulaFrequencia || { valor: pedido.valor, automatico: false };
+        if (dados.leituraFrequenciaIndisponivel) {
+          mostrarToastFt('Lançamento removido', 'Reabra o mês para conferir se há férias automáticas neste dia.');
+        }
+        select.value = celula.valor;
+        const descricao = select.getAttribute('data-freq-rotulo') + (celula.automatico ? ' — férias automáticas do PAF' : '');
+        select.setAttribute('aria-label', descricao);
+        if (wrap) {
+          wrap.title = descricao;
+          wrap.classList.toggle('freq-paf-auto', celula.automatico);
+        }
+        atualizarVisualCelulaFrequencia(select);
         const re = select.getAttribute('data-re');
         const totalD = document.querySelector('[data-total-diarias="' + CSS.escape(re) + '"]');
         const totalT = document.querySelector('[data-total-trabalhados="' + CSS.escape(re) + '"]');
@@ -11899,12 +11965,14 @@ function epMesclarResenhaFt(payload,auto){
         }
         if (APP.dadosControleFrequencia) {
           const chave = normalizarReClienteFrequencia(re);
-          const lancamento = APP.dadosControleFrequencia.lancamentos[chave];
-          if (lancamento) {
-            lancamento.dias[Number(pedido.dia) - 1] = pedido.valor;
-            lancamento.diarias = Number(dados.diarias || 0);
-            lancamento.diasTrabalhados = Number(dados.diasTrabalhados || 0);
-          }
+          const mapa = tela.lancamentos || (tela.lancamentos = {});
+          const lancamento = mapa[chave] || (mapa[chave] = { dias: [] });
+          const dia = Number(pedido.dia);
+          lancamento.dias[dia - 1] = celula.valor;
+          lancamento.diasPaf = (lancamento.diasPaf || []).filter(d => d !== dia);
+          if (celula.automatico) lancamento.diasPaf.push(dia);
+          lancamento.diarias = Number(dados.diarias || 0);
+          lancamento.diasTrabalhados = Number(dados.diasTrabalhados || 0);
           APP.dadosControleFrequencia.auditoria = dados.auditoria || APP.dadosControleFrequencia.auditoria;
           const auditArea = document.getElementById('freqAuditArea');
           if (auditArea) auditArea.innerHTML = montarAuditoriaFrequencia(APP.dadosControleFrequencia);
@@ -17616,8 +17684,22 @@ function epMesclarResenhaFt(payload,auto){
        bloqueio do Apps Script entre requisicoes desta mesma aba. */
     let filaLancamentosFt_ = Promise.resolve();
     function enfileirarLancamentoFt_(acao, pedido) {
-      const tarefa = filaLancamentosFt_.then(function() {
-        return chamarApiLancamentoVerificado_(acao, pedido);
+      const tarefa = filaLancamentosFt_.then(async function() {
+        const resp = await chamarApiLancamentoVerificado_(acao, pedido);
+        if (acao !== 'salvar_frequencia' || pedido.valor !== '' || pedido.competencia < '2027-01' ||
+            resp.dados?.celulaFrequencia) return resp;
+        // Ao apagar um código manual, exibe o valor efetivo do dia, inclusive o F do PAF.
+        const dados = Object.assign({}, resp.dados);
+        try {
+          const leitura = await chamarApi('dados_controle_frequencia', {
+            login: pedido.login, senha: pedido.senha, competencia: pedido.competencia
+          }, { semCache: true });
+          if (!leitura || !leitura.ok || !leitura.dados) throw new Error('Leitura indisponível.');
+          dados.celulaFrequencia = lerCelulaFrequencia_(leitura.dados, pedido);
+        } catch (_) {
+          dados.leituraFrequenciaIndisponivel = true;
+        }
+        return Object.assign({}, resp, { dados });
       });
       filaLancamentosFt_ = tarefa.catch(function() {});
       return tarefa;
@@ -17641,12 +17723,14 @@ function epMesclarResenhaFt(payload,auto){
           const indice = Number(pedido.dia) - 1;
           const lancamento = dados.lancamentos && dados.lancamentos[re];
           if (!lancamento || !Array.isArray(lancamento.dias)) throw new Error('Policial nao retornou na conferencia.');
-          if (String(lancamento.dias[indice] || '') !== String(pedido.valor || '')) throw erroOriginal;
+          const celula = frequencia ? lerCelulaFrequencia_(dados, pedido) : null;
+          const valorGravado = celula ? (celula.automatico ? '' : celula.valor) : String(lancamento.dias[indice] || '');
+          if (valorGravado !== String(pedido.valor || '')) throw erroOriginal;
           if (frequencia) {
             return { ok: true, dados: {
               re: pedido.re, dia: Number(pedido.dia), valor: pedido.valor,
               diarias: lancamento.diarias, diasTrabalhados: lancamento.diasTrabalhados,
-              auditoria: dados.auditoria,
+              auditoria: dados.auditoria, celulaFrequencia: celula,
               mensagem: 'Lancamento confirmado no servidor apos falha de conexao.'
             } };
           }
