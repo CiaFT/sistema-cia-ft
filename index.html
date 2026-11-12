@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.4.2 — OCORRÊNCIAS E FOLGAS FLAGRANTES
+SISTEMA CIA FT — PORTAL GITHUB V1.4.3 — OCORRÊNCIAS E FOLGAS FLAGRANTES
 Arquivo: index.html
 ============================================================
 
-VERSÃO V1.4.2 — DESEMPENHO E PADRÃO VISUAL
+VERSÃO V1.4.3 — DESEMPENHO E PADRÃO VISUAL
 - Ranking com filtros anual, semestral, mensal e por pelotão.
 - Destaque discreto dos três primeiros colocados.
 - Consulta de FF aguardando decisão e aprovação/recusa exclusiva do Cmt Cia.
 - Histórico individual preserva datas de FF já gozadas, inclusive importadas.
 - Área de importação removida do formulário após a carga inicial.
-- Versão fixada em V1.4.2: alterar somente por determinação expressa do responsável.
+- Versão fixada em V1.4.3: alterar somente por determinação expressa do responsável.
 - Preserva a última versão encerrada do Controle de Frequência.
 - Preserva a implantação completa de Viaturas V1.2.6.
 - Corrige a leitura e a identificação funcional em Resenhas Enviadas.
@@ -52,7 +52,7 @@ Banco de dados: Google Sheets.
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="cia-ft-build" content="FT-V138-20261006-GRAVACAO-CONFIAVEL-R7">
-  <title>Portal Força Tática • V1.4.2</title>
+  <title>Portal Força Tática • V1.4.3</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
 
@@ -4827,7 +4827,7 @@ Banco de dados: Google Sheets.
     .resenha-cal-dia .resenha-cal-badge { display:block; width:max-content; max-width:100%; box-sizing:border-box; min-height:0; padding:3px 5px; border-width:1px; border-style:solid;
       border-radius:7px; font-size:9px; font-weight:900; line-height:1.25; cursor:inherit; box-shadow:none; overflow-wrap:anywhere; white-space:normal; }
     .resenha-cal-badge.enviado { color:#3949AB; background:#fff; border-color:#c7cdec; }
-    .resenha-cal-badge.a-enviar { color:#374247; background:#fff; border-color:#d4dbe0; }
+    .resenha-cal-dia .resenha-cal-badge.nao-enviada { width:100%; color:#fff; background:#a91c25; border-color:#76131a; text-align:center; padding:5px 4px; font-size:11px; }
     .resenha-cal-dialogo { box-sizing:border-box; width:min(1000px,96vw); max-height:92vh; }
     .resenha-cal-dialogo .resenha-cal-topo { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; }
     .resenha-cal-topo h2 { margin:0; font-size:18px; }
@@ -7227,7 +7227,7 @@ Banco de dados: Google Sheets.
         <div id="loginAlerta" class="alerta"></div>
 
         <div class="footer">
-          Portal Força Tática • V1.4.2
+          Portal Força Tática • V1.4.3
         </div>
       </main>
 
@@ -13522,13 +13522,13 @@ function epMesclarResenhaFt(payload,auto){
     }
 
 
-    function statusCalendarioResenhaFt_(estado,enviar){
+    function statusCalendarioResenhaFt_(estado){
       const s=normalizarTexto(estado || '').replace(/_/g,' ');
       if(s.includes('CORRECAO')) return ['CORREÇÃO SOLICITADA','adm-analise-btn corrigir'];
       if(s.startsWith('RECUSAD')) return ['RECUSADA','adm-analise-btn recusar'];
       if(s.startsWith('APROVAD')) return ['APROVADA','adm-analise-btn aprovar'];
       if(s) return [['PENDENTE','ENVIADA','ENVIADO'].includes(s)?'ENVIADO':s,'enviado'];
-      return enviar?['A ENVIAR','a-enviar']:null;
+      return null;
     }
 
     async function carregarCalendarioResenhaFt_(){
@@ -13547,19 +13547,21 @@ function epMesclarResenhaFt(payload,auto){
         if(!Array.isArray(dias)||dias.length!==28)throw new Error('A consulta por calendário ainda não está disponível nesta implantação.');
         const nomes=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
         const diaBR=d=>dataISOParaBR(d);
-        host.innerHTML='<div class="resenha-cal">'+Array.from({length:4},(_,semana)=>{
+        host.innerHTML='<div class="resenha-cal"><p class="resenha-alerta" style="margin:0">As situações exibidas correspondem às resenhas visíveis para o seu perfil.</p>'+Array.from({length:4},(_,semana)=>{
           const grupo=dias.slice(semana*7,semana*7+7);
           return '<section class="resenha-cal-semana"><h3>'+(!semana?'Semana em andamento':'Semana '+(semana+1))+
             ' · '+escapar(diaBR(grupo[0].data))+' a '+escapar(diaBR(grupo[6].data))+'</h3><div class="resenha-cal-dias">'+grupo.map(d=>{
               const i=new Date(d.data+'T00:00:00Z').getUTCDay();
               const lotacao=d.planos.filter(p=>p.servico).map(p=>p.pel.replace('PEL','Pel'));
-              const badges=d.planos.map(p=>({p,estado:statusCalendarioResenhaFt_(p.estado,p.enviar)})).filter(b=>b.estado);
+              const badges=d.planos.map(p=>({p,estado:statusCalendarioResenhaFt_(p.estado || (p.id?'ENVIADA':''))})).filter(b=>b.estado);
+              const semResenha=!badges.length;
               const rotulo=nomes[i]+', '+diaBR(d.data)+(d.fechado?' · Semana em andamento':'')+
-                (lotacao.length?' · '+lotacao.join(' / '):'')+badges.map(b=>' · '+b.p.pel+' '+b.estado[0]).join('');
+                (lotacao.length?' · '+lotacao.join(' / '):'')+(semResenha?' · NÃO ENVIADA':badges.map(b=>' · '+b.p.pel+' '+b.estado[0]).join(''));
               return '<button type="button" class="resenha-cal-dia'+(d.fechado?' fechado':'')+([0,5,6].includes(i)?' fim-semana':'')+
                 '" data-dia="'+escaparAttr(d.data)+'" aria-label="'+escaparAttr(rotulo)+'"><span class="data"><b>'+
                 Number(d.data.slice(8,10))+'</b><small>'+nomes[i]+'</small></span>'+
-                badges.map(b=>'<span class="resenha-cal-badge '+b.estado[1]+'">'+(badges.length>1?escapar(b.p.pel.replace('PEL','Pel'))+' · ':'')+escapar(b.estado[0])+'</span>').join('')+
+                (semResenha?'<span class="resenha-cal-badge nao-enviada">NÃO ENVIADA</span>':
+                  badges.map(b=>'<span class="resenha-cal-badge '+b.estado[1]+'">'+(badges.length>1?escapar(b.p.pel.replace('PEL','Pel'))+' · ':'')+escapar(b.estado[0])+'</span>').join(''))+
                 '<span class="pel">'+escapar(lotacao.join(' / ') || 'Sem pelotão de serviço')+'</span></button>';
             }).join('')+'</div></section>';
         }).join('')+'</div>';
