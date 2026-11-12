@@ -4813,9 +4813,19 @@ Banco de dados: Google Sheets.
     .meus-dados-ferias-nota { display:block; margin-top:4px; font-size:11px; line-height:1.4; color:#475569; }
     .meus-dados-ferias-nota:empty { display:none; }
     .resenha-cal { display:grid; gap:14px; }
-    .resenha-cal-outra-data { display:flex; gap:8px; align-items:end; flex-wrap:wrap; }
-    .resenha-cal-outra-data label { display:grid; gap:4px; font-size:12px; font-weight:800; }
-    .resenha-cal-outra-data input { min-height:44px; padding:6px 9px; border:1px solid #d4dbe0; border-radius:10px; font:inherit; }
+    .resenha-op-form { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
+    .resenha-op-form label { display:grid; gap:5px; font-weight:800; }
+    .resenha-op-form input,.resenha-op-form select { min-width:0; min-height:42px; padding:6px 9px; border:1px solid #d4dbe0; border-radius:9px; font:inherit; }
+    .resenha-op-form p,.resenha-op-form button { grid-column:1/-1; }
+    .resenha-op-form [role="alert"]:empty { display:none; }
+    .resenha-cal .resenha-cal-dia.duplo { cursor:default; }
+    .resenha-cal-dia .resenha-cal-botao-pel { width:100%; text-align:left; display:flex; flex-direction:column; gap:3px; padding:5px 6px; }
+    .resenha-cal-botao-pel span { font-size:10px; color:#17202a; }
+    .resenha-cal-botao-pel strong { font-size:11px; }
+    .resenha-cal-botao-pel.nao-enviada span { color:#fff; }
+    .resenha-cal-botao-pel:disabled { opacity:1; cursor:default; }
+    .resenha-cal-op-rotulo { font-size:10px; font-weight:900; color:#17202a; }
+    .resenha-cal-badge.a-enviar { color:#374247; background:#fff; border-color:#d4dbe0; }
     .resenha-cal-semana { display:grid; gap:7px; min-width:0; }
     .resenha-cal-semana h3 { margin:0; font-size:13px; color:#374247; }
     .resenha-cal-dias { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:7px; }
@@ -13604,6 +13614,63 @@ function epMesclarResenhaFt(payload,auto){
       return null;
     }
 
+    function resenhaBotaoOperacaoFt_(dia,p){
+      const status=statusCalendarioResenhaFt_(p.estado || (p.id?'ENVIADA':'')) ||
+        (p.visivel?['NÃO ENVIADA','nao-enviada']:['CONSULTA RESTRITA','a-enviar']);
+      const numero=p.pel.startsWith('1')?'1º':'2º';
+      return '<button type="button" class="resenha-cal-badge resenha-cal-botao-pel '+status[1]+'" data-dia="'+
+        escaparAttr(dia.data)+'" data-pel="'+escaparAttr(p.pel)+'"'+(!p.enviar&&!p.id?' disabled':'')+
+        ' aria-label="'+escaparAttr(p.pel+' — '+status[0])+'"><span>'+numero+' PEL</span><strong>'+escapar(status[0])+'</strong></button>';
+    }
+
+    function abrirProgramacaoOperacaoResenhaFt_(dias,retorno,hoje){
+      const overlay=resenhaOverlayFt_('Programar operação',retorno);
+      if(!overlay)return;
+      const {d,corpo}=overlay;
+      const opcoes=dias.map(x=>'<option value="'+escaparAttr(x.data)+'">'+escapar(dataISOParaBR(x.data))+
+        (x.operacao?' — operação cadastrada':'')+'</option>').join('');
+      corpo.innerHTML='<form class="resenha-op-form">'+
+        '<label>Data<select name="data" required>'+opcoes+'</select></label>'+
+        '<label>Nome da operação<input type="text" name="nome" maxlength="120" required></label>'+
+        '<label>Início<input type="time" name="inicio" required></label>'+
+        '<label>Fim<input type="time" name="fim" required></label>'+
+        '<label>Pelotões envolvidos<select name="pelotoes" required><option value="AMBOS">1º e 2º Pel</option>'+
+        '<option value="1">Apenas 1º Pel</option><option value="2">Apenas 2º Pel</option></select></label>'+
+        '<p class="resenha-alerta">A operação abre a data para os pelotões selecionados. A escala regular e as resenhas já enviadas são preservadas. Se o horário final for menor que o inicial, o término será no dia seguinte.</p>'+
+        '<p role="alert" data-erro></p><button type="submit" class="btn-page">SALVAR OPERAÇÃO</button></form>';
+      const form=corpo.querySelector('form'), campos=form.elements, erro=form.querySelector('[data-erro]');
+      const btn=form.querySelector('button'), fechar=d.querySelector('[data-resenha-fechar]');
+      const preencher=()=>{
+        const op=dias.find(x=>x.data===campos.data.value)?.operacao;
+        campos.nome.value=op?.nome || '';campos.inicio.value=op?.inicio || '';campos.fim.value=op?.fim || '';
+        campos.pelotoes.value=op?.pelotoes?.length===1?(op.pelotoes[0].startsWith('1')?'1':'2'):'AMBOS';
+        btn.textContent=op?'ATUALIZAR OPERAÇÃO':'SALVAR OPERAÇÃO';erro.textContent='';
+      };
+      if(dias.some(x=>x.data===hoje))campos.data.value=hoje;
+      campos.data.onchange=preencher;preencher();
+      form.onsubmit=async e=>{
+        e.preventDefault();
+        if(btn.disabled || !form.reportValidity())return;
+        const data=campos.data.value, op=dias.find(x=>x.data===data)?.operacao;
+        const nome=campos.nome.value.trim(), inicio=campos.inicio.value, fim=campos.fim.value;
+        if(!nome || inicio===fim){erro.textContent='Informe o nome e horários de início e fim diferentes.';return;}
+        erro.textContent='';btn.disabled=fechar.disabled=true;d.dataset.enviando='1';
+        try{
+          const r=await chamarApi('salvar_operacao_resenha',{
+            login:APP.credenciais.login,senha:APP.credenciais.senha,data,nome,inicio,fim,
+            pelotoes:campos.pelotoes.value,revisao:op?.revisao || ''
+          },{semCache:true});
+          if(!r?.ok)throw new Error(r?.erro || 'Não foi possível confirmar a operação.');
+          if(overlay.ativo()){
+            d.close();
+            mostrarToastFt('Operação registrada','O calendário foi atualizado.','sucesso');
+            void carregarCalendarioResenhaFt_();
+          }
+        }catch(e){if(overlay.ativo())erro.textContent=e.message || String(e);}
+        finally{btn.disabled=fechar.disabled=false;d.dataset.enviando='';}
+      };
+    }
+
     async function carregarCalendarioResenhaFt_(){
       const host=document.getElementById('resenhaCalendario');
       if(!host)return;
@@ -13621,8 +13688,7 @@ function epMesclarResenhaFt(payload,auto){
         const nomes=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
         const diaBR=d=>dataISOParaBR(d);
         host.innerHTML='<div class="resenha-cal"><p class="resenha-alerta" style="margin:0">As situações exibidas correspondem às resenhas visíveis para o seu perfil. O prazo de envio não impede lançamentos pendentes.</p>'+
-          '<form class="resenha-cal-outra-data" data-outra-data><label>Outra data (inclusive de semanas anteriores)<input type="date" name="data" required></label>'+
-          '<button type="submit" class="btn-page">ABRIR DATA</button><span role="status" data-outra-status></span></form>'+Array.from({length:4},(_,semana)=>{
+          (r.dados.podeProgramarOperacao?'<div><button type="button" class="btn-page" data-programar-operacao>PROGRAMAR OPERAÇÃO</button></div>':'')+Array.from({length:4},(_,semana)=>{
           const grupo=dias.slice(semana*7,semana*7+7);
           return '<section class="resenha-cal-semana"><h3>'+(!semana?'Semana em andamento':'Semana '+(semana+1))+
             ' · '+escapar(diaBR(grupo[0].data))+' a '+escapar(diaBR(grupo[6].data))+'</h3><div class="resenha-cal-dias">'+grupo.map(d=>{
@@ -13630,42 +13696,32 @@ function epMesclarResenhaFt(payload,auto){
               const lotacao=d.planos.filter(p=>p.servico).map(p=>p.pel.replace('PEL','Pel'));
               const badges=d.planos.map(p=>({p,estado:statusCalendarioResenhaFt_(p.estado || (p.id?'ENVIADA':''))})).filter(b=>b.estado);
               const semResenha=!badges.length;
+              const operacao=d.operacao || d.planos.some(p=>p.operacao);
               const rotulo=nomes[i]+', '+diaBR(d.data)+(d.fechado?' · Semana em andamento':'')+
-                (lotacao.length?' · '+lotacao.join(' / '):'')+(semResenha?' · NÃO ENVIADA':badges.map(b=>' · '+b.p.pel+' '+b.estado[0]).join(''));
-              return '<button type="button" class="resenha-cal-dia'+(d.fechado?' fechado':'')+([0,5,6].includes(i)?' fim-semana':'')+
-                '" data-dia="'+escaparAttr(d.data)+'" aria-label="'+escaparAttr(rotulo)+'"><span class="data"><b>'+
-                Number(d.data.slice(8,10))+'</b><small>'+nomes[i]+'</small></span>'+
+                (lotacao.length?' · '+lotacao.join(' / '):'')+(operacao?' · Operação':'')+
+                (semResenha?' · NÃO ENVIADA':badges.map(b=>' · '+b.p.pel+' '+b.estado[0]).join(''));
+              const classe='resenha-cal-dia'+(d.fechado?' fechado':'')+([0,5,6].includes(i)?' fim-semana':'');
+              const cab='<span class="data"><b>'+Number(d.data.slice(8,10))+'</b><small>'+nomes[i]+'</small></span>';
+              const rodape='<span class="pel">'+escapar(lotacao.join(' / ') || 'Sem pelotão de serviço')+'</span>';
+              const previstos=d.planos.filter(p=>p.servico);
+              if(operacao && previstos.length>1){
+                return '<div class="'+classe+' duplo" role="group" aria-label="'+escaparAttr(rotulo)+'">'+cab+
+                  '<span class="resenha-cal-op-rotulo">OPERAÇÃO · DOIS PELOTÕES</span>'+
+                  previstos.map(p=>resenhaBotaoOperacaoFt_(d,p)).join('')+rodape+'</div>';
+              }
+              return '<button type="button" class="'+classe+'" data-dia="'+escaparAttr(d.data)+'" aria-label="'+escaparAttr(rotulo)+'">'+cab+
+                (operacao?'<span class="resenha-cal-op-rotulo">OPERAÇÃO</span>':'')+
                 (semResenha?'<span class="resenha-cal-badge nao-enviada">NÃO ENVIADA</span>':
                   badges.map(b=>'<span class="resenha-cal-badge '+b.estado[1]+'">'+(badges.length>1?escapar(b.p.pel.replace('PEL','Pel'))+' · ':'')+escapar(b.estado[0])+'</span>').join(''))+
-                '<span class="pel">'+escapar(lotacao.join(' / ') || 'Sem pelotão de serviço')+'</span></button>';
+                rodape+'</button>';
             }).join('')+'</div></section>';
         }).join('')+'</div>';
-        const formData=host.querySelector('[data-outra-data]');
-        formData.onsubmit=async e=>{
-          e.preventDefault();
-          const data=formData.elements.namedItem('data').value;
-          if(!/^\d{4}-\d{2}-\d{2}$/.test(data))return;
-          const btn=formData.querySelector('button'), msg=formData.querySelector('[data-outra-status]');
-          btn.disabled=true;msg.textContent='Consultando…';
-          try{
-            let dia=dias.find(x=>x.data===data);
-            if(!dia){
-              const r=await chamarApi('dados_resenhas_enviadas',{
-                login:APP.credenciais.login,senha:APP.credenciais.senha,calendario:'1',dataCalendario:data
-              },{semCache:true});
-              if(!r?.ok)throw new Error(r?.erro || 'Não foi possível consultar esta data.');
-              dia=r.dados?.dias?.find(x=>x.data===data);
-              if(!dia)throw new Error('A implantação atual ainda não consulta datas fora do calendário.');
-            }
-            if(atual() && formData.isConnected)abrirDiaCalendarioResenhaFt_(dia,btn);
-            msg.textContent='';
-          }catch(err){if(formData.isConnected)msg.textContent=err.message || String(err);}
-          finally{btn.disabled=false;}
-        };
+        const programar=host.querySelector('[data-programar-operacao]');
+        if(programar)programar.onclick=()=>abrirProgramacaoOperacaoResenhaFt_(dias,programar,r.dados.hoje);
         host.onclick=e=>{
           const btn=e.target.closest('button[data-dia]');
           const dia=btn && dias.find(d=>d.data===btn.dataset.dia);
-          if(dia) abrirDiaCalendarioResenhaFt_(dia,btn);
+          if(dia) abrirDiaCalendarioResenhaFt_(dia,btn,btn.dataset.pel || null);
         };
       }catch(e){
         if(atual())host.innerHTML='<p class="resenha-alerta">'+escapar(e.message || String(e))+'</p>'+
@@ -13703,20 +13759,21 @@ function epMesclarResenhaFt(payload,auto){
       return payload && typeof payload==='object' ? {cabecalho:registro.cabecalho,payload} : null;
     }
 
-    async function montarEdicaoOverlayResenhaFt_(overlay,edicao,data,pel,avisos){
+    async function montarEdicaoOverlayResenhaFt_(overlay,edicao,data,pel,avisos,horario){
       await carregarDadosResenha();
       if(!overlay.ativo())return;
       APP.resenhaEdicao=edicao;
-      renderizarFormularioResenha(data && pel ? {data,pel,avisos} : null);
+      renderizarFormularioResenha(data && pel ? {data,pel,avisos,horario} : null);
       if(edicao)prepararFormularioEdicaoResenha(edicao);
     }
 
-    function abrirDiaCalendarioResenhaFt_(dia,btn){
+    function abrirDiaCalendarioResenhaFt_(dia,btn,pelEscolhido){
       const overlay=resenhaOverlayFt_('Resenha de '+dataISOParaBR(dia.data),btn);
       if(!overlay)return;
       const {d,corpo}=overlay;
       const disponiveis=dia.planos.filter(p=>p.id || p.enviar);
-      const planos=disponiveis.length ? disponiveis : dia.planos.filter(p=>p.servico);
+      const planos=pelEscolhido ? disponiveis.filter(p=>p.pel===pelEscolhido) :
+        (disponiveis.length ? disponiveis : dia.planos.filter(p=>p.servico));
       const ativo=overlay.ativo;
       const abrir=async plano=>{
         corpo.textContent='Carregando resenha e permissões…';
@@ -13741,8 +13798,10 @@ function epMesclarResenhaFt(payload,auto){
           }
           const avisos=[];
           if(dia.atrasada)avisos.push('O prazo já passou. Você ainda pode enviar a resenha pendente.');
-          if(!plano.servico)avisos.push('Não há serviço regular previsto para este pelotão nesta data. Use este lançamento se houver uma escala a registrar.');
-          await montarEdicaoOverlayResenhaFt_(overlay,null,dia.data,plano.pel,avisos);
+          const op=dia.operacao?.pelotoes?.includes(plano.pel)?dia.operacao:null;
+          const horario=op?'Das '+op.inicio+' às '+op.fim+(op.fim<op.inicio?' (dia seguinte)':''):'';
+          if(op)avisos.push('Operação: '+op.nome+'. Confira o horário programado antes de enviar.');
+          await montarEdicaoOverlayResenhaFt_(overlay,null,dia.data,plano.pel,avisos,horario);
         }catch(e){if(ativo())corpo.textContent=e.message || String(e);}
       };
       if(planos.length===1){void abrir(planos[0]);return;}
@@ -13942,6 +14001,7 @@ function epMesclarResenhaFt(payload,auto){
         const dia=document.getElementById('resenhaDataEscala'), pel=document.getElementById('resenhaPelotao');
         dia.value=contexto.data; dia.readOnly=true;
         pel.value=contexto.pel; pel.disabled=true;
+        if(contexto.horario && !edicao)document.getElementById('resenhaHorarioEscala').value=contexto.horario;
       }
       for(const id of ['resenhaPelotao','resenhaDataEscala'])document.getElementById(id)?.addEventListener('change',epPreviaResenhaFt);
       if(!edicao)void epPreviaResenhaFt();
