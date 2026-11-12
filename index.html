@@ -6892,6 +6892,18 @@ Banco de dados: Google Sheets.
     /* Ocorrências: formulários e tabelas seguem a paleta do portal. */
     .oc-ft-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
     .oc-ft-grid .oc-ft-largo{grid-column:1/-1}
+    .oc-ft-indices form .page-actions{margin-top:12px}
+    .oc-ft-indices [hidden]{display:none!important}
+    .oc-ft-indices .oc-ft-tabela table{font-size:inherit}
+    .oc-ft-indices .oc-ft-tabela tbody th{background:#f2f5f7;color:#17202a;font-weight:650}
+    .oc-ft-indices .oc-ft-tabela td{vertical-align:top}
+    .oc-ft-indices .oc-ft-tabela small{display:block;color:#47586a;margin-top:4px}
+    .oc-ft-indices-paineis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+    .oc-ft-indices-lista,.oc-ft-indices-meses{list-style:none;padding:0;margin:0;display:grid;gap:6px}
+    .oc-ft-indices-lista li,.oc-ft-indices-meses li{display:flex;justify-content:space-between;gap:12px;padding:8px 10px;border:1px solid #dbe1e7;border-radius:10px;background:#f7f9fa}
+    .oc-ft-indices-lista span{overflow-wrap:anywhere}
+    .oc-ft-indices-meses{grid-template-columns:repeat(auto-fit,minmax(106px,1fr))}
+    @media(max-width:620px){.oc-ft-indices-paineis{grid-template-columns:1fr}.oc-ft-indices .oc-ft-tabela table{font-size:.85em}}
     #ocFtConteudo label{display:grid;gap:6px;min-width:0;font-size:11px;font-weight:800;color:#374247}
     #ocFtConteudo input,#ocFtConteudo select,#ocFtConteudo textarea{width:100%;min-width:0;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:10px;padding:10px;background:#fff;color:#17202a;font:inherit;font-size:12px}
     .oc-ft-responsavel{background:#f1f5f9;border:1px solid #dbe1e7;border-radius:12px;padding:12px;margin-bottom:16px;color:#374247;font-size:12px}
@@ -8304,6 +8316,7 @@ function epMesclarResenhaFt(payload,auto){
         ENTREVISTAS_FT: { arquivo: './icone-candidaturas.png', alt: 'Candidaturas à Cia FT' },
         OCORRENCIAS: { arquivo: './icone-ocorrencias.png?v=138-ocorrencias-r1', alt: 'Ocorrências' },
         OCORRENCIAS_INCLUSAO: { arquivo: './icone-inclusao-ocorrencia.png?v=138-r1', alt: 'Inclusão de Ocorrência' },
+        OCORRENCIAS_INDICES: { arquivo: './icone-indices-criminais.png?v=142-r1', alt: 'Índices Criminais' },
         OCORRENCIAS_RANKING: { arquivo: './icone-ranking-ocorrencias.png?v=138-r1', alt: 'Ranking de Ocorrências' },
         REVISTA_ARMARIO: { arquivo: './icone-revista-armario.png?v=131-rotinas-r3', alt: 'Revista de Armário' },
         PLANO_ANUAL_FERIAS: { arquivo: './icone-ferias.png?v=20260930-r2', alt: 'Plano Anual de Férias' }
@@ -8412,7 +8425,7 @@ function epMesclarResenhaFt(payload,auto){
         return;
       }
 
-      if (['OCORRENCIAS_INCLUSAO', 'OCORRENCIAS_RANKING'].indexOf(normalizarModuloCliente(id)) !== -1) {
+      if (['OCORRENCIAS_INCLUSAO', 'OCORRENCIAS_RANKING', 'OCORRENCIAS_INDICES'].indexOf(normalizarModuloCliente(id)) !== -1) {
         abrirSubpaginaOcorrencias(normalizarModuloCliente(id));
         return;
       }
@@ -8526,7 +8539,7 @@ function epMesclarResenhaFt(payload,auto){
         id: 'OCORRENCIAS',
         titulo: 'OCORRÊNCIAS',
         icone: '',
-        descricao: 'Lançamento de ocorrências, validação e ranking geral.'
+        descricao: 'Lançamento, validação, ranking e índices de ocorrências.'
       });
       modulos.push({id:"FORMULARIOS_PMESP",titulo:"FORMULÁRIOS PMESP",descricao:"Solicitação e acompanhamento de documentos oficiais."});
 
@@ -8555,7 +8568,8 @@ function epMesclarResenhaFt(payload,auto){
       window.scrollTo(0, 0);
       const modulos = [
         { id: 'OCORRENCIAS_INCLUSAO', titulo: 'Inclusão de Ocorrência', icone: '' },
-        { id: 'OCORRENCIAS_RANKING', titulo: 'Ranking de Ocorrências', icone: '' }
+        { id: 'OCORRENCIAS_RANKING', titulo: 'Ranking de Ocorrências', icone: '' },
+        { id: 'OCORRENCIAS_INDICES', titulo: 'Índices Criminais', icone: '' }
       ];
       document.getElementById('appConteudo').innerHTML = `
         <div class="page-wrap">
@@ -8688,6 +8702,7 @@ function epMesclarResenhaFt(payload,auto){
     }
     async function abrirSubpaginaOcorrencias(id) {
       window.scrollTo(0,0);
+      if(id==='OCORRENCIAS_INDICES')return ocFtAbrirIndices();
       const inclusao=id==='OCORRENCIAS_INCLUSAO';
       document.getElementById('appConteudo').innerHTML='<div class="page-wrap">'+ocFtTitulo(inclusao?'Inclusão de Ocorrência':'Ranking de Ocorrências')+'<div id="ocFtConteudo" class="modal-card">Carregando...</div></div>';
       try{
@@ -8709,6 +8724,90 @@ function epMesclarResenhaFt(payload,auto){
     function ocFtAdicionarEquipe(){const box=document.getElementById('ocFtEquipe');box.insertAdjacentHTML('beforeend','<div class="oc-ft-dinamico"><select data-oc-equipe aria-label="Policial da equipe">'+ocFtOptionsEquipe('')+'</select><button type="button" class="btn-page" onclick="this.parentElement.remove()" aria-label="Remover policial">REMOVER</button></div>');}
     function ocFtAdicionarApoio(){document.getElementById('ocFtApoio').insertAdjacentHTML('beforeend','<div class="oc-ft-dinamico"><input data-oc-apoio maxlength="60" placeholder="Prefixo da viatura de apoio" aria-label="Prefixo da viatura de apoio"><button type="button" class="btn-page" onclick="this.parentElement.remove()">REMOVER</button></div>');}
     function ocFtAdicionarPessoa(tipo){document.getElementById(tipo==='indiciados'?'ocFtIndiciados':'ocFtSindicados').insertAdjacentHTML('beforeend','<div class="oc-ft-pessoa" data-oc-pessoa="'+tipo+'"><label>Nome<input data-oc-nome maxlength="200"></label><label>RG<input data-oc-rg maxlength="40"></label><button type="button" class="btn-page" onclick="this.parentElement.remove()">REMOVER</button></div>');}
+    const OC_FT_INDICES_METRICAS=[
+      ['flagrante','Flagrantes'],['presas','Pessoas presas'],['procurados','Procurados capturados'],
+      ['drogasGramas','Drogas apreendidas'],['armas','Armas apreendidas']
+    ];
+    function ocFtCamposIndicadores(d={}){
+      const num=(k,rotulo,peso=false)=>'<label>'+rotulo+'<input name="ocInd_'+k+'" inputmode="'+(peso?'decimal':'numeric')+'" maxlength="'+(peso?12:5)+'" pattern="'+(peso?'[0-9]{1,8}([.,][0-9]{1,3})?':'[0-9]{1,5}')+'" value="'+escaparAttr(d[k]??'')+'"></label>';
+      return '<section class="oc-ft-secao"><h2>Dados para Índices Criminais</h2><p class="oc-ft-nota">Informe 0 quando não houver. Deixe em branco apenas se o dado for desconhecido. No campo de drogas, informe o peso total em gramas, sem separador de milhar (ex.: 1250,5).</p><div class="oc-ft-grid">'+
+        '<label>Região / bairro<input name="ocInd_regiao" maxlength="100" placeholder="Somente o nome do bairro ou região" value="'+escaparAttr(d.regiao||'')+'"></label>'+
+        '<label>Houve flagrante?<select name="ocInd_flagrante"><option value="">Não informado</option><option value="1"'+(d.flagrante===1?' selected':'')+'>Sim</option><option value="0"'+(d.flagrante===0?' selected':'')+'>Não</option></select></label>'+
+        num('presas','Pessoas presas')+num('procurados','Procurados capturados')+num('drogasGramas','Drogas apreendidas (g)',true)+num('armas','Armas apreendidas')+'</div></section>';
+    }
+    function ocFtLerIndicadores(form){
+      return Object.fromEntries(['regiao',...OC_FT_INDICES_METRICAS.map(([k])=>k)].map(k=>[k,form.elements['ocInd_'+k].value.trim()]));
+    }
+    function ocFtDetalheIndicadores(d){
+      const i=d.indicadores||{};
+      return Object.keys(i).length?'<h3>Dados para Índices Criminais</h3><div class="oc-ft-grid">'+[['regiao','Região / bairro'],...OC_FT_INDICES_METRICAS].map(([k,t])=>{
+        const v=i[k];
+        return '<div><strong>'+t+'</strong><p>'+escapar(v==null?'Não informado':k==='flagrante'?(v===1?'Sim':'Não'):k==='drogasGramas'?new Intl.NumberFormat('pt-BR',{maximumFractionDigits:3}).format(v)+' g':v)+'</p></div>';
+      }).join('')+'</div>':'';
+    }
+    function ocFtAbrirIndices(){
+      const ano=Number(new Intl.DateTimeFormat('en',{timeZone:'America/Sao_Paulo',year:'numeric'}).format(new Date()));
+      const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+      const mes=Number(new Intl.DateTimeFormat('en',{timeZone:'America/Sao_Paulo',month:'numeric'}).format(new Date()));
+      document.getElementById('appConteudo').innerHTML='<div class="page-wrap">'+ocFtTitulo('Índices Criminais')+
+        '<div class="modal-card oc-ft-indices"><form id="ocFtIndicesFiltros" onsubmit="event.preventDefault();ocFtAtualizarIndices()">'+
+        '<div class="oc-ft-grid"><label>Ano<select name="ano">'+Array.from({length:Math.max(1,ano-2025)},(_,i)=>'<option>'+(ano-i)+'</option>').join('')+'</select></label>'+
+        '<label>Período<select name="periodo" onchange="ocFtAjustarPeriodoIndices(this.form)"><option value="ANUAL">Anual</option><option value="SEMESTRAL">Semestral</option><option value="MENSAL">Mensal</option></select></label>'+
+        '<label data-semestre hidden>Semestre<select name="semestre"><option value="1">1º semestre</option><option value="2"'+(mes>6?' selected':'')+'>2º semestre</option></select></label>'+
+        '<label data-mes hidden>Mês<select name="mes">'+meses.map((m,i)=>'<option value="'+(i+1)+'"'+(i+1===mes?' selected':'')+'>'+m+'</option>').join('')+'</select></label></div>'+
+        '<div class="page-actions"><button type="submit" class="btn-primary-soft">CONSULTAR</button></div></form>'+
+        '<p class="oc-ft-nota">Somente ocorrências validadas, pela data do atendimento, independentemente da decisão sobre Folga Flagrante.</p>'+
+        '<div id="ocFtIndicesStatus" role="status"></div><div id="ocFtIndicesResultado"></div></div></div>';
+      ocFtAjustarPeriodoIndices(document.getElementById('ocFtIndicesFiltros'));
+      return ocFtAtualizarIndices();
+    }
+    function ocFtAjustarPeriodoIndices(form){
+      form.querySelector('[data-semestre]').hidden=form.elements.periodo.value!=='SEMESTRAL';
+      form.querySelector('[data-mes]').hidden=form.elements.periodo.value!=='MENSAL';
+    }
+    async function ocFtAtualizarIndices(){
+      const form=document.getElementById('ocFtIndicesFiltros'),box=document.getElementById('ocFtIndicesResultado'),status=document.getElementById('ocFtIndicesStatus');
+      const btn=form.querySelector('button[type="submit"]');
+      if(btn.disabled)return;
+      const params=Object.fromEntries(['ano','periodo','semestre','mes'].map(k=>[k,form.elements[k].value]));
+      const filtros=Array.from(form.querySelectorAll('select'));
+      btn.disabled=true;filtros.forEach(el=>el.disabled=true);box.textContent='';box.setAttribute('aria-busy','true');
+      status.textContent='Carregando indicadores...';
+      try{
+        const r=await ocFtApi('ocorrencias_indices',params);
+        if(!box.isConnected)return;
+        box.innerHTML=ocFtHtmlIndices(r);
+        status.textContent='Consulta concluída.';
+      }catch(e){
+        if(!box.isConnected)return;
+        status.textContent=e.message;
+        mostrarToastFt('Não foi possível consultar os índices',e.message,'erro');
+      }finally{btn.disabled=false;filtros.forEach(el=>el.disabled=false);box.removeAttribute('aria-busy');}
+    }
+    function ocFtHtmlIndices(r){
+      const p=r.periodo,d=r.atual,fmt=new Intl.NumberFormat('pt-BR'),peso=new Intl.NumberFormat('pt-BR',{maximumFractionDigits:6});
+      const faixa=x=>escapar(iccDataBR(x.inicio))+' a '+escapar(iccDataBR(x.fim));
+      if(p.futuro)return '<section class="oc-ft-secao"><p>O período de '+faixa(p)+' ainda não começou.</p></section>';
+      const resumo=(dados,periodo,titulo)=>'<section class="oc-ft-secao"><h2>'+titulo+' · '+faixa(periodo)+'</h2>'+
+        (dados.grupos.geral.total?'<div class="oc-ft-tabela"><table><thead><tr><th scope="col">Indicador</th><th scope="col">Geral</th><th scope="col">1º Pel</th><th scope="col">2º Pel</th></tr></thead><tbody>'+
+        [['total','Ocorrências atendidas'],...OC_FT_INDICES_METRICAS].map(([k,t])=>'<tr><th scope="row">'+t+'</th>'+['geral','pel1','pel2'].map(g=>{
+          const grupo=dados.grupos[g],i=grupo.indicadores[k];
+          if(!i)return '<td><strong>'+fmt.format(grupo.total)+'</strong></td>';
+          if(!grupo.total)return '<td>— <small>Sem registros</small></td>';
+          if(!i.informadas)return '<td>— <small>Não informado</small></td>';
+          const v=k==='drogasGramas'?peso.format(i.valor/1e6)+' kg':fmt.format(i.valor);
+          return '<td><strong>'+v+'</strong>'+(i.informadas<grupo.total?'<small>'+fmt.format(i.informadas)+' de '+fmt.format(grupo.total)+' informadas</small>':'')+'</td>';
+        }).join('')+'</tr>').join('')+'</tbody></table></div>'+
+        '<p class="oc-ft-nota">Geral também inclui outros grupos'+(dados.semPel?' e '+fmt.format(dados.semPel)+' ocorrência(s) sem pelotão informado':'')+'. Flagrantes contam ocorrências; pessoas presas e procurados são contagens informadas separadamente.</p>':'<p>Nenhuma ocorrência validada neste período.</p>')+'</section>';
+      const lista=(itens,vazio)=>itens.length?'<ol class="oc-ft-indices-lista">'+itens.map(x=>'<li><span>'+escapar(x.nome)+'</span><strong>'+fmt.format(x.total)+'</strong></li>').join('')+'</ol>':'<p>'+vazio+'</p>';
+      const cards=dados=>dados.grupos.geral.total?'<div class="oc-ft-indices-paineis"><section class="oc-ft-secao"><h2>Top 5 · Naturezas</h2>'+lista(dados.naturezas,'Sem naturezas informadas.')+
+        (dados.semNatureza?'<p class="oc-ft-nota">'+fmt.format(dados.semNatureza)+' ocorrência(s) sem natureza informada.</p>':'')+'</section>'+
+        '<section class="oc-ft-secao"><h2>'+(dados.regioesLideres.length>1?'Regiões empatadas em primeiro':'Região com mais ocorrências')+'</h2>'+lista(dados.regioesLideres,'Sem região informada no período.')+
+        '<p class="oc-ft-nota">Região informada em '+fmt.format(dados.grupos.geral.total-dados.semRegiao)+' de '+fmt.format(dados.grupos.geral.total)+' ocorrências.</p></section></div>':'';
+      const tendencia=d.grupos.geral.total&&d.tendencia.length>1?'<section class="oc-ft-secao"><h2>Ocorrências por mês</h2><ul class="oc-ft-indices-meses">'+d.tendencia.map(x=>'<li><span>'+escapar(x.mes.slice(5)+'/'+x.mes.slice(0,4))+'</span><strong>'+fmt.format(x.total)+'</strong></li>').join('')+'</ul></section>':'';
+      return resumo(d,p,'Período consultado')+cards(d)+tendencia+(r.anterior?resumo(r.anterior,p.anterior,'Mesmo período do ano anterior')+cards(r.anterior):'<p class="oc-ft-nota">O comparativo anual fica disponível a partir de 2027, usando 2026 como primeira base.</p>');
+    }
+
     function ocFtRenderFormulario(){
       const c=OC_FT_CATALOGOS,p=c.usuario;
       OC_FT_REQUEST_ID=OC_FT_REQUEST_ID||crypto.randomUUID();
@@ -8725,6 +8824,7 @@ function epMesclarResenhaFt(payload,auto){
         '<section class="oc-ft-secao"><h2>Indiciados</h2><div id="ocFtIndiciados"></div><button type="button" class="btn-page" onclick="ocFtAdicionarPessoa(\'indiciados\')">ADICIONAR INDICIADO</button></section>'+
         '<section class="oc-ft-secao"><h2>Sindicados</h2><div id="ocFtSindicados"></div><button type="button" class="btn-page" onclick="ocFtAdicionarPessoa(\'sindicados\')">ADICIONAR SINDICADO</button></section>'+
         '<section class="oc-ft-secao"><label>Breve Histórico<textarea id="ocFtBreveHistorico" rows="8" maxlength="12000" required aria-describedby="ocFtBreveHistoricoAjuda" placeholder="Cole aqui o histórico da resenha da ocorrência."></textarea></label><p id="ocFtBreveHistoricoAjuda" class="oc-ft-nota">Copie o histórico da resenha da ocorrência, incluindo as apreensões quando houver.</p></section>'+
+        ocFtCamposIndicadores()+
         '<p id="ocFtEnvioStatus" role="status"></p><button id="ocFtEnviarBtn" class="btn-primary-soft" type="submit">ENVIAR OCORRÊNCIA</button></form>'+
         '<section class="oc-ft-secao"><h2>Consulta de ocorrências</h2><button class="btn-page" onclick="ocFtCarregarConsulta()">CONSULTAR REGISTROS / VALIDAÇÃO</button><div id="ocFtConsulta" aria-live="polite"></div></section>';
       for(let i=0;i<5;i++)ocFtAdicionarEquipe();for(let i=0;i<3;i++){ocFtAdicionarApoio();ocFtAdicionarPessoa('indiciados');}ocFtAdicionarPessoa('sindicados');
@@ -8735,7 +8835,7 @@ function epMesclarResenhaFt(payload,auto){
       const val=id=>document.getElementById(id).value.trim();
       const pessoas=tipo=>Array.from(document.querySelectorAll('[data-oc-pessoa="'+tipo+'"]')).map(row=>({nome:row.querySelector('[data-oc-nome]').value.trim(),rg:row.querySelector('[data-oc-rg]').value.trim()})).filter(p=>p.nome||p.rg);
       // Mantém o campo da API existente para gravar o texto sem alterar o Apps Script.
-      const f={pel:val('ocFtPel'),data:val('ocFtData'),qtr:val('ocFtQtr'),qth:val('ocFtQth'),bopm:val('ocFtBopm'),bopc:val('ocFtBopc'),dp:val('ocFtDp'),natureza:val('ocFtNatureza'),vtr:val('ocFtVtr'),equipe:Array.from(document.querySelectorAll('[data-oc-equipe]')).map(x=>x.value).filter(Boolean),apoio:Array.from(document.querySelectorAll('[data-oc-apoio]')).map(x=>x.value.trim()).filter(Boolean),indiciados:pessoas('indiciados'),sindicados:pessoas('sindicados'),apreensao:val('ocFtBreveHistorico')};
+      const f={pel:val('ocFtPel'),data:val('ocFtData'),qtr:val('ocFtQtr'),qth:val('ocFtQth'),bopm:val('ocFtBopm'),bopc:val('ocFtBopc'),dp:val('ocFtDp'),natureza:val('ocFtNatureza'),vtr:val('ocFtVtr'),equipe:Array.from(document.querySelectorAll('[data-oc-equipe]')).map(x=>x.value).filter(Boolean),apoio:Array.from(document.querySelectorAll('[data-oc-apoio]')).map(x=>x.value.trim()).filter(Boolean),indiciados:pessoas('indiciados'),sindicados:pessoas('sindicados'),apreensao:val('ocFtBreveHistorico'),indicadores:ocFtLerIndicadores(event.currentTarget)};
       if(!f.apreensao){document.getElementById('ocFtBreveHistorico').focus();mostrarToastFt('Breve Histórico obrigatório','Cole o histórico da resenha da ocorrência.','erro');return;}
       if(!f.equipe.length){mostrarToastFt('Equipe obrigatória','Selecione ao menos um policial da equipe.','erro');return;}
       btn.disabled=true;status.textContent='Enviando. Aguarde a confirmação.';
@@ -8886,7 +8986,7 @@ function epMesclarResenhaFt(payload,auto){
       botao.setAttribute('aria-expanded','false');
       botao.onclick=d.podeRetificar===true?()=>ocFtFormularioRetificacao(dialog,d):null;
       const pessoaLista=(titulo,lista)=>'<h3>'+titulo+'</h3><p>'+(lista||[]).map(p=>escapar(p.nome)+' — RG '+escapar(p.rg||'não informado')).join('<br>')+'</p>';
-      box.innerHTML='<section class="oc-ft-secao"><h2>BOPM '+escapar(d.bopm)+' — '+iccDataBR(d.data)+'</h2><p>'+escapar(d.natureza)+'</p><p>QTR: '+escapar(d.qtr)+' | QTH: '+escapar(d.qth)+'</p><p>BOPC: '+escapar(d.bopc)+' | DP: '+escapar(d.dp)+' | VTR: '+escapar(d.vtr)+'</p><h3>Equipe</h3><p>'+(d.equipe||[]).map(p=>escapar([p.posto,p.re,p.nomeGuerra||p.nome].join(' '))).join('<br>')+'</p><h3>Apoio</h3><p>'+escapar((d.apoio||[]).join(', '))+'</p>'+pessoaLista('Indiciados',d.indiciados)+pessoaLista('Sindicados',d.sindicados)+'<h3>Breve Histórico</h3><p style="white-space:pre-wrap;overflow-wrap:anywhere">'+escapar(d.apreensao||'Não informado.')+'</p><h3>Histórico do registro</h3><p>'+(d.auditoria||[]).map(a=>escapar(a.acao)+' — '+escapar(a.nome)+' — '+escapar(iccHoraBR(a.dataHora))).join('<br>')+'</p></section>';
+      box.innerHTML='<section class="oc-ft-secao"><h2>BOPM '+escapar(d.bopm)+' — '+iccDataBR(d.data)+'</h2><p>'+escapar(d.natureza)+'</p><p>QTR: '+escapar(d.qtr)+' | QTH: '+escapar(d.qth)+'</p><p>BOPC: '+escapar(d.bopc)+' | DP: '+escapar(d.dp)+' | VTR: '+escapar(d.vtr)+'</p><h3>Equipe</h3><p>'+(d.equipe||[]).map(p=>escapar([p.posto,p.re,p.nomeGuerra||p.nome].join(' '))).join('<br>')+'</p><h3>Apoio</h3><p>'+escapar((d.apoio||[]).join(', '))+'</p>'+pessoaLista('Indiciados',d.indiciados)+pessoaLista('Sindicados',d.sindicados)+'<h3>Breve Histórico</h3><p style="white-space:pre-wrap;overflow-wrap:anywhere">'+escapar(d.apreensao||'Não informado.')+'</p>'+ocFtDetalheIndicadores(d)+'<h3>Histórico do registro</h3><p>'+(d.auditoria||[]).map(a=>escapar(a.acao)+' — '+escapar(a.nome)+' — '+escapar(iccHoraBR(a.dataHora))).join('<br>')+'</p></section>';
     }
     function ocFtFormularioRetificacao(dialog,d){
       const painel=dialog.querySelector('#ocFtRetificacao'),retificar=dialog.querySelector('[data-oc-retificar]'),fechar=dialog.querySelector('[data-oc-fechar]');
@@ -8909,6 +9009,7 @@ function epMesclarResenhaFt(payload,auto){
         '<div class="oc-ft-grid"><label>Pelotão<select name="pel">'+pelotoes.map(p=>'<option value="'+escaparAttr(p)+'"'+(p===(d.pel||'')?' selected':'')+'>'+escapar(p||'Não informado')+'</option>').join('')+'</select></label>'+
         campos.map(([k,n,t,max])=>'<label>'+n+'<input name="'+k+'" type="'+t+'" value="'+escaparAttr(d[k]||'')+'"'+(max?' maxlength="'+max+'"':'')+((k==='data'||k==='bopm'||k==='natureza')&&d[k]?' required':'')+'></label>').join('')+'</div>'+
         '<label>Breve Histórico<textarea name="apreensao" rows="6" maxlength="12000">'+escapar(d.apreensao||'')+'</textarea></label>'+
+        ocFtCamposIndicadores(d.indicadores)+
         '<fieldset><legend>Equipe</legend><div data-oc-equipe-retificacao></div><div class="oc-ft-dialogo-acoes"><select data-oc-novo aria-label="Policial a incluir"></select><button type="button" class="btn-page" data-oc-incluir>INCLUIR</button></div></fieldset>'+
         '<label>Apoio (uma viatura por linha)<textarea name="apoio" rows="3" maxlength="6200">'+escapar(apoio)+'</textarea></label>'+
         grupos.map(k=>'<fieldset><legend>'+(k==='indiciados'?'Indiciados':'Sindicados')+'</legend><div data-oc-ret-pessoas="'+k+'"></div><button type="button" class="btn-page" data-oc-ret-adicionar="'+k+'">ADICIONAR PESSOA</button></fieldset>').join('')+
@@ -8942,7 +9043,7 @@ function epMesclarResenhaFt(payload,auto){
       const lerPessoas=k=>Array.from(pessoaBox(k).children).map(row=>({nome:row.querySelector('[data-nome]').value.trim(),rg:row.querySelector('[data-rg]').value.trim()})).filter(p=>p.nome||p.rg);
       const lerApoio=()=>form.elements.apoio.value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
       const lerCampos=()=>Object.fromEntries(['pel',...campos.map(([k])=>k),'apreensao'].map(k=>[k,form.elements[k].value.trim()]));
-      const snapshot=()=>({...lerCampos(),equipe:equipe.map(p=>p.re),apoio:lerApoio(),indiciados:lerPessoas('indiciados'),sindicados:lerPessoas('sindicados')});
+      const snapshot=()=>({...lerCampos(),indicadores:ocFtLerIndicadores(form),equipe:equipe.map(p=>p.re),apoio:lerApoio(),indiciados:lerPessoas('indiciados'),sindicados:lerPessoas('sindicados')});
       const inicial=snapshot();
       const limpar=()=>{painel.hidden=true;painel.textContent='';retificar.setAttribute('aria-expanded','false');};
       cancelar.onclick=()=>{limpar();retificar.focus();};
@@ -17283,7 +17384,7 @@ function epMesclarResenhaFt(payload,auto){
 
     function acaoApiSomenteLeitura(action) {
       const acao = normalizarTexto(action || '').replace(/[^A-Z0-9]/g, '');
-      return acao === 'LOGIN' || acao === 'PING' || ['ESPACOPELDADOS','ESPACOPELSALDO','ESPACOPELRESENHA','FOLGACOMPGESTAO','FCADMDADOS'].includes(acao) || acao.indexOf('DADOS') === 0 || acao.indexOf('CONSULT') === 0 || acao.indexOf('HISTORICO') === 0 || acao.indexOf('BAIXAR') === 0 || acao.indexOf('GERARPDF') === 0;
+      return acao === 'LOGIN' || acao === 'PING' || ['ESPACOPELDADOS','ESPACOPELSALDO','ESPACOPELRESENHA','FOLGACOMPGESTAO','FCADMDADOS','OCORRENCIASINDICES'].includes(acao) || acao.indexOf('DADOS') === 0 || acao.indexOf('CONSULT') === 0 || acao.indexOf('HISTORICO') === 0 || acao.indexOf('BAIXAR') === 0 || acao.indexOf('GERARPDF') === 0;
     }
 
 
