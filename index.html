@@ -6937,6 +6937,18 @@ Banco de dados: Google Sheets.
     #ocFtPainelFF .oc-ft-acoes{justify-items:center}
     .oc-ft-dialogo{border:1px solid #dbe1e7;border-radius:16px;padding:20px;width:min(860px,90vw);max-height:85vh;overflow:auto;color:#17202a;background:white}
     .oc-ft-dialogo::backdrop{background:rgba(15,23,42,.45)}.oc-ft-dialogo-topo{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .oc-ft-dialogo .oc-ft-dialogo-topo{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px}
+    .oc-ft-dialogo-topo .oc-ft-dialogo-acoes{flex-wrap:nowrap;justify-content:flex-end}
+    .oc-ft-dialogo-topo .oc-ft-dialogo-acoes button{width:auto;min-width:0;min-height:36px;padding:7px 10px;white-space:nowrap;font-size:11px}
+    .oc-ft-retificacao fieldset{min-width:0;margin:10px 0;padding:10px;border:1px solid #dbe1e7;border-radius:8px}
+    .oc-ft-retificacao fieldset legend{font-size:12px;font-weight:700}
+    .oc-ft-retificacao input{box-sizing:border-box;width:100%;min-width:0;padding:9px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#17202a;font:inherit}
+    .oc-ft-retificacao [data-oc-novo]{flex:1;min-width:135px;width:auto}
+    .oc-ft-retificacao .btn-primary-soft{width:auto}
+    .oc-ft-retificacao-integrante,.oc-ft-retificacao-pessoa{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px}
+    .oc-ft-retificacao-pessoa label:first-child{flex:2 1 160px}
+    .oc-ft-retificacao-pessoa label:nth-child(2){flex:1 1 90px}
+    @media(max-width:360px){.oc-ft-dialogo-topo .oc-ft-dialogo-acoes button{font-size:10px;padding-inline:6px}}
     .oc-ft-dialogo-acoes{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
     .oc-ft-dialogo [hidden]{display:none!important}
     .oc-ft-retificacao{padding:12px;background:#f1f5f9;border:1px solid #dbe1e7;border-radius:10px;margin:14px 0}
@@ -8880,30 +8892,82 @@ function epMesclarResenhaFt(payload,auto){
     function ocFtFormularioRetificacao(dialog,d){
       const painel=dialog.querySelector('#ocFtRetificacao'),retificar=dialog.querySelector('[data-oc-retificar]'),fechar=dialog.querySelector('[data-oc-fechar]');
       const aviso=dialog.querySelector('[data-oc-retificacao-msg]');
-      if(!painel.hidden){painel.querySelector('select')?.focus();return;}
+      if(!painel.hidden){painel.querySelector('input')?.focus();return;}
       aviso.hidden=true;
       const chave=re=>String(re||'').trim().split('-')[0].replace(/\D/g,'').slice(0,6);
-      const equipe=new Set((d.equipe||[]).map(p=>chave(p.re)));
-      const efetivo=(OC_FT_CATALOGOS?.efetivo||[]).filter(p=>!equipe.has(chave(p.re)));
+      const equipe=(d.equipe||[]).slice(),efetivo=OC_FT_CATALOGOS?.efetivo||[];
+      const apoio=(d.apoio||[]).join('\n');
+      const campos=[
+        ['data','Data','date'],['qtr','Horário (QTR)','time'],
+        ['bopm','BOPM','text',60],['bopc','BOPC','text',60],['dp','DP','text',100],
+        ['qth','Endereço (QTH)','text',500],['natureza','Natureza','text',500],['vtr','Viatura (VTR)','text',60]
+      ];
+      const pelotoes=['','1º PEL','2º PEL','ADM','DEJEM'];
+      if(d.pel&&!pelotoes.includes(d.pel))pelotoes.push(d.pel);
+      const grupos=['indiciados','sindicados'];
       painel.hidden=false;retificar.setAttribute('aria-expanded','true');
-      if(!efetivo.length){painel.innerHTML='<p>Nenhum integrante do efetivo está disponível para inclusão.</p>';return;}
-      painel.innerHTML='<form class="oc-ft-retificacao"><strong>Incluir policial na equipe</strong><p class="oc-ft-nota">A retificação fica registrada no histórico. A decisão da FF continua com o Cmt Cia.</p><label>Policial<select name="re" required><option value="">Selecione pelo RE ou nome</option>'+efetivo.map(p=>'<option value="'+escaparAttr(p.re)+'">'+escapar([p.re,p.posto,p.nomeGuerra||p.nome].filter(Boolean).join(' — '))+'</option>').join('')+'</select></label><label>Motivo da retificação<textarea name="motivo" rows="3" required minlength="5" maxlength="500"></textarea></label><div class="oc-ft-dialogo-acoes"><button type="submit" class="btn-primary-soft">SALVAR RETIFICAÇÃO</button><button type="button" class="btn-page" data-oc-cancelar>CANCELAR</button></div><p class="oc-ft-retificacao-erro" role="alert" data-oc-erro hidden></p></form>';
-      const form=painel.querySelector('form'),cancelar=painel.querySelector('[data-oc-cancelar]'),salvar=form.querySelector('[type="submit"]'),erro=form.querySelector('[data-oc-erro]');
+      painel.innerHTML='<form class="oc-ft-retificacao"><strong>Retificar dados da ocorrência</strong><p class="oc-ft-nota">Altere apenas os dados que precisam de correção e informe o motivo. A decisão da FF continua com o Cmt Cia.</p>'+
+        '<div class="oc-ft-grid"><label>Pelotão<select name="pel">'+pelotoes.map(p=>'<option value="'+escaparAttr(p)+'"'+(p===(d.pel||'')?' selected':'')+'>'+escapar(p||'Não informado')+'</option>').join('')+'</select></label>'+
+        campos.map(([k,n,t,max])=>'<label>'+n+'<input name="'+k+'" type="'+t+'" value="'+escaparAttr(d[k]||'')+'"'+(max?' maxlength="'+max+'"':'')+((k==='data'||k==='bopm'||k==='natureza')&&d[k]?' required':'')+'></label>').join('')+'</div>'+
+        '<label>Breve Histórico<textarea name="apreensao" rows="6" maxlength="12000">'+escapar(d.apreensao||'')+'</textarea></label>'+
+        '<fieldset><legend>Equipe</legend><div data-oc-equipe-retificacao></div><div class="oc-ft-dialogo-acoes"><select data-oc-novo aria-label="Policial a incluir"></select><button type="button" class="btn-page" data-oc-incluir>INCLUIR</button></div></fieldset>'+
+        '<label>Apoio (uma viatura por linha)<textarea name="apoio" rows="3" maxlength="6200">'+escapar(apoio)+'</textarea></label>'+
+        grupos.map(k=>'<fieldset><legend>'+(k==='indiciados'?'Indiciados':'Sindicados')+'</legend><div data-oc-ret-pessoas="'+k+'"></div><button type="button" class="btn-page" data-oc-ret-adicionar="'+k+'">ADICIONAR PESSOA</button></fieldset>').join('')+
+        '<label>Motivo da retificação<textarea name="motivo" rows="3" required minlength="5" maxlength="500"></textarea></label><div class="oc-ft-dialogo-acoes"><button type="submit" class="btn-primary-soft">SALVAR RETIFICAÇÃO</button><button type="button" class="btn-page" data-oc-cancelar>CANCELAR</button></div><p class="oc-ft-retificacao-erro" role="alert" data-oc-erro hidden></p></form>';
+      const form=painel.querySelector('form'),cancelar=form.querySelector('[data-oc-cancelar]'),salvar=form.querySelector('[type="submit"]'),erro=form.querySelector('[data-oc-erro]');
+      const lista=form.querySelector('[data-oc-equipe-retificacao]'),novo=form.querySelector('[data-oc-novo]'),incluir=form.querySelector('[data-oc-incluir]');
+      const mostrarEquipe=()=>{
+        lista.innerHTML=equipe.map((p,i)=>'<div class="oc-ft-retificacao-integrante"><span>'+escapar([p.re,p.posto,p.nomeGuerra||p.nome].filter(Boolean).join(' — '))+(p.ffGozadaEm?' <small>(FF fruída)</small>':'')+'</span><button type="button" class="btn-page" data-oc-remover="'+i+'"'+(p.ffGozadaEm?' disabled':'')+'>REMOVER</button></div>').join('')||'<p>Nenhum integrante. Inclua pelo menos um policial.</p>';
+        const escolhidos=new Set(equipe.map(p=>chave(p.re))),disponiveis=efetivo.filter(p=>!escolhidos.has(chave(p.re)));
+        novo.innerHTML='<option value="">Selecione pelo RE ou nome</option>'+disponiveis.map(p=>'<option value="'+escaparAttr(p.re)+'">'+escapar([p.re,p.posto,p.nomeGuerra||p.nome].filter(Boolean).join(' — '))+'</option>').join('');
+        incluir.disabled=!disponiveis.length;
+        lista.querySelectorAll('[data-oc-remover]').forEach(b=>b.onclick=()=>{
+          equipe.splice(Number(b.dataset.ocRemover),1);mostrarEquipe();novo.focus();
+        });
+      };
+      incluir.onclick=()=>{const p=efetivo.find(x=>x.re===novo.value);if(p){equipe.push(p);mostrarEquipe();novo.focus();}};
+      mostrarEquipe();
+      const pessoaBox=k=>form.querySelector('[data-oc-ret-pessoas="'+k+'"]');
+      const adicionarPessoa=(k,p={})=>{
+        const linha=document.createElement('div');
+        linha.className='oc-ft-retificacao-pessoa';
+        linha.innerHTML='<label>Nome<input data-nome maxlength="200" value="'+escaparAttr(p.nome||'')+'"></label><label>RG<input data-rg maxlength="40" value="'+escaparAttr(p.rg||'')+'"></label><button type="button" class="btn-page">REMOVER</button>';
+        linha.querySelector('button').onclick=()=>{linha.remove();form.querySelector('[data-oc-ret-adicionar="'+k+'"]').focus();};
+        pessoaBox(k).appendChild(linha);
+        return linha;
+      };
+      grupos.forEach(k=>{
+        (d[k]||[]).forEach(p=>adicionarPessoa(k,p));
+        form.querySelector('[data-oc-ret-adicionar="'+k+'"]').onclick=()=>adicionarPessoa(k).querySelector('[data-nome]').focus();
+      });
+      const lerPessoas=k=>Array.from(pessoaBox(k).children).map(row=>({nome:row.querySelector('[data-nome]').value.trim(),rg:row.querySelector('[data-rg]').value.trim()})).filter(p=>p.nome||p.rg);
+      const lerApoio=()=>form.elements.apoio.value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+      const lerCampos=()=>Object.fromEntries(['pel',...campos.map(([k])=>k),'apreensao'].map(k=>[k,form.elements[k].value.trim()]));
+      const snapshot=()=>({...lerCampos(),equipe:equipe.map(p=>p.re),apoio:lerApoio(),indiciados:lerPessoas('indiciados'),sindicados:lerPessoas('sindicados')});
+      const inicial=snapshot();
       const limpar=()=>{painel.hidden=true;painel.textContent='';retificar.setAttribute('aria-expanded','false');};
       cancelar.onclick=()=>{limpar();retificar.focus();};
-      form.elements.re.focus();
+      form.elements.data.focus();
       form.onsubmit=async event=>{
         event.preventDefault();
         if(salvar.disabled)return;
-        const motivo=form.elements.motivo.value.trim(),re=form.elements.re.value;
-        if(motivo.length<5||!re){erro.hidden=false;erro.textContent='Selecione o policial e informe um motivo com ao menos 5 caracteres.';return;}
+        const motivo=form.elements.motivo.value.trim(),atual=snapshot();
+        const alteracoes=Object.fromEntries(Object.entries(atual).filter(([k,v])=>JSON.stringify(v)!==JSON.stringify(inicial[k])));
+        const falha=msg=>{erro.hidden=false;erro.textContent=msg;};
+        if(motivo.length<5){falha('Informe um motivo com ao menos 5 caracteres.');return;}
+        if(!Object.keys(alteracoes).length){falha('Altere pelo menos um dado da ocorrência.');return;}
+        if(!atual.equipe.length){falha('A equipe deve ter pelo menos um policial.');return;}
+        if(grupos.some(k=>alteracoes[k]?.some(p=>!p.nome))){falha('Preencha o nome das pessoas cujo RG foi informado.');return;}
         erro.hidden=true;
-        salvar.disabled=cancelar.disabled=retificar.disabled=fechar.disabled=true;
+        const habilitados=Array.from(form.elements).filter(el=>!el.disabled);
+        habilitados.forEach(el=>el.disabled=true);
+        retificar.disabled=fechar.disabled=true;
         try{
-          const atualizado=await ocFtApi('ocorrencias_retificar',{id:d.id,re,motivo});
+          const atualizado=await ocFtApi('ocorrencias_retificar',{id:d.id,revisao:d.revisaoRetificacao,motivo,alteracoes:JSON.stringify(alteracoes)});
           if(!dialog.open||!dialog.isConnected)return;
           limpar();ocFtMostrarDetalhe(dialog,atualizado);
-          aviso.textContent='Retificação registrada. O policial foi incluído na equipe.';aviso.hidden=false;
+          aviso.textContent='Retificação registrada.';aviso.hidden=false;
+          if(document.getElementById('ocFtConsulta'))void ocFtCarregarConsulta();
           if(document.getElementById('ocFtRanking')){
             void ocFtAtualizarRanking();
             if(OC_FT_PAINEL_DADOS&&document.getElementById('ocFtFFPeriodo')?.value!=='RANKING')void ocFtRecarregarPainelFF();
@@ -8913,10 +8977,8 @@ function epMesclarResenhaFt(payload,auto){
           if(/^Retificação bloqueada:/.test(e.message)){
             limpar();retificar.hidden=true;
             aviso.textContent=e.message;aviso.hidden=false;
-          }else{
-            erro.textContent=e.message;erro.hidden=false;
-          }
-        }finally{salvar.disabled=cancelar.disabled=retificar.disabled=fechar.disabled=false;}
+          }else falha(e.message);
+        }finally{habilitados.forEach(el=>el.disabled=false);retificar.disabled=fechar.disabled=false;}
       };
     }
     async function ocFtDecidir(id,tipo,decisao){
@@ -17328,6 +17390,7 @@ function epMesclarResenhaFt(payload,auto){
       const acaoNormalizada = normalizarTexto(action).replace(/[^A-Z0-9]/g, '');
       const operacaoPesada = acaoNormalizada.indexOf('GERARPDF') === 0 || acaoNormalizada.indexOf('BAIXAR') === 0;
       const operacaoEscrita = !somenteLeitura;
+      const retificacaoOcorrencia = acaoNormalizada === 'OCORRENCIASRETIFICAR';
       const lancamentoDiario = acaoNormalizada === 'SALVARFREQUENCIA' || acaoNormalizada === 'SALVARCONTROLEFOLGAS';
       const limitePonte = operacaoPesada ? 45000 : (lancamentoDiario ? 55000 : (operacaoEscrita ? 35000 : 20000));
       const limiteJsonp = operacaoPesada ? 60000 : (lancamentoDiario ? 60000 : (operacaoEscrita ? 40000 : (ehLogin ? 25000 : 30000)));
@@ -17342,10 +17405,22 @@ function epMesclarResenhaFt(payload,auto){
       const maxTentativas = !somenteLeitura ? 1 : 2;
       const executar = function(tentativa) {
         if (navigator.onLine === false) return Promise.reject(new Error('Sem conexão com a internet. Verifique a rede do aparelho.'));
-        const prepararTransporte = !somenteLeitura && tentativa === 1 && !APP.apiBridgePronta ? aguardarPonteApiFt(700) : Promise.resolve(APP.apiBridgePronta);
+        const prepararTransporte = !somenteLeitura && tentativa === 1 && !APP.apiBridgePronta ? aguardarPonteApiFt(retificacaoOcorrencia ? 4000 : 700) : Promise.resolve(APP.apiBridgePronta);
         return prepararTransporte.then(function() {
           const usarPonte = APP.apiBridgePronta && tentativa === 1;
-          return usarPonte ? chamadaPelaPonteApiFt(action, params, limitePonte) : chamadaJsonpFt(action, params, limiteJsonp);
+          if (usarPonte) return chamadaPelaPonteApiFt(action, params, limitePonte);
+          if (retificacaoOcorrencia) {
+            return fetch(API_URL, {
+              method: 'POST', credentials: 'omit', cache: 'no-store',
+              headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+              body: JSON.stringify(Object.assign({}, params, {action})),
+              signal: AbortSignal.timeout(limitePonte)
+            }).then(function(resp) {
+              if (!resp.ok) throw new Error('Não foi possível confirmar a retificação. Reabra os detalhes antes de tentar novamente.');
+              return resp.json();
+            });
+          }
+          return chamadaJsonpFt(action, params, limiteJsonp);
         }).catch(function(erro) {
           if (tentativa >= maxTentativas) throw erro;
           const espera = tentativa === 1 ? 700 : 1800;
