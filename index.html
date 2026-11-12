@@ -4810,6 +4810,37 @@ Banco de dados: Google Sheets.
       gap: 8px;
     }
 
+    .resenha-cal { display:grid; gap:14px; }
+    .resenha-cal-semana { display:grid; gap:7px; min-width:0; }
+    .resenha-cal-semana h3 { margin:0; font-size:13px; color:#374247; }
+    .resenha-cal-dias { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:7px; }
+    .resenha-cal-dia { display:flex; min-width:0; min-height:108px; flex-direction:column; align-items:stretch; text-align:left; gap:5px; padding:9px 7px;
+      border:1px solid #d4dbe0; border-radius:13px; background:linear-gradient(155deg,#fff,#f1f4f6); color:#000000; cursor:pointer; font:inherit; }
+    .resenha-cal-dia.fechado { background:#9CA3AF; border-color:#9CA3AF; }
+    .resenha-cal-dia:focus-visible { outline:2px solid #3949AB; outline-offset:2px; }
+    .resenha-cal-dia:hover { box-shadow:0 4px 13px rgba(15,23,42,.14); }
+    .resenha-cal-dia .data { display:flex; flex-direction:column; gap:0; font-weight:900; color:#000000; }
+    .resenha-cal-dia .data b { font-size:22px; line-height:1.05; }
+    .resenha-cal-dia .data small { font-size:11px; }
+    .resenha-cal-dia.fim-semana .data { color:#8E1B1B; }
+    .resenha-cal-dia .pel { margin-top:auto; font-size:11px; font-weight:800; color:#000000; }
+    .resenha-cal-dia .resenha-cal-badge { display:block; width:max-content; max-width:100%; box-sizing:border-box; min-height:0; padding:3px 5px; border-width:1px; border-style:solid;
+      border-radius:7px; font-size:9px; font-weight:900; line-height:1.25; cursor:inherit; box-shadow:none; overflow-wrap:anywhere; white-space:normal; }
+    .resenha-cal-badge.enviado { color:#3949AB; background:#fff; border-color:#c7cdec; }
+    .resenha-cal-badge.a-enviar { color:#374247; background:#fff; border-color:#d4dbe0; }
+    .resenha-cal-dialogo { box-sizing:border-box; width:min(1000px,96vw); max-height:92vh; }
+    .resenha-cal-dialogo .resenha-cal-topo { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; }
+    .resenha-cal-topo h2 { margin:0; font-size:18px; }
+    .resenha-cal-opcoes { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+    @media(max-width:760px) {
+      .resenha-cal-dias { grid-template-columns:repeat(4,minmax(0,1fr)); }
+    }
+    @media(max-width:480px) {
+      .resenha-cal-dias { grid-template-columns:repeat(3,minmax(0,1fr)); gap:5px; }
+      .resenha-cal-dia { min-height:96px; }
+      .resenha-cal-dialogo { padding:10px; }
+    }
+
     .adm-analise-btn {
       border: 1px solid rgba(55,66,71,.16);
       border-radius: 13px;
@@ -13491,6 +13522,137 @@ function epMesclarResenhaFt(payload,auto){
     }
 
 
+    function statusCalendarioResenhaFt_(estado,enviar){
+      const s=normalizarTexto(estado || '').replace(/_/g,' ');
+      if(s.includes('CORRECAO')) return ['CORREÇÃO SOLICITADA','adm-analise-btn corrigir'];
+      if(s.startsWith('RECUSAD')) return ['RECUSADA','adm-analise-btn recusar'];
+      if(s.startsWith('APROVAD')) return ['APROVADA','adm-analise-btn aprovar'];
+      if(s) return [['PENDENTE','ENVIADA','ENVIADO'].includes(s)?'ENVIADO':s,'enviado'];
+      return enviar?['A ENVIAR','a-enviar']:null;
+    }
+
+    async function carregarCalendarioResenhaFt_(){
+      const host=document.getElementById('resenhaCalendario');
+      if(!host)return;
+      const seq=String((Number(host.dataset.seq)||0)+1);
+      host.dataset.seq=seq;
+      const atual=()=>host.isConnected && host.dataset.seq===seq;
+      host.setAttribute('aria-busy','true');
+      if(!host.querySelector('.resenha-cal')) host.textContent='Carregando as quatro semanas…';
+      try{
+        const r=await chamarApi('dados_resenhas_enviadas',{login:APP.credenciais.login,senha:APP.credenciais.senha,calendario:'1'},{semCache:true});
+        if(!atual())return;
+        if(!r?.ok)throw new Error(r?.erro || 'Não foi possível consultar as resenhas.');
+        const dias=r.dados?.dias;
+        if(!Array.isArray(dias)||dias.length!==28)throw new Error('A consulta por calendário ainda não está disponível nesta implantação.');
+        const nomes=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+        const diaBR=d=>dataISOParaBR(d);
+        host.innerHTML='<div class="resenha-cal">'+Array.from({length:4},(_,semana)=>{
+          const grupo=dias.slice(semana*7,semana*7+7);
+          return '<section class="resenha-cal-semana"><h3>'+(!semana?'Semana em andamento':'Semana '+(semana+1))+
+            ' · '+escapar(diaBR(grupo[0].data))+' a '+escapar(diaBR(grupo[6].data))+'</h3><div class="resenha-cal-dias">'+grupo.map(d=>{
+              const i=new Date(d.data+'T00:00:00Z').getUTCDay();
+              const lotacao=d.planos.filter(p=>p.servico).map(p=>p.pel.replace('PEL','Pel'));
+              const badges=d.planos.map(p=>({p,estado:statusCalendarioResenhaFt_(p.estado,p.enviar)})).filter(b=>b.estado);
+              const rotulo=nomes[i]+', '+diaBR(d.data)+(d.fechado?' · Semana em andamento':'')+
+                (lotacao.length?' · '+lotacao.join(' / '):'')+badges.map(b=>' · '+b.p.pel+' '+b.estado[0]).join('');
+              return '<button type="button" class="resenha-cal-dia'+(d.fechado?' fechado':'')+([0,5,6].includes(i)?' fim-semana':'')+
+                '" data-dia="'+escaparAttr(d.data)+'" aria-label="'+escaparAttr(rotulo)+'"><span class="data"><b>'+
+                Number(d.data.slice(8,10))+'</b><small>'+nomes[i]+'</small></span>'+
+                badges.map(b=>'<span class="resenha-cal-badge '+b.estado[1]+'">'+(badges.length>1?escapar(b.p.pel.replace('PEL','Pel'))+' · ':'')+escapar(b.estado[0])+'</span>').join('')+
+                '<span class="pel">'+escapar(lotacao.join(' / ') || 'Sem pelotão de serviço')+'</span></button>';
+            }).join('')+'</div></section>';
+        }).join('')+'</div>';
+        host.onclick=e=>{
+          const btn=e.target.closest('button[data-dia]');
+          const dia=btn && dias.find(d=>d.data===btn.dataset.dia);
+          if(dia) abrirDiaCalendarioResenhaFt_(dia,btn);
+        };
+      }catch(e){
+        if(atual())host.innerHTML='<p class="resenha-alerta">'+escapar(e.message || String(e))+'</p>'+
+          '<button type="button" class="btn-page" onclick="carregarCalendarioResenhaFt_()">TENTAR NOVAMENTE</button>';
+      }finally{if(atual())host.removeAttribute('aria-busy');}
+    }
+
+    function resenhaOverlayFt_(titulo,retorno){
+      const d=document.getElementById('resenhaOverlay');
+      if(!d || d.open)return null;
+      const fecha=d.querySelector('[data-resenha-fechar]'), corpo=d.querySelector('#resenhaFormularioOverlay');
+      d.querySelector('h2').textContent=titulo;
+      corpo.textContent='Carregando…';
+      d.dataset.enviando='';
+      const seq=String((Number(d.dataset.contexto)||0)+1);
+      d.dataset.contexto=seq;
+      const toast=obterRegiaoToastFt();
+      d.appendChild(toast);
+      fecha.onclick=()=>{if(!d.dataset.enviando)d.close();};
+      d.oncancel=e=>{if(d.dataset.enviando)e.preventDefault();};
+      d.onclose=()=>{
+        document.body.appendChild(toast);
+        corpo.replaceChildren();
+        APP.resenhaEdicao=null;
+        if(retorno?.isConnected)retorno.focus();
+      };
+      d.showModal();
+      return {d,corpo,ativo:()=>d.isConnected && d.open && d.dataset.contexto===seq};
+    }
+
+    function resenhaEdicaoDoRegistroFt_(registro){
+      if(!registro?.cabecalho?.podeEditar)return null;
+      let payload=registro.payload || registro.cabecalho.payload;
+      if(typeof payload==='string')try{payload=JSON.parse(payload);}catch(_){return null;}
+      return payload && typeof payload==='object' ? {cabecalho:registro.cabecalho,payload} : null;
+    }
+
+    async function montarEdicaoOverlayResenhaFt_(overlay,edicao,data,pel){
+      await carregarDadosResenha();
+      if(!overlay.ativo())return;
+      APP.resenhaEdicao=edicao;
+      renderizarFormularioResenha(data && pel ? {data,pel} : null);
+      if(edicao)prepararFormularioEdicaoResenha(edicao);
+    }
+
+    function abrirDiaCalendarioResenhaFt_(dia,btn){
+      const overlay=resenhaOverlayFt_('Resenha de '+dataISOParaBR(dia.data),btn);
+      if(!overlay)return;
+      const {d,corpo}=overlay;
+      const planos=dia.planos.filter(p=>p.id || p.enviar || p.servico);
+      const ativo=overlay.ativo;
+      const abrir=async plano=>{
+        corpo.textContent='Carregando resenha e permissões…';
+        try{
+          const r=await carregarResenhasEnviadas(dia.data);
+          if(!ativo())return;
+          const lista=(r.resenhas || []).filter(x=>x?.cabecalho?.pelotao && normalizarTexto(x.cabecalho.pelotao)===normalizarTexto(plano.pel));
+          const registro=lista.find(x=>String(x.cabecalho.id)===plano.id) || lista[0];
+          if(registro){
+            const edicao=resenhaEdicaoDoRegistroFt_(registro);
+            if(edicao){await montarEdicaoOverlayResenhaFt_(overlay,edicao,dia.data,plano.pel);return;}
+            corpo.innerHTML=renderizarResenhaEnviadaCard({...registro,cabecalho:{...registro.cabecalho,podeEditar:false,podeExcluir:false}},0,false);
+            return;
+          }
+          if(plano.id){
+            corpo.textContent='O registro não está mais nesta data. Feche a janela e consulte o calendário atualizado.';
+            void carregarCalendarioResenhaFt_();return;
+          }
+          if(!plano.enviar){
+            corpo.textContent=dia.fechado?'Semana em andamento. Não há resenha disponível para consulta neste dia.':'Não há resenha disponível para envio pelo seu perfil neste pelotão.';
+            return;
+          }
+          await montarEdicaoOverlayResenhaFt_(overlay,null,dia.data,plano.pel);
+        }catch(e){if(ativo())corpo.textContent=e.message || String(e);}
+      };
+      if(planos.length===1){void abrir(planos[0]);return;}
+      if(!planos.length){corpo.textContent='Não há resenha disponível para esta data.';return;}
+      corpo.innerHTML='<p>Selecione o pelotão da resenha:</p><div class="resenha-cal-opcoes"></div>';
+      const opcoes=corpo.querySelector('.resenha-cal-opcoes');
+      planos.forEach(p=>{
+        const botao=document.createElement('button');botao.type='button';botao.className='btn-page';
+        botao.textContent=p.pel;botao.onclick=()=>abrir(p);opcoes.appendChild(botao);
+      });
+      opcoes.querySelector('button')?.focus();
+    }
+
     function abrirResenhasEscalas(modoEdicao) {
       if (!modoEdicao) APP.resenhaEdicao = null;
       window.scrollTo(0, 0);
@@ -13515,32 +13677,27 @@ function epMesclarResenhaFt(payload,auto){
             </div>
           </div>
 
-          <div id="resenhaConteudo">
-            <div class="resenha-loading">Carregando efetivo, viaturas e listas da resenha...</div>
-          </div>
+          <div id="resenhaCalendario" aria-live="polite" class="resenha-card-body"></div>
+          <dialog id="resenhaOverlay" class="oc-ft-dialogo resenha-cal-dialogo" aria-labelledby="resenhaOverlayTitulo">
+            <div class="resenha-cal-topo">
+              <h2 id="resenhaOverlayTitulo">Resenha da escala</h2>
+              <button type="button" class="btn-page" data-resenha-fechar autofocus>FECHAR</button>
+            </div>
+            <div id="resenhaFormularioOverlay"></div>
+          </dialog>
         </div>
       `;
 
       iniciarRelogioResenha();
 
-      carregarDadosResenha()
-        .then(function() {
-          renderizarFormularioResenha();
-          if (APP.resenhaEdicao) prepararFormularioEdicaoResenha(APP.resenhaEdicao);
-        })
-        .catch(function(err) {
-          document.getElementById('resenhaConteudo').innerHTML = `
-            <div class="resenha-card">
-              <div class="resenha-card-header">
-                <h2>Não foi possível carregar as listas</h2>
-                <p>A página foi aberta, mas a API ainda não retornou efetivo e viaturas para as listas suspensas.</p>
-              </div>
-              <div class="resenha-card-body">
-                <div class="resenha-alerta">${escapar(err.message || err)}</div>
-              </div>
-            </div>
-          `;
+      void carregarCalendarioResenhaFt_();
+      if(APP.resenhaEdicao){
+        const edicao=APP.resenhaEdicao;
+        const overlay=resenhaOverlayFt_('Editar resenha enviada');
+        if(overlay) montarEdicaoOverlayResenhaFt_(overlay,edicao).catch(e=>{
+          if(overlay.ativo())overlay.corpo.textContent=e.message || String(e);
         });
+      }
     }
 
 
@@ -13567,38 +13724,14 @@ function epMesclarResenhaFt(payload,auto){
     }
 
 
-    function renderizarFormularioResenha() {
+    function renderizarFormularioResenha(contexto) {
       const u = APP.usuario || {};
-      const dados = APP.dadosResenha || {};
       const edicao = APP.resenhaEdicao;
+      const host=document.getElementById('resenhaFormularioOverlay');
+      if(!host)return;
 
-      document.getElementById('resenhaConteudo').innerHTML = `
-        <div class="resenha-grid">
+      host.innerHTML = `
           <div class="resenha-card">
-            <div class="resenha-card-header">
-              <h2>Identificação</h2>
-              <p>Dados do responsável pelo envio.</p>
-              <span class="resenha-status">PREENCHIMENTO</span>
-            </div>
-
-            <div class="resenha-card-body">
-              <div class="resenha-info-list">
-                ${resenhaInfo('Escalante', [u.postoGrad, u.nomeGuerra].filter(Boolean).join(' '))}
-                ${resenhaInfo('Horário limite', 'Segunda-feira até às 11h')}
-              </div>
-
-              <div class="resenha-alerta">
-                O envio fora do horário limite será permitido, mas ficará visualmente identificado como atraso.
-              </div>
-            </div>
-          </div>
-
-          <div class="resenha-card">
-            <div class="resenha-card-header">
-              <h2>Informações da Escala</h2>
-              <p>${edicao ? 'Revise a resenha original e ajuste somente os dados necessários. O envio manterá o mesmo registro e voltará para análise.' : 'Preencha a data da escala, o pelotão, as equipes FT, as duplas ROCAM, folgas/dispensas, afastamentos e observações.'}</p>
-            </div>
-
             <div class="resenha-card-body">
               <form id="formResenhaEscala">
                 ${edicao ? '<div class="resenha-edicao-banner" style="margin:0 0 14px;padding:12px 14px;border:1px solid #d5a928;background:#fff8df;border-radius:12px;color:#4f4218"><strong>Correção da resenha ' + escapar(edicao.cabecalho && edicao.cabecalho.id || '') + '</strong><br>Última decisão: ' + escapar(edicao.cabecalho && edicao.cabecalho.justificativaAnalise || 'Aguardando aprovação.') + '</div>' : ''}
@@ -13697,12 +13830,16 @@ function epMesclarResenhaFt(payload,auto){
               </div>
             </div>
           </div>
-        </div>
       `;
 
       preencherPadroesResenha(u);
+      if(contexto){
+        const dia=document.getElementById('resenhaDataEscala'), pel=document.getElementById('resenhaPelotao');
+        dia.value=contexto.data; dia.readOnly=true;
+        pel.value=contexto.pel; pel.disabled=true;
+      }
       for(const id of ['resenhaPelotao','resenhaDataEscala'])document.getElementById(id)?.addEventListener('change',epPreviaResenhaFt);
-      void epPreviaResenhaFt();
+      if(!edicao)void epPreviaResenhaFt();
       instalarEventosResenha();
       atualizarDisponibilidadeResenha();
     }
@@ -14245,6 +14382,12 @@ function epMesclarResenhaFt(payload,auto){
 
       const payload = coletarPayloadResenhaEscala();
       const edicaoAtual = APP.resenhaEdicao;
+      const overlay=form.closest('#resenhaOverlay');
+      if(overlay?.dataset.enviando)return;
+      if(overlay){
+        overlay.dataset.enviando='1';
+        overlay.querySelector('[data-resenha-fechar]').disabled=true;
+      }
       const btn = document.querySelector('.resenha-submit');
       if (btn) {
         btn.disabled = true;
@@ -14268,21 +14411,20 @@ function epMesclarResenhaFt(payload,auto){
         .then(function(resp) {
           if (resp===null)return;
           if (!resp || !resp.ok) throw new Error(resp && resp.erro ? resp.erro : 'Falha ao enviar resenha.');
-          if (edicaoAtual) {
-            APP.resenhaEdicao = null;
-            mostrarToastFt('Resenha atualizada', resp.dados && resp.dados.mensagem ? resp.dados.mensagem : 'Resenha reenviada para análise.');
-            abrirConsultaResenhasEnviadas(payload.dataEscala || dataISOHoje());
-          } else {
-            mostrarToastFt('Resenha enviada', resp.dados && resp.dados.mensagem ? resp.dados.mensagem : 'Resenha gravada com sucesso.');
-            if (form) form.reset();
-            renderizarFormularioResenha();
-            window.scrollTo(0, 0);
-          }
+          const mensagem=resp.dados?.mensagem || (edicaoAtual?'Resenha reenviada para análise.':'Resenha gravada com sucesso.');
+          APP.resenhaEdicao=null;
+          if(overlay?.isConnected && overlay.open)overlay.close();
+          mostrarToastFt(edicaoAtual?'Resenha atualizada':'Resenha enviada',mensagem);
+          void carregarCalendarioResenhaFt_();
         })
         .catch(function(err) {
           mostrarToastFt('Resenha não enviada', err.message || String(err));
         })
         .finally(function() {
+          if(overlay){
+            overlay.dataset.enviando='';
+            overlay.querySelector('[data-resenha-fechar]').disabled=false;
+          }
           if (btn) {
             btn.disabled = false;
             btn.textContent = APP.resenhaEdicao ? 'SALVAR ALTERAÇÕES E REENVIAR' : 'ENVIAR RESENHA DE ESCALA';
