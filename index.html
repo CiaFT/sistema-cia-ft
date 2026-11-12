@@ -6787,6 +6787,12 @@ Banco de dados: Google Sheets.
     #appScreen .paf-timeline [data-area="1"] { --paf-area:#1d4ed8; }
     #appScreen .paf-timeline [data-area="2"] { --paf-area:#047857; }
     #appScreen .paf-timeline [data-area="adm"] { --paf-area:#7e22ce; }
+    #appScreen .paf-timeline [data-area="adm"][data-grad="sgt"] { --paf-area:#581c87; }
+    #appScreen .paf-timeline [data-area="adm"][data-grad="cb-sd"] { --paf-area:#d8b4fe; --paf-texto:#17202a; }
+    #appScreen .paf-timeline [data-area="1"][data-grad="sgt"] { --paf-area:#1e3a8a; }
+    #appScreen .paf-timeline [data-area="1"][data-grad="cb-sd"] { --paf-area:#93c5fd; --paf-texto:#17202a; }
+    #appScreen .paf-timeline [data-area="2"][data-grad="sgt"] { --paf-area:#14532d; }
+    #appScreen .paf-timeline [data-area="2"][data-grad="cb-sd"] { --paf-area:#86efac; --paf-texto:#17202a; }
     #appScreen .paf-timeline-swatch { width:12px; height:10px; flex:none; border-radius:3px; background:var(--paf-area,#556575); }
     #appScreen .paf-timeline-swatch.is-pending { border:2px dashed #674301; background:#fff5dc; }
     #appScreen .paf-timeline-scroll { overflow-x:auto; border:1px solid #dbe1e7; border-radius:10px; background:#fff; }
@@ -6799,8 +6805,8 @@ Banco de dados: Google Sheets.
     #appScreen .paf-timeline-track { padding:4px 0; grid-auto-rows:minmax(32px,auto); row-gap:3px; background-image:linear-gradient(to right,#e7edf2 1px,transparent 1px); background-size:calc(100% / var(--paf-days)) 100%; }
     #appScreen .paf-timeline-month { padding:5px 6px; background:#eef2f6; border-right:1px solid #dbe1e7; font-weight:700; }
     #appScreen .paf-timeline-tick { padding:4px 0 4px 3px; border-left:1px solid #dbe1e7; white-space:nowrap; color:#475569; font-size:11px; font-variant-numeric:tabular-nums; }
-    #appScreen .paf-timeline-bar { position:relative; z-index:1; min-width:0; min-height:30px; margin:0 1px; padding:0 4px; overflow:hidden; border:1px solid transparent; border-radius:5px; background:var(--paf-area,#556575); color:#fff; font:inherit; font-weight:700; text-align:left; text-overflow:ellipsis; white-space:nowrap; cursor:pointer; }
-    #appScreen .paf-timeline-bar.is-pending { border:2px dashed #674301; background:#fff5dc; background:color-mix(in srgb,var(--paf-area,#556575) 17%,white); color:#17202a; }
+    #appScreen .paf-timeline-bar { position:relative; z-index:1; min-width:0; min-height:30px; margin:0 1px; padding:0 4px; overflow:hidden; border:1px solid transparent; border-radius:5px; background:var(--paf-area,#556575); color:var(--paf-texto,#fff); font:inherit; font-weight:700; text-align:left; text-overflow:ellipsis; white-space:nowrap; cursor:pointer; }
+    #appScreen .paf-timeline-bar.is-pending { border:2px dashed currentColor; background-clip:padding-box; }
     #appScreen .paf-timeline-bar:focus-visible, #appScreen .paf-timeline-bar[aria-pressed="true"] { outline:2px solid #17202a; outline-offset:-2px; z-index:2; }
     #appScreen .paf-timeline-detail { padding-top:8px; overflow-wrap:anywhere; }
     #appScreen .paf-timeline-detail:empty { display:none; }
@@ -9938,6 +9944,13 @@ function epMesclarResenhaFt(payload,auto){
       return 'sem';
     }
 
+    function pafLinhaGradFt_(valor) {
+      const grad=String(valor || '').replace(/[ºª°]/g,' ').normalize('NFKD').toUpperCase().replace(/[^A-Z0-9]+/g,' ').trim();
+      if(/^(?:(?:1|2|3)\s*)?(?:SGT|SARGENTO)(?=\s|[0-9]|$)/.test(grad)) return 'sgt';
+      if(/^(?:CB|CABO|SD|SOLDADO)(?=\s|[0-9]|$)/.test(grad)) return 'cb-sd';
+      return '';
+    }
+
     function pafLinhaRecorteFt_(ano,bimestre,solicitacoes) {
       const mes=bimestre*2, dia=m=>Date.UTC(ano,m,1)/PAF_LINHA_DIA_FT_;
       const ini=dia(mes), meio=dia(mes+1), fim=dia(mes+2);
@@ -9970,7 +9983,7 @@ function epMesclarResenhaFt(payload,auto){
           trilhas[i]=b.ate;
           b.trilha=i+1;
         }
-        linhas.push({nome:[s.graduacao,s.nome].filter(Boolean).join(' ') || 'Policial sem nome',area:pafLinhaAreaFt_(s),barras});
+        linhas.push({nome:[s.graduacao,s.nome].filter(Boolean).join(' ') || 'Policial sem nome',area:pafLinhaAreaFt_(s),grad:pafLinhaGradFt_(s.graduacao),barras});
       }
       return {ini,meio,fim,linhas};
     }
@@ -9989,8 +10002,13 @@ function epMesclarResenhaFt(payload,auto){
       }
       const esc=escaparFerias, attr=escaparAttr;
       const ajuda='Selecione uma barra para ver as datas completas. Barras alinhadas indicam sobreposição.';
-      const legenda=Object.entries(PAF_LINHA_AREA_FT_).filter(([id])=>id!=='sem' || solicitacoes.some(s=>s && pafLinhaAreaFt_(s)==='sem'))
-        .map(([id,nome])=>'<li><span aria-hidden="true" class="paf-timeline-swatch" data-area="'+id+'"></span>'+esc(nome)+'</li>').join('');
+      const itensLegenda=['adm','1','2'].flatMap(id=>[
+        {id,grad:'sgt',nome:PAF_LINHA_AREA_FT_[id]+' · Sgt'},
+        {id,grad:'cb-sd',nome:PAF_LINHA_AREA_FT_[id]+' · Cb e Sd'}
+      ]);
+      if(solicitacoes.some(s=>s && pafLinhaAreaFt_(s)==='sem')) itensLegenda.push({id:'sem',grad:'',nome:PAF_LINHA_AREA_FT_.sem});
+      const legenda=itensLegenda.map(({id,grad,nome})=>'<li><span aria-hidden="true" class="paf-timeline-swatch" data-area="'+id+
+        '" data-grad="'+grad+'"></span>'+esc(nome)+'</li>').join('');
       host.innerHTML='<div class="paf-timeline-head"><div><h3 id="pafLinhaTempoTituloFt">Linha do tempo das férias</h3>'+
         '<p>Períodos por policial e lotação · '+ano+'</p></div><label>Bimestre<select>'+
         PAF_LINHA_BIM_FT_.map((nome,i)=>'<option value="'+i+'"'+(i===pafLinhaSelecaoFt_.bimestre?' selected':'')+'>'+nome+'</option>').join('')+
@@ -10024,7 +10042,7 @@ function epMesclarResenhaFt(payload,auto){
             esc(PAF_LINHA_AREA_FT_[linha.area])+'</small></div><div class="paf-timeline-track">'+linha.barras.map(b=>{
               const descricao=linha.nome+' · '+PAF_LINHA_AREA_FT_[linha.area]+' · '+completa(b.inicio)+' a '+completa(b.final)+
                 (b.real?' · início real':' · período previsto')+(b.sobrestado?' · sobrestamento':'')+(b.ajuste?' · Ajuste necessário':'');
-              return '<button type="button" class="paf-timeline-bar'+(b.ajuste?' is-pending':'')+'" data-area="'+linha.area+
+              return '<button type="button" class="paf-timeline-bar'+(b.ajuste?' is-pending':'')+'" data-area="'+linha.area+'" data-grad="'+linha.grad+
                 '" aria-pressed="false" aria-label="'+attr(descricao)+'" title="'+attr(descricao)+'" style="grid-column:'+(b.de-ini+1)+'/'+(b.ate-ini+2)+';grid-row:'+b.trilha+'">'+
                 (b.inicio<b.de?'‹ ':'')+curta(b.de)+'–'+curta(b.ate)+(b.final>b.ate?' ›':'')+(b.ajuste?' · Ajuste':'')+'</button>';
             }).join('')+'</div></div>').join('')+'</div></div>';
