@@ -6763,6 +6763,35 @@ Banco de dados: Google Sheets.
     #appScreen .ferias-validacao { min-height: 20px; margin: 0; color: #64748b; font-size: 10px; line-height: 1.45; }
     #appScreen .ferias-validacao.erro { color: #b42318; }
     #appScreen .ferias-rules { margin: 0; padding-left: 18px; color: #475569; font-size: 10.5px; line-height: 1.6; }
+    #appScreen .paf-timeline { margin-bottom:16px; padding:14px; min-width:0; border:1px solid #dbe1e7; border-radius:14px; background:#f8fafc; color:#17202a; }
+    #appScreen .paf-timeline-head { display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:12px; margin-bottom:10px; }
+    #appScreen .paf-timeline-head h3 { margin:0 0 4px; font-size:15px; }
+    #appScreen .paf-timeline-head p, #appScreen .paf-timeline-detail { margin:0; color:#475569; font-size:12px; line-height:1.5; }
+    #appScreen .paf-timeline-head label { display:grid; gap:4px; font-size:12px; font-weight:700; }
+    #appScreen .paf-timeline-head select { min-height:38px; padding:7px 10px; border:1px solid #cbd5e1; border-radius:8px; background:#fff; color:#17202a; font:inherit; }
+    #appScreen .paf-timeline-legend { display:flex; flex-wrap:wrap; gap:6px 14px; margin:0 0 10px; padding:0; list-style:none; font-size:12px; }
+    #appScreen .paf-timeline-legend li { display:flex; align-items:center; gap:6px; }
+    #appScreen .paf-timeline [data-area="1"] { --paf-area:#1d4ed8; }
+    #appScreen .paf-timeline [data-area="2"] { --paf-area:#047857; }
+    #appScreen .paf-timeline [data-area="adm"] { --paf-area:#7e22ce; }
+    #appScreen .paf-timeline-swatch { width:12px; height:10px; flex:none; border-radius:3px; background:var(--paf-area,#556575); }
+    #appScreen .paf-timeline-swatch.is-pending { border:2px dashed #674301; background:#fff5dc; }
+    #appScreen .paf-timeline-scroll { overflow-x:auto; border:1px solid #dbe1e7; border-radius:10px; background:#fff; }
+    #appScreen .paf-timeline-grid { --paf-names:164px; min-width:calc(var(--paf-names) + 8px * var(--paf-days)); font-size:12px; }
+    #appScreen .paf-timeline-row { display:grid; grid-template-columns:var(--paf-names) minmax(0,1fr); border-bottom:1px solid #e2e8f0; }
+    #appScreen .paf-timeline-row:last-child { border-bottom:0; }
+    #appScreen .paf-timeline-name { position:sticky; left:0; z-index:3; display:grid; align-content:center; gap:2px; padding:7px 9px; border-right:1px solid #dbe1e7; background:#f8fafc; overflow-wrap:anywhere; }
+    #appScreen .paf-timeline-name small { color:#475569; font-size:11px; }
+    #appScreen .paf-timeline-track, #appScreen .paf-timeline-scale { display:grid; grid-template-columns:repeat(var(--paf-days),minmax(0,1fr)); }
+    #appScreen .paf-timeline-track { padding:4px 0; grid-auto-rows:minmax(32px,auto); row-gap:3px; background-image:linear-gradient(to right,#e7edf2 1px,transparent 1px); background-size:calc(100% / var(--paf-days)) 100%; }
+    #appScreen .paf-timeline-month { padding:5px 6px; background:#eef2f6; border-right:1px solid #dbe1e7; font-weight:700; }
+    #appScreen .paf-timeline-tick { padding:4px 0 4px 3px; border-left:1px solid #dbe1e7; white-space:nowrap; color:#475569; font-size:11px; font-variant-numeric:tabular-nums; }
+    #appScreen .paf-timeline-bar { position:relative; z-index:1; min-width:0; min-height:30px; margin:0 1px; padding:0 4px; overflow:hidden; border:1px solid transparent; border-radius:5px; background:var(--paf-area,#556575); color:#fff; font:inherit; font-weight:700; text-align:left; text-overflow:ellipsis; white-space:nowrap; cursor:pointer; }
+    #appScreen .paf-timeline-bar.is-pending { border:2px dashed #674301; background:#fff5dc; background:color-mix(in srgb,var(--paf-area,#556575) 17%,white); color:#17202a; }
+    #appScreen .paf-timeline-bar:focus-visible, #appScreen .paf-timeline-bar[aria-pressed="true"] { outline:2px solid #17202a; outline-offset:-2px; z-index:2; }
+    #appScreen .paf-timeline-detail { padding-top:8px; overflow-wrap:anywhere; }
+    #appScreen .paf-timeline-detail:empty { display:none; }
+    @media(max-width:520px) { #appScreen .paf-timeline { padding:10px; } #appScreen .paf-timeline-grid { --paf-names:120px; } }
     #appScreen .ferias-agenda-wrap { overflow: auto; border: 1px solid #dbe1e7; border-radius: 14px; }
     #appScreen .ferias-agenda { width: 100%; min-width: 690px; border-collapse: collapse; font-size: 13px; }
     #appScreen .ferias-agenda.paf-com-acoes { min-width: 980px; }
@@ -9747,6 +9776,131 @@ function epMesclarResenhaFt(payload,auto){
       }finally{botao.disabled=false;}
     }
 
+    const PAF_LINHA_DIA_FT_ = 86400000;
+    const PAF_LINHA_BIM_FT_ = ['Jan–Fev','Mar–Abr','Mai–Jun','Jul–Ago','Set–Out','Nov–Dez'];
+    const PAF_LINHA_AREA_FT_ = {'1':'1º Pel','2':'2º Pel',adm:'ADM',sem:'Lotação não informada'};
+    let pafLinhaSelecaoFt_ = {ano:0,bimestre:0};
+
+    function pafLinhaDiaFt_(valor) {
+      const iso=String(valor || '').slice(0,10);
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return null;
+      const ms=Date.parse(iso+'T00:00:00Z');
+      return Number.isFinite(ms) && new Date(ms).toISOString().slice(0,10)===iso ? ms/PAF_LINHA_DIA_FT_ : null;
+    }
+
+    function pafLinhaAreaFt_(s) {
+      for(const valor of [s.escopo,s.lotacao,s.pelotao]){
+        const area=String(valor || '').toUpperCase().normalize('NFD').replace(/[^A-Z0-9]/g,'');
+        if(/^0?1(?:PEL|PELOTAO)?$/.test(area)) return '1';
+        if(/^0?2(?:PEL|PELOTAO)?$/.test(area)) return '2';
+        if(area==='ADM' || area==='ADMINISTRACAO') return 'adm';
+      }
+      return 'sem';
+    }
+
+    function pafLinhaRecorteFt_(ano,bimestre,solicitacoes) {
+      const mes=bimestre*2, dia=m=>Date.UTC(ano,m,1)/PAF_LINHA_DIA_FT_;
+      const ini=dia(mes), meio=dia(mes+1), fim=dia(mes+2);
+      const linhas=[];
+      const inativo=status=>/^(?:CANCELAD|ANULAD|RECUSAD|INDEFERID)[AO]$/.test(status || '');
+      for(const s of solicitacoes){
+        if(!s || inativo(s.status)) continue;
+        const barras=[];
+        for(const p of Array.isArray(s.periodos)?s.periodos:[]){
+          if(!p || inativo(p.status)) continue;
+          const previsto=pafLinhaDiaFt_(p.inicio), fimPrevisto=pafLinhaDiaFt_(p.fim);
+          const real=pafLinhaDiaFt_(p.inicio_real);
+          const inicio=real ?? pafLinhaDiaFt_(p.inicio_vigente) ?? previsto;
+          if(inicio===null) continue;
+          const duracao=Number(p.dias);
+          const dias=Number.isInteger(duracao) && duracao>0 ? duracao : (fimPrevisto!==null && previsto!==null ? fimPrevisto-previsto+1 : 0);
+          const corte=pafLinhaDiaFt_(p.sobrestamento);
+          const final=corte ?? pafLinhaDiaFt_(p.fim_vigente) ?? (dias>0 ? inicio+dias-1 : fimPrevisto);
+          if(final===null || final<inicio || final<ini || inicio>=fim) continue;
+          barras.push({inicio,final,real:real!==null,sobrestado:corte!==null,
+            ajuste:p.status==='AJUSTE_NECESSARIO' || (!p.status && s.status==='AJUSTE_NECESSARIO'),
+            de:Math.max(inicio,ini),ate:Math.min(final,fim-1)});
+        }
+        if(!barras.length) continue;
+        barras.sort((a,b)=>a.de-b.de || a.ate-b.ate);
+        const trilhas=[];
+        for(const b of barras){
+          let i=trilhas.findIndex(ultimo=>ultimo<b.de);
+          if(i<0) i=trilhas.length;
+          trilhas[i]=b.ate;
+          b.trilha=i+1;
+        }
+        linhas.push({nome:[s.graduacao,s.nome].filter(Boolean).join(' ') || 'Policial sem nome',area:pafLinhaAreaFt_(s),barras});
+      }
+      return {ini,meio,fim,linhas};
+    }
+
+    function montarLinhaTempoPafFt_(ano,hoje,solicitacoes) {
+      const host=document.getElementById('pafLinhaTempoFt');
+      ano=Number(ano);
+      if(!host || !Number.isInteger(ano) || ano<1900 || ano>9998) return;
+      const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+      const iso=d=>new Date(d*PAF_LINHA_DIA_FT_).toISOString().slice(0,10);
+      const curta=d=>iso(d).slice(5).split('-').reverse().join('/');
+      const completa=d=>iso(d).split('-').reverse().join('/');
+      const data=String(hoje || ''), mesHoje=Number(data.slice(5,7));
+      if(pafLinhaSelecaoFt_.ano!==ano){
+        pafLinhaSelecaoFt_={ano,bimestre:data.slice(0,4)===String(ano) && mesHoje>=1 && mesHoje<=12 ? Math.floor((mesHoje-1)/2) : 0};
+      }
+      const esc=escaparFerias, attr=escaparAttr;
+      const ajuda='Selecione uma barra para ver as datas completas. Barras alinhadas indicam sobreposição.';
+      const legenda=Object.entries(PAF_LINHA_AREA_FT_).filter(([id])=>id!=='sem' || solicitacoes.some(s=>s && pafLinhaAreaFt_(s)==='sem'))
+        .map(([id,nome])=>'<li><span aria-hidden="true" class="paf-timeline-swatch" data-area="'+id+'"></span>'+esc(nome)+'</li>').join('');
+      host.innerHTML='<div class="paf-timeline-head"><div><h3 id="pafLinhaTempoTituloFt">Linha do tempo das férias</h3>'+
+        '<p>Períodos por policial e lotação · '+ano+'</p></div><label>Bimestre<select>'+
+        PAF_LINHA_BIM_FT_.map((nome,i)=>'<option value="'+i+'"'+(i===pafLinhaSelecaoFt_.bimestre?' selected':'')+'>'+nome+'</option>').join('')+
+        '</select></label></div><ul class="paf-timeline-legend" aria-label="Legenda">'+legenda+
+        '<li><span aria-hidden="true" class="paf-timeline-swatch is-pending"></span>Ajuste necessário</li></ul>'+
+        '<div data-paf-quadro></div><p class="paf-timeline-detail" data-paf-detalhe aria-live="polite"></p>';
+      const quadro=host.querySelector('[data-paf-quadro]'), detalhe=host.querySelector('[data-paf-detalhe]'), seletor=host.querySelector('select');
+      const desenhar=()=>{
+        const bi=Number(seletor.value);
+        if(!Number.isInteger(bi) || bi<0 || bi>5) return;
+        pafLinhaSelecaoFt_={ano,bimestre:bi};
+        const {ini,meio,fim,linhas}=pafLinhaRecorteFt_(ano,bi,solicitacoes);
+        detalhe.textContent=linhas.length?ajuda:'';
+        if(!linhas.length){
+          quadro.innerHTML='<div class="ferias-empty" role="status">Nenhum período de férias neste bimestre para o seu escopo.</div>';
+          return;
+        }
+        const marcas=[];
+        for(const [de,ate] of [[ini,meio],[meio,fim]]){
+          for(let d=de;d<ate;d+=7){
+            const limite=Math.min(d+7,ate);
+            if(limite-d>=4) marcas.push('<span class="paf-timeline-tick" style="grid-column:'+(d-ini+1)+'/'+(limite-ini+1)+'">'+curta(d)+'</span>');
+          }
+        }
+        quadro.innerHTML='<div class="paf-timeline-scroll" role="region" aria-label="Calendário de férias do bimestre" tabindex="0">'+
+          '<div class="paf-timeline-grid" style="--paf-days:'+(fim-ini)+'"><div class="paf-timeline-row"><div class="paf-timeline-name"><strong>Policial</strong><small>Lotação</small></div>'+
+          '<div><div class="paf-timeline-scale"><div class="paf-timeline-month" style="grid-column:1/'+(meio-ini+1)+'">'+meses[bi*2]+'</div>'+
+          '<div class="paf-timeline-month" style="grid-column:'+(meio-ini+1)+'/-1">'+meses[bi*2+1]+'</div></div>'+
+          '<div class="paf-timeline-scale" aria-hidden="true">'+marcas.join('')+'</div></div></div>'+
+          linhas.map(linha=>'<div class="paf-timeline-row"><div class="paf-timeline-name"><strong>'+esc(linha.nome)+'</strong><small>'+
+            esc(PAF_LINHA_AREA_FT_[linha.area])+'</small></div><div class="paf-timeline-track">'+linha.barras.map(b=>{
+              const descricao=linha.nome+' · '+PAF_LINHA_AREA_FT_[linha.area]+' · '+completa(b.inicio)+' a '+completa(b.final)+
+                (b.real?' · início real':' · período previsto')+(b.sobrestado?' · sobrestamento':'')+(b.ajuste?' · Ajuste necessário':'');
+              return '<button type="button" class="paf-timeline-bar'+(b.ajuste?' is-pending':'')+'" data-area="'+linha.area+
+                '" aria-pressed="false" aria-label="'+attr(descricao)+'" title="'+attr(descricao)+'" style="grid-column:'+(b.de-ini+1)+'/'+(b.ate-ini+2)+';grid-row:'+b.trilha+'">'+
+                (b.inicio<b.de?'‹ ':'')+curta(b.de)+'–'+curta(b.ate)+(b.final>b.ate?' ›':'')+(b.ajuste?' · Ajuste':'')+'</button>';
+            }).join('')+'</div></div>').join('')+'</div></div>';
+      };
+      seletor.addEventListener('change',desenhar);
+      quadro.addEventListener('click',evento=>{
+        const barra=evento.target.closest('button.paf-timeline-bar');
+        if(!barra || !quadro.contains(barra)) return;
+        const anterior=quadro.querySelector('button[aria-pressed="true"]');
+        if(anterior) anterior.setAttribute('aria-pressed','false');
+        barra.setAttribute('aria-pressed','true');
+        detalhe.textContent=barra.getAttribute('aria-label');
+      });
+      desenhar();
+    }
+
     function renderizarPlanoAnualFerias(dados) {
       const aviso = document.getElementById('feriasAviso');
       const conteudo = document.getElementById('feriasConteudo');
@@ -9834,8 +9988,9 @@ function epMesclarResenhaFt(payload,auto){
             ${(dados.anos_fruicao||[]).length>1?'<div class="ferias-field"><label for="pafAnoConsulta">Ano de fruição</label><select id="pafAnoConsulta" onchange="carregarPlanoAnualFerias(this.value)">'+dados.anos_fruicao.map(y=>'<option value="'+Number(y)+'"'+(Number(y)===Number(ano)?' selected':'')+'>'+Number(y)+'</option>').join('')+'</select></div>':''}
             ${usuarioPodeExportarPlanoFerias() ? '<div class="ferias-actions"><button class="btn-page" type="button" onclick="imprimirPlanoAnualFerias(this)" ' + (ciclo && ciclo.status === 'ENCERRADO' ? '' : 'disabled title="Disponível após o encerramento do prazo"') + '>PDF / IMPRIMIR PAF</button></div>' + (ciclo && ciclo.status === 'ENCERRADO' ? '' : '<p style="margin-top:8px">A relação para impressão será liberada ao encerrar o ciclo.</p>') : ''}
           </div>
-          <div class="ferias-panel-body">${linhasAgenda ? '<div class="ferias-agenda-wrap"><table class="ferias-agenda'+(encerrado?' paf-com-acoes':'')+'"><thead><tr><th>Policial</th><th>Modalidade</th><th>Período previsto</th><th>Situação</th>'+(encerrado?'<th>Início real</th><th>Sobrestamento</th><th>Ação</th>':'')+'</tr></thead><tbody>' + linhasAgenda + '</tbody></table></div>' : '<div class="ferias-empty">Ainda não há períodos informados.</div>'}</div>
+          <div class="ferias-panel-body"><section class="paf-timeline" id="pafLinhaTempoFt" aria-labelledby="pafLinhaTempoTituloFt"></section>${linhasAgenda ? '<div class="ferias-agenda-wrap"><table class="ferias-agenda'+(encerrado?' paf-com-acoes':'')+'"><thead><tr><th>Policial</th><th>Modalidade</th><th>Período previsto</th><th>Situação</th>'+(encerrado?'<th>Início real</th><th>Sobrestamento</th><th>Ação</th>':'')+'</tr></thead><tbody>' + linhasAgenda + '</tbody></table></div>' : '<div class="ferias-empty">Ainda não há períodos informados.</div>'}</div>
         </section>`;
+      montarLinhaTempoPafFt_(ano,dados.hoje_sp,solicitacoes);
       if (aberto) atualizarCamposPlanoFerias(defaultDates);
       if (usuarioPodeConfigurarPlanoFerias()) adicionarJanelaPlanoFerias();
     }
