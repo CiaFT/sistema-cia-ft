@@ -13058,7 +13058,7 @@ function epMesclarResenhaFt(payload,auto){
 
 
     function carregarDadosResenha() {
-      if (APP.dadosResenha) return Promise.resolve(APP.dadosResenha);
+      if (APP.dadosResenha && Date.now()-APP.dadosResenhaEm<15000) return Promise.resolve(APP.dadosResenha);
 
       if (!APP.credenciais || !APP.credenciais.login || !APP.credenciais.senha) {
         return Promise.reject(new Error('Sessão inválida. Faça login novamente.'));
@@ -13067,13 +13067,14 @@ function epMesclarResenhaFt(payload,auto){
       return chamarApi('dadosresenha', {
           login: APP.credenciais.login,
           senha: APP.credenciais.senha
-        })
+        }, {semCache:true})
         .then(function(resp) {
           if (!resp || !resp.ok) {
             throw new Error(resp && resp.erro ? resp.erro : 'Falha ao carregar dados da resenha.');
           }
 
           APP.dadosResenha = resp.dados || {};
+          APP.dadosResenhaEm = Date.now();
           return APP.dadosResenha;
         });
     }
@@ -13411,7 +13412,7 @@ function epMesclarResenhaFt(payload,auto){
 
     function optionsViaturas(tipo, placeholder) {
       const dados = APP.dadosResenha || {};
-      const lista = tipo === 'ROCAM' ? (dados.viaturasRocam || []) : (dados.viaturasTatico || []);
+      const lista = (tipo === 'ROCAM' ? (dados.viaturasRocam || []) : (dados.viaturasTatico || [])).filter(v=>!viaturaOpVeraoFt(v.situacao));
       const rotuloInicial = placeholder || 'Selecione';
 
       return '<option value="">' + escapar(rotuloInicial) + '</option>' + lista.map(function(v) {
@@ -16133,10 +16134,12 @@ function epMesclarResenhaFt(payload,auto){
         </div>
       `;
 
-      carregarDadosViaturas()
-        .then(renderizarViaturas)
+      const alvo=document.getElementById('viaturasConteudo');
+      carregarDadosViaturas(false,false)
+        .then(function(){if(alvo.isConnected)renderizarViaturas();})
         .catch(function(err) {
-          document.getElementById('viaturasConteudo').innerHTML = `
+          if(!alvo.isConnected)return;
+          alvo.innerHTML = `
             <div class="viatura-bloco">
               <div class="viatura-lista">
                 <div class="viatura-empty">${escapar(err.message || err)}</div>
@@ -16146,26 +16149,39 @@ function epMesclarResenhaFt(payload,auto){
         });
     }
 
-    function carregarDadosViaturas(forcar) {
+    function carregarDadosViaturas(forcar, completo) {
       if (!APP.credenciais || !APP.credenciais.login || !APP.credenciais.senha) {
         return Promise.reject(new Error('Sessão inválida. Faça login novamente.'));
       }
-
-      if (APP.dadosViaturas && !forcar) {
+      const precisaFicha=completo!==false;
+      if(forcar)APP.dadosResenha=null;
+      if(!forcar&&APP.dadosViaturas&&Date.now()-APP.dadosViaturasEm<15000&&(!precisaFicha||!APP.dadosViaturas.somenteLista)){
         return Promise.resolve(APP.dadosViaturas);
       }
+      const geracao=APP.sessaoGeracao,inicioConsulta=Date.now(),params={login:APP.credenciais.login,senha:APP.credenciais.senha};
+      if(!precisaFicha)params.somenteLista='1';
+      return chamarApi('dados_viaturas',params,{semCache:true}).then(function(resp){
+        if(geracao!==APP.sessaoGeracao)throw new Error('Sessão alterada. Abra novamente a página de Viaturas.');
+        if(!resp||!resp.ok)throw new Error(resp&&resp.erro||'Falha ao carregar viaturas.');
+        if(!precisaFicha&&APP.dadosViaturas&&!APP.dadosViaturas.somenteLista&&APP.dadosViaturasEm>=inicioConsulta)return APP.dadosViaturas;
+        APP.dadosViaturas=resp.dados||{};
+        APP.dadosViaturasEm=Date.now();
+        return APP.dadosViaturas;
+      });
+    }
 
-      return chamarApi('dados_viaturas', {
-          login: APP.credenciais.login,
-          senha: APP.credenciais.senha
-        })
-        .then(function(resp) {
-          if (!resp || !resp.ok) {
-            throw new Error(resp && resp.erro ? resp.erro : 'Falha ao carregar viaturas.');
-          }
-          APP.dadosViaturas = resp.dados || {};
-          return APP.dadosViaturas;
-        });
+    function viaturaOpVeraoFt(situacao){
+      return /^(?:OP|OPERACAO)\s+VERAO(?:$|\s)/.test(normalizarTexto(situacao||'').replace(/[^A-Z0-9]+/g,' ').trim());
+    }
+
+    function viaturaCarregarFichaFt(continuar) {
+      const alvo=document.getElementById('viaturasConteudo');
+      return carregarDadosViaturas(false,true).then(function(){
+        if(alvo&&!alvo.isConnected)return;
+        continuar();
+      }).catch(function(erro){
+        if(!alvo||alvo.isConnected)mostrarToastFt('Falha ao carregar ficha',erro.message||String(erro),'erro');
+      });
     }
 
     function renderizarViaturas() {
@@ -16173,10 +16189,14 @@ function epMesclarResenhaFt(payload,auto){
       const tatico = dados.tatico || [];
       const rocam = dados.rocam || [];
 
-      document.getElementById('viaturasConteudo').innerHTML = `
+      const alvo=document.getElementById('viaturasConteudo');
+      if(!alvo)return;
+      const outras=dados.outras||[];
+      alvo.innerHTML = `
         <div class="viaturas-grid">
-          ${montarBlocoViaturas('TÁTICO', 'Relação Total', VIATURAS_IMAGENS.topoTatico, tatico)}
-          ${montarBlocoViaturas('ROCAM', 'Relação Total', VIATURAS_IMAGENS.topoRocam, rocam)}
+          ${montarBlocoViaturas('TÁTICO', '', VIATURAS_IMAGENS.topoTatico, tatico)}
+          ${montarBlocoViaturas('ROCAM', '', VIATURAS_IMAGENS.topoRocam, rocam)}
+          ${outras.length?montarBlocoViaturas('OUTRAS MODALIDADES', '', '', outras):''}
         </div>
       `;
     }
@@ -16585,6 +16605,7 @@ function epMesclarResenhaFt(payload,auto){
     }
 
     function abrirFormularioNovaViatura(modalidadeInicial) {
+      if(!APP.dadosViaturas||APP.dadosViaturas.somenteLista)return viaturaCarregarFichaFt(()=>abrirFormularioNovaViatura(modalidadeInicial));
       if (!usuarioPodeInserirViatura()) {
         mostrarToastFt('Inclusão bloqueada', 'Seu perfil não possui permissão para adicionar viatura.');
         return;
@@ -17874,7 +17895,7 @@ function epMesclarResenhaFt(payload,auto){
 
     function usuarioPodeGerenciarViaturaV125(){return usuarioPodeGerenciarViaturasCliente_();}
     function classeStatusViaturaV125(s){const n=normalizarTexto(s||'');if(n==='OPERANDO')return'verde';if(['BAIXADA','BAIXADA PEL','SINDICANCIA','SINDICÂNCIA'].includes(n))return'amarelo';if(n==='PROJETO BASICO'||n==='PROJETO BÁSICO')return'azul';if(n==='DESCARGA')return'vermelho';return'cinza';}
-    function resumoViaturasV125(itens){const c={operando:0,reserva:0,baixada:0,descarga:0,sindicancia:0,outros:0};itens.forEach(function(v){const s=normalizarTexto(v.situacao||'');if(s==='OPERANDO')c.operando++;else if(s==='RESERVA')c.reserva++;else if(['BAIXADA','BAIXADA PEL','PROJETO BASICO','PROJETO BÁSICO'].includes(s))c.baixada++;else if(s==='DESCARGA')c.descarga++;else if(['SINDICANCIA','SINDICÂNCIA'].includes(s))c.sindicancia++;else if(['OUTROS','OP VERAO','OP VERÃO'].includes(s))c.outros++;});return c;}
+    function resumoViaturasV125(itens){const c={operando:0,reserva:0,baixada:0,descarga:0,sindicancia:0,outros:0};itens.forEach(function(v){const s=normalizarTexto(v.situacao||'');if(s==='OPERANDO')c.operando++;else if(s==='RESERVA')c.reserva++;else if(['BAIXADA','BAIXADA PEL','PROJETO BASICO','PROJETO BÁSICO'].includes(s))c.baixada++;else if(s==='DESCARGA')c.descarga++;else if(['SINDICANCIA','SINDICÂNCIA'].includes(s))c.sindicancia++;else if(s==='OUTROS'||viaturaOpVeraoFt(s))c.outros++;});return c;}
     function montarBlocoViaturas(titulo,subtitulo,imagem,lista){const itens=Array.isArray(lista)?lista:[],c=resumoViaturasV125(itens);return `<div class="viatura-bloco"><div class="viatura-banner"><img src="${escaparAttr(imagem)}" alt="${escaparAttr(titulo)}" loading="lazy" onerror="this.style.display='none'"><div class="viatura-banner-texto"><h2>${escapar(titulo)}</h2><p><strong>TOTAL VTR</strong> ${itens.length}</p><div class="viatura-resumo-status"><span>OPERANDO: ${c.operando}</span><span>RESERVA: ${c.reserva}</span><span>BAIXADA: ${c.baixada}</span><span>DESCARGA: ${c.descarga}</span><span>SINDICÂNCIA: ${c.sindicancia}</span><span>OUTROS: ${c.outros}</span></div></div></div><div class="viatura-lista">${itens.length?itens.map(function(v){return `<button class="viatura-prefixo-btn" type="button" onclick="abrirFichaViatura('${escaparAttr(v.prefixo||'')}')"><span style="display:flex;align-items:center;gap:10px"><i class="status-dot ${classeStatusViaturaV125(v.situacao)}"></i>${escapar(v.prefixo||'-')}</span><small>Ficha completa</small></button>`}).join(''):'<div class="viatura-empty">Nenhuma viatura cadastrada neste bloco.</div>'}</div></div>`;}
 
     function montarCamposEditaveisViaturaV125(v){if(!usuarioPodeGerenciarViaturaV125())return'';const campos=(v.campos||[]).filter(function(c){const rotulo=normalizarTexto(c.rotulo||'').replace(/_/g,' ');return c.coluna>=2&&c.coluna<=18&&![19,20,21,22,23].includes(c.coluna)&&c.coluna!==2&&rotulo!=='SITUACAO'&&rotulo!=='SITUAÇÃO';});return `<div class="viatura-edit-grid">${campos.map(c=>`<label>${escapar(c.rotulo)}<input data-vtr-col="${c.coluna}" value="${escaparAttr(c.valor||'')}"></label>`).join('')}</div>`;}
@@ -17997,20 +18018,27 @@ function epMesclarResenhaFt(payload,auto){
     function resumoViaturasV130(itens) {
       const base = resumoViaturasV125(itens || []);
       base.total = (itens || []).length;
-      base.emUso = (itens || []).filter(function(v) { return !!v.utilizacaoAtual; }).length;
+      base.emUso = (itens || []).filter(function(v) { return !viaturaOpVeraoFt(v.situacao)&&!!v.utilizacaoAtual; }).length;
       base.disponiveis = (itens || []).filter(viaturaDisponivelParaUsoV130).length;
       return base;
     }
 
     montarBlocoViaturas = function(titulo, subtitulo, imagem, lista) {
       const itens = Array.isArray(lista) ? lista : [];
-      const c = resumoViaturasV130(itens);
+      const c = resumoViaturasV130(itens),outros=itens.filter(v=>viaturaOpVeraoFt(v.situacao)||normalizarTexto(v.situacao)==='OUTROS');
+      const comuns=itens.filter(v=>!outros.includes(v));
+      const linhas=(lista)=>lista.map(function(v){
+        const op=viaturaOpVeraoFt(v.situacao),emUso=!op&&!!v.utilizacaoAtual;
+        return `<button class="viatura-prefixo-btn" type="button" onclick="abrirFichaViatura('${escaparAttr(v.prefixo || '')}')">
+          <span style="display:flex;align-items:center;gap:10px"><i class="status-dot ${classeStatusViaturaV125(v.situacao)}"></i>${escapar(v.prefixo || '-')}</span>
+          <small>${op?'OP VERÃO':emUso?'USO EM ANDAMENTO':'Ficha completa'}</small>
+        </button>`;
+      }).join('');
       return `<div class="viatura-bloco">
         <div class="viatura-banner">
-          <img src="${escaparAttr(imagem)}" alt="${escaparAttr(titulo)}" loading="lazy" onerror="this.style.display='none'">
+          ${imagem?`<img src="${escaparAttr(imagem)}" alt="${escaparAttr(titulo)}" loading="lazy" onerror="this.style.display='none'">`:''}
           <div class="viatura-banner-texto">
             <h2>${escapar(titulo)}</h2>
-            <p>${escapar(subtitulo || 'Controle operacional de viaturas')}</p>
           </div>
         </div>
         <div class="vtr130-resumo" aria-label="Resumo ${escaparAttr(titulo)}">
@@ -18029,13 +18057,9 @@ function epMesclarResenhaFt(payload,auto){
           </div>
         </div>
         <div class="viatura-lista">
-          ${itens.length ? itens.map(function(v) {
-            const emUso = !!v.utilizacaoAtual;
-            return `<button class="viatura-prefixo-btn" type="button" onclick="abrirFichaViatura('${escaparAttr(v.prefixo || '')}')">
-              <span style="display:flex;align-items:center;gap:10px"><i class="status-dot ${classeStatusViaturaV125(v.situacao)}"></i>${escapar(v.prefixo || '-')}</span>
-              <small>${emUso ? 'USO EM ANDAMENTO' : 'Ficha completa'}</small>
-            </button>`;
-          }).join('') : '<div class="viatura-empty">Nenhuma viatura cadastrada neste bloco.</div>'}
+          ${linhas(comuns)}
+          ${outros.length?`<div class="vtr130-situacao"><strong>OUTROS</strong></div>${linhas(outros)}`:''}
+          ${itens.length?'':'<div class="viatura-empty">Nenhuma viatura cadastrada neste bloco.</div>'}
         </div>
       </div>`;
     };
@@ -18184,6 +18208,7 @@ function epMesclarResenhaFt(payload,auto){
     }
 
     abrirFichaViatura = function(prefixo) {
+      if(APP.dadosViaturas&&APP.dadosViaturas.somenteLista)return viaturaCarregarFichaFt(()=>abrirFichaViatura(prefixo));
       const alvo = localizarViaturaV126(prefixo);
       if (!alvo) {
         mostrarToastFt('Viatura não localizada', 'Não foi possível abrir a ficha desta viatura.');
