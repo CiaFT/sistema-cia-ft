@@ -6763,6 +6763,16 @@ Banco de dados: Google Sheets.
     #appScreen .ferias-validacao { min-height: 20px; margin: 0; color: #64748b; font-size: 10px; line-height: 1.45; }
     #appScreen .ferias-validacao.erro { color: #b42318; }
     #appScreen .ferias-rules { margin: 0; padding-left: 18px; color: #475569; font-size: 10.5px; line-height: 1.6; }
+    .paf-excecao-dialogo { width:min(560px,94vw); }
+    .paf-excecao-form { display:grid; gap:10px; }
+    .paf-excecao-form label { display:grid; gap:5px; font-weight:700; }
+    .paf-excecao-form label small { color:#475569; font-weight:400; }
+    .paf-excecao-form input, .paf-excecao-form textarea { box-sizing:border-box; width:100%; padding:8px 10px; border:1px solid #cbd5e1; border-radius:8px; font:inherit; font-weight:400; color:inherit; background:#fff; }
+    .paf-excecao-form textarea { resize:vertical; }
+    .paf-excecao-form .ferias-actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .paf-excecao-form [role="alert"] { color:#9b2424; margin:0; }
+    .paf-excecao-form [role="alert"]:empty { display:none; }
+    #appScreen .paf-acao .paf-excecao-acao { margin:4px 0; }
     #appScreen .paf-timeline { margin-bottom:16px; padding:14px; min-width:0; border:1px solid #dbe1e7; border-radius:14px; background:#f8fafc; color:#17202a; }
     #appScreen .paf-timeline-head { display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:12px; margin-bottom:10px; }
     #appScreen .paf-timeline-head h3 { margin:0 0 4px; font-size:15px; }
@@ -9653,6 +9663,12 @@ function epMesclarResenhaFt(payload,auto){
       try {
         const dados = await rpcPlanoFerias('ft_paf_fruicao_listar_v2', { p_ano_fruicao: anoFruicao?Number(anoFruicao):null });
         if(!conteudo.isConnected)return;
+        const u=APP.usuario || {};
+        const papel=String(u.perfilAcesso || u.roleCode || u.role_code || '').toUpperCase();
+        if(dados?.ciclo?.status==='ENCERRADO' && papel.includes('GESTOR')){
+          dados.pode_excecao_paf=(await rpcPlanoFerias('ft_paf_pode_excecao_v1',{}).catch(()=>false))===true;
+          if(!conteudo.isConnected)return;
+        }
         window.APPFT_FERIAS_DADOS = dados || {};
         renderizarPlanoAnualFerias(dados || {});
       } catch (erro) {
@@ -9774,6 +9790,95 @@ function epMesclarResenhaFt(payload,auto){
       }catch(e){
         mostrarToastFt('Solicitação não validada',e.message,'erro');
       }finally{botao.disabled=false;}
+    }
+
+    function pafBotaoExcecaoFt_(s,periodos,encerrado,podeExcecao){
+      const id=String(s.solicitacao_id || '');
+      if(!podeExcecao || !encerrado || !['ENVIADA','AJUSTE_NECESSARIO','VALIDADA'].includes(s.status) ||
+        !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id) || !periodos.length ||
+        periodos.some(p=>!['VALIDO','AJUSTE_NECESSARIO'].includes(p.status))) return '';
+      return '<button type="button" class="btn-page paf-excecao-acao" data-pedido="'+id+
+        '" onclick="pafAbrirExcecaoFt_(this)">AUTORIZAR EXCEÇÃO</button>';
+    }
+
+    async function pafExecutarExcecaoFt_(pedido,inicios,justificativa,senhaPortal,re){
+      const cfg=configPlanoFerias();
+      const url=String(cfg.url || APPFT_FERIAS_SUPABASE_URL).replace(/\/$/,'');
+      const apikey=cfg.anonKey || window.APPFT_SUPABASE_ANON_KEY || APPFT_FERIAS_SUPABASE_ANON_KEY;
+      const senhaAuth=await senhaSupabasePonteFerias(re,senhaPortal);
+      const login=await fetch(url+'/auth/v1/token?grant_type=password',{
+        method:'POST',headers:{apikey,'Content-Type':'application/json'},cache:'no-store',credentials:'omit',
+        body:JSON.stringify({email:'re-'+re+'@appft.invalid',password:senhaAuth})
+      });
+      const sessao=await login.json().catch(()=>null);
+      if(login.status===429) throw new Error('Muitas tentativas de autenticação. Aguarde antes de tentar novamente.');
+      if(!login.ok || !sessao?.access_token) throw new Error('O Supabase não confirmou a senha. Confira e tente novamente.');
+      const resposta=await fetch(url+'/rest/v1/rpc/ft_paf_autorizar_excecao_v1',{
+        method:'POST',headers:{apikey,Authorization:'Bearer '+sessao.access_token,'Content-Type':'application/json',Accept:'application/json'},
+        cache:'no-store',credentials:'omit',body:JSON.stringify({p_solicitacao:pedido,p_inicios:inicios,p_justificativa:justificativa})
+      });
+      const corpo=await resposta.json().catch(()=>null);
+      if(!resposta.ok || corpo?.excepcional!==true) throw new Error(corpo?.message || 'O Supabase não confirmou a autorização. Reabra o PAF para conferir.');
+      return corpo;
+    }
+
+    function pafAbrirExcecaoFt_(botao){
+      const dados=window.APPFT_FERIAS_DADOS;
+      const s=dados?.solicitacoes_visiveis?.find(item=>item.solicitacao_id===botao.dataset.pedido);
+      if(!s || dados.pode_excecao_paf!==true || document.getElementById('pafExcecaoFt')) return;
+      const usuario=APP.usuario || {}, cred=APP.credenciais || {};
+      const re=String(usuario.re || usuario.login || cred.login || '').replace(/\D/g,'').slice(0,6);
+      if(re.length!==6){mostrarToastFt('Sessão do portal indisponível','Entre novamente para autorizar.','erro');return;}
+      const dialog=document.createElement('dialog');
+      dialog.id='pafExcecaoFt'; dialog.className='oc-ft-dialogo paf-excecao-dialogo';
+      dialog.setAttribute('aria-labelledby','pafExcecaoTituloFt');
+      const esc=escaparFerias;
+      dialog.innerHTML='<h2 id="pafExcecaoTituloFt">Autorizar férias por exceção</h2><p><strong>'+
+        esc([s.graduacao,s.nome].filter(Boolean).join(' '))+'</strong></p>'+
+        '<p>Esta decisão pode autorizar datas bloqueadas ou sobreposições com outros policiais. A justificativa será registrada no histórico do PAF.</p>'+
+        '<form class="paf-excecao-form">'+s.periodos.map((p,i)=>{
+          const atual=p.inicio_real || p.inicio_vigente || p.inicio;
+          const editavel=!p.sobrestamento && (!dados.hoje_sp || atual>dados.hoje_sp);
+          return '<label class="ferias-field"><span>Início do '+(i+1)+'º período · atual: '+esc(dataFeriasBR(atual))+'</span>'+
+            (editavel?'<input type="date" data-periodo="'+escaparAttr(p.id)+'" value="'+escaparAttr(atual)+'" data-original="'+escaparAttr(atual)+'" required>':
+              '<small>Período já iniciado ou sobrestado; a data será mantida.</small>')+'</label>';
+        }).join('')+
+        '<label class="ferias-field"><span>Justificativa da exceção</span><textarea rows="3" name="justificativa" required minlength="10" maxlength="1000" autofocus></textarea></label>'+
+        '<label class="ferias-field"><span>Confirme a sua senha atual do portal</span><input name="senha" type="password" autocomplete="current-password" required></label>'+
+        '<p role="alert" data-erro></p><div class="ferias-actions"><button type="button" class="btn-page" data-cancelar>Cancelar</button>'+
+        '<button type="submit" class="ferias-primary">Confirmar autorização excepcional</button></div></form>';
+      const form=dialog.querySelector('form'), confirmar=form.querySelector('[type="submit"]'), cancelar=form.querySelector('[data-cancelar]');
+      const erro=form.querySelector('[data-erro]'), campoSenha=form.elements.namedItem('senha');
+      dialog.addEventListener('close',()=>{campoSenha.value='';dialog.remove();},{once:true});
+      dialog.addEventListener('cancel',evento=>{if(confirmar.disabled)evento.preventDefault();});
+      cancelar.addEventListener('click',()=>dialog.close());
+      form.addEventListener('submit',async evento=>{
+        evento.preventDefault();
+        if(confirmar.disabled || !form.reportValidity()) return;
+        if(!botao.isConnected || window.APPFT_FERIAS_DADOS!==dados){dialog.close();return;}
+        const motivo=form.elements.namedItem('justificativa').value.trim(), inicios={};
+        for(const campo of form.querySelectorAll('input[data-periodo]')){
+          if(campo.value!==campo.dataset.original) inicios[campo.dataset.periodo]=campo.value;
+        }
+        if(motivo.length<10){erro.textContent='Informe pelo menos 10 caracteres na justificativa.';return;}
+        if(s.status==='VALIDADA' && !Object.keys(inicios).length){erro.textContent='Informe uma nova data para alterar um pedido já validado.';return;}
+        let senha=campoSenha.value;
+        campoSenha.value='';
+        confirmar.disabled=cancelar.disabled=true; erro.textContent='';
+        try{
+          await pafExecutarExcecaoFt_(s.solicitacao_id,inicios,motivo,senha,re);
+        }catch(e){
+          erro.textContent=e.message || 'Não foi possível autorizar por exceção.';
+          return;
+        }finally{
+          senha=''; confirmar.disabled=cancelar.disabled=false;
+        }
+        dialog.close();
+        APP.apiCache={}; APP.dadosConsultaEfetivo=null;
+        mostrarToastFt('Exceção registrada','Férias autorizadas com justificativa registrada.','ok');
+        if(botao.isConnected && window.APPFT_FERIAS_DADOS===dados) await carregarPlanoAnualFerias(dados.ciclo?.ano_fruição);
+      });
+      document.body.appendChild(dialog); dialog.showModal();
     }
 
     const PAF_LINHA_DIA_FT_ = 86400000;
@@ -9938,7 +10043,7 @@ function epMesclarResenhaFt(payload,auto){
             '<td><strong class="paf-situacao" data-tom="'+(p.status==='AJUSTE_NECESSARIO'?'ajuste':p.status==='VALIDO'?'ok':'')+'">'+escaparFerias(String(p.status||'—').replaceAll('_',' '))+'</strong><br><small>Solicitação: '+escaparFerias(String(s.status||'—').replaceAll('_',' '))+'</small>'+
             (p.motivo?'<br><small>'+escaparFerias(p.motivo)+'</small>':'')+'</td>'+
             (encerrado?'<td>'+(ajuste?pafInputAjusteFt(p):pafCampoFruicaoFt(p,'INICIO_REAL',dados.hoje_sp))+'</td><td>'+pafCampoFruicaoFt(p,'SOBRESTAMENTO',dados.hoje_sp)+'</td>'+
-              (i===0?'<td class="paf-acao" rowspan="'+periodos.length+'">'+(pafBotaoValidarFt(s,periodos,encerrado)||'—')+'</td>':''):'')+'</tr>';
+              (i===0?'<td class="paf-acao" rowspan="'+periodos.length+'">'+((pafBotaoValidarFt(s,periodos,encerrado)+pafBotaoExcecaoFt_(s,periodos,encerrado,dados.pode_excecao_paf===true))||'—')+'</td>':''):'')+'</tr>';
         });
       }).join('');
 
