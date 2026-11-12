@@ -7035,6 +7035,7 @@ Banco de dados: Google Sheets.
     .ent-situacao[data-tom="atencao"],.ent-tramite[data-tom="atencao"]{background:#fff5dc;color:#674301;border-color:#e9c16b}
     .ent-situacao[data-tom="ok"]{background:#e8f5ed;color:#205638}.ent-situacao[data-tom="erro"]{background:#fceeee;color:#8d2424}
     .ent-tramite{margin:12px 0;padding:14px;border:1px solid #cbd5e1;border-left-width:5px;border-radius:10px;background:#f5f7fa}
+    .oc-ft-indices-aviso{font-size:13px;line-height:1.45;overflow-wrap:anywhere}
     .ent-tramite h3{margin:0 0 8px;font-size:16px}.ent-tramite p{margin:5px 0;overflow-wrap:anywhere}.ent-tramite .ent-data{font-weight:800}
     .ent-ficha-bloco[id="entDecisao"]{scroll-margin-top:110px}
     .ent-timeline{list-style:none;padding:0;margin:0}.ent-timeline li{padding:7px 0;border-bottom:1px solid #e2e8f0;overflow-wrap:anywhere}.ent-timeline li:last-child{border:0}
@@ -8776,11 +8777,26 @@ function epMesclarResenhaFt(payload,auto){
         return '<div><strong>'+t+'</strong><p>'+escapar(v==null?'Não informado':k==='flagrante'?(v===1?'Sim':'Não'):k==='drogasGramas'?new Intl.NumberFormat('pt-BR',{maximumFractionDigits:3}).format(v)+' g':v)+'</p></div>';
       }).join('')+'</div>':'';
     }
+    const OC_FT_INDICES_AVISO_ATE=Date.parse('2027-01-01T00:01:00-03:00');
+    let ocFtIndicesAvisoTimer;
+    function ocFtIndicesAvisoHtml(){
+      return Date.now()<OC_FT_INDICES_AVISO_ATE
+        ?'<aside id="ocFtIndicesAviso" class="ent-tramite oc-ft-indices-aviso" data-tom="atencao"><strong>ÍNDICES CRIMINAIS INCOMPLETOS EM VIRTUDE DA IMPLANTAÇÃO DO SISTEMA</strong></aside>':'';
+    }
+    function ocFtIndicesAgendarAviso(){
+      clearTimeout(ocFtIndicesAvisoTimer);
+      const aviso=document.getElementById('ocFtIndicesAviso');
+      if(!aviso)return;
+      const restante=OC_FT_INDICES_AVISO_ATE-Date.now();
+      if(restante<=0){aviso.remove();return;}
+      // Limita o intervalo para que o temporizador também funcione com semanas de antecedência.
+      ocFtIndicesAvisoTimer=setTimeout(ocFtIndicesAgendarAviso,Math.min(restante,86400000));
+    }
     function ocFtAbrirIndices(){
       const ano=Number(new Intl.DateTimeFormat('en',{timeZone:'America/Sao_Paulo',year:'numeric'}).format(new Date()));
       const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
       const mes=Number(new Intl.DateTimeFormat('en',{timeZone:'America/Sao_Paulo',month:'numeric'}).format(new Date()));
-      document.getElementById('appConteudo').innerHTML='<div class="page-wrap">'+ocFtTitulo('Índices Criminais')+
+      document.getElementById('appConteudo').innerHTML='<div class="page-wrap">'+ocFtTitulo('Índices Criminais')+ocFtIndicesAvisoHtml()+
         '<div class="modal-card oc-ft-indices"><form id="ocFtIndicesFiltros" onsubmit="event.preventDefault();ocFtAtualizarIndices()">'+
         '<div class="oc-ft-grid"><label>Ano<select name="ano">'+Array.from({length:Math.max(1,ano-2025)},(_,i)=>'<option>'+(ano-i)+'</option>').join('')+'</select></label>'+
         '<label>Período<select name="periodo" onchange="ocFtAjustarPeriodoIndices(this.form)"><option value="ANUAL">Anual</option><option value="SEMESTRAL">Semestral</option><option value="MENSAL">Mensal</option></select></label>'+
@@ -8789,6 +8805,7 @@ function epMesclarResenhaFt(payload,auto){
         '<div class="page-actions"><button type="submit" class="btn-primary-soft">CONSULTAR</button></div></form>'+
         '<p class="oc-ft-nota">Somente ocorrências validadas, pela data do atendimento, independentemente da decisão sobre Folga Flagrante.</p>'+
         '<div id="ocFtIndicesStatus" role="status"></div><div id="ocFtIndicesResultado"></div></div></div>';
+      ocFtIndicesAgendarAviso();
       ocFtAjustarPeriodoIndices(document.getElementById('ocFtIndicesFiltros'));
       return ocFtAtualizarIndices();
     }
