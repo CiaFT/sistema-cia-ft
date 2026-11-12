@@ -4810,6 +4810,8 @@ Banco de dados: Google Sheets.
       gap: 8px;
     }
 
+    .meus-dados-ferias-nota { display:block; margin-top:4px; font-size:11px; line-height:1.4; color:#475569; }
+    .meus-dados-ferias-nota:empty { display:none; }
     .resenha-cal { display:grid; gap:14px; }
     .resenha-cal-semana { display:grid; gap:7px; min-width:0; }
     .resenha-cal-semana h3 { margin:0; font-size:13px; color:#374247; }
@@ -7807,7 +7809,11 @@ async function dsDetalharFt(id){
                         ${dadosItem('RG', valorCampo(u, ['rg', 'RG']))}
                         ${dadosItem('Data de nascimento', valorCampo(u, ['dataNascimento', 'nascimento', 'dtNascimento']))}
                         ${dadosItem('Data de entrada na Cia FT', valorCampo(u, ['dataEntrada', 'entradaCiaFt', 'entrada', 'dataEntradaCia']))}
-                        ${dadosItem('Férias', ferias)}
+                        <div class="dados-item" id="meusDadosFeriasFt" aria-live="polite">
+                          <small>Férias</small>
+                          <strong>${escapar(ferias || '-')}</strong>
+                          <span class="meus-dados-ferias-nota" data-ferias-paf></span>
+                        </div>
                         ${dadosItem('EAP', eap)}
                       </div>
                     </div>
@@ -7865,8 +7871,64 @@ async function dsDetalharFt(id){
           </div>
         </div>
       `;
+      void carregarFeriasMeusDadosFt_(u);
     }
 
+
+    function meusDadosDiaFeriasFt_(valor){
+      const s=String(valor ?? '').trim();
+      const br=s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+      const iso=br ? br[3]+'-'+br[2]+'-'+br[1] : (/^\d{4}-\d{2}-\d{2}$/.test(s) ? s : '');
+      const ms=Date.parse(iso+'T00:00:00Z');
+      return Number.isFinite(ms) && new Date(ms).toISOString().slice(0,10)===iso ? ms/86400000 : null;
+    }
+
+    function meusDadosSituacaoFerias2026Ft_(u,hoje){
+      const integral=valorCampo(u,['ferias30','ferias','feriasAj','feriasAJ']);
+      const parte1=valorCampo(u,['ferias15a','ferias1','feriasAk','feriasAK']);
+      const parte2=valorCampo(u,['ferias15b','ferias2','feriasAl','feriasAL']);
+      const inicio=meusDadosDiaFeriasFt_;
+      const diaHoje=inicio(hoje);
+      if(diaHoje===null)return 'incerto';
+      const eh2026=v=>v!==null && new Date(v*86400000).getUTCFullYear()===2026;
+      const datas=[inicio(parte1),inicio(parte2)].filter(eh2026).sort((a,b)=>a-b);
+      if(datas.some(d=>diaHoje<=d+14))return 'pendente';
+      if(integral){
+        const d=inicio(integral);
+        if(!eh2026(d))return 'incerto';
+        if(diaHoje<=d+29)return 'pendente';
+        return parte1 || parte2 ? 'incerto' : 'terminou';
+      }
+      if(datas.length===2 && datas[1]>=datas[0]+15)return 'terminou';
+      return 'incerto';
+    }
+
+    async function carregarFeriasMeusDadosFt_(u){
+      const campo=document.getElementById('meusDadosFeriasFt'),geracao=APP.sessaoGeracao;
+      if(!campo)return;
+      const atual=()=>campo.isConnected && APP.usuario===u && APP.sessaoGeracao===geracao;
+      const nota=campo.querySelector('[data-ferias-paf]');
+      try{
+        const r=await rpcPlanoFerias('ft_meus_dados_ferias_2027_v1',{});
+        if(!atual())return;
+        if(r?.ano!==2027 || !Array.isArray(r.periodos))throw new Error('Dados de férias indisponíveis.');
+        const formatar=d=>String(d).split('-').reverse().join('/');
+        const datas=r.periodos.filter(p=>meusDadosDiaFeriasFt_(p?.inicio)!==null && meusDadosDiaFeriasFt_(p?.fim)!==null)
+          .map(p=>formatar(p.inicio)+' a '+formatar(p.fim)+(p.sobrestado?' (sobrestado)':''));
+        const texto=datas.length?datas.join(' • '):'Sem período validado no PAF 2027.';
+        const situacao=meusDadosSituacaoFerias2026Ft_(u,r.hoje_sp);
+        const valor=campo.querySelector('strong');
+        if(situacao==='terminou'){
+          valor.textContent=datas.length?'PAF 2027: '+texto:texto;
+        }else if(situacao==='incerto' && datas.length){
+          // Cadastro incompleto: não esconde a previsão confirmada nem presume fruição.
+          if(montarTextoFerias(u))nota.textContent='PAF 2027: '+texto;
+          else valor.textContent='PAF 2027: '+texto;
+        }
+      }catch(_){
+        if(atual())nota.textContent='Não foi possível consultar o PAF 2027.';
+      }
+    }
 
     function dadosItem(rotulo, valor, classeExtra) {
       return `
