@@ -9674,6 +9674,36 @@ function epMesclarResenhaFt(payload,auto){
       }finally{input.disabled=false;}
     }
 
+    function pafBotaoValidarFt(s,periodos,encerrado){
+      const id=String(s.solicitacao_id||'');
+      const qtd=s.modalidade==='30_DIAS'?1:s.modalidade==='2X15_DIAS'?2:0;
+      if(!encerrado||!usuarioPodeConfigurarPlanoFerias()||s.status!=='ENVIADA'||!qtd||
+        periodos.length!==qtd||periodos.some(p=>p.status!=='VALIDO')||
+        !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id))return '';
+      return '<br><button type="button" class="btn-page" data-pedido="'+id+
+        '" onclick="pafValidarSolicitacaoFt(this)">VALIDAR SOLICITAÇÃO</button>';
+    }
+
+    async function pafValidarSolicitacaoFt(botao){
+      const dados=window.APPFT_FERIAS_DADOS,id=botao.dataset.pedido;
+      const s=dados?.solicitacoes_visiveis?.find(x=>x.solicitacao_id===id);
+      if(!s||botao.disabled)return;
+      const ano=dados.ciclo?.ano_fruição;
+      const datas=s.periodos.map(p=>dataFeriasBR(p.inicio)+' a '+dataFeriasBR(p.fim)).join('; ');
+      botao.disabled=true;
+      try{
+        if(!await confirmarToastFt('Validar solicitação do PAF',
+          'Confirma a aprovação do PAF de '+s.nome+' para '+datas+'? Os períodos passam a alimentar a Resenha e a Frequência.')||!botao.isConnected)return;
+        await rpcPlanoFerias('ft_paf_validar_solicitacao_v2',{p_solicitacao:id});
+        APP.apiCache={};
+        APP.dadosConsultaEfetivo=null;
+        mostrarToastFt('PAF atualizado','Solicitação validada.','ok');
+        if(botao.isConnected)await carregarPlanoAnualFerias(ano);
+      }catch(e){
+        mostrarToastFt('Solicitação não validada',e.message,'erro');
+      }finally{botao.disabled=false;}
+    }
+
     function renderizarPlanoAnualFerias(dados) {
       const aviso = document.getElementById('feriasAviso');
       const conteudo = document.getElementById('feriasConteudo');
@@ -9708,7 +9738,8 @@ function epMesclarResenhaFt(payload,auto){
             '<td rowspan="'+periodos.length+'">'+escaparFerias(s.modalidade)+'</td>':'')+
             '<td>'+escaparFerias(dataFeriasBR(p.inicio))+' a '+escaparFerias(dataFeriasBR(p.fim))+'<br><small>'+escaparFerias(p.dias)+' dias corridos</small></td>'+
             '<td><strong>Período: '+escaparFerias(p.status||'—')+'</strong><br><small>Solicitação: '+escaparFerias(s.status||'—')+'</small>'+
-            (p.motivo?'<br><small>'+escaparFerias(p.motivo)+'</small>':'')+'</td>'+
+            (p.motivo?'<br><small>'+escaparFerias(p.motivo)+'</small>':'')+
+            (i===0?pafBotaoValidarFt(s,periodos,encerrado):'')+'</td>'+
             (encerrado?'<td>'+pafCampoFruicaoFt(p,'INICIO_REAL',dados.hoje_sp)+'</td><td>'+pafCampoFruicaoFt(p,'SOBRESTAMENTO',dados.hoje_sp)+'</td>':'')+'</tr>';
         });
       }).join('');
