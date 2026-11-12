@@ -8819,23 +8819,24 @@ function epMesclarResenhaFt(payload,auto){
       const p=r.periodo,d=r.atual,fmt=new Intl.NumberFormat('pt-BR'),peso=new Intl.NumberFormat('pt-BR',{maximumFractionDigits:6});
       const faixa=x=>escapar(iccDataBR(x.inicio))+' a '+escapar(iccDataBR(x.fim));
       if(p.futuro)return '<section class="oc-ft-secao"><p>O período de '+faixa(p)+' ainda não começou.</p></section>';
-      const metricas=[['total','Ocorrências atendidas'],...OC_FT_INDICES_METRICAS,['capturas','Ocorrências de captura']];
+      const metricas=[['total','Ocorrências atendidas'],...OC_FT_INDICES_METRICAS];
       const resumo=(dados,periodo,titulo)=>'<section class="oc-ft-secao"><h2>'+titulo+' · '+faixa(periodo)+'</h2>'+
         (dados.grupos.geral.total?'<div class="oc-ft-indices-kpis">'+metricas.map(([k,t])=>'<article class="oc-ft-indices-kpi"><h3>'+t+'</h3><dl>'+
           [['geral','Geral'],['pel1','1º Pel'],['pel2','2º Pel']].map(([g,rotulo])=>{
             const grupo=dados.grupos[g],i=grupo.indicadores[k];
             let valor='—',nota='';
-            if(!i)valor=fmt.format(k==='capturas'?grupo.capturas||0:grupo.total);
+            if(!i)valor=fmt.format(grupo.total);
             else if(!grupo.total)nota='Sem registros';
             else if(!i.informadas)nota='Não informado';
             else {
               valor=k==='drogasGramas'?peso.format(i.valor/1e6)+' kg':fmt.format(i.valor);
               if(i.informadas<grupo.total)nota=fmt.format(i.informadas)+' de '+fmt.format(grupo.total)+' informadas';
             }
-            return '<div><dt>'+rotulo+'</dt><dd>'+valor+(nota?'<small>'+nota+'</small>':'')+'</dd></div>';
+            const contexto=k==='procurados'&&grupo.capturas>0?'<small>'+fmt.format(grupo.capturas)+(grupo.capturas===1?' ocorrência de captura':' ocorrências de captura')+'</small>':'';
+            return '<div><dt>'+rotulo+'</dt><dd>'+valor+(nota?'<small>'+nota+'</small>':'')+contexto+'</dd></div>';
           }).join('')+'</dl></article>').join('')+'</div>'+
           '<p class="oc-ft-nota">Geral inclui outros grupos'+(dados.semPel?' e '+fmt.format(dados.semPel)+' ocorrência(s) sem pelotão identificado':'')+
-          '. '+(dados.pelPelaEquipe?fmt.format(dados.pelPelaEquipe)+' ocorrência(s) com pelotão identificado pela equipe. ':'')+'Flagrantes: apresentação no DP, exceto ocorrências de captura. Pessoas presas: indiciados e sindicados, sem repetir a mesma pessoa no registro, quando não houver total informado. Ocorrências de captura e pessoas procuradas capturadas são contagens diferentes.</p>':
+          '. '+(dados.pelPelaEquipe?fmt.format(dados.pelPelaEquipe)+' ocorrência(s) com pelotão identificado pela equipe. ':'')+'Flagrantes: apresentação no DP, exceto ocorrências de captura. Pessoas presas: indiciados e sindicados, sem repetir a mesma pessoa no registro, quando não houver total informado.</p>':
           '<p>Nenhuma ocorrência validada neste período.</p>')+'</section>';
       const lista=(itens,vazio)=>itens.length?'<ol class="oc-ft-indices-lista">'+itens.map(x=>
         '<li><span>'+escapar(x.nome)+'</span><strong>'+fmt.format(x.total)+'</strong><span class="oc-ft-indices-faixa" aria-hidden="true"><i style="width:'+Math.round(x.total/itens[0].total*100)+'%"></i></span></li>'
