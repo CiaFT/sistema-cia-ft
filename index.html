@@ -9565,11 +9565,11 @@ function epMesclarResenhaFt(payload,auto){
       const modal=document.getElementById('eapModalRoot');if(modal)modal.innerHTML='';
       const abrir=document.getElementById('eapAbrirCicloBtn');if(abrir)abrir.style.display='none';
       if(aviso){aviso.hidden=false;aviso.innerHTML='Carregando EAP '+APP.eapAno+'...';}
-      chamarApi('dados_eap_cadastro_r5',{ano:APP.eapAno},{semCache:true}).then(function(resp){
+      chamarApi('dados_eap_restaurado',{ano:APP.eapAno},{semCache:true}).then(function(resp){
         if(carga!==APP.eapCarga||!aviso?.isConnected)return;
         if(!resp||!resp.ok)throw new Error(resp&&resp.erro||'Não foi possível carregar os dados do EAP.');
-        if(resp.dados?.buildEap!=='FT-V144-20261113-EAP-LISTAGEM-R5')
-          throw new Error('Atualize a implantação existente do Apps Script para a versão do pacote EAP R5.');
+        if(resp.dados?.buildEap!=='FT-V144-20261113-EAP-RESTAURO')
+          throw new Error('Atualize a implantação existente do Apps Script para a versão do pacote de restauração do EAP.');
         APP.dadosEap=resp.dados;
         const botao=document.getElementById('eapAbrirCicloBtn');if(botao)botao.style.display=APP.dadosEap.podeAdministrar?'inline-flex':'none';
         if(aviso){aviso.textContent='';aviso.hidden=true;}
@@ -9621,7 +9621,7 @@ function epMesclarResenhaFt(payload,auto){
       const linhas=lista.map(function(r){
         const turma=r.statusEap==='DISPENSADO'?'—':r.turma?escapar(String(r.turma).trim().replace(/^turma\s*/i,'')):'—';
         const mes=r.statusEap!=='DISPENSADO'&&r.mes?'<small class="eap-turma-mes">'+escapar(['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][Number(r.mes)-1]||'')+'</small>':'';
-        const acao=dados.podeAdministrar&&r.podeEditarRegistro!==false?'<button class="btn-primary-soft" onclick="abrirEditorEap(\''+escaparAttr(r.re)+'\')">EDITAR</button>':'—';
+        const acao=dados.podeAdministrar&&r.podeEditarRegistro===true?'<button class="btn-primary-soft" onclick="abrirEditorEap(\''+escaparAttr(r.re)+'\')">EDITAR</button>':'—';
         return '<tr><td><button type="button" class="eap-nome eap-nome-botao '+classeNomeEap(r.statusEap)+'" onclick="abrirDetalhesEap(\''+escaparAttr(r.re)+'\')" aria-label="Consultar EAP de '+escaparAttr(r.nomeCompleto||r.nomeGuerra||r.re)+'"><strong>'+escapar(r.postoGrad||'')+' '+escapar(r.nomeGuerra||r.nomeCompleto||'')+'</strong><small>RE '+escapar(r.re||'')+'</small></button></td><td>'+escapar(r.pelotao||'')+'</td><td>'+turma+mes+'</td><td><span class="eap-status '+classeSeloEap(r.statusEap)+'">'+escapar(rotuloStatusEap(r.statusEap))+'</span></td><td><span class="eap-status '+classeResultadoEap(r.statusTaf)+'">'+escapar(rotuloResultadoEap(r.statusTaf))+'</span></td><td><span class="eap-status '+classeResultadoEap(r.statusTat)+'">'+escapar(rotuloResultadoEap(r.statusTat))+'</span></td><td>'+acao+'</td></tr>';
       }).join('');
       const pend=(dados.solicitacoes||[]).map(function(s){const controles=s.podeDecidir?'<div class="eap-modal-actions"><button class="btn-primary-soft" onclick="decidirSolicitacaoEap(\''+escaparAttr(s.id)+'\',\'APROVAR\')">APROVAR</button><button class="btn-page" onclick="decidirSolicitacaoEap(\''+escaparAttr(s.id)+'\',\'RECUSAR\')">RECUSAR</button></div>':'';return '<div class="eap-solicitacao"><strong>'+escapar(s.nomeAlvo)+' — RE '+escapar(s.reAlvo)+' ('+escapar(s.pelotao)+')</strong><p>Status: <b>'+escapar(s.status)+'</b> · Solicitado: '+escapar(s.solicitadoEm||'')+'</p><p>Turma solicitada: '+escapar(s.turmaSolicitada)+' — '+String(s.mesSolicitado||'').padStart(2,'0')+'/'+s.ano+'</p><p>Justificativa: '+escapar(s.justificativa)+'</p>'+(s.respostaAdmin?'<p>Resposta: '+escapar(s.respostaAdmin)+' — '+escapar(s.decididoPorNome||'')+'</p>':'')+controles+'</div>';}).join('');
