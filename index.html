@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.4.3 — OCORRÊNCIAS E FOLGAS FLAGRANTES
+SISTEMA CIA FT — PORTAL GITHUB V1.4.4 — OCORRÊNCIAS E FOLGAS FLAGRANTES
 Arquivo: index.html
 ============================================================
 
-VERSÃO V1.4.3 — DESEMPENHO E PADRÃO VISUAL
+VERSÃO V1.4.4 — DESEMPENHO E PADRÃO VISUAL
 - Ranking com filtros anual, semestral, mensal e por pelotão.
 - Destaque discreto dos três primeiros colocados.
 - Consulta de FF aguardando decisão e aprovação/recusa exclusiva do Cmt Cia.
 - Histórico individual preserva datas de FF já gozadas, inclusive importadas.
 - Área de importação removida do formulário após a carga inicial.
-- Versão fixada em V1.4.3: alterar somente por determinação expressa do responsável.
+- Versão fixada em V1.4.4: alterar somente por determinação expressa do responsável.
 - Preserva a última versão encerrada do Controle de Frequência.
 - Preserva a implantação completa de Viaturas V1.2.6.
 - Corrige a leitura e a identificação funcional em Resenhas Enviadas.
@@ -52,7 +52,7 @@ Banco de dados: Google Sheets.
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="cia-ft-build" content="FT-V138-20261006-GRAVACAO-CONFIAVEL-R7">
-  <title>Portal Força Tática • V1.4.3</title>
+  <title>Portal Força Tática • V1.4.4</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
 
@@ -7186,7 +7186,6 @@ Banco de dados: Google Sheets.
   </style>
 <style>
 #appScreen .top-actions #dsCaixaFt{position:relative;display:inline-grid;place-items:center;width:52px;min-width:52px;min-height:44px;padding:0}
-.ds-rotinas-par{display:grid;grid-column:span 2;grid-template-columns:repeat(2,minmax(0,1fr));gap:inherit}
 #dsCaixaFt img{display:block;width:42px;height:42px;max-width:none;object-fit:contain}
 #dsCaixaFt span:not(:empty){position:absolute;top:-5px;right:-5px;min-width:16px;padding:1px 4px;border:1px solid #fff;border-radius:999px;background:#9f2936;color:#fff;font:700 10px/14px system-ui;text-align:center;pointer-events:none}
 #dsCorpoFt .ds-form-ft,#dsCorpoFt .ds-lista-ft,.ds-caixa-abas,.ds-caixa-resumo{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
@@ -7235,6 +7234,18 @@ Banco de dados: Google Sheets.
     }
     #appScreen .home-aviso-pendente[hidden] { display:none; }
     #appScreen .home-pel-compacto { display:none; }
+    @media (max-width:980px) {
+      #appScreen .rotinas-menu-grid { grid-template-columns:repeat(2,minmax(0,1fr)); grid-auto-flow:row; }
+      #appScreen .rotinas-menu-grid > .menu-card { min-height:116px; }
+      #appScreen .rotinas-menu-grid > .menu-card:last-child:nth-child(odd) { grid-column:1 / -1; }
+      #appScreen .rotinas-menu-grid > .menu-card:last-child:nth-child(odd) .ft-menu-conteudo {
+        display:grid; grid-template-columns:auto minmax(0,1fr); column-gap:10px; align-items:center;
+      }
+      #appScreen .rotinas-menu-grid > .menu-card:last-child:nth-child(odd) .menu-icon {
+        grid-row:span 2; margin:0;
+      }
+      #appScreen .rotinas-menu-grid > .menu-card:last-child:nth-child(odd) { min-height:86px; align-items:center; }
+    }
     #appScreen .home-perfil-acoes { padding:0 18px 18px; }
     #appScreen .home-meus-dados {
       display:inline-flex; align-items:center; justify-content:center; gap:8px;
@@ -7289,7 +7300,7 @@ Banco de dados: Google Sheets.
         <div id="loginAlerta" class="alerta"></div>
 
         <div class="footer">
-          Portal Força Tática • V1.4.3
+          Portal Força Tática • V1.4.4
         </div>
       </main>
 
@@ -7487,8 +7498,8 @@ function dsPaginaFt(titulo,descricao,voltar){
 function dsFormulariosFt(){
  if(!APP.usuario)return;
  const h=dsPaginaFt('Formulários PMESP','Solicitação e acompanhamento de documentos da Companhia.','abrirRotinasOperacionais()');
- h.className='menu-grid';
- h.innerHTML=montarMenuCard({id:'DISPENSA_PMP118',titulo:'DISPENSA DE SERVIÇO',descricao:'Preencha e encaminhe uma solicitação de dispensa.'});
+ h.className='menu-grid rotinas-menu-grid';
+ h.innerHTML=montarMenuCard({id:'DISPENSA_PMP118',titulo:'DISPENSA DE SERVIÇO',descricao:'Preencha e encaminhe uma solicitação de dispensa.'}, true);
 }
 async function dsOperacaoFt(b,tarefa){
  if(b.disabled)return;
@@ -8638,7 +8649,7 @@ function epMesclarResenhaFt(payload,auto){
         ESPACO_PEL: { arquivo: './icone-espaco-pel.png', alt: 'Espaço do Pelotão' },
         AVISOS_CIA_FT: { arquivo: './icone-avisos-ft.png', alt: 'Avisos Cia FT' },
         MEUS_DADOS: { arquivo: './icone-meus-dados.png?v=1211-ft1408r1', alt: 'Meus Dados' },
-        GESTAO_CIA_FT: { arquivo:'./icone-painel-administrativo.png?v=1211-ft1408r1', alt:'' },
+        GESTAO_CIA_FT: { arquivo:'./icone-gestao-cia-ft.png?v=144', alt:'' },
         CONTROLE_FREQUENCIA: { arquivo:'./icone-controle-frequencia.png?v=138-paginas-r1', alt:'' },
         CONTROLE_FOLGAS: { arquivo:'./icone-controle-folgas.png?v=138-paginas-r1', alt:'' },
         ROTINAS_ADMINISTRATIVAS: { arquivo:'./icone-rotinas-administrativas.png?v=138-paginas-r1', alt:'' },
@@ -8896,47 +8907,17 @@ function epMesclarResenhaFt(payload,auto){
 
     function abrirRotinasOperacionais() {
       window.scrollTo(0, 0);
-      const modulos = [];
-      if (usuarioTemPermissaoCliente('COP', 'visualizar')) {
-        modulos.push({
-          id: 'COP',
-          titulo: 'COP',
-          icone: '',
-          descricao: 'Portal COP, análise e auditoria mensal dos vídeos das câmeras operacionais.'
-        });
+      const modulos = [
+        { id:'OCORRENCIAS', titulo:'OCORRÊNCIAS', descricao:'Registre, valide e consulte ocorrências.' },
+        { id:'FORMULARIOS_PMESP', titulo:'FORMULÁRIOS PMESP', descricao:'Solicite e acompanhe documentos oficiais.' },
+        { id:'ICC', titulo:'ICC', descricao:'Consulte a ICC e registre sua ciência.' },
+        { id:'REVISTA_ARMARIO', titulo:'REVISTA DE ARMÁRIO', descricao:'Acompanhe as revistas de armário.' },
+        { id:'EAP', titulo:'EAP', descricao:'Acompanhe a programação de EAP, TAF e TAT.' },
+        { id:'PLANO_ANUAL_FERIAS', titulo:'PLANO ANUAL DE FÉRIAS', descricao:'Solicite e acompanhe suas férias.' }
+      ];
+      if (usuarioTemPermissaoCliente('COP','visualizar')) {
+        modulos.push({id:'COP', titulo:'COP', descricao:'Consulte e audite vídeos das câmeras operacionais.'});
       }
-      modulos.push({
-        id: 'ICC',
-        titulo: 'ICC',
-        icone: '',
-        descricao: 'Consulta da ICC atual, ciência digital e lista oficial de presença.'
-      });
-      modulos.push({
-        id: 'REVISTA_ARMARIO',
-        titulo: 'REVISTA DE ARMÁRIO',
-        icone: '',
-        descricao: 'Acesso às rotinas, registros e controles de revistas de armário.'
-      });
-      modulos.push({
-        id: 'PLANO_ANUAL_FERIAS',
-        titulo: 'PLANO ANUAL DE FÉRIAS',
-        icone: '📅',
-        descricao: 'Solicitação e acompanhamento do plano anual de férias.'
-      });
-      modulos.push({
-        id: 'EAP',
-        titulo: 'EAP',
-        icone: '🎓',
-        descricao: 'Programação anual e acompanhamento de EAP, TAF e TAT do efetivo.'
-      });
-
-      modulos.push({
-        id: 'OCORRENCIAS',
-        titulo: 'OCORRÊNCIAS',
-        icone: '',
-        descricao: 'Lançamento, validação, ranking e índices de ocorrências.'
-      });
-      modulos.push({id:"FORMULARIOS_PMESP",titulo:"FORMULÁRIOS PMESP",descricao:"Solicitação e acompanhamento de documentos oficiais."});
 
       document.getElementById('appConteudo').innerHTML = `
         <div class="page-wrap">
@@ -8951,9 +8932,8 @@ function epMesclarResenhaFt(payload,auto){
             </div>
           </div>
 
-          <div class="menu-grid">
-            ${modulos.slice(0,-2).map(montarMenuCard).join('')}
-            <div class="ds-rotinas-par">${modulos.slice(-2).map(montarMenuCard).join('')}</div>
+          <div class="menu-grid rotinas-menu-grid">
+            ${modulos.map(menu => montarMenuCard(menu, true)).join('')}
           </div>
         </div>`;
     }
@@ -8962,9 +8942,9 @@ function epMesclarResenhaFt(payload,auto){
     function abrirOcorrencias() {
       window.scrollTo(0, 0);
       const modulos = [
-        { id: 'OCORRENCIAS_INCLUSAO', titulo: 'Inclusão de Ocorrência', icone: '' },
-        { id: 'OCORRENCIAS_RANKING', titulo: 'Ranking de Ocorrências', icone: '' },
-        { id: 'OCORRENCIAS_INDICES', titulo: 'Índices Criminais', icone: '' }
+        { id:'OCORRENCIAS_INCLUSAO', titulo:'Inclusão de Ocorrência', descricao:'Registre ou valide ocorrências.' },
+        { id:'OCORRENCIAS_RANKING', titulo:'Ranking de Ocorrências', descricao:'Consulte o ranking por período e pelotão.' },
+        { id:'OCORRENCIAS_INDICES', titulo:'Índices Criminais', descricao:'Veja os indicadores do período.' }
       ];
       document.getElementById('appConteudo').innerHTML = `
         <div class="page-wrap">
@@ -8978,7 +8958,7 @@ function epMesclarResenhaFt(payload,auto){
               <div class="page-actions"><button class="btn-page" onclick="abrirRotinasOperacionais()">VOLTAR</button></div>
             </div>
           </div>
-          <div class="menu-grid">${modulos.map(montarMenuCard).join('')}</div>
+          <div class="menu-grid rotinas-menu-grid">${modulos.map(menu => montarMenuCard(menu, true)).join('')}</div>
         </div>`;
     }
 
