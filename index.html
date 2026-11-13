@@ -8552,6 +8552,13 @@ function epMesclarResenhaFt(payload,auto){
       if(['1º PEL','2º PEL'].includes(epGrupoClienteFt())||epGestorClienteFt())menus.push({id:'ESPACO_PEL',titulo:'ESPAÇO DO PEL',descricao:'Solicite folgas e acompanhe os pedidos do pelotão.'});
       if(!menus.some(m=>m.id==='AVISOS_CIA_FT'))menus.push({id:'AVISOS_CIA_FT',titulo:'AVISOS CIA FT',descricao:'Comunicados da Companhia e ciência de leitura.'});
       if(entPodeGerir())menus.push({id:"ENTREVISTAS_FT",titulo:"CANDIDATURAS À CIA FT",icone:"📋",descricao:"Consulta de fichas, impressão e agendamento de entrevistas."});
+      if (APP.usuario && !menus.some(m => normalizarModuloCliente(m && m.id) === 'VALORIZACAO_POLICIAL')) {
+        menus.push({
+          id: 'VALORIZACAO_POLICIAL',
+          titulo: 'VALORIZAÇÃO POLICIAL',
+          descricao: 'Ações de valorização do efetivo da Cia FT.'
+        });
+      }
       return menus;
     }
 
@@ -8561,6 +8568,7 @@ function epMesclarResenhaFt(payload,auto){
       const iconeMenu = menu.id === 'MEUS_DADOS' ? '🪪' : (menu.icone || '•');
       const moduloMenu = normalizarModuloCliente(menu.id);
       const imagensMenu = {
+        VALORIZACAO_POLICIAL: { arquivo: './icone-valorizacao-policial.png', alt: '' },
         FORMULARIOS_PMESP: {arquivo:"./icone-formularios-pmesp.png",alt:"Formulários PMESP"},
         DISPENSA_PMP118: {arquivo:"./icone-formularios-pmesp.png",alt:"Dispensa de Serviço"},
         ESPACO_PEL: { arquivo: './icone-espaco-pel.png', alt: 'Espaço do Pelotão' },
@@ -8602,7 +8610,38 @@ function epMesclarResenhaFt(payload,auto){
     }
 
 
+    function abrirValorizacaoPolicial() {
+      if (!APP.usuario) return;
+
+      window.scrollTo(0, 0);
+      document.getElementById('appConteudo').innerHTML = `
+        <div class="page-wrap">
+          <div class="page-header">
+            <div class="page-header-row">
+              <div>
+                <div class="page-kicker">CIA FT</div>
+                <h1>Valorização Policial</h1>
+                <p>Ações de valorização do efetivo da Cia FT.</p>
+              </div>
+              <div class="page-actions">
+                <button type="button" class="btn-page" onclick="abrirHome()">VOLTAR</button>
+              </div>
+            </div>
+          </div>
+          <div class="modal-card">
+            <h2>Em implantação</h2>
+            <p>Os conteúdos desta área serão disponibilizados em breve.</p>
+          </div>
+        </div>
+      `;
+    }
+
+
     function abrirModulo(id) {
+      if (normalizarModuloCliente(id) === 'VALORIZACAO_POLICIAL') {
+        abrirValorizacaoPolicial();
+        return;
+      }
       if(id==="FORMULARIOS_PMESP"){dsFormulariosFt();return;}
       if(id==="ESPACO_PEL"){epAbrirFt();return;}
       if(id==="DISPENSA_PMP118"){dsPedidoFt();return;}
