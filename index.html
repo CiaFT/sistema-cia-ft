@@ -4810,7 +4810,15 @@ Banco de dados: Google Sheets.
       gap: 8px;
     }
 
-    .meus-dados-ferias-nota { display:block; margin-top:4px; font-size:11px; line-height:1.4; color:#475569; }
+    .dados-item.ferias-paf-campo,.consulta-detail.ferias-paf-campo { grid-column:1/-1; min-width:0; text-align:center; padding:13px 12px; }
+    .ferias-paf-campo .ferias-paf-titulo { display:block; font-size:13px; font-weight:900; margin-bottom:5px; }
+    .ferias-paf-campo .ferias-paf-ciclo { display:block; color:#334155; font-size:12px; font-weight:800; margin-bottom:9px; }
+    .ferias-paf-periodos { display:flex; justify-content:center; flex-wrap:wrap; gap:8px; }
+    .ferias-paf-periodo { box-sizing:border-box; flex:0 1 230px; min-width:0; padding:9px 10px; border:1px solid #dbe3ed; border-radius:10px; background:#f4f7fb; }
+    .ferias-paf-periodo .ferias-paf-datas { display:block; font-size:13px; font-variant-numeric:tabular-nums; }
+    .ferias-paf-periodo small { display:block; margin-bottom:4px; }
+    .ferias-paf-periodo .ferias-paf-sobrestado { margin:5px 0 0; color:#854d0e; }
+    .meus-dados-ferias-nota { display:block; margin-top:6px; font-size:11px; line-height:1.4; color:#475569; }
     .meus-dados-ferias-nota:empty { display:none; }
     .resenha-cal { display:grid; gap:14px; }
     .resenha-op-form { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
@@ -7919,23 +7927,36 @@ async function dsDetalharFt(id){
       const atual=porAno.get(ano) || [], anterior=porAno.get(ano-1) || [];
       const anteriorEmCurso=anterior.filter(p=>p.ini<=hoje && p.fimDia>=hoje);
       const diasLegados=feriasLegadasPendentesCardFt_(u,hoje,ano);
-      const textoLegado=montarTextoFerias(u) || '—';
-      const exibir=(a,periodos)=>{
-        const br=d=>new Date(d*86400000).toISOString().slice(0,10).split('-').reverse().join('/');
-        return 'PAF '+a+': '+periodos.slice().sort((x,y)=>x.ini-y.ini).map(p=>
-          br(p.ini)+' a '+br(p.fimDia)+(p.sobrestado?' (sobrestado)':'')).join(' • ');
-      };
-      if(anteriorEmCurso.length)return {valor:exibir(ano-1,anteriorEmCurso)};
-      if(atual.some(p=>p.fimDia>=hoje))return {valor:exibir(ano,atual)};
-      if(!atual.length && diasLegados)return {valor:textoLegado};
-      if(porAno.has(ano+1))return {valor:exibir(ano+1,porAno.get(ano+1))};
-      if(atual.length)return {valor:exibir(ano,atual),nota:'PAF '+(ano+1)+' ainda sem período validado.'};
-      return {valor:textoLegado,nota:'Sem período validado no PAF '+ano+' ou '+(ano+1)+'.'};
+      const legado=()=>montarFeriasCadastroCardFt_(u);
+      const exibir=(a,periodos)=>({ciclo:'PAF '+a,periodos:periodos.slice().sort((x,y)=>x.ini-y.ini)});
+      if(anteriorEmCurso.length)return exibir(ano-1,anteriorEmCurso);
+      if(atual.some(p=>p.fimDia>=hoje))return exibir(ano,atual);
+      if(!atual.length && diasLegados)return legado();
+      if(porAno.has(ano+1))return exibir(ano+1,porAno.get(ano+1));
+      if(atual.length)return {...exibir(ano,atual),nota:'PAF '+(ano+1)+' ainda sem período validado.'};
+      return {...legado(),nota:'Sem período validado no PAF '+ano+' ou '+(ano+1)+'.'};
+    }
+
+    function montarFeriasCadastroCardFt_(u){
+      const periodos=String(montarTextoFerias(u) || '').split(' • ').map(valor=>valor.trim()).filter(Boolean);
+      return {ciclo:periodos.length?'Cadastro anterior':'',periodos:periodos.map(valor=>({valor}))};
+    }
+
+    function renderizarPeriodosFeriasCardFt_(dados){
+      const br=d=>new Date(d*86400000).toISOString().slice(0,10).split('-').reverse().join('/');
+      const periodos=dados.periodos;
+      if(!periodos.length)return '<strong>Sem férias cadastradas</strong>';
+      return '<span class="ferias-paf-ciclo">'+escapar(dados.ciclo)+'</span><div class="ferias-paf-periodos">'+
+        periodos.map((p,i)=>'<div class="ferias-paf-periodo"><small>'+
+          (periodos.length>1?(i+1)+'º período':'Período')+'</small><strong class="ferias-paf-datas">'+
+          escapar(p.valor ?? (br(p.ini)+' a '+br(p.fimDia)))+'</strong>'+
+          (p.sobrestado?'<small class="ferias-paf-sobrestado">Sobrestado</small>':'')+'</div>').join('')+'</div>';
     }
 
     function montarCampoFeriasPafFt_(u,id,classe){
-      return '<div class="'+classe+'" id="'+id+'" aria-live="polite"><small>Férias</small><strong>'+
-        escapar(montarTextoFerias(u) || '—')+'</strong><span class="meus-dados-ferias-nota" data-ferias-paf></span></div>';
+      return '<div class="'+classe+' ferias-paf-campo" id="'+id+'" aria-live="polite"><small class="ferias-paf-titulo">Férias</small>'+
+        '<div data-periodos-ferias>'+renderizarPeriodosFeriasCardFt_(montarFeriasCadastroCardFt_(u))+'</div>'+
+        '<span class="meus-dados-ferias-nota" data-ferias-paf></span></div>';
     }
 
     async function carregarFeriasPafCardFt_(u,campo,reConsulta=null){
@@ -7947,7 +7968,7 @@ async function dsDetalharFt(id){
         const r=await rpcPlanoFerias('ft_consultar_ferias_paf_anual_v1',reConsulta===null?{}:{p_re:reConsulta});
         if(!atual())return;
         const texto=selecionarFeriasPafCardFt_(u,r);
-        campo.querySelector('strong').textContent=texto.valor;
+        campo.querySelector('[data-periodos-ferias]').innerHTML=renderizarPeriodosFeriasCardFt_(texto);
         nota.textContent=texto.nota || '';
       }catch(_){
         if(atual())nota.textContent='Não foi possível consultar as datas do PAF.';
