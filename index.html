@@ -4816,7 +4816,10 @@ Banco de dados: Google Sheets.
     .resenha-op-form { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
     .resenha-op-form label { display:grid; gap:5px; font-weight:800; }
     .resenha-op-form input,.resenha-op-form select { min-width:0; min-height:42px; padding:6px 9px; border:1px solid #d4dbe0; border-radius:9px; font:inherit; }
-    .resenha-op-form p,.resenha-op-form button { grid-column:1/-1; }
+    .resenha-op-form p,.resenha-op-acoes { grid-column:1/-1; }
+    .resenha-op-acoes { display:flex; gap:8px; flex-wrap:wrap; }
+    .resenha-op-acoes [data-cancelar-op] { color:#991b1b; border-color:#991b1b; }
+    .resenha-op-acoes [hidden] { display:none!important; }
     .resenha-op-form [role="alert"]:empty { display:none; }
     .resenha-cal .resenha-cal-dia.duplo { cursor:default; }
     .resenha-cal-dia .resenha-cal-botao-pel { width:100%; text-align:left; display:flex; flex-direction:column; gap:3px; padding:5px 6px; }
@@ -13637,38 +13640,47 @@ function epMesclarResenhaFt(payload,auto){
         '<label>Pelotões envolvidos<select name="pelotoes" required><option value="AMBOS">1º e 2º Pel</option>'+
         '<option value="1">Apenas 1º Pel</option><option value="2">Apenas 2º Pel</option></select></label>'+
         '<p class="resenha-alerta">A operação abre a data para os pelotões selecionados. A escala regular e as resenhas já enviadas são preservadas. Se o horário final for menor que o inicial, o término será no dia seguinte.</p>'+
-        '<p role="alert" data-erro></p><button type="submit" class="btn-page">SALVAR OPERAÇÃO</button></form>';
+        '<p role="alert" data-erro></p><div class="resenha-op-acoes"><button type="submit" class="btn-page">SALVAR OPERAÇÃO</button>'+
+        '<button type="button" class="btn-page" data-cancelar-op hidden>CANCELAR OPERAÇÃO</button></div></form>';
       const form=corpo.querySelector('form'), campos=form.elements, erro=form.querySelector('[data-erro]');
-      const btn=form.querySelector('button'), fechar=d.querySelector('[data-resenha-fechar]');
+      const btn=form.querySelector('[type=submit]'), cancelar=form.querySelector('[data-cancelar-op]');
+      const fechar=d.querySelector('[data-resenha-fechar]');
       const preencher=()=>{
         const op=dias.find(x=>x.data===campos.data.value)?.operacao;
         campos.nome.value=op?.nome || '';campos.inicio.value=op?.inicio || '';campos.fim.value=op?.fim || '';
         campos.pelotoes.value=op?.pelotoes?.length===1?(op.pelotoes[0].startsWith('1')?'1':'2'):'AMBOS';
-        btn.textContent=op?'ATUALIZAR OPERAÇÃO':'SALVAR OPERAÇÃO';erro.textContent='';
+        btn.textContent=op?'ATUALIZAR OPERAÇÃO':'SALVAR OPERAÇÃO';cancelar.hidden=!op;erro.textContent='';
       };
       if(dias.some(x=>x.data===hoje))campos.data.value=hoje;
       campos.data.onchange=preencher;preencher();
-      form.onsubmit=async e=>{
-        e.preventDefault();
-        if(btn.disabled || !form.reportValidity())return;
-        const data=campos.data.value, op=dias.find(x=>x.data===data)?.operacao;
+      const registrar=async(cancelamento)=>{
+        if(btn.disabled || (cancelamento?cancelar.hidden:!form.reportValidity()))return;
+        const data=campos.data.value, dia=dias.find(x=>x.data===data);
+        if(!dia || (cancelamento && !dia.operacao))return;
         const nome=campos.nome.value.trim(), inicio=campos.inicio.value, fim=campos.fim.value;
-        if(!nome || inicio===fim){erro.textContent='Informe o nome e horários de início e fim diferentes.';return;}
-        erro.textContent='';btn.disabled=fechar.disabled=true;d.dataset.enviando='1';
+        if(!cancelamento && (!nome || inicio===fim)){erro.textContent='Informe o nome e horários de início e fim diferentes.';return;}
+        erro.textContent='';btn.disabled=cancelar.disabled=fechar.disabled=campos.data.disabled=true;d.dataset.enviando='1';
         try{
+          if(cancelamento && (!await confirmarToastFt('Cancelar operação',
+            'Cancelar a operação de '+dataISOParaBR(data)+'? A data voltará a seguir a escala regular e as resenhas já enviadas serão preservadas.',
+            {confirmar:'SIM, CANCELAR OPERAÇÃO',cancelar:'VOLTAR'}) || !overlay.ativo()))return;
           const r=await chamarApi('salvar_operacao_resenha',{
-            login:APP.credenciais.login,senha:APP.credenciais.senha,data,nome,inicio,fim,
-            pelotoes:campos.pelotoes.value,revisao:op?.revisao || ''
+            login:APP.credenciais.login,senha:APP.credenciais.senha,data,
+            revisao:dia.revisaoOperacao || dia.operacao?.revisao || '',
+            ...(cancelamento?{cancelar:'1'}:{nome,inicio,fim,pelotoes:campos.pelotoes.value})
           },{semCache:true});
-          if(!r?.ok)throw new Error(r?.erro || 'Não foi possível confirmar a operação.');
+          if(!r?.ok)throw new Error(r?.erro || 'Não foi possível confirmar a alteração.');
           if(overlay.ativo()){
             d.close();
-            mostrarToastFt('Operação registrada','O calendário foi atualizado.','sucesso');
+            mostrarToastFt(cancelamento?'Operação cancelada':'Operação registrada',
+              cancelamento?'As resenhas já enviadas foram preservadas.':'O calendário foi atualizado.','sucesso');
             void carregarCalendarioResenhaFt_();
           }
         }catch(e){if(overlay.ativo())erro.textContent=e.message || String(e);}
-        finally{btn.disabled=fechar.disabled=false;d.dataset.enviando='';}
+        finally{btn.disabled=cancelar.disabled=fechar.disabled=campos.data.disabled=false;d.dataset.enviando='';}
       };
+      form.onsubmit=e=>{e.preventDefault();void registrar(false);};
+      cancelar.onclick=()=>{void registrar(true);};
     }
 
     async function carregarCalendarioResenhaFt_(){
