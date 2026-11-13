@@ -7221,7 +7221,33 @@ Banco de dados: Google Sheets.
 #fcFormFt input,#fcFormFt select,#fcFormFt textarea{width:100%;min-width:0;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:10px;padding:10px;background:#fff;color:#17202a;font:inherit;font-size:12px}
 #dsCorpoFt .ep-acoes label{display:flex;gap:6px;align-items:center}
 #dsCorpoFt .ep-acoes input,#dsCorpoFt .ep-acoes select{width:auto;margin:0}
-</style>
+</style>  <style>
+    #appScreen button.ft-menu-button { display:flex; align-items:flex-start; justify-content:flex-start; width:100%; min-width:0; text-align:left; font-family:inherit; }
+    #appScreen .ft-menu-nome {
+      display:block; margin:0 0 5px; color:#17202a; font-size:14px; line-height:1.2; font-weight:900;
+    }
+    #appScreen .ft-menu-descricao { display:block; color:#64748b; font-size:12px; line-height:1.42; }
+    #appScreen .ft-menu-descricao:empty { display:none; }
+    #appScreen button.ft-menu-button:focus-visible { outline:3px solid #3949ab; outline-offset:2px; }
+    #appScreen .home-aviso-pendente {
+      display:inline-block; margin-top:8px; padding:3px 7px; border-radius:999px;
+      background:#fef3c7; color:#78350f; font-size:11px; font-weight:800;
+    }
+    #appScreen .home-aviso-pendente[hidden] { display:none; }
+    #appScreen .home-pel-compacto { display:none; }
+    @media (max-width:980px) {
+      #appScreen .home-hero > .pm-profile-card {
+        display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; min-height:0;
+      }
+      #appScreen .home-hero > .pm-profile-card .pm-photo-area { background:none !important; border:0 !important; padding:12px; }
+      #appScreen .home-hero .foto-pm.home { width:52px; height:52px; border-radius:12px; font-size:24px; }
+      #appScreen .home-hero .pm-main-info { padding:8px 12px 8px 0; text-align:left; }
+      #appScreen .home-hero .pm-main-info h1 { font-size:16px; }
+      #appScreen .home-hero .pm-main-info .status { margin-top:4px; padding:3px 8px; font-size:11px; }
+      #appScreen .home-hero .re-line, #appScreen .home-hero .pm-detail-list { display:none; }
+      #appScreen .home-pel-compacto { display:inline-block; margin-right:6px; font-size:12px; color:#475569; }
+    }
+  </style>
 </head>
 
 <body>
@@ -7648,7 +7674,7 @@ async function dsDetalharFt(id){
             </div>
 
             <div class="menu-grid">
-              ${montarMenusHome().map(montarMenuCard).join('') || '<div class="modal-card">Nenhum menu liberado para seu perfil.</div>'}
+              ${montarMenusHome().map(menu => montarMenuCard(menu, true)).join('') || '<div class="modal-card">Nenhum menu liberado para seu perfil.</div>'}
             </div>
           </div>
         </div>
@@ -7679,6 +7705,7 @@ async function dsDetalharFt(id){
           <div class="pm-main-info">
             <h1>${escapar(u.postoGrad || '')} ${escapar(u.nomeGuerra || '')}</h1>
             <div class="re-line">RE ${escapar(u.re || '')}</div>
+            ${u.pelotao ? '<span class="home-pel-compacto">'+escapar(u.pelotao)+'</span>' : ''}
             <span class="status">${escapar(u.status || '')}</span>
           </div>
 
@@ -8169,7 +8196,10 @@ async function dsDetalharFt(id){
       FT_AVISOS.consultando=true;
       avisosRpcFt('pendencias').then(d=>{
         if(!home.isConnected||!APP.usuario)return;
-        const aviso=d.itens?.[0];if(!aviso)return;
+        const aviso=d.itens?.[0];
+        const destaque=home.querySelector('.home-aviso-pendente');
+        if(destaque)destaque.hidden=!aviso;
+        if(!aviso)return;
         if(document.querySelector('#toastFtObrigatorioOverlay .toast-ft')){
           FT_AVISOS.timer=setTimeout(avisosVerificarInicioFt,1500);return;
         }
@@ -8549,22 +8579,40 @@ function epMesclarResenhaFt(payload,auto){
         });
         menus.splice(indicePainel >= 0 ? indicePainel + 1 : menus.length, 0, cardRotinas);
       }
-      if(['1º PEL','2º PEL'].includes(epGrupoClienteFt())||epGestorClienteFt())menus.push({id:'ESPACO_PEL',titulo:'ESPAÇO DO PEL',descricao:'Solicite folgas e acompanhe os pedidos do pelotão.'});
-      if(!menus.some(m=>m.id==='AVISOS_CIA_FT'))menus.push({id:'AVISOS_CIA_FT',titulo:'AVISOS CIA FT',descricao:'Comunicados da Companhia e ciência de leitura.'});
-      if(entPodeGerir())menus.push({id:"ENTREVISTAS_FT",titulo:"CANDIDATURAS À CIA FT",icone:"📋",descricao:"Consulta de fichas, impressão e agendamento de entrevistas."});
-      if (APP.usuario && !menus.some(m => normalizarModuloCliente(m && m.id) === 'VALORIZACAO_POLICIAL')) {
-        menus.push({
-          id: 'VALORIZACAO_POLICIAL',
-          titulo: 'VALORIZAÇÃO POLICIAL',
-          descricao: 'Ações de valorização do efetivo da Cia FT.'
-        });
+      if (['1º PEL','2º PEL'].includes(epGrupoClienteFt()) || epGestorClienteFt()) {
+        menus.push({id:'ESPACO_PEL', titulo:'ESPAÇO DO PEL'});
       }
-      return menus;
+      menus.push({id:'AVISOS_CIA_FT', titulo:'AVISOS CIA FT'});
+      if (APP.usuario) menus.push({id:'VALORIZACAO_POLICIAL', titulo:'VALORIZAÇÃO POLICIAL', descricao:'Ações de valorização do efetivo da Cia FT.'});
+      if (montarMenusGestaoCiaFt().length) {
+        menus.push({id:'GESTAO_CIA_FT', titulo:'GESTÃO DA CIA FT', descricao:'Acesse as ferramentas administrativas disponíveis para seu perfil.'});
+      }
+
+      const agrupados = new Set(['PAINEL_ADMINISTRATIVO','ESCALAS_ADM','ENTREVISTAS_FT']);
+      const descricoes = {
+        ESCALAS_E_FOLGAS:'Consulte escalas de serviço e saldos de folgas.',
+        ESPACO_PEL:'Solicite folgas e acompanhe seus pedidos.',
+        AVISOS_CIA_FT:'Leia os comunicados e registre ciência.',
+        RESENHA_DE_ESCALAS:'Consulte, preencha e envie as resenhas de serviço.',
+        ROTINAS_OPERACIONAIS:'Ocorrências, formulários, ICC, EAP e plano anual de férias.'
+      };
+      const unicos = new Map();
+      menus.forEach(menu => {
+        const id = normalizarModuloCliente(menu && menu.id);
+        if (!id || agrupados.has(id) || unicos.has(id)) return;
+        unicos.set(id, {...menu, id, descricao: descricoes[id] || menu.descricao});
+      });
+      const podeEnviarResenha = usuarioTemPermissaoCliente('RESENHA_DE_ESCALAS','inserir');
+      const administrativo = epGrupoClienteFt() === 'ADM' || (unicos.has('GESTAO_CIA_FT') && !unicos.has('ESPACO_PEL'));
+      const prioridades = administrativo
+        ? ['GESTAO_CIA_FT','AVISOS_CIA_FT',...(podeEnviarResenha ? ['RESENHA_DE_ESCALAS'] : []),'ESCALAS_E_FOLGAS','ESPACO_PEL']
+        : [ ...(podeEnviarResenha ? ['RESENHA_DE_ESCALAS'] : []), 'ESCALAS_E_FOLGAS','ESPACO_PEL','AVISOS_CIA_FT','GESTAO_CIA_FT'];
+      const ordem = [...new Set([...prioridades,'RESENHA_DE_ESCALAS','DEPOIMENTOS_AUDIENCIAS','ROTINAS_OPERACIONAIS','CONSULTA_EFETIVO','VIATURAS','DEJEM_ROCAM','MEUS_DADOS',...unicos.keys()])];
+      return ordem.filter(id => id !== 'VALORIZACAO_POLICIAL' && unicos.has(id)).concat(unicos.has('VALORIZACAO_POLICIAL') ? ['VALORIZACAO_POLICIAL'] : []).map(id => unicos.get(id));
     }
 
 
-
-    function montarMenuCard(menu) {
+    function montarMenuCard(menu, modo = null) {
       const iconeMenu = menu.id === 'MEUS_DADOS' ? '🪪' : (menu.icone || '•');
       const moduloMenu = normalizarModuloCliente(menu.id);
       const imagensMenu = {
@@ -8574,6 +8622,11 @@ function epMesclarResenhaFt(payload,auto){
         ESPACO_PEL: { arquivo: './icone-espaco-pel.png', alt: 'Espaço do Pelotão' },
         AVISOS_CIA_FT: { arquivo: './icone-avisos-ft.png', alt: 'Avisos Cia FT' },
         MEUS_DADOS: { arquivo: './icone-meus-dados.png?v=1211-ft1408r1', alt: 'Meus Dados' },
+        GESTAO_CIA_FT: { arquivo:'./icone-painel-administrativo.png?v=1211-ft1408r1', alt:'' },
+        CONTROLE_FREQUENCIA: { arquivo:'./icone-controle-frequencia.png?v=138-paginas-r1', alt:'' },
+        CONTROLE_FOLGAS: { arquivo:'./icone-controle-folgas.png?v=138-paginas-r1', alt:'' },
+        ROTINAS_ADMINISTRATIVAS: { arquivo:'./icone-rotinas-administrativas.png?v=138-paginas-r1', alt:'' },
+        CONSULTAS_P4: { arquivo:'./icone-consultas-p4.png?v=138-paginas-r1', alt:'' },
         PAINEL_ADMINISTRATIVO: { arquivo: './icone-painel-administrativo.png?v=1211-ft1408r1', alt: 'Painel Administrativo' },
         CONSULTA_EFETIVO: { arquivo: './icone-consulta-efetivo.png?v=1211-ft1408r1', alt: 'Consulta Efetivo' },
         RESENHA_DE_ESCALAS: { arquivo: './icone-resenha-de-escalas.png?v=1211-ft1408r1', alt: 'Resenha de Escalas' },
@@ -8600,12 +8653,22 @@ function epMesclarResenhaFt(payload,auto){
           ? '<div class="menu-icon menu-icon-cop"><img src="./cop.png?v=1210" alt="Câmera operacional COP"></div>'
           : '<div class="menu-icon">' + iconeMenu + '</div>';
 
-      return `
+      if (modo !== true) return `
         <div class="menu-card" data-modulo="${escaparAttr(menu.id)}" onclick="abrirModulo('${escaparAttr(menu.id)}')">
           ${blocoIcone}
           <h3>${escapar(menu.titulo || menu.id)}</h3>
           <p>${escapar(menu.descricao || '')}</p>
         </div>
+      `;
+
+      return `
+        <button type="button" class="menu-card ft-menu-button" data-modulo="${escaparAttr(menu.id)}" onclick="abrirModulo('${escaparAttr(menu.id)}')">
+          <span class="ft-menu-conteudo">${blocoIcone.replace('<div class="menu-icon', '<span class="menu-icon').replace('</div>', '</span>')}
+            <span class="ft-menu-nome">${escapar(menu.titulo || menu.id)}</span>
+            <span class="ft-menu-descricao">${escapar(menu.descricao || '')}</span>
+            ${moduloMenu === 'AVISOS_CIA_FT' ? '<span class="home-aviso-pendente" hidden>NOVO AVISO</span>' : ''}
+          </span>
+        </button>
       `;
     }
 
@@ -8638,7 +8701,20 @@ function epMesclarResenhaFt(payload,auto){
 
 
     function abrirModulo(id) {
-      if (normalizarModuloCliente(id) === 'VALORIZACAO_POLICIAL') {
+      const modulo = normalizarModuloCliente(id);
+      if (modulo === 'GESTAO_CIA_FT') { abrirGestaoCiaFt(); return; }
+      if (['CONTROLE_FREQUENCIA','CONTROLE_FOLGAS','ROTINAS_ADMINISTRATIVAS','CONSULTAS_P4'].includes(modulo)) {
+        if (!montarMenusGestaoCiaFt().some(menu => menu.id === modulo)) {
+          abrirAcessoNegado('Gestão da Cia FT');
+          return;
+        }
+        if (modulo === 'CONTROLE_FREQUENCIA') abrirControleFrequencia();
+        if (modulo === 'CONTROLE_FOLGAS') abrirControleFolgas();
+        if (modulo === 'ROTINAS_ADMINISTRATIVAS') abrirRotinasAdministrativas();
+        if (modulo === 'CONSULTAS_P4') abrirConsultasP4();
+        return;
+      }
+      if (modulo === 'VALORIZACAO_POLICIAL') {
         abrirValorizacaoPolicial();
         return;
       }
@@ -8709,7 +8785,7 @@ function epMesclarResenhaFt(payload,auto){
           abrirAcessoNegado('Painel Administrativo');
           return;
         }
-        abrirPainelAdministrativo();
+        abrirGestaoCiaFt();
         return;
       }
 
@@ -8916,7 +8992,7 @@ function epMesclarResenhaFt(payload,auto){
     }
     async function abrirEntrevistasFT(){
       if(!entPodeGerir()){abrirAcessoNegado('Candidaturas à Cia FT');return;}
-      document.getElementById('appConteudo').innerHTML='<div class="page-wrap"><div class="page-header"><h1>CANDIDATURAS À CIA FT</h1><p>Análise e agendamento. Tramitação formal preservada em papel.</p><button class="btn-page" onclick="abrirHome()">VOLTAR AO INÍCIO</button></div><div class="modal-card"><button class="btn-page" onclick="entAdminListar()">ATUALIZAR LISTA</button><div id="entLista"></div><div id="entDetalhe"></div></div></div>';await entAdminListar();
+      document.getElementById('appConteudo').innerHTML='<div class="page-wrap"><div class="page-header"><div class="page-header-row"><div><div class="page-kicker">Gestão da Cia FT</div><h1>CANDIDATURAS À CIA FT</h1><p>Análise e agendamento. Tramitação formal preservada em papel.</p></div><div class="page-actions"><button class="btn-page" onclick="abrirGestaoCiaFt()">VOLTAR</button></div></div></div><div class="modal-card"><button class="btn-page" onclick="entAdminListar()">ATUALIZAR LISTA</button><div id="entLista"></div><div id="entDetalhe"></div></div></div>';await entAdminListar();
     }
     function entDataBR(v){const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(v||''));return m?m[3]+'/'+m[2]+'/'+m[1]:String(v||'');}
     function entNomeGuerra(nome,guerra){
@@ -11816,38 +11892,37 @@ function epMesclarResenhaFt(payload,auto){
     }
 
 
-    function abrirPainelAdministrativo() {
+    function montarMenusGestaoCiaFt() {
+      if (!APP.usuario) return [];
+      const painel = usuarioTemPermissaoCliente('PAINEL_ADMINISTRATIVO','visualizar');
+      return [
+        [usuarioTemPermissaoCliente('ESCALAS_ADM','visualizar'), 'ESCALAS_ADM','ESCALAS ADM','Preencha ou consulte a escala administrativa semanal.'],
+        [painel, 'CONTROLE_FREQUENCIA','CONTROLE DE FREQUÊNCIA','Lançamento, conferência e fechamento mensal.'],
+        [painel, 'CONTROLE_FOLGAS','CONTROLE DE FOLGAS','Acompanhe dias trabalhados e saldos de folgas.'],
+        [painel, 'ROTINAS_ADMINISTRATIVAS','ROTINAS ADMINISTRATIVAS','Acompanhe as tarefas e os prazos da administração.'],
+        [podeConsultarArmarioCliente(), 'CONSULTAS_P4','CONSULTAS P/4','Localize armários e materiais do efetivo.'],
+        [entPodeGerir(), 'ENTREVISTAS_FT','CANDIDATURAS À CIA FT','Consulte fichas e gerencie as entrevistas.']
+      ].filter(([permitido]) => permitido).map(([,id,titulo,descricao]) => ({id,titulo,descricao}));
+    }
+
+    function abrirGestaoCiaFt() {
+      if (!APP.usuario) return;
+      const menus = montarMenusGestaoCiaFt();
+      if (!menus.length) { abrirAcessoNegado('Gestão da Cia FT'); return; }
       window.scrollTo(0, 0);
       document.getElementById('appConteudo').innerHTML = `
         <div class="page-wrap">
           <div class="page-header">
             <div class="page-header-row">
               <div>
-                <div class="page-kicker">Gestão da Companhia</div>
-                <h1>Painel Administrativo</h1>
-                <p>Ferramentas de lançamento, conferência e controle administrativo.</p>
+                <div class="page-kicker">Menu Principal</div>
+                <h1>Gestão da Cia FT</h1>
+                <p>Escalas administrativas, controles e serviços da Companhia.</p>
               </div>
-              <div class="page-actions"><button class="btn-page" onclick="abrirHome()">VOLTAR</button></div>
+              <div class="page-actions"><button type="button" class="btn-page" onclick="abrirHome()">VOLTAR</button></div>
             </div>
           </div>
-          <div class="menu-grid">
-            <div class="menu-card" data-modulo="CONTROLE_FREQUENCIA" onclick="abrirControleFrequencia()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirControleFrequencia();}">
-              <div class="menu-icon menu-icon-imagem"><img src="./icone-controle-frequencia.png?v=138-paginas-r1" alt="Controle de Frequência"></div>
-              <h3>CONTROLE DE FREQUÊNCIA</h3>
-              <p>Lançamento mensal para apuração de diárias, dias trabalhados e auditorias administrativas.</p>
-            </div>
-            <div class="menu-card" data-modulo="ROTINAS_ADMINISTRATIVAS" onclick="abrirRotinasAdministrativas()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirRotinasAdministrativas();}">
-              <div class="menu-icon menu-icon-imagem"><img src="./icone-rotinas-administrativas.png?v=138-paginas-r1" alt="Rotinas Administrativas"></div>
-              <h3>ROTINAS ADMINISTRATIVAS</h3>
-              <p>Acompanhamento e confirmação das rotinas mensais, semanais e diárias da administração.</p>
-            </div>
-            <div class="menu-card" data-modulo="CONTROLE_FOLGAS" onclick="abrirControleFolgas()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirControleFolgas();}">
-              <div class="menu-icon menu-icon-imagem"><img src="./icone-controle-folgas.png?v=138-paginas-r1" alt="Controle Folgas"></div>
-              <h3>CONTROLE FOLGAS</h3>
-              <p>Lançamento diário, ciclo de 14 serviços e acompanhamento dos saldos individuais de folgas.</p>
-            </div>
-            ${podeConsultarArmarioCliente() ? '<div class="menu-card" data-modulo="CONSULTAS_P4" onclick="abrirConsultasP4()" role="button" tabindex="0" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();abrirConsultasP4();}"><div class="menu-icon menu-icon-imagem"><img src="./icone-consultas-p4.png?v=138-paginas-r1" alt="Consultas P/4"></div><h3>CONSULTAS P/4</h3><p>Localizar detentores de armário, arma, colete e algemas.</p></div>' : ''}
-          </div>
+          <div class="menu-grid">${menus.map(menu => montarMenuCard(menu, true)).join('')}</div>
         </div>`;
     }
 
@@ -11859,7 +11934,7 @@ function epMesclarResenhaFt(payload,auto){
     function abrirConsultasP4() {
       if (!podeConsultarArmarioCliente()) { abrirAcessoNegado('Consultas P/4'); return; }
       window.scrollTo(0,0);
-      document.getElementById('appConteudo').innerHTML=`<div class="page-wrap"><div class="page-header"><div class="page-header-row"><div><div class="page-kicker">Painel Administrativo</div><h1>Consultas P/4</h1><p>Localize o detentor atual pelo número do armário, série ou patrimônio do material.</p></div><div class="page-actions"><button class="btn-page" onclick="abrirPainelAdministrativo()">VOLTAR</button></div></div></div><div class="modal-card"><div class="eap-filtros"><label for="consultaTipoP4">MATERIAL<select id="consultaTipoP4" onchange="document.getElementById('consultaP4Resultado').textContent='Informe o número e clique em PESQUISAR.'"><option value="ARMARIO">Armário</option><option value="ARMA">Arma</option><option value="COLETE">Colete</option><option value="ALGEMA">Algemas</option></select></label><label for="consultaNumeroP4">NÚMERO DO ARMÁRIO, SÉRIE OU PATRIMÔNIO<input id="consultaNumeroP4" type="text" maxlength="40" autocomplete="off" placeholder="Digite a identificação exata" onkeydown="if(event.key==='Enter')consultarMaterialP4()"></label><button id="consultarP4Btn" class="btn-primary-soft" type="button" onclick="consultarMaterialP4()">PESQUISAR</button></div><div id="consultaP4Resultado" role="status" aria-live="polite">Selecione o material, digite o número e clique em PESQUISAR.</div></div></div>`;
+      document.getElementById('appConteudo').innerHTML=`<div class="page-wrap"><div class="page-header"><div class="page-header-row"><div><div class="page-kicker">Gestão da Cia FT</div><h1>Consultas P/4</h1><p>Localize o detentor atual pelo número do armário, série ou patrimônio do material.</p></div><div class="page-actions"><button class="btn-page" onclick="abrirGestaoCiaFt()">VOLTAR</button></div></div></div><div class="modal-card"><div class="eap-filtros"><label for="consultaTipoP4">MATERIAL<select id="consultaTipoP4" onchange="document.getElementById('consultaP4Resultado').textContent='Informe o número e clique em PESQUISAR.'"><option value="ARMARIO">Armário</option><option value="ARMA">Arma</option><option value="COLETE">Colete</option><option value="ALGEMA">Algemas</option></select></label><label for="consultaNumeroP4">NÚMERO DO ARMÁRIO, SÉRIE OU PATRIMÔNIO<input id="consultaNumeroP4" type="text" maxlength="40" autocomplete="off" placeholder="Digite a identificação exata" onkeydown="if(event.key==='Enter')consultarMaterialP4()"></label><button id="consultarP4Btn" class="btn-primary-soft" type="button" onclick="consultarMaterialP4()">PESQUISAR</button></div><div id="consultaP4Resultado" role="status" aria-live="polite">Selecione o material, digite o número e clique em PESQUISAR.</div></div></div>`;
       document.getElementById('consultaNumeroP4').focus();
     }
 
@@ -11890,11 +11965,11 @@ function epMesclarResenhaFt(payload,auto){
           <div class="page-header">
             <div class="page-header-row">
               <div>
-                <div class="page-kicker">Painel Administrativo</div>
+                <div class="page-kicker">Gestão da Cia FT</div>
                 <h1>Rotinas Administrativas</h1>
                 <p>Controle mensal, semanal e diário das tarefas administrativas da Companhia.</p>
               </div>
-              <div class="page-actions"><button class="btn-page" onclick="abrirPainelAdministrativo()">VOLTAR</button></div>
+              <div class="page-actions"><button class="btn-page" onclick="abrirGestaoCiaFt()">VOLTAR</button></div>
             </div>
           </div>
           <div id="rotinasAdministrativasConteudo"><div class="resenha-loading">Carregando rotinas administrativas...</div></div>
@@ -12150,11 +12225,11 @@ function epMesclarResenhaFt(payload,auto){
           <div class="page-header">
             <div class="page-header-row">
               <div>
-                <div class="page-kicker">Painel Administrativo</div>
+                <div class="page-kicker">Gestão da Cia FT</div>
                 <h1>Controle de Frequência</h1>
                 <p>Lançamento manual, auditoria semanal e fechamento mensal.</p>
               </div>
-              <div class="page-actions"><button class="btn-page" onclick="abrirPainelAdministrativo()">VOLTAR</button></div>
+              <div class="page-actions"><button class="btn-page" onclick="abrirGestaoCiaFt()">VOLTAR</button></div>
             </div>
           </div>
           <div id="freqConteudo"><div class="resenha-loading">Carregando controle de frequência...</div></div>
@@ -12587,11 +12662,11 @@ function epMesclarResenhaFt(payload,auto){
           <div class="page-header">
             <div class="page-header-row">
               <div>
-                <div class="page-kicker">Painel Administrativo</div>
-                <h1>Controle Folgas</h1>
+                <div class="page-kicker">Gestão da Cia FT</div>
+                <h1>Controle de Folgas</h1>
                 <p>Lançamento diário, ciclo de 14 escalas ordinárias e controle dos saldos de folgas.</p>
               </div>
-              <div class="page-actions"><button class="btn-page" onclick="abrirPainelAdministrativo()">VOLTAR</button></div>
+              <div class="page-actions"><button class="btn-page" onclick="abrirGestaoCiaFt()">VOLTAR</button></div>
             </div>
           </div>
           <div id="folgasConteudo"><div class="resenha-loading">Carregando controle de folgas...</div></div>
@@ -15144,12 +15219,12 @@ function epMesclarResenhaFt(payload,auto){
           <div class="page-header">
             <div class="page-header-row">
               <div>
-                <div class="page-kicker">Escala administrativa semanal</div>
+                <div class="page-kicker">Gestão da Cia FT</div>
                 <h1>Escalas ADM</h1>
                 <p>Envio da escala individual administrativa da semana seguinte, com visualização das escalas já enviadas pela ADM.</p>
               </div>
               <div class="page-actions">
-                <button class="btn-page" onclick="abrirHome()">VOLTAR</button>
+                <button class="btn-page" onclick="abrirGestaoCiaFt()">VOLTAR</button>
               </div>
             </div>
           </div>
