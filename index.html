@@ -8664,6 +8664,7 @@ function epMesclarResenhaFt(payload,auto){
         DEJEM_ROCAM: { arquivo: './icone-dejem-rocam.png?v=1211-ft1408r1', alt: 'DEJEM ROCAM' },
         ROTINAS_OPERACIONAIS: { arquivo: './icone-rotinas-operacionais.png?v=131-rotinas-r2', alt: 'Rotinas Operacionais' },
         ICC: { arquivo: './icone-icc.png?v=132-icc-r1', alt: 'ICC' },
+        CURSOS_CIA_FT: { arquivo:'./icone-cursos.png', alt:'' },
         EAP: { arquivo: './icone-eap.png?v=138-eap-r1', alt: 'EAP' },
         ENTREVISTAS_FT: { arquivo: './icone-candidaturas.png', alt: 'Candidaturas à Cia FT' },
         OCORRENCIAS: { arquivo: './icone-ocorrencias.png?v=138-ocorrencias-r1', alt: 'Ocorrências' },
@@ -8729,6 +8730,7 @@ function epMesclarResenhaFt(payload,auto){
 
     function abrirModulo(id) {
       const modulo = normalizarModuloCliente(id);
+      if (modulo === 'CURSOS_CIA_FT') { abrirCursosFt(); return; }
       if (modulo === 'GESTAO_CIA_FT') { abrirGestaoCiaFt(); return; }
       if (['CONTROLE_FREQUENCIA','CONTROLE_FOLGAS','ROTINAS_ADMINISTRATIVAS','CONSULTAS_P4'].includes(modulo)) {
         if (!montarMenusGestaoCiaFt().some(menu => menu.id === modulo)) {
@@ -11918,6 +11920,104 @@ function epMesclarResenhaFt(payload,auto){
     }
 
 
+    function podeAcessarCursosFt() {
+      const perfil=normalizarTexto(APP.usuario?.perfilAcesso||'').replace(/[\s-]+/g,'_');
+      return /^(?:GESTOR(?:_FT|_TEC(?:_FT)?|_TECNICO(?:_FT)?)?|ADM_GERAL|ADMINISTRADOR_GERAL|ACESSO_TOTAL|ENC_ADM(?:_FT)?|ENCARREGADO_ADM_FT|ENCARREGADO_ADMINISTRATIVO|AUX_ADM(?:_FT)?|AUXILIAR_ADM_FT|AUXILIAR_ADMINISTRATIVO|CMT_CIA(?:_FT)?|COMANDANTE_CIA(?:_FT)?|COMANDANTE_DE_CIA)$/.test(perfil);
+    }
+
+    function abrirCursosFt() {
+      if (!podeAcessarCursosFt()) return abrirAcessoNegado('Cursos');
+      window.scrollTo(0,0);
+      document.getElementById('appConteudo').innerHTML=`
+        <div class="page-wrap">
+          <div class="page-header"><div class="page-header-row"><div>
+            <div class="page-kicker">Gestão da Cia FT</div><h1>Cursos</h1>
+            <p>Cadastre e acompanhe os cursos do efetivo da Companhia.</p>
+          </div><div class="page-actions"><button type="button" class="btn-page" onclick="abrirGestaoCiaFt()">VOLTAR</button></div></div></div>
+          <div class="modal-card"><p id="cursosMsgFt" role="status" aria-live="polite"></p>
+            <div id="cursosEditorFt"></div><div id="cursosListaFt"></div>
+          </div>
+        </div>`;
+      const painel=document.getElementById('cursosMsgFt');
+      const atual=()=>painel.isConnected;
+      const editor=document.getElementById('cursosEditorFt');
+      const lista=document.getElementById('cursosListaFt');
+      let dados;
+
+      function montarEditor(curso={}) {
+        if(!dados.pode_editar) return;
+        const efetivo=dados.efetivo||[];
+        const opcoes=efetivo.map(p=>'<option value="'+escaparAttr(p.id)+'" '+(p.id===curso.policial_id?'selected':'')+'>'+escapar([p.posto,p.re,p.nome].filter(Boolean).join(' · '))+'</option>');
+        if(curso.policial_id&&!efetivo.some(p=>p.id===curso.policial_id)) opcoes.unshift('<option value="'+escaparAttr(curso.policial_id)+'" selected>'+escapar(curso.policial)+' · Inativo</option>');
+        editor.innerHTML=`<h2>${curso.id?'Editar curso':'Novo curso'}</h2>
+          <form class="eap-form-grid">
+            <label class="span3">Policial<select name="policial_id" required><option value="">Selecione</option>${opcoes.join('')}</select></label>
+            <label class="span2">Nome do curso<input name="nome" required maxlength="160" value="${escaparAttr(curso.nome||'')}"></label>
+            <label>Número do curso<input name="numero" maxlength="60" value="${escaparAttr(curso.numero||'')}"></label>
+            <label>Data de início<input name="inicio" required type="date" value="${escaparAttr(curso.inicio||'')}"></label>
+            <label>Data de término<input name="termino" required type="date" value="${escaparAttr(curso.termino||'')}"></label>
+            <label>Local do curso<input name="local" required maxlength="160" value="${escaparAttr(curso.local||'')}"></label>
+            <label class="span3">Observações<textarea name="observacoes" maxlength="2000" rows="3">${escapar(curso.observacoes||'')}</textarea></label>
+            <div class="span3 eap-modal-actions">
+              ${curso.id?'<button type="button" class="btn-page" data-voltar>VOLTAR AO CADASTRO</button>':''}
+              <button type="submit" class="btn-primary-soft">SALVAR CURSO</button>
+            </div>
+          </form>`;
+        const form=editor.querySelector('form');
+        editor.querySelector('[data-voltar]')?.addEventListener('click',()=>montarEditor());
+        form.addEventListener('submit',async e=>{
+          e.preventDefault();
+          const campos=Object.fromEntries(new FormData(form));
+          if(campos.termino<campos.inicio){painel.textContent='O término não pode ser anterior ao início.';return;}
+          const btn=form.querySelector('[type=submit]');
+          btn.disabled=true; painel.textContent='Salvando curso…';
+          try{
+            await rpcPlanoFerias('ft_cursos_cia_v1',{p_acao:'salvar',p_dados:{...campos,id:curso.id,revisao:curso.revisao}});
+            if(atual()) await carregar('Curso salvo.');
+          }catch(erro){if(atual())painel.textContent=erro.message;}
+          finally{btn.disabled=false;}
+        });
+      }
+
+      function montarLista() {
+        const dataBR=d=>String(d||'').split('-').reverse().join('/');
+        const cursos=dados.cursos||[];
+        lista.innerHTML='<h2>Cursos registrados</h2>';
+        if(!cursos.length){lista.insertAdjacentHTML('beforeend','<p>Nenhum curso registrado.</p>');return;}
+        lista.insertAdjacentHTML('beforeend','<div class="eap-tabela-wrap"><table class="eap-tabela"><thead><tr><th>POLICIAL</th><th>CURSO</th><th>PERÍODO</th><th>LOCAL</th><th>SITUAÇÃO</th>'+(dados.pode_editar?'<th>AÇÕES</th>':'')+'</tr></thead><tbody>'+cursos.map((c,i)=>
+          '<tr><td>'+escapar(c.policial)+'</td><td><strong>'+escapar(c.nome)+'</strong>'+(c.numero?'<br>Nº '+escapar(c.numero):'')+(c.observacoes?'<details><summary>Observações</summary><p style="white-space:pre-wrap;overflow-wrap:anywhere">'+escapar(c.observacoes)+'</p></details>':'')+'</td><td>'+escapar(dataBR(c.inicio)+' a '+dataBR(c.termino))+'</td><td>'+escapar(c.local)+'</td><td>'+escapar(c.situacao)+'</td>'+(dados.pode_editar?'<td>'+(c.situacao!=='Cancelado'?'<button type="button" class="btn-page" data-editar="'+i+'">EDITAR</button> <button type="button" class="btn-page" data-cancelar="'+i+'">CANCELAR CURSO</button>':'—')+'</td>':'')+'</tr>'
+        ).join('')+'</tbody></table></div>');
+        lista.querySelectorAll('[data-editar]').forEach(b=>b.addEventListener('click',()=>{
+          montarEditor(cursos[Number(b.dataset.editar)]);editor.scrollIntoView({block:'start'});editor.querySelector('select')?.focus();
+        }));
+        lista.querySelectorAll('[data-cancelar]').forEach(b=>b.addEventListener('click',async()=>{
+          const c=cursos[Number(b.dataset.cancelar)];
+          if(!await confirmarToastFt('CANCELAR CURSO','Cancelar este lançamento? O histórico será preservado.')||!atual())return;
+          b.disabled=true;
+          try{
+            await rpcPlanoFerias('ft_cursos_cia_v1',{p_acao:'cancelar',p_dados:{id:c.id,revisao:c.revisao}});
+            if(atual())await carregar('Curso cancelado.');
+          }catch(erro){if(atual())painel.textContent=erro.message;}
+          finally{b.disabled=false;}
+        }));
+      }
+
+      async function carregar(msg='') {
+        painel.textContent='Carregando cursos…';
+        try{
+          const retorno=await rpcPlanoFerias('ft_cursos_cia_v1',{p_acao:'listar',p_dados:{}});
+          if(!atual())return;
+          dados=retorno; montarEditor(); montarLista(); painel.textContent=msg; painel.hidden=false;
+        }catch(erro){
+          if(!atual())return;
+          editor.replaceChildren();lista.replaceChildren();
+          painel.textContent=erro.message==='SUPABASE_PASSWORD_REQUIRED'?'Não foi possível autenticar no Supabase. Confira a sessão do Portal.':erro.message;
+          const b=document.createElement('button');b.type='button';b.className='btn-page';b.textContent='TENTAR NOVAMENTE';b.addEventListener('click',()=>carregar());lista.appendChild(b);
+        }
+      }
+      void carregar();
+    }
+
     function montarMenusGestaoCiaFt() {
       if (!APP.usuario) return [];
       const painel = usuarioTemPermissaoCliente('PAINEL_ADMINISTRATIVO','visualizar');
@@ -11927,6 +12027,7 @@ function epMesclarResenhaFt(payload,auto){
         [painel, 'CONTROLE_FOLGAS','CONTROLE DE FOLGAS','Acompanhe dias trabalhados e saldos de folgas.'],
         [painel, 'ROTINAS_ADMINISTRATIVAS','ROTINAS ADMINISTRATIVAS','Acompanhe as tarefas e os prazos da administração.'],
         [podeConsultarArmarioCliente(), 'CONSULTAS_P4','CONSULTAS P/4','Localize armários e materiais do efetivo.'],
+        [podeAcessarCursosFt(), 'CURSOS_CIA_FT','CURSOS','Registre e acompanhe os cursos do efetivo.'],
         [entPodeGerir(), 'ENTREVISTAS_FT','CANDIDATURAS À CIA FT','Consulte fichas e gerencie as entrevistas.']
       ].filter(([permitido]) => permitido).map(([,id,titulo,descricao]) => ({id,titulo,descricao}));
     }
