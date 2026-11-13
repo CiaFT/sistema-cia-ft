@@ -9568,12 +9568,11 @@ function epMesclarResenhaFt(payload,auto){
       chamarApi('dados_eap',{ano:APP.eapAno},{semCache:true}).then(function(resp){
         if(carga!==APP.eapCarga||!aviso?.isConnected)return;
         if(!resp||!resp.ok)throw new Error(resp&&resp.erro||'Não foi possível carregar os dados do EAP.');
-        APP.dadosEap=resp.dados||{};
+        if(resp.dados?.buildEap!=='FT-V144-20261113-EAP-LISTAGEM-R4')
+          throw new Error('Atualize a implantação existente do Apps Script para a versão do pacote EAP R4.');
+        APP.dadosEap=resp.dados;
         const botao=document.getElementById('eapAbrirCicloBtn');if(botao)botao.style.display=APP.dadosEap.podeAdministrar?'inline-flex':'none';
-        if(aviso){
-          aviso.textContent=APP.dadosEap.buildEap==='FT-V144-20261113-EAP-LISTAGEM-R2'?'':'O Portal ainda está conectado a uma versão anterior da API do EAP. Confira a implantação existente no Apps Script.';
-          aviso.hidden=!aviso.textContent;
-        }
+        if(aviso){aviso.textContent='';aviso.hidden=true;}
         if(conteudo)conteudo.innerHTML=montarConteudoEap(APP.dadosEap);
       }).catch(function(err){if(carga===APP.eapCarga&&aviso?.isConnected)aviso.innerHTML='<strong>Não foi possível carregar o EAP.</strong><br>'+escapar(err.message||String(err));});
     }
