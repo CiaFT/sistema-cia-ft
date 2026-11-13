@@ -7834,7 +7834,6 @@ async function dsDetalharFt(id){
         : '👤';
 
       const classeHierarquia = classeVisualHierarquia(u.postoGrad);
-      const eap = valorCampo(u, ['eap', 'EAP', 'eapPeriodo', 'periodoEap']);
 
       document.getElementById('appConteudo').innerHTML = `
         <div class="page-wrap">
@@ -7887,7 +7886,7 @@ async function dsDetalharFt(id){
                         ${dadosItem('Data de nascimento', valorCampo(u, ['dataNascimento', 'nascimento', 'dtNascimento']))}
                         ${dadosItem('Data de entrada na Cia FT', valorCampo(u, ['dataEntrada', 'entradaCiaFt', 'entrada', 'dataEntradaCia']))}
                         ${montarCampoFeriasPafFt_(u,'meusDadosFeriasFt','dados-item')}
-                        ${dadosItem('EAP', eap)}
+                        <div class="dados-item"><small>EAP</small><strong id="meusDadosEapSqlFt" title="Consultando EAP no Supabase">…</strong></div>
                       </div>
                     </div>
                   </div>
@@ -7945,6 +7944,7 @@ async function dsDetalharFt(id){
         </div>
       `;
       void carregarFeriasPafCardFt_(u,document.getElementById('meusDadosFeriasFt'));
+      void carregarResumoEapFt(u.re||u.login,document.getElementById('meusDadosEapSqlFt'));
     }
 
 
@@ -9542,6 +9542,31 @@ function epMesclarResenhaFt(payload,auto){
     }
 
 
+    function rpcEapFt(acao,dados){
+      return rpcPlanoFerias('ft_eap_v1',{p_acao:acao,p_dados:dados||{}}).catch(function(e){
+        if(e?.message==='SUPABASE_PASSWORD_REQUIRED') {
+          throw new Error('O Supabase não aceitou a sessão deste usuário. Entre novamente no Portal ou confira o vínculo no Supabase.');
+        }
+        throw e;
+      });
+    }
+
+    async function carregarResumoEapFt(re,campo){
+      if(!campo||!re)return;
+      const geracao=APP.sessaoGeracao;
+      try {
+        const r=await rpcEapFt('resumo',{reAlvo:re});
+        if(!campo.isConnected||geracao!==APP.sessaoGeracao)return;
+        campo.textContent=r?.restrito?'Consulta restrita':r?.resumo||'—';
+        campo.removeAttribute('title');
+      } catch(e) {
+        if(campo.isConnected&&geracao===APP.sessaoGeracao){
+          campo.textContent='Indisponível';
+          campo.title='Não foi possível consultar o EAP agora.';
+        }
+      }
+    }
+
     function abrirEap() {
       window.scrollTo(0,0);
       const anoAtual = new Date().getFullYear();
@@ -9565,11 +9590,9 @@ function epMesclarResenhaFt(payload,auto){
       const modal=document.getElementById('eapModalRoot');if(modal)modal.innerHTML='';
       const abrir=document.getElementById('eapAbrirCicloBtn');if(abrir)abrir.style.display='none';
       if(aviso){aviso.hidden=false;aviso.innerHTML='Carregando EAP '+APP.eapAno+'...';}
-      chamarApi('dados_eap_restaurado',{ano:APP.eapAno},{semCache:true}).then(function(resp){
+      rpcEapFt('listar',{ano:APP.eapAno}).then(function(resp){
         if(carga!==APP.eapCarga||!aviso?.isConnected)return;
         if(!resp||!resp.ok)throw new Error(resp&&resp.erro||'Não foi possível carregar os dados do EAP.');
-        if(resp.dados?.buildEap!=='FT-V144-20261113-EAP-RESTAURO')
-          throw new Error('Atualize a implantação existente do Apps Script para a versão do pacote de restauração do EAP.');
         APP.dadosEap=resp.dados;
         const botao=document.getElementById('eapAbrirCicloBtn');if(botao)botao.style.display=APP.dadosEap.podeAdministrar?'inline-flex':'none';
         if(aviso){aviso.textContent='';aviso.hidden=true;}
@@ -9616,7 +9639,7 @@ function epMesclarResenhaFt(payload,auto){
         if(pelSelecionado&&normalizarTexto(r.pelotao)!==normalizarTexto(pelSelecionado))return false;
         if(reTermo&&!normalizarLoginConsultaCliente(r.re).includes(reTermo))return false;
         return true;
-      }).sort(ordenarConsultaEfetivoHierarquiaReal);
+      });
       const filtros=ehLista?'<div class="eap-filtros"><label>FILTRAR POR PELOTÃO<select id="eapFiltroPelotao" class="select-ft" onchange="filtrarEap()"><option value="">Todos os Pelotões</option>'+pels.map(p=>'<option value="'+escaparAttr(p)+'" '+(normalizarTexto(p)===normalizarTexto(pelSelecionado)?'selected':'')+'>'+escapar(p)+'</option>').join('')+'</select></label><label>FILTRAR POR RE<input id="eapFiltroRe" type="search" inputmode="numeric" autocomplete="off" placeholder="Digite o RE" value="'+escaparAttr(reDigitado)+'" oninput="filtrarEap()"></label><button class="btn-page" onclick="limparFiltrosEap()">LIMPAR FILTROS</button></div>':'';
       const linhas=lista.map(function(r){
         const turma=r.statusEap==='DISPENSADO'?'—':r.turma?escapar(String(r.turma).trim().replace(/^turma\s*/i,'')):'—';
@@ -9635,7 +9658,7 @@ function epMesclarResenhaFt(payload,auto){
     function filtrarEap(){if(!APP.dadosEap)return;const ativo=document.activeElement,id=ativo&&ativo.id,pos=ativo&&typeof ativo.selectionStart==='number'?ativo.selectionStart:null;document.getElementById('eapConteudo').innerHTML=montarConteudoEap(APP.dadosEap);const restaurar=id&&document.getElementById(id);if(restaurar){restaurar.focus();if(pos!==null&&typeof restaurar.setSelectionRange==='function')restaurar.setSelectionRange(pos,pos);}}
     function limparFiltrosEap(){const p=document.getElementById('eapFiltroPelotao'),r=document.getElementById('eapFiltroRe');if(p)p.value='';if(r)r.value='';filtrarEap();}
 
-    async function abrirCicloEap(){const ano=Number(document.getElementById('eapAno').value);if(!await confirmarToastFt('CONFIRMAR AÇÃO','Abrir o ciclo EAP '+ano+' para o efetivo atual? Os registros existentes serão preservados.'))return;const b=document.getElementById('eapAbrirCicloBtn');if(b)b.disabled=true;chamarApi('abrir_ciclo_eap',{ano:ano}).then(function(r){if(!r||!r.ok)throw new Error(r&&r.erro||'Falha ao abrir ciclo.');mostrarToastFt('Ciclo EAP aberto',r.dados.mensagem,'sucesso');carregarDadosEap(ano);}).catch(e=>mostrarToastFt('Não foi possível abrir o ciclo',e.message||String(e),'erro')).finally(()=>{if(b)b.disabled=false;});}
+    async function abrirCicloEap(){const ano=Number(document.getElementById('eapAno').value);if(!await confirmarToastFt('CONFIRMAR AÇÃO','Abrir o ciclo EAP '+ano+' para o efetivo atual? Os registros existentes serão preservados.'))return;const b=document.getElementById('eapAbrirCicloBtn');if(b)b.disabled=true;rpcEapFt('abrir_ciclo',{ano}).then(function(r){if(!r||!r.ok)throw new Error(r&&r.erro||'Falha ao abrir ciclo.');mostrarToastFt('Ciclo EAP aberto',r.dados.mensagem,'sucesso');carregarDadosEap(ano);}).catch(e=>mostrarToastFt('Não foi possível abrir o ciclo',e.message||String(e),'erro')).finally(()=>{if(b)b.disabled=false;});}
 
     function abrirEditorEap(re){const r=(APP.dadosEap&&APP.dadosEap.policiais||[]).find(x=>String(x.re)===String(re));if(!r)return;const meses=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];const mesOpts='<option value="0">— selecione —</option>'+meses.map((m,i)=>'<option value="'+(i+1)+'" '+(Number(r.mes)===i+1?'selected':'')+'>'+m+'</option>').join('');const root=document.getElementById('eapModalRoot');if(!root||!APP.dadosEap.podeAdministrar||r.podeEditarRegistro===false)return;root.innerHTML='<div class="eap-modal-backdrop" onclick="if(event.target===this)fecharModalEap()"><div class="eap-modal"><h2>Atualizar EAP — '+escapar(r.postoGrad)+' '+escapar(r.nomeCompleto)+'</h2><p>RE '+escapar(r.re)+' · '+escapar(r.pelotao)+' · Ciclo '+APP.eapAno+'</p>'+(r.statusTaf==='REPROVADO'?'<div class="eap-reprovado">TAF reprovado: programe uma nova turma/mês de EAP para a reapresentação e, depois, registre o novo resultado.</div>':'')+'<h3>Programação da turma</h3><p>Informe as três datas para marcar a turma como Programada. Os resultados podem ser preenchidos depois.</p><div class="eap-form-grid"><label>Turma EAP<input id="eapEditTurma" maxlength="80" value="'+escaparAttr(r.turma||'')+'" placeholder="Ex.: Turma 01"></label><label>Mês do EAP<select id="eapEditMes">'+mesOpts+'</select></label><label>Situação do EAP<select id="eapEditStatus"><option value="AGUARDANDO_TURMA">Aguardando turma</option><option value="PROGRAMADO">Programado</option><option value="CONCLUIDO">Concluído</option><option value="DISPENSADO">Dispensado por curso</option><option value="REAPRESENTACAO_TAF">Reapresentação TAF</option></select></label><label>Curso que dispensa<select id="eapEditCurso"><option value="">— não se aplica —</option><option value="CFSD">CFSd</option><option value="CFS">CFS</option><option value="CAS">CAS</option></select></label><label>Ano em que frequentou o curso<input id="eapEditCursoAno" type="number" min="2020" max="2100" value="'+escaparAttr(r.cursoDispensaAno||APP.eapAno)+'"></label><label>Início — EAP<input id="eapEditData" type="date" value="'+dataEapParaInput(r.dataEap)+'"></label><label>Data do TAT<input id="eapEditDataTat" type="date" value="'+dataEapParaInput(r.dataTat)+'"></label><label>Término — TAF<input id="eapEditDataTaf" type="date" value="'+dataEapParaInput(r.dataTaf)+'"></label></div><h3>Resultados e boletins</h3><div class="eap-form-grid"><label>Boletim EAP<input id="eapEditBolEap" maxlength="120" value="'+escaparAttr(r.boletimEap||'')+'" placeholder="Referência, quando disponível"></label><label>Resultado TAF<select id="eapEditTaf"><option value="PENDENTE">Pendente</option><option value="APROVADO">Aprovado</option><option value="REPROVADO">Reprovado</option><option value="NAO_SE_APLICA">Não se aplica</option></select></label><label>Pontuação TAF<input id="eapEditPontos" type="number" min="0" step="1" oninput="atualizarConceitoTafEap()" onchange="atualizarConceitoTafEap()" value="'+escaparAttr(r.pontosTaf||'')+'"></label><label>Conceito TAF<input id="eapEditConceito" readonly maxlength="50" value="'+escaparAttr(r.conceitoTaf||'')+'"></label><label>Boletim TAF<input id="eapEditBolTaf" maxlength="120" value="'+escaparAttr(r.boletimTaf||'')+'" placeholder="Referência, quando disponível"></label><label>Resultado TAT<select id="eapEditTat"><option value="PENDENTE">Pendente</option><option value="APROVADO">Aprovado</option><option value="REPROVADO">Reprovado</option><option value="NAO_SE_APLICA">Não se aplica</option></select></label><label>Boletim TAT<input id="eapEditBolTat" maxlength="120" value="'+escaparAttr(r.boletimTat||'')+'" placeholder="Referência, quando disponível"></label><label class="span3">Observação<textarea id="eapEditObs" maxlength="500">'+escapar(r.observacao||'')+'</textarea></label></div><div class="eap-nota">Boletins podem ser informados quando publicados. Cada gravação preserva o estado anterior na trilha de auditoria.</div><div class="eap-modal-actions" style="margin-top:14px"><button class="btn-page" onclick="fecharModalEap()">CANCELAR</button><button class="btn-primary-soft" onclick="salvarRegistroEap(\''+escaparAttr(r.re)+'\')">SALVAR</button></div></div></div>';document.getElementById('eapEditStatus').value=r.statusEap||'AGUARDANDO_TURMA';document.getElementById('eapEditCurso').value=r.cursoDispensa||'';document.getElementById('eapEditCursoAno').value=r.cursoDispensaAno||APP.eapAno;document.getElementById('eapEditTaf').value=r.statusTaf||'PENDENTE';document.getElementById('eapEditTat').value=r.statusTat||'PENDENTE';atualizarConceitoTafEap();}
 
@@ -9656,11 +9679,11 @@ function epMesclarResenhaFt(payload,auto){
         (pontos<250?'Reprovado':pontos<330?'Regular':pontos<415?'Bom':'Muito Bom');
       if(status)status.value=conceito.value==='Reprovado'?'REPROVADO':'APROVADO';
     }
-    function salvarRegistroEap(re){const campos={turma:document.getElementById('eapEditTurma').value,mes:Number(document.getElementById('eapEditMes').value),statusEap:document.getElementById('eapEditStatus').value,cursoDispensa:document.getElementById('eapEditCurso').value,cursoDispensaAno:Number(document.getElementById('eapEditCursoAno').value),dataEap:document.getElementById('eapEditData').value,boletimEap:document.getElementById('eapEditBolEap').value,statusTaf:document.getElementById('eapEditTaf').value,pontosTaf:document.getElementById('eapEditPontos').value,conceitoTaf:document.getElementById('eapEditConceito').value,boletimTaf:document.getElementById('eapEditBolTaf').value,dataTaf:document.getElementById('eapEditDataTaf').value,statusTat:document.getElementById('eapEditTat').value,boletimTat:document.getElementById('eapEditBolTat').value,dataTat:document.getElementById('eapEditDataTat').value,observacao:document.getElementById('eapEditObs').value};chamarApi('salvar_eap',{ano:APP.eapAno,reAlvo:re,campos:JSON.stringify(campos)}).then(function(resp){if(!resp||!resp.ok)throw new Error(resp&&resp.erro||'Não foi possível salvar.');fecharModalEap();mostrarToastFt('EAP atualizado',resp.dados.mensagem,'sucesso');carregarDadosEap(APP.eapAno);}).catch(e=>mostrarToastFt('Falha ao salvar EAP',e.message||String(e),'erro'));}
+    function salvarRegistroEap(re){const campos={turma:document.getElementById('eapEditTurma').value,mes:Number(document.getElementById('eapEditMes').value),statusEap:document.getElementById('eapEditStatus').value,cursoDispensa:document.getElementById('eapEditCurso').value,cursoDispensaAno:Number(document.getElementById('eapEditCursoAno').value),dataEap:document.getElementById('eapEditData').value,boletimEap:document.getElementById('eapEditBolEap').value,statusTaf:document.getElementById('eapEditTaf').value,pontosTaf:document.getElementById('eapEditPontos').value,conceitoTaf:document.getElementById('eapEditConceito').value,boletimTaf:document.getElementById('eapEditBolTaf').value,dataTaf:document.getElementById('eapEditDataTaf').value,statusTat:document.getElementById('eapEditTat').value,boletimTat:document.getElementById('eapEditBolTat').value,dataTat:document.getElementById('eapEditDataTat').value,observacao:document.getElementById('eapEditObs').value};rpcEapFt('salvar',{ano:APP.eapAno,reAlvo:re,campos,revisao:APP.dadosEap?.policiais?.find(r=>r.re===re)?.revisao}).then(function(resp){if(!resp||!resp.ok)throw new Error(resp&&resp.erro||'Não foi possível salvar.');fecharModalEap();mostrarToastFt('EAP atualizado',resp.dados.mensagem,'sucesso');carregarDadosEap(APP.eapAno);}).catch(e=>mostrarToastFt('Falha ao salvar EAP',e.message||String(e),'erro'));}
 
     function abrirSolicitacaoEap(re){const r=(APP.dadosEap&&APP.dadosEap.policiais||[]).find(x=>String(x.re)===String(re));if(!r)return;const root=document.getElementById('eapModalRoot');root.innerHTML='<div class="eap-modal-backdrop" onclick="if(event.target===this)fecharModalEap()"><div class="eap-modal"><h2>Solicitar mudança de turma</h2><p>'+escapar(r.postoGrad)+' '+escapar(r.nomeCompleto)+' — RE '+escapar(r.re)+' — '+escapar(r.pelotao)+'</p><div class="eap-form-grid"><label>Nova turma<input id="eapReqTurma" maxlength="80" required></label><label>Mês<select id="eapReqMes"><option value="">— selecione —</option>'+['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'].map((m,i)=>'<option value="'+(i+1)+'">'+m+'</option>').join('')+'</select></label><label class="span3">Justificativa<textarea id="eapReqMotivo" maxlength="500" required></textarea></label></div><div class="eap-modal-actions"><button class="btn-page" onclick="fecharModalEap()">CANCELAR</button><button class="btn-primary-soft" onclick="enviarSolicitacaoEap(\''+escaparAttr(r.re)+'\')">ENVIAR SOLICITAÇÃO</button></div></div></div>';}
-    function enviarSolicitacaoEap(re){const turma=document.getElementById('eapReqTurma').value,mes=Number(document.getElementById('eapReqMes').value),justificativa=document.getElementById('eapReqMotivo').value;chamarApi('solicitar_mudanca_eap',{ano:APP.eapAno,reAlvo:re,turmaSolicitada:turma,mesSolicitado:mes,justificativa:justificativa}).then(function(r){if(!r||!r.ok)throw new Error(r&&r.erro||'Não foi possível enviar.');fecharModalEap();mostrarToastFt('Solicitação enviada',r.dados.mensagem,'sucesso');carregarDadosEap(APP.eapAno);}).catch(e=>mostrarToastFt('Falha na solicitação',e.message||String(e),'erro'));}
-    async function decidirSolicitacaoEap(id,decisao){let respostaAdmin='';if(decisao==='RECUSAR'){respostaAdmin=await pedirMotivoToastFt('INFORMAR MOTIVO','Informe o motivo da recusa:')||'';if(respostaAdmin.trim().length<3)return;}else if(!await confirmarToastFt('CONFIRMAR AÇÃO','Aprovar e aplicar a mudança de turma solicitada?'))return;chamarApi('decidir_solicitacao_eap',{id:id,decisao:decisao,respostaAdmin:respostaAdmin}).then(function(r){if(!r||!r.ok)throw new Error(r&&r.erro||'Não foi possível decidir.');mostrarToastFt('Solicitação processada',r.dados.mensagem,'sucesso');carregarDadosEap(APP.eapAno);}).catch(e=>mostrarToastFt('Falha ao decidir',e.message||String(e),'erro'));}
+    function enviarSolicitacaoEap(re){const turma=document.getElementById('eapReqTurma').value,mes=Number(document.getElementById('eapReqMes').value),justificativa=document.getElementById('eapReqMotivo').value;rpcEapFt('solicitar',{ano:APP.eapAno,reAlvo:re,turmaSolicitada:turma,mesSolicitado:mes,justificativa:justificativa}).then(function(r){if(!r||!r.ok)throw new Error(r&&r.erro||'Não foi possível enviar.');fecharModalEap();mostrarToastFt('Solicitação enviada',r.dados.mensagem,'sucesso');carregarDadosEap(APP.eapAno);}).catch(e=>mostrarToastFt('Falha na solicitação',e.message||String(e),'erro'));}
+    async function decidirSolicitacaoEap(id,decisao){let respostaAdmin='';if(decisao==='RECUSAR'){respostaAdmin=await pedirMotivoToastFt('INFORMAR MOTIVO','Informe o motivo da recusa:')||'';if(respostaAdmin.trim().length<3)return;}else if(!await confirmarToastFt('CONFIRMAR AÇÃO','Aprovar e aplicar a mudança de turma solicitada?'))return;rpcEapFt('decidir',{ano:APP.eapAno,id:id,decisao:decisao,respostaAdmin:respostaAdmin}).then(function(r){if(!r||!r.ok)throw new Error(r&&r.erro||'Não foi possível decidir.');mostrarToastFt('Solicitação processada',r.dados.mensagem,'sucesso');carregarDadosEap(APP.eapAno);}).catch(e=>mostrarToastFt('Falha ao decidir',e.message||String(e),'erro'));}
 
     function abrirPlanoAnualFerias() {
       window.scrollTo(0, 0);
@@ -16457,6 +16480,7 @@ function epMesclarResenhaFt(payload,auto){
       };
       if (/^\d{6}$/.test(alvoLogin)) {
         void carregarFeriasPafCardFt_(alvo,modal.querySelector('#consultaFeriasPafFt'),alvoLogin);
+        void carregarResumoEapFt(alvoLogin,modal.querySelector('#consultaEapSqlFt'));
       }
     }
 
@@ -16745,7 +16769,7 @@ function epMesclarResenhaFt(payload,auto){
           ${consultaDetail('Nascimento', pm.dataNascimento)}
           ${consultaDetail('Entrada Cia FT', pm.entradaCia || pm.dataEntrada)}
           ${montarCampoFeriasPafFt_(pm,'consultaFeriasPafFt','consulta-detail')}
-          ${consultaDetail('EAP', pm.eap)}
+          <div class="consulta-detail"><small>EAP</small><strong id="consultaEapSqlFt" title="Consultando EAP no Supabase">…</strong></div>
           ${consultaDetail('Perfil APP', pm.perfilAcesso)}
           ${consultaDetail('Endereço', pm.endereco)}
         </div>
@@ -16801,7 +16825,7 @@ function epMesclarResenhaFt(payload,auto){
               ${consultaInput('Férias 30 dias', 'ferias30', pm.ferias30)}
               ${consultaInput('Férias 15 dias 1', 'ferias15a', pm.ferias15a)}
               ${consultaInput('Férias 15 dias 2', 'ferias15b', pm.ferias15b)}
-              ${consultaInput('EAP', 'eap', pm.eap)}
+              ${consultaDetail('EAP', 'Alterações em Rotinas Operacionais → EAP')}
               ${consultaCampoPerfilApp(pm.perfilAcesso)}
               ${consultaTextarea('Foto (link Google Drive)', 'foto', pm.foto)}
               ${consultaTextarea('Endereço', 'endereco', pm.endereco)}
