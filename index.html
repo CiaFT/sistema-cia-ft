@@ -8916,7 +8916,7 @@ function epMesclarResenhaFt(payload,auto){
           <div class="menu-grid rotinas-menu-grid">
             ${[
               {id:'VALORIZACAO_POLICIAL_MES',titulo:'POLICIAL DO MÊS',descricao:'Policial do Mês e indicações.'},
-              {id:'VALORIZACAO_LMP_ELOGIOS',titulo:'LMP E ELOGIOS',descricao:'Solicitações e acompanhamentos.'}
+              ...(valorLmpPodeUsarFt()?[{id:'VALORIZACAO_LMP_ELOGIOS',titulo:'LMP E ELOGIOS',descricao:'Solicitações e acompanhamentos.'}]:[])
             ].map(menu=>montarMenuCard(menu,true)).join('')}
           </div>
         </div>
@@ -8924,6 +8924,7 @@ function epMesclarResenhaFt(payload,auto){
     }
 
     function abrirPaginaValorizacaoFt(modulo) {
+      if(normalizarModuloCliente(modulo)==='VALORIZACAO_LMP_ELOGIOS')return valorLmpAbrirFt();
       const paginas={
         VALORIZACAO_POLICIAL_MES:{titulo:'Policial do Mês',icone:'./icone-policial-do-mes.png',alt:'Policial do Mês'},
         VALORIZACAO_LMP_ELOGIOS:{titulo:'LMP e Elogios',icone:'./icone-lmp-elogios.png',alt:'LMP e Elogios'}
@@ -9124,6 +9125,58 @@ function epMesclarResenhaFt(payload,auto){
           </div>
         </div>
       `;
+    }
+
+    let VAL_LMP_DADOS_FT=null,VAL_LMP_PEDIDO_FT=0;
+    function valorLmpAdminFt(){const perfil=normalizarTexto(APP.usuario?.perfilAcesso||'').replace(/[\s-]+/g,'_');return epGestorClienteFt()||['ENC_ADM','ENC_ADM_FT','ENCARREGADO_ADM_FT','ENCARREGADO_ADMINISTRATIVO'].includes(perfil);}
+    function valorLmpPodeUsarFt(){return valorLmpAdminFt()||(/SGT|SARGENTO/.test(normalizarTexto(APP.usuario?.postoGrad||''))&&['1º PEL','2º PEL'].includes(epGrupoClienteFt()));}
+    function valorLmpDataFt(v){if(!v)return '—';const m=String(v).slice(0,10).match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?m[3]+'/'+m[2]+'/'+m[1]:String(v);}
+    function valorLmpAbrirFt(){
+      if(!APP.usuario)return;
+      VAL_LMP_DADOS_FT=null;
+      window.scrollTo(0,0);
+      document.getElementById('appConteudo').innerHTML=`<div class="page-wrap">
+        <div class="page-header"><div class="page-header-row"><div><div class="page-kicker">VALORIZAÇÃO POLICIAL</div><h1>LMP e Elogios</h1><p>Indicações individuais vinculadas às ocorrências da semana atual.</p></div><div class="page-actions"><button type="button" class="btn-page" onclick="abrirValorizacaoPolicial()">VOLTAR</button></div></div></div>
+        <div id="valorLmpPainelFt" class="modal-card" aria-live="polite">Carregando ocorrências da semana…</div></div>`;
+      if(valorLmpAdminFt())valorLmpRenderFt(null);else valorLmpCarregarFt(epGrupoClienteFt());
+    }
+    function valorLmpRenderFt(dados){
+      const box=document.getElementById('valorLmpPainelFt');if(!box)return;
+      if(dados)VAL_LMP_DADOS_FT=dados;
+      const d=VAL_LMP_DADOS_FT,admin=valorLmpAdminFt();
+      if(admin&&!d){
+        box.innerHTML='<section class="oc-ft-secao"><h2>Selecionar pelotão</h2><label>Pelotão<select id="valorLmpPelFt"><option value="">Selecione</option><option value="1º PEL">1º PEL</option><option value="2º PEL">2º PEL</option></select></label><p class="oc-ft-nota">Enc Adm e Gestor podem consultar e indicar ocorrências de qualquer pelotão.</p></section>';
+        box.querySelector('#valorLmpPelFt').onchange=e=>{if(e.target.value)valorLmpCarregarFt(e.target.value);};return;
+      }
+      if(!d){box.innerHTML='<p>Não foi possível carregar as ocorrências.</p>';return;}
+      const pessoas=(o)=>'<div class="oc-ft-secao"><h3>Policiais da ocorrência — '+escapar(o.natureza||'Natureza não informada')+'</h3><p class="oc-ft-nota">Marque uma ou ambas as indicações para cada policial.</p><div class="oc-ft-tabela"><table><thead><tr><th>Policial</th><th>LMP</th><th>Elogio individual</th></tr></thead><tbody>'+o.equipe.map(p=>'<tr><td>'+escapar([p.posto,p.re,p.nome].filter(Boolean).join(' '))+'</td><td><input type="checkbox" data-lmp-re="'+escaparAttr(p.re)+'" aria-label="Indicar para Laurea de Mérito Pessoal"></td><td><input type="checkbox" data-elogio-re="'+escaparAttr(p.re)+'" aria-label="Indicar para Elogio individual"></td></tr>').join('')+'</tbody></table></div></div>';
+      const opcoes=(d.ocorrencias||[]).map(o=>'<option value="'+escaparAttr(o.id)+'">'+escapar(valorLmpDataFt(o.data)+' · BOPM '+o.bopm+' · '+o.natureza+' · '+o.status)+'</option>').join('');
+      const registros=(d.registros||[]).map(r=>'<article class="oc-ft-secao"><strong>'+escapar(valorLmpDataFt(r.data)+' · BOPM '+r.bopm+' · '+r.natureza)+'</strong><p class="oc-ft-nota">'+r.policiais.map(p=>escapar([p.posto,p.re,p.nome].filter(Boolean).join(' '))+': '+[p.lmp?'LMP':'',p.elogio?'Elogio individual':''].filter(Boolean).join(' + ')).join('<br>')+'</p><p class="oc-ft-nota">Indicado por RE '+escapar(r.criadoPorRe||'—')+(r.criadoEm?' · '+escapar(new Date(r.criadoEm).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'})):'')+'</p><span class="ep-status">'+escapar(String(r.status||'').replace(/_/g,' '))+'</span></article>').join('');
+      box.innerHTML=(admin?'<div class="oc-ft-grid"><label>Pelotão<select id="valorLmpPelFt"><option value="'+escaparAttr(d.pel)+'">'+escapar(d.pel)+'</option><option value="'+(d.pel==='1º PEL'?'2º PEL':'1º PEL')+'">'+(d.pel==='1º PEL'?'2º PEL':'1º PEL')+'</option></select></label></div>':'<p><strong>Escopo:</strong> '+escapar(d.pel)+'</p>')+
+        '<p class="oc-ft-nota">Semana atual: '+escapar(valorLmpDataFt(d.semana.inicio))+' a '+escapar(valorLmpDataFt(d.semana.fim))+' (terça-feira a segunda-feira). O formulário padrão PMESP será integrado após o recebimento do modelo.</p>'+
+        '<section class="oc-ft-secao"><h2>Indicar ocorrência</h2>'+(opcoes?'<label>Ocorrência<select id="valorLmpOcorrenciaFt"><option value="">Selecione uma ocorrência</option>'+opcoes+'</select></label><div id="valorLmpEquipeFt"></div><div class="page-actions"><button type="button" class="btn-primary-soft" id="valorLmpSalvarFt" disabled>REGISTRAR INDICAÇÕES</button></div><p id="valorLmpStatusFt" role="status"></p>':'<p>Não há ocorrência cadastrada para este pelotão na semana atual ('+escapar(valorLmpDataFt(d.semana.inicio))+' a '+escapar(valorLmpDataFt(d.semana.fim))+').</p>')+'</section>'+
+        '<section class="oc-ft-secao"><h2>Indicações registradas</h2>'+(registros||'<p>Nenhuma indicação registrada para este pelotão.</p>')+'</section>';
+      if(admin){const pel=document.getElementById('valorLmpPelFt');pel.onchange=()=>valorLmpCarregarFt(pel.value);}
+      const select=document.getElementById('valorLmpOcorrenciaFt'),equipe=document.getElementById('valorLmpEquipeFt'),salvar=document.getElementById('valorLmpSalvarFt');
+      if(!select||!equipe||!salvar)return;
+      select.onchange=()=>{const o=d.ocorrencias.find(x=>x.id===select.value);equipe.innerHTML=o?pessoas(o):'';salvar.disabled=!o||!o.equipe.length;};
+      salvar.onclick=valorLmpSalvarSelecionadosFt;
+    }
+    async function valorLmpCarregarFt(pel){
+      const box=document.getElementById('valorLmpPainelFt');if(!box)return;
+      const req=++VAL_LMP_PEDIDO_FT;box.setAttribute('aria-busy','true');
+      try{const d=await ocFtApi('valor_lmp_indicacoes_listar',{pel:pel||''});if(req!==VAL_LMP_PEDIDO_FT||!box.isConnected)return;valorLmpRenderFt(d);}
+      catch(e){if(req===VAL_LMP_PEDIDO_FT&&box.isConnected)box.innerHTML='<p>'+escapar(e.message)+'</p>'+(valorLmpAdminFt()?'<button type="button" class="btn-page" onclick="valorLmpRenderFt(null)">TROCAR PELOTÃO</button>':'');}
+      finally{if(req===VAL_LMP_PEDIDO_FT&&box.isConnected)box.removeAttribute('aria-busy');}
+    }
+    async function valorLmpSalvarSelecionadosFt(){
+      const box=document.getElementById('valorLmpPainelFt'),select=document.getElementById('valorLmpOcorrenciaFt'),status=document.getElementById('valorLmpStatusFt'),btn=document.getElementById('valorLmpSalvarFt');if(!box||!select||!btn||btn.disabled)return;
+      const policiais=Array.from(box.querySelectorAll('[data-lmp-re],[data-elogio-re]')).reduce((acc,el)=>{const re=el.dataset.lmpRe||el.dataset.elogioRe;if(!acc[re])acc[re]={re,lmp:false,elogio:false};if(el.dataset.lmpRe)acc[re].lmp=el.checked;if(el.dataset.elogioRe)acc[re].elogio=el.checked;return acc;},{});
+      const selecionados=Object.values(policiais).filter(p=>p.lmp||p.elogio);if(!selecionados.length){mostrarToastFt('Nenhuma indicação selecionada','Marque LMP e/ou Elogio individual para pelo menos um policial.','atencao');return;}
+      if(!await confirmarToastFt('Registrar indicações','Confirma as indicações selecionadas para esta ocorrência? O registro ficará aguardando o formulário padrão PMESP.'))return;
+      btn.disabled=true;status.textContent='Salvando indicações…';
+      try{const r=await ocFtApi('valor_lmp_indicacoes_salvar',{pel:VAL_LMP_DADOS_FT.pel,ocorrenciaId:select.value,policiais:JSON.stringify(selecionados)});mostrarToastFt('Indicações registradas',r.policiais+' policial(is). Aguardando o formulário padrão PMESP.','sucesso');await valorLmpCarregarFt(VAL_LMP_DADOS_FT.pel);}
+      catch(e){status.textContent=e.message;mostrarToastFt('Não foi possível registrar',e.message,'erro');btn.disabled=false;}
     }
 
 
