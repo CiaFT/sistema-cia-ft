@@ -7301,6 +7301,28 @@ Banco de dados: Google Sheets.
       .quadro-ft .qe-grupo:not(.qe-grupo-ativo) { display:none; }
     }
   </style>
+  <style>
+    .quadro-ft .qe-vagas { margin:12px 0 8px; }
+    .quadro-ft .qe-vagas h3 { margin:0 0 8px; font-size:14px; }
+    .quadro-ft .qe-vagas-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
+    .quadro-ft .qe-vaga { min-width:0; padding:10px; border:1px solid #d7dee7; border-top:4px solid var(--qe-cor); border-radius:12px; background:linear-gradient(145deg,var(--qe-fundo),#fff 82%); box-shadow:0 5px 14px rgba(20,35,55,.06); }
+    .quadro-ft .qe-vaga-cap { --qe-cor:#a87918; --qe-fundo:#fff8e7; }
+    .quadro-ft .qe-vaga-ten { --qe-cor:#425f91; --qe-fundo:#eef4ff; }
+    .quadro-ft .qe-vaga-sub_sgt { --qe-cor:#5f4a83; --qe-fundo:#f3eff9; }
+    .quadro-ft .qe-vaga-cb_sd { --qe-cor:#34798a; --qe-fundo:#edf8fa; }
+    .quadro-ft .qe-vaga-titulo { color:#243447; font-weight:800; font-size:13px; line-height:1.25; min-height:32px; }
+    .quadro-ft .qe-vaga-numeros { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; margin-top:8px; }
+    .quadro-ft .qe-vaga-numeros div { min-width:0; text-align:center; padding:6px 3px; border-radius:8px; background:rgba(255,255,255,.78); }
+    .quadro-ft .qe-vaga-numeros small { display:block; color:#64748b; font-size:9px; font-weight:800; }
+    .quadro-ft .qe-vaga-numeros strong { color:var(--qe-cor); display:block; font-size:19px; line-height:1.2; }
+    .quadro-ft .qe-vaga-numeros .qe-claro strong { color:#25384d; }
+    .quadro-ft .qe-afastamentos { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:8px; }
+    .quadro-ft .qe-afastamento-tipo { min-width:0; padding:9px; border:1px solid #e4d5d5; border-left:3px solid #8b2428; border-radius:10px; background:linear-gradient(145deg,#fff8f8,#fff); }
+    .quadro-ft .qe-afastamento-tipo h3 { margin:0; font-size:13px; color:#7c2528; }
+    .quadro-ft .qe-afastamento-tipo .qe-lista { margin-top:6px; }
+    @media(max-width:900px) { .quadro-ft .qe-vagas-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media(max-width:520px) { .quadro-ft .qe-vagas-grid { grid-template-columns:minmax(0,1fr); } }
+  </style>
 </head>
 
 <body>
@@ -9787,6 +9809,7 @@ function epMesclarResenhaFt(payload,auto){
     const APPFT_FERIAS_SUPABASE_ANON_KEY = 'sb_publishable_cqG2KMMDzLsFBGXaA2WgFA_wxis7-29';
     let APPFT_FERIAS_SUPABASE_SESSION = null;
     let APPFT_FOTOS_SUPABASE_POR_RE = Object.create(null);
+    let APPFT_FOTOS_SUPABASE_POR_ID = Object.create(null);
     let APPFT_FOTOS_SUPABASE_EXPIRA_EM = 0;
     let APPFT_FOTOS_SUPABASE_PROMISE = null;
 
@@ -9930,6 +9953,7 @@ function epMesclarResenhaFt(payload,auto){
         });
         if (!itensComFoto.length) {
           APPFT_FOTOS_SUPABASE_POR_RE = Object.create(null);
+          APPFT_FOTOS_SUPABASE_POR_ID = Object.create(null);
           APPFT_FOTOS_SUPABASE_EXPIRA_EM = Date.now() + 50 * 60 * 1000;
           return APPFT_FOTOS_SUPABASE_POR_RE;
         }
@@ -9959,6 +9983,7 @@ function epMesclarResenhaFt(payload,auto){
         }
 
         const novoMapa = Object.create(null);
+        const novoMapaId = Object.create(null);
         const baseStorage = url + '/storage/v1';
         itensComFoto.forEach(function(item, indice) {
           const assinatura = assinaturas[indice] || {};
@@ -9968,9 +9993,11 @@ function epMesclarResenhaFt(payload,auto){
             ? caminhoAssinado
             : baseStorage + (String(caminhoAssinado).startsWith('/') ? caminhoAssinado : '/' + caminhoAssinado);
           novoMapa[chaveREFotoSupabase(item.re)] = endereco;
+          if (item.id) novoMapaId[String(item.id)] = endereco;
         });
 
         APPFT_FOTOS_SUPABASE_POR_RE = novoMapa;
+        APPFT_FOTOS_SUPABASE_POR_ID = novoMapaId;
         APPFT_FOTOS_SUPABASE_EXPIRA_EM = Date.now() + 50 * 60 * 1000;
         return APPFT_FOTOS_SUPABASE_POR_RE;
       })().finally(function() {
@@ -12131,9 +12158,28 @@ function epMesclarResenhaFt(payload,auto){
       };
       const botao=(acao,nome,extras='')=>`<button type="button" class="btn-page" data-qe="${acao}" ${extras}>${nome}</button>`;
       const funcao=p=>({CMT:'Cmt Cia FT',ENC:'Enc. ADM',AUX:'Aux. ADM'})[p.funcao]||'';
-      const mostraFoto=p=>fotos[chaveREFotoSupabase(p.re)]?
-        `<img src="${a(fotos[chaveREFotoSupabase(p.re)])}" alt="" width="44" height="52" loading="lazy">`:
-        `<span class="qe-sem-foto" aria-hidden="true">${e(String(p.nome||'?').slice(0,1))}</span>`;
+      const urlFoto=p=>APPFT_FOTOS_SUPABASE_POR_ID[String(p.id)]||fotos[chaveREFotoSupabase(p.re)]||'';
+      const mostraFoto=p=>urlFoto(p)?
+        `<img class="qe-foto" data-qe-foto="${a(p.id)}" src="${a(urlFoto(p))}" alt="" width="44" height="52" loading="lazy">`:
+        `<span class="qe-sem-foto" data-qe-foto="${a(p.id)}" aria-hidden="true">${e(String(p.nome||'?').slice(0,1))}</span>`;
+      function configurarFallbackFotos() {
+        box.querySelectorAll('img.qe-foto[data-qe-foto]').forEach(img=>{
+          img.onerror=()=>{
+            const p=[...atual.efetivo,...pessoas].find(x=>x.id===img.dataset.qeFoto);
+            const span=document.createElement('span');span.className='qe-sem-foto';span.setAttribute('aria-hidden','true');
+            span.textContent=String(p?.nome||'?').slice(0,1);img.replaceWith(span);
+          };
+        });
+      }
+      function renderAfastamentos(itens) {
+        const gruposTipo=new Map();
+        itens.forEach(p=>{const tipo=String(p.afastamento||'Afastado').trim();if(!gruposTipo.has(tipo))gruposTipo.set(tipo,[]);gruposTipo.get(tipo).push(p);});
+        const ordemTipo=['Férias','EAP','Curso','Dispensa de Serviço','DS','Folga flagrante','Folga mensal','Folga compensatória','Folga','Convalescença','Licença paternidade','LSV','LTS','LP','Afastado'];
+        return `<div class="qe-afastamentos">${[...gruposTipo.entries()].sort((x,y)=>{
+          const ix=ordemTipo.indexOf(x[0]),iy=ordemTipo.indexOf(y[0]);
+          return (ix<0?999:ix)-(iy<0?999:iy)||x[0].localeCompare(y[0],'pt-BR');
+        }).map(([tipo,listaTipo])=>`<section class="qe-afastamento-tipo"><h3>${e(tipo)} · ${listaTipo.length}</h3><ul class="qe-lista">${listaTipo.map(p=>ficha(p)).join('')}</ul></section>`).join('')}</div>`;
+      }
       function ficha(p,origem) {
         const montagem=origem!==undefined;
         const escolhas=montagem && !p.afastamento ? `<label class="qe-mover">Mover para
@@ -12151,9 +12197,8 @@ function epMesclarResenhaFt(payload,auto){
         if(aba==='atual') {
           const contagem=Object.fromEntries(postos.map(([k])=>[k,atual.efetivo.filter(p=>p.categoria.toLowerCase()===k).length]));
           const outros=atual.efetivo.filter(p=>p.categoria==='OUTRO').length;
-          const saldo=(f,n)=>f<n?`0 <small>(+${n-f} excedente)</small>`:String(f-n);
           const totalFix=postos.reduce((v,[k])=>v+Number(atual.fixado[k]),0);
-          const totais=postos.reduce((v,[k])=>v+Math.max(0,atual.fixado[k]-contagem[k]),0);
+          const rotulosPosto={cap:'Oficiais · Cap PM',ten:'Oficiais · Ten PM',sub_sgt:'Subtenentes e Sargentos PM',cb_sd:'Cabos e Soldados PM'};
           const by=Object.fromEntries(grupos.map(([k])=>[k,atual.efetivo.filter(p=>p.afastamento?k==='AFAST':p.grupo===k)]));
           const visiveis=grupos.filter(([k])=>k!=='CONFERIR'||by[k].length);
           if(!visiveis.some(([k])=>k===grupo))grupo='1_PEL';
@@ -12161,16 +12206,15 @@ function epMesclarResenhaFt(payload,auto){
             <div class="qe-numeros"><div><small>Fixado</small><strong>${totalFix}</strong></div><div><small>Existente</small><strong>${atual.efetivo.length}</strong></div><div><small>Claro total</small><strong>${Math.max(0,totalFix-atual.efetivo.length)}</strong></div></div>
             ${atual.sincronizado?`<p>Planilha sincronizada em ${e(new Date(atual.sincronizado).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}))}.</p>`:''}
             ${atual.cadastros_a_conferir?`<p class="qe-erro">${Number(atual.cadastros_a_conferir)} cadastro(s) da planilha sem vínculo ativo no Supabase. Confira antes de usar o total.</p>`:''}
-            <details><summary>Ver por posto e graduação</summary>
-            <table class="qe-tabela"><thead><tr><th scope="col">Posto / grad.</th><th scope="col">Fixado</th><th scope="col">Existente</th><th scope="col">Claro</th></tr></thead><tbody>
-            ${postos.map(([k,n])=>`<tr><th scope="row">${n}</th><td>${atual.fixado[k]}</td><td>${contagem[k]}</td><td>${saldo(atual.fixado[k],contagem[k])}</td></tr>`).join('')}
-            ${outros?`<tr><th scope="row">Outros / a conferir</th><td>—</td><td>${outros}</td><td>—</td></tr>`:''}</tbody></table>
-            ${totais!==Math.max(0,totalFix-atual.efetivo.length)?'<p>O claro total é a diferença entre Fixado e Existente; excedentes e graduações a conferir podem fazer o total diferir da soma dos claros por posto.</p>':''}
-            </details>${botao('atualizar','ATUALIZAR EFETIVO')}<p><strong>${atual.efetivo.length-by.AFAST.length}</strong> sem afastamento registrado · <strong>${by.AFAST.length}</strong> em afastamento.</p>
+            <section class="qe-vagas" aria-label="Vagas e existentes por círculo hierárquico"><h3>Vagas e efetivo por círculo hierárquico</h3>
+              <div class="qe-vagas-grid">${postos.map(([k,n])=>{const fix=Number(atual.fixado[k]||0),ex=contagem[k]||0,claro=fix-ex;return `<article class="qe-vaga qe-vaga-${k}"><div class="qe-vaga-titulo">${rotulosPosto[k]}</div><div class="qe-vaga-numeros"><div><small>FIXADO</small><strong>${fix}</strong></div><div><small>EXISTENTE</small><strong>${ex}</strong></div><div class="qe-claro"><small>${claro<0?'EXCEDENTE':'CLARO'}</small><strong>${Math.abs(claro)}</strong></div></div></article>`;}).join('')}</div>
+              ${outros?`<p>${outros} policial(is) em outra graduação ou a conferir. O total de existentes inclui afastados, exibidos separadamente abaixo.</p>`:'<p>Existente inclui o efetivo afastado; a disponibilidade atual aparece na seção Afastamentos.</p>'}
+            </section>${botao('atualizar','ATUALIZAR EFETIVO')}<p><strong>${atual.efetivo.length-by.AFAST.length}</strong> sem afastamento registrado · <strong>${by.AFAST.length}</strong> em afastamento.</p>
             ${atual.pode_editar_fixado?'<details><summary>Editar efetivo fixado</summary><form id="qeFixado" class="qe-controles">'+postos.map(([k,n])=>`<label>${n}<input name="${k}" type="number" min="0" max="999" required value="${atual.fixado[k]}"></label>`).join('')+'<button class="btn-page" type="submit">SALVAR FIXADO</button></form></details>':''}</section>
             <div class="qe-controles qe-grupos" aria-label="Grupos do efetivo">${visiveis.map(([k,n])=>botao('grupo',`${n} · ${by[k].length}`,`data-grupo="${k}" aria-pressed="${grupo===k}"`)).join('')}</div>
             <div class="qe-efetivo-grid">${visiveis.map(([k,n])=>`<section class="modal-card qe-secao qe-grupo ${grupo===k?'qe-grupo-ativo':''}" data-grupo="${k}"><h2>${n} <small>(${by[k].length})</small></h2>
-            ${by[k].length?`<ul class="qe-lista">${(k==='ADM'?[...by[k]].sort((x,y)=>({CMT:0,ENC:1,AUX:2}[x.funcao]??3)-({CMT:0,ENC:1,AUX:2}[y.funcao]??3)):by[k]).map(p=>ficha(p)).join('')}</ul>`:'<p>Nenhum policial neste grupo.</p>'}</section>`).join('')}</div>`;
+            ${by[k].length?(k==='AFAST'?renderAfastamentos(by[k]):`<ul class="qe-lista">${by[k].map(p=>ficha(p)).join('')}</ul>`):'<p>Nenhum policial neste grupo.</p>'}</section>`).join('')}</div>`;
+          configurarFallbackFotos();
           return;
         }
         const lotados=new Set(plano.equipes.flatMap(eq=>eq.membros));
@@ -12189,8 +12233,9 @@ function epMesclarResenhaFt(payload,auto){
           <label class="qe-nome-equipe">Nome da equipe <input data-qe-equipe="${i}" maxlength="60" value="${a(eq.nome)}"></label>
           ${botao('remover','REMOVER EQUIPE',`data-indice="${i}"`)}
           ${eq.membros.length?`<ul class="qe-lista">${eq.membros.map(id=>ficha(pessoas.find(p=>p.id===id)||{id,nome:'Policial fora do efetivo',afastamento:'Indisponível'},i)).join('')}</ul>`:'<p>Arraste uma foto para cá ou use “Mover para”.</p>'}</section>`).join('')}
-          ${afastados.length?`<section class="modal-card qe-secao"><h2>Afastamentos <small>(${afastados.length})</small></h2><ul class="qe-lista">${afastados.map(p=>ficha(p)).join('')}</ul></section>`:''}
+          ${afastados.length?`<section class="modal-card qe-secao"><h2>Afastamentos <small>(${afastados.length})</small></h2>${renderAfastamentos(afastados)}</section>`:''}
           </div>`;
+        configurarFallbackFotos();
       }
       function mover(id,destino) {
         if(ocupado||!plano||!Number.isInteger(destino)||destino< -1||destino>=plano.equipes.length) return;
@@ -12275,14 +12320,15 @@ function epMesclarResenhaFt(payload,auto){
       executar(async()=>{
         try { atual=await api('atual'); render(); }
         catch(erro){box.innerHTML='<p>Não foi possível carregar o efetivo.</p><button class="btn-page" type="button" id="qeTentar">TENTAR NOVAMENTE</button>';box.querySelector('#qeTentar').onclick=abrirQuadroEfetivoFt;throw erro;}
-        void carregarFotosSupabaseAssinadas(false).then(f=>{
+        void carregarFotosSupabaseAssinadas(true).then(f=>{
           if(!ativo())return; fotos=f;
           const membros=[...atual.efetivo,...pessoas];
           const porId=new Map(membros.map(p=>[p.id,p]));
           for(const li of box.querySelectorAll('[data-qe-pm]')){
             const p=porId.get(li.dataset.qePm), lugar=li.querySelector('.qe-sem-foto');
-            if(p&&lugar&&fotos[chaveREFotoSupabase(p.re)])lugar.outerHTML=mostraFoto(p);
+            if(p&&lugar&&urlFoto(p))lugar.outerHTML=mostraFoto(p);
           }
+          configurarFallbackFotos();
         }).catch(()=>{});
       });
     }
@@ -18692,6 +18738,7 @@ function epMesclarResenhaFt(payload,auto){
       APP.sessaoExpiraEm = 0;
       APPFT_FERIAS_SUPABASE_SESSION = null;
       APPFT_FOTOS_SUPABASE_POR_RE = Object.create(null);
+      APPFT_FOTOS_SUPABASE_POR_ID = Object.create(null);
       APPFT_FOTOS_SUPABASE_EXPIRA_EM = 0;
       APPFT_FOTOS_SUPABASE_PROMISE = null;
       APP.renovacaoSessao = null;
