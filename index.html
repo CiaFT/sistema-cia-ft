@@ -8516,6 +8516,7 @@ async function epBuscarResenhaFt(pel,data){
  return {itens:[...(ds.status==='fulfilled'?ds.value:[]),...(folgas.value.itens||[])],ferias:Array.isArray(folgas.value.ferias)?folgas.value.ferias:null,semDS:ds.status!=='fulfilled'};
 }
 async function epPreviaResenhaFt(){
+ void cursosPreviaResenhaFt();
  const folgas=document.getElementById('epPreviaResenha'),ferias=document.getElementById('epPreviaFerias'),pel=document.getElementById('resenhaPelotao')?.value,data=document.getElementById('resenhaDataEscala')?.value;
  if(!folgas||!ferias)return;
  const req=String((Number(folgas.dataset.req)||0)+1);folgas.dataset.req=req;
@@ -8545,6 +8546,47 @@ async function epPreviaResenhaFt(){
   ferias.textContent='Não foi possível confirmar as férias do PAF para esta data.';
  }
 }
+async function cursosBuscarResenhaFt(pel,data){
+ const r=await rpcPlanoFerias('ft_cursos_resenha_v1',{p_pel:pel,p_data:data});
+ if(!Array.isArray(r))throw Error('Resposta inválida na consulta de cursos.');
+ return r;
+}
+function cursosMesclarResenhaFt(payload,cursos){
+ const itens=payload.itens,grupos=new Map();
+ for(const i of itens){
+  if(i.tipo!=='AFASTAMENTO')continue;
+  const k=String(i.grupo),g=grupos.get(k)||{};
+  g[normalizarTexto(i.campo)]=i;grupos.set(k,g);
+ }
+ const existentes=new Set([...grupos.values()].filter(g=>normalizarTexto(g['TIPO DE AFASTAMENTO']?.valor)==='CURSO')
+   .map(g=>epChaveReFt(g.POLICIAL?.valorTecnico||g.POLICIAL?.valor)).filter(Boolean));
+ let n=Math.max(0,...[...grupos.keys()].map(Number).filter(Number.isFinite));
+ for(const c of cursos){
+  const re=epChaveReFt(c.re);
+  if(!re)continue;
+  if(itens.some(i=>['FT','ROCAM'].includes(i.tipo)&&epChaveReFt(i.valorTecnico)===re))
+   throw Error(c.nome+' consta em equipe e está em curso na data. Retire-o da equipe antes de enviar.');
+  if(existentes.has(re))continue;
+  n++;
+  itens.push({tipo:'AFASTAMENTO',grupo:String(n),campo:'Policial',valor:c.nome,valorTecnico:c.re,origemCursoAuto:true},
+   {tipo:'AFASTAMENTO',grupo:String(n),campo:'Tipo de afastamento',valor:'Curso',valorTecnico:'Curso',origemCursoAuto:true});
+  existentes.add(re);
+ }
+}
+async function cursosPreviaResenhaFt(){
+ const painel=document.getElementById('cursosPreviaResenhaFt');
+ if(!painel)return;
+ const pel=document.getElementById('resenhaPelotao')?.value,data=document.getElementById('resenhaDataEscala')?.value;
+ const req=String((Number(painel.dataset.req)||0)+1);painel.dataset.req=req;
+ const atual=()=>painel.isConnected&&painel.dataset.req===req;
+ if(!pel||!data){painel.textContent='Selecione o pelotão e a data para consultar cursos.';return;}
+ painel.textContent='Consultando cursos…';
+ try{
+  const r=await cursosBuscarResenhaFt(pel,data);if(!atual())return;
+  painel.innerHTML=r.length?'<ul>'+r.map(c=>'<li>'+escapar(c.nome)+' · Curso</li>').join('')+'</ul>':'Nenhum curso para este pelotão e data.';
+ }catch(e){if(atual())painel.textContent='Não foi possível consultar os cursos. Confira os afastamentos antes de enviar.';}
+}
+
 function epMesclarResenhaFt(payload,auto){
  const itens=payload.itens,grupos=new Map();
  for(const i of itens){
@@ -14238,6 +14280,7 @@ function epMesclarResenhaFt(payload,auto){
                 </div>
 
                 <div class="resenha-alerta"><strong>Férias do PAF — inclusão automática</strong><div id="epPreviaFerias" aria-live="polite"></div></div>
+                <div class="resenha-alerta"><strong>Cursos — inclusão automática</strong><div id="cursosPreviaResenhaFt" aria-live="polite"></div></div>
 
                 <div id="afastamentosWrap" class="resenha-equipes-wrap">
                   ${registroAfastamentoBox(1)}
@@ -14707,7 +14750,7 @@ function epMesclarResenhaFt(payload,auto){
         FOLGA_DISPENSA: ['folgasDispensasWrap', registroFolgaDispensaBox, 40],
         AFASTAMENTO: ['afastamentosWrap', registroAfastamentoBox, 40]
       };
-      const itens = Array.isArray(payload.itens) ? payload.itens.filter(x=>!x.origemPelAuto) : [];
+      const itens = Array.isArray(payload.itens) ? payload.itens.filter(x=>!x.origemPelAuto&&!x.origemCursoAuto) : [];
       Object.keys(tipoWraps).forEach(function(tipo) {
         const relacionados = itens.filter(function(item) { return normalizarTexto(item.tipo || '') === tipo; });
         const maiorGrupo = relacionados.reduce(function(maior, item) { return Math.max(maior, Number(item.grupo || 1)); }, 1);
@@ -14835,11 +14878,16 @@ function epMesclarResenhaFt(payload,auto){
 
       Promise.resolve().then(async function(){
         if(!payload.pelotao||!payload.dataEscala)throw new Error('Informe o pelotão e a data da escala.');
-        const integracao=await epBuscarResenhaFt(payload.pelotao,payload.dataEscala);
+        const [integracao,consultaCursos]=await Promise.all([
+          epBuscarResenhaFt(payload.pelotao,payload.dataEscala),
+          cursosBuscarResenhaFt(payload.pelotao,payload.dataEscala).then(itens=>({itens}),()=>({falhou:true}))
+        ]);
         if(!form?.isConnected)return null;
         if(integracao.semDS&&!await confirmarToastFt('DS AUTOMÁTICA INDISPONÍVEL','Confirma o envio depois de conferir as dispensas manualmente?'))return null;
+        if(consultaCursos.falhou&&!await confirmarToastFt('CURSOS INDISPONÍVEIS','Confirma que já conferiu e lançou manualmente os afastamentos por curso, se houver?'))return null;
         if(!form.isConnected||payload.pelotao!==document.getElementById('resenhaPelotao').value||payload.dataEscala!==document.getElementById('resenhaDataEscala').value)return null;
         epMesclarResenhaFt(payload,integracao.itens);
+        cursosMesclarResenhaFt(payload,consultaCursos.itens||[]);
         return chamarApi(edicaoAtual ? 'editar_resenha_escala' : 'enviar_resenha_escala', {
           login: APP.credenciais.login,
           senha: APP.credenciais.senha,
