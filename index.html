@@ -8643,9 +8643,17 @@ async function epRenderAgendaFt(h,pel,data,adm){
 }
 function epChaveReFt(v){return String(v||'').replace(/\D/g,'').slice(0,6);}
 async function epBuscarResenhaFt(pel,data){
- const [folgas,ds]=await Promise.allSettled([ocFtApi('espaco_pel_resenha',{pel,data}),rpcPlanoFerias('ft_ds_resenha_v142',{p_pel:pel,p_data:data})]);
+ // Usa a mesma lista de pedidos que alimenta "Pedidos do pelotão" no Espaço do Pel.
+ // Evita divergência entre a aprovação visível ao Sgt e a consulta resumida da resenha.
+ const [folgas,ds]=await Promise.allSettled([ocFtApi('espaco_pel_dados',{pel,data,semSaldo:'1'}),rpcPlanoFerias('ft_ds_resenha_v142',{p_pel:pel,p_data:data})]);
  if(folgas.status!=='fulfilled')throw folgas.reason;
- return {itens:[...(ds.status==='fulfilled'?ds.value:[]),...(folgas.value.itens||[])],bloqueiosEquipe:folgas.value.bloqueiosEquipe||[],ferias:Array.isArray(folgas.value.ferias)?folgas.value.ferias:null,semDS:ds.status!=='fulfilled'};
+ if(!Array.isArray(folgas.value.pedidos))throw Error('O servidor não retornou a lista de pedidos do Pel. A equipe foi bloqueada para evitar empenho indevido.');
+ const pedidos=folgas.value.pedidos.filter(x=>x.data===data);
+ const itens=pedidos.filter(x=>x.estado==='APROVADA'||x.tipo==='FC'&&x.estado==='GOZADA')
+  .map(x=>({id:x.id,re:x.re,nome:x.nome,tipo:x.tipo,bopm:x.bopm||'',referencia:x.referencia||''}));
+ const bloqueiosEquipe=pedidos.filter(x=>x.tipo==='FF'&&x.estado==='PENDENTE')
+  .map(x=>({re:x.re,nome:x.nome,tipo:x.tipo,estado:x.estado}));
+ return {itens:[...(ds.status==='fulfilled'?ds.value:[]),...itens],bloqueiosEquipe,ferias:Array.isArray(folgas.value.ferias)?folgas.value.ferias:null,semDS:ds.status!=='fulfilled'};
 }
 async function epPreviaResenhaFt(){
  const gestorDisponibilidade=epGestorClienteFt()&&!APP.resenhaEdicao;
@@ -15079,7 +15087,7 @@ function epMesclarResenhaFt(payload,auto){
       if (tipo === 'FT') lista = dados.efetivoFt || [];
       else if (tipo === 'ROCAM') lista = dados.efetivoRocam || [];
       else lista = dados.efetivoCadastro || dados.efetivoAtivo || [];
-      if(epGestorClienteFt()&&!APP.resenhaEdicao){
+      if(!APP.resenhaEdicao){
         const pel=EP_RESENHA_GESTOR_DISP.pel;
         if(!pel)return '<option value="">Selecione o Pelotão</option>';
         lista=lista.filter(pm=>epChavePelResenhaFt(pm.pelotao)===pel);
@@ -15217,6 +15225,7 @@ function epMesclarResenhaFt(payload,auto){
       if (atual >= 6) return mostrarToastFt('Limite atingido', 'A resenha permite até 6 equipes FT.');
 
       wrap.insertAdjacentHTML('beforeend', equipeFtBox(atual + 1));
+      epAplicarListaGestorResenhaFt();
       instalarEventosResenha();
       atualizarDisponibilidadeResenha();
     }
@@ -15242,6 +15251,7 @@ function epMesclarResenhaFt(payload,auto){
       if (atual >= 6) return mostrarToastFt('Limite atingido', 'A resenha permite até 6 duplas ROCAM.');
 
       wrap.insertAdjacentHTML('beforeend', duplaRocamBox(atual + 1));
+      epAplicarListaGestorResenhaFt();
       instalarEventosResenha();
       atualizarDisponibilidadeResenha();
     }
