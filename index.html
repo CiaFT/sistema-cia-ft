@@ -12186,16 +12186,17 @@ function epMesclarResenhaFt(payload,auto){
         });
       }
       function renderAfastamentos(itens) {
-        const nomes={FERIAS:'Férias',FOLGAS:'Folga',CURSOS:'Curso',OUTROS:'Conval e outros afastamentos',LSV:'LSV'};
-        const ordem=['FERIAS','FOLGAS','CURSOS','OUTROS','LSV'];
+        const nomes={FERIAS:'Férias',FOLGAS:'Folga',CURSOS:'Curso',LTS_CONVAL:'LTS + Conval',OUTROS:'Restrição, Paternidade e outros afastamentos',LSV:'LSV'};
+        const ordem=['FERIAS','FOLGAS','CURSOS','LTS_CONVAL','OUTROS','LSV'];
         const gruposTipo=new Map();
         itens.forEach(p=>{
           const tipo=String(p.afastamento||'Afastado').trim();
           const chave=normalizarTexto(tipo).replace(/[^A-Z0-9]/g,'');
-          const grupo=(chave==='LSV')?'LSV':
+          const grupo=chave==='LSV'?'LSV':
             (chave.includes('FERIA')||chave==='F')?'FERIAS':
             (chave.includes('FOLGA')||['FF','FM','FC','FOL'].includes(chave))?'FOLGAS':
-            (chave==='EAP'||chave.includes('CURSO'))?'CURSOS':'OUTROS';
+            (chave==='EAP'||chave.includes('CURSO'))?'CURSOS':
+            (chave==='LTS'||chave.includes('CONVAL'))?'LTS_CONVAL':'OUTROS';
           if(!gruposTipo.has(grupo))gruposTipo.set(grupo,[]);
           gruposTipo.get(grupo).push(p);
         });
@@ -17453,6 +17454,10 @@ function epMesclarResenhaFt(payload,auto){
       document.querySelectorAll('#consultaModalBackdrop [data-consulta-campo]').forEach(function(el) {
         campos[el.getAttribute('data-consulta-campo')] = String(el.value || '').trim();
       });
+      const policialAntes=(((APP.dadosConsultaEfetivo||{}).efetivo)||[]).find(function(pm){
+        return normalizarLoginConsultaCliente(pm.re||'')===normalizarLoginConsultaCliente(reLogin||'');
+      });
+      const statusAnterior=policialAntes?String(policialAntes.status||''):'';
 
       if (campos.telefone && !/^\d{2}-\d{9}$/.test(campos.telefone)) {
         mostrarToastFt('Alteração não enviada', 'Telefone deve seguir o padrão 11-999999999.');
@@ -17487,6 +17492,18 @@ function epMesclarResenhaFt(payload,auto){
           }
 
           const atualizado = resp.dados && resp.dados.policial ? resp.dados.policial : null;
+          let avisoAtualizacaoQuadro='';
+          const statusAtual=String((atualizado&&atualizado.status)||campos.status||'');
+          if(statusAnterior&&normalizarTexto(statusAnterior)!==normalizarTexto(statusAtual)){
+            try{
+              const respostaQuadro=await rpcPlanoFerias('ft_quadro_status_imediato_v1',{
+                p_re:normalizarLoginConsultaCliente((atualizado&&atualizado.re)||reLogin),p_status:statusAtual
+              });
+              if(!respostaQuadro||respostaQuadro.ok!==true)throw new Error('O Quadro não confirmou a atualização.');
+            }catch(erroQuadro){
+              avisoAtualizacaoQuadro=' O Quadro será atualizado pelo sincronizador periódico; detalhe: '+(erroQuadro.message||String(erroQuadro));
+            }
+          }
           if (atualizado && APP.dadosConsultaEfetivo && Array.isArray(APP.dadosConsultaEfetivo.efetivo)) {
             const lista = APP.dadosConsultaEfetivo.efetivo;
             const idx = lista.findIndex(function(pm) {
@@ -17501,8 +17518,9 @@ function epMesclarResenhaFt(payload,auto){
             catch (erro) { erroFoto = erro.message || String(erro); }
           }
           mostrarToastFt(erroFoto ? 'Foto pendente no Supabase' : 'Dados atualizados',
-            erroFoto ? 'Os dados foram salvos na planilha, mas o link da foto não foi sincronizado: ' + erroFoto :
-              'As alterações foram gravadas na CADASTRO GERAL.', erroFoto ? 'erro' : 'sucesso');
+            erroFoto ? 'Os dados foram salvos na planilha, mas o link da foto não foi sincronizado: ' + erroFoto + avisoAtualizacaoQuadro :
+              'As alterações foram gravadas na CADASTRO GERAL.'+(avisoAtualizacaoQuadro|| (statusAnterior&&normalizarTexto(statusAnterior)!==normalizarTexto(statusAtual)?' O status também foi atualizado imediatamente no Quadro.':'')),
+            erroFoto||avisoAtualizacaoQuadro ? 'erro' : 'sucesso');
           filtrarConsultaEfetivo();
           abrirCardConsultaEfetivo(atualizado ? atualizado.re : reLogin);
         })
