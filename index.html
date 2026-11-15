@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.4.6 — OCORRÊNCIAS E FOLGAS FLAGRANTES
+SISTEMA CIA FT — PORTAL GITHUB V1.4.7 — OCORRÊNCIAS E FOLGAS FLAGRANTES
 Arquivo: index.html
 ============================================================
 
-VERSÃO V1.4.6 — DESEMPENHO E PADRÃO VISUAL
+VERSÃO V1.4.7 — DESEMPENHO E PADRÃO VISUAL
 - Ranking com filtros anual, semestral, mensal e por pelotão.
 - Destaque discreto dos três primeiros colocados.
 - Consulta de FF aguardando decisão e aprovação/recusa exclusiva do Cmt Cia.
 - Histórico individual preserva datas de FF já gozadas, inclusive importadas.
 - Área de importação removida do formulário após a carga inicial.
-- Versão fixada em V1.4.6: alterar somente por determinação expressa do responsável.
+- Versão fixada em V1.4.7: alterar somente por determinação expressa do responsável.
 - Preserva a última versão encerrada do Controle de Frequência.
 - Preserva a implantação completa de Viaturas V1.2.6.
 - Corrige a leitura e a identificação funcional em Resenhas Enviadas.
@@ -52,7 +52,7 @@ Banco de dados: Google Sheets.
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="cia-ft-build" content="FT-V138-20261006-GRAVACAO-CONFIAVEL-R7">
-  <title>Portal Força Tática • V1.4.6</title>
+  <title>Portal Força Tática • V1.4.7</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
 
@@ -7416,7 +7416,7 @@ Banco de dados: Google Sheets.
         <div id="loginAlerta" class="alerta"></div>
 
         <div class="footer">
-          Portal Força Tática • V1.4.6
+          Portal Força Tática • V1.4.7
         </div>
       </main>
 
@@ -8648,7 +8648,8 @@ async function epBuscarResenhaFt(pel,data){
  return {itens:[...(ds.status==='fulfilled'?ds.value:[]),...(folgas.value.itens||[])],ferias:Array.isArray(folgas.value.ferias)?folgas.value.ferias:null,semDS:ds.status!=='fulfilled'};
 }
 async function epPreviaResenhaFt(){
- void cursosPreviaResenhaFt();
+ const gestorDisponibilidade=epGestorClienteFt()&&!APP.resenhaEdicao;
+ if(!gestorDisponibilidade)void cursosPreviaResenhaFt();
  const folgas=document.getElementById('epPreviaResenha'),ferias=document.getElementById('epPreviaFerias'),pel=document.getElementById('resenhaPelotao')?.value,data=document.getElementById('resenhaDataEscala')?.value;
  if(!folgas||!ferias)return;
  const req=String((Number(folgas.dataset.req)||0)+1);folgas.dataset.req=req;
@@ -8656,12 +8657,27 @@ async function epPreviaResenhaFt(){
  if(!pel||!data){
   folgas.textContent='Escolha o pelotão e a data para ver as folgas e dispensas automáticas.';
   ferias.textContent='Escolha o pelotão e a data para consultar as férias do PAF.';
+  if(gestorDisponibilidade){EP_RESENHA_GESTOR_DISP={pel:'',data:'',carregando:false,erro:'',ausentes:new Set()};epAplicarListaGestorResenhaFt();}
   return;
  }
+ if(gestorDisponibilidade){EP_RESENHA_GESTOR_DISP={pel,data,carregando:true,erro:'',ausentes:new Set()};epAplicarListaGestorResenhaFt();}
  folgas.textContent='Consultando folgas e dispensas…';
  ferias.textContent='Consultando férias do PAF…';
  try{
-  const r=await epBuscarResenhaFt(pel,data);if(!atual())return;
+  const [r,cursos]=await Promise.all([epBuscarResenhaFt(pel,data),gestorDisponibilidade?cursosBuscarResenhaFt(pel,data):Promise.resolve(null)]);if(!atual())return;
+  if(gestorDisponibilidade){
+   const efetivo=(APP.dadosResenha?.efetivoCadastro||APP.dadosResenha?.efetivoAtivo||[]);
+   let ausentes=new Set();
+   (r.itens||[]).forEach(x=>{const re=epPessoaPafReFt(x,efetivo);if(re)ausentes.add(re);});
+   if(Array.isArray(r.ferias))r.ferias.forEach(x=>{const re=epPessoaPafReFt(x,efetivo);if(re)ausentes.add(re);});
+   else{
+    const paf=await epPafResenhaGestorFt(Number(String(data).slice(0,4)));if(!atual())return;
+    const afastados=epPafAusentesGestorFt(paf,pel,efetivo);afastados.forEach(re=>ausentes.add(re));
+   }
+   (cursos||[]).forEach(x=>{const re=epPessoaPafReFt(x,efetivo);if(re)ausentes.add(re);});
+   EP_RESENHA_GESTOR_DISP={pel,data,carregando:false,erro:'',ausentes};epAplicarListaGestorResenhaFt();
+   const painelCursos=document.getElementById('cursosPreviaResenhaFt');if(painelCursos&&painelCursos.isConnected)painelCursos.innerHTML=cursos.length?'<ul>'+cursos.map(c=>'<li>'+escapar(c.nome)+' · Curso</li>').join('')+'</ul>':'Nenhum curso para este pelotão e data.';
+  }
   folgas.innerHTML=(r.semDS?'<p>DS automática indisponível. Confira e lance manualmente, se necessário.</p>':'')+
    (r.itens.length?'<ul>'+r.itens.map(x=>'<li>'+dsEscFt(x.nome)+' · '+dsEscFt(epTiposFt[x.tipo])+'</li>').join('')+'</ul>':'<p>'+(r.semDS?'Nenhuma folga automática encontrada.':'Nenhuma folga ou dispensa automática encontrada.')+'</p>');
   if(r.ferias===null){
@@ -8674,6 +8690,7 @@ async function epPreviaResenhaFt(){
   }
  }catch(err){
   if(!atual())return;
+  if(gestorDisponibilidade){EP_RESENHA_GESTOR_DISP={pel,data,carregando:false,erro:'Afastamentos não conferidos',ausentes:new Set()};epAplicarListaGestorResenhaFt({erro:err.message||'falha na consulta'});const pc=document.getElementById('cursosPreviaResenhaFt');if(pc)pc.textContent='Não foi possível confirmar os cursos. A lista de equipes foi bloqueada.';}
   folgas.textContent=err.message;
   ferias.textContent='Não foi possível confirmar as férias do PAF para esta data.';
  }
@@ -14890,6 +14907,79 @@ function epMesclarResenhaFt(payload,auto){
     }
 
 
+    let EP_RESENHA_GESTOR_DISP = {pel:'',data:'',carregando:false,erro:'',ausentes:new Set()};
+    function epChavePelResenhaFt(v){const t=normalizarTexto(v||'').replace(/[^A-Z0-9]+/g,' ').trim();if(/(^|\s)1(\s|$)|PRIMEIRO/.test(t))return '1º PEL';if(/(^|\s)2(\s|$)|SEGUNDO/.test(t))return '2º PEL';return '';}
+    function epChaveReGestorFt(v){return String(v||'').toUpperCase().replace(/[^0-9A-Z]/g,'');}
+    function epPessoaPafReFt(s,efetivo){
+      const direto=s?.re||s?.policial_re||s?.pm_re||s?.identidade?.re||s?.policial?.re;
+      if(direto)return epChaveReGestorFt(direto);
+      const nome=normalizarTexto(s?.nome||s?.nome_completo||s?.policial_nome||'');
+      const posto=normalizarTexto(s?.graduacao||s?.posto||'');
+      const candidatos=(efetivo||[]).filter(p=>{
+        const nomes=[p.rotulo,p.nomeCompleto,p.nomeGuerra,[p.postoGrad,p.nomeCompleto].filter(Boolean).join(' '),[p.postoGrad,p.nomeGuerra].filter(Boolean).join(' ')].map(normalizarTexto);
+        return nomes.includes(nome)||nomes.includes((posto+' '+nome).trim());
+      });
+      return candidatos.length===1?epChaveReGestorFt(candidatos[0].re):'';
+    }
+    async function epPafResenhaGestorFt(ano){
+      const chave=String(ano),cache=window.__EP_PAF_RESENHA_CACHE||(window.__EP_PAF_RESENHA_CACHE={});
+      const existente=cache[chave];if(existente&&Date.now()-existente.em<60000)return existente.promessa;
+      const promessa=rpcPlanoFerias('ft_paf_fruicao_listar_v2',{p_ano_fruicao:Number(ano)});
+      cache[chave]={em:Date.now(),promessa};
+      try{return await promessa;}catch(e){delete cache[chave];throw e;}
+    }
+    function epPafAusentesGestorFt(dados,alvo,efetivo){
+      if(!dados||!Array.isArray(dados.solicitacoes_visiveis))throw Error('O PAF não retornou a relação de períodos para conferir a disponibilidade.');
+      const encerrado=pafEstadoCicloFt_(dados.ciclo).encerrado,ausentes=new Set();
+      for(const s of dados.solicitacoes_visiveis){
+        if(!s)continue;
+        const st=normalizarTexto(s.status||'');
+        if(/CANCELAD|ANULAD|RECUSAD|INDEFERID/.test(st))continue;
+        const cicloValido=encerrado||/VALIDAD|APROVAD/.test(st);
+        if(!cicloValido)continue;
+        let area=epChavePelResenhaFt(s.escopo||s.lotacao||s.pelotao||s.policial?.pelotao||'');
+        const re=epPessoaPafReFt(s,efetivo);
+        if(!area&&re){const pm=efetivo.find(p=>epChaveReGestorFt(p.re)===re);area=epChavePelResenhaFt(pm?.pelotao);}
+        if(area&&area!==alvo)continue;
+        for(const p of (Array.isArray(s.periodos)?s.periodos:[])){
+          const ps=normalizarTexto(p?.status||'');
+          if(/AJUSTE|CANCELAD|ANULAD|RECUSAD|INDEFERID|PENDENTE/.test(ps))continue;
+          if(ps&&!/VALIDO|VALIDAD|APROVAD/.test(ps))continue;
+          const ini=String(p?.inicio_real||p?.inicio_vigente||p?.inicio||'').slice(0,10);
+          const fim=String(p?.fim_vigente||p?.fim||'').slice(0,10);
+          if(!ini||!fim||alvo!==EP_RESENHA_GESTOR_DISP.pel||EP_RESENHA_GESTOR_DISP.data<ini||EP_RESENHA_GESTOR_DISP.data>fim)continue;
+          if(!re)throw Error('Há férias vigentes no Pel/data, mas não foi possível vincular o policial ao RE do efetivo. A lista foi bloqueada para evitar empenho indevido.');
+          ausentes.add(re);
+        }
+      }
+      return ausentes;
+    }
+    function epRenderSelectResenhaGestorFt(sel,lista,placeholder,disabled){
+      const anterior=sel.value,opcoes=lista.map(pm=>'<option value="'+escaparAttr(pm.re)+'">'+escapar(pm.rotulo)+'</option>').join('');
+      sel.innerHTML='<option value="">'+escapar(placeholder)+'</option>'+opcoes;
+      sel.disabled=!!disabled;
+      if(anterior&&lista.some(pm=>epChaveReGestorFt(pm.re)===epChaveReGestorFt(anterior)))sel.value=anterior;
+      else if(anterior)sel.value='';
+    }
+    function epAplicarListaGestorResenhaFt(opcoes){
+      const form=document.getElementById('formResenhaEscala');if(!form||!epGestorClienteFt()||APP.resenhaEdicao)return;
+      const st=EP_RESENHA_GESTOR_DISP,pel=st.pel,dados=APP.dadosResenha||{};
+      const cadastro=(dados.efetivoCadastro||dados.efetivoAtivo||[]).filter(p=>!pel||epChavePelResenhaFt(p.pelotao)===pel);
+      const equipes=Array.from(form.querySelectorAll('[data-tipo="FT"] .pm-select,[data-tipo="ROCAM"] .pm-select'));
+      equipes.forEach(sel=>{
+        const box=sel.closest('[data-tipo]'),tipo=box?.dataset.tipo,base=tipo==='ROCAM'?(dados.efetivoRocam||[]):(dados.efetivoFt||[]);
+        if(!pel){epRenderSelectResenhaGestorFt(sel,[],'Selecione o Pelotão',true);return;}
+        if(st.carregando){epRenderSelectResenhaGestorFt(sel,[],'Verificando disponibilidade…',true);return;}
+        if(st.erro){epRenderSelectResenhaGestorFt(sel,[],opcoes?.erro||st.erro,true);return;}
+        const lista=base.filter(pm=>epChavePelResenhaFt(pm.pelotao)===pel&&!st.ausentes.has(epChaveReGestorFt(pm.re)));
+        epRenderSelectResenhaGestorFt(sel,lista,lista.length?'Selecione policial':'Nenhum policial disponível',false);
+      });
+      form.querySelectorAll('[data-tipo="FOLGA_DISPENSA"] .pm-select,[data-tipo="AFASTAMENTO"] .pm-select').forEach(sel=>{
+        epRenderSelectResenhaGestorFt(sel,cadastro,pel?'Selecione policial':'Selecione o Pelotão',!pel);
+      });
+      if(opcoes?.erro){const painel=document.getElementById('epPreviaResenha');if(painel&&!painel.textContent.includes(opcoes.erro))painel.insertAdjacentHTML('beforeend','<p><strong>Disponibilidade da equipe não conferida:</strong> '+escapar(opcoes.erro)+'</p>');}
+    }
+
     function optionsPms(tipo) {
       const dados = APP.dadosResenha || {};
       let lista = [];
@@ -14897,6 +14987,12 @@ function epMesclarResenhaFt(payload,auto){
       if (tipo === 'FT') lista = dados.efetivoFt || [];
       else if (tipo === 'ROCAM') lista = dados.efetivoRocam || [];
       else lista = dados.efetivoCadastro || dados.efetivoAtivo || [];
+      if(epGestorClienteFt()&&!APP.resenhaEdicao){
+        const pel=EP_RESENHA_GESTOR_DISP.pel;
+        if(!pel)return '<option value="">Selecione o Pelotão</option>';
+        lista=lista.filter(pm=>epChavePelResenhaFt(pm.pelotao)===pel);
+        if(tipo==='FT'||tipo==='ROCAM')lista=lista.filter(pm=>!EP_RESENHA_GESTOR_DISP.ausentes.has(epChaveReGestorFt(pm.re)));
+      }
 
       return '<option value="">Selecione</option>' + lista.map(function(pm) {
         return `<option value="${escaparAttr(pm.re)}">${escapar(pm.rotulo)}</option>`;
