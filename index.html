@@ -8668,7 +8668,12 @@ async function epPreviaResenhaFt(){
  folgas.textContent='Consultando folgas e dispensas…';
  ferias.textContent='Consultando férias do PAF…';
  try{
-  const [r,cursos]=await Promise.all([epBuscarResenhaFt(pel,data),gestorDisponibilidade?cursosBuscarResenhaFt(pel,data):Promise.resolve(null)]);if(!atual())return;
+  const r=await epBuscarResenhaFt(pel,data);if(!atual())return;
+  const linhasFolga=(r.itens||[]).map(x=>'<li>'+dsEscFt(x.nome)+' · '+dsEscFt(epTiposFt[x.tipo])+'</li>')
+   .concat((r.bloqueiosEquipe||[]).map(x=>'<li>'+dsEscFt(x.nome)+' · '+dsEscFt(epTiposFt[x.tipo]||'Folga')+' pendente — policial bloqueado para compor equipe até decisão do pedido</li>'));
+  folgas.innerHTML=(r.semDS?'<p>DS automática indisponível. Confira e lance manualmente, se necessário.</p>':'')+
+   (linhasFolga.length?'<ul>'+linhasFolga.join('')+'</ul>':'<p>'+(r.semDS?'Nenhuma folga automática encontrada.':'Nenhuma folga ou dispensa automática encontrada.')+'</p>');
+  const cursos=gestorDisponibilidade?await cursosBuscarResenhaFt(pel,data):null;if(!atual())return;
   if(!APP.resenhaEdicao){
    const efetivo=(APP.dadosResenha?.efetivoCadastro||APP.dadosResenha?.efetivoAtivo||[]);
    let ausentes=new Set();
@@ -8687,10 +8692,6 @@ async function epPreviaResenhaFt(){
   if(gestorDisponibilidade){
    const painelCursos=document.getElementById('cursosPreviaResenhaFt');if(painelCursos&&painelCursos.isConnected)painelCursos.innerHTML=cursos.length?'<ul>'+cursos.map(c=>'<li>'+escapar(c.nome)+' · Curso</li>').join('')+'</ul>':'Nenhum curso para este pelotão e data.';
   }
-  const linhasFolga=(r.itens||[]).map(x=>'<li>'+dsEscFt(x.nome)+' · '+dsEscFt(epTiposFt[x.tipo])+'</li>')
-   .concat((r.bloqueiosEquipe||[]).map(x=>'<li>'+dsEscFt(x.nome)+' · '+dsEscFt(epTiposFt[x.tipo]||'Folga')+' pendente — policial bloqueado para compor equipe até decisão do pedido</li>'));
-  folgas.innerHTML=(r.semDS?'<p>DS automática indisponível. Confira e lance manualmente, se necessário.</p>':'')+
-   (linhasFolga.length?'<ul>'+linhasFolga.join('')+'</ul>':'<p>'+(r.semDS?'Nenhuma folga automática encontrada.':'Nenhuma folga ou dispensa automática encontrada.')+'</p>');
   if(r.ferias===null){
    ferias.textContent='O servidor não retornou a lista de férias. Confira se a Etapa 2 foi publicada no Apps Script.';
   }else if(r.ferias.length){
@@ -8703,7 +8704,7 @@ async function epPreviaResenhaFt(){
   if(!atual())return;
   if(!APP.resenhaEdicao){EP_RESENHA_GESTOR_DISP={pel,data,carregando:false,erro:'Afastamentos não conferidos',ausentes:new Set()};epAplicarListaGestorResenhaFt({erro:err.message||'falha na consulta'});}
   if(gestorDisponibilidade){const pc=document.getElementById('cursosPreviaResenhaFt');if(pc)pc.textContent='Não foi possível confirmar os cursos. A lista de equipes foi bloqueada.';}
-  folgas.textContent=err.message;
+  if(folgas.textContent==='Consultando folgas e dispensas…')folgas.textContent=err.message;
   ferias.textContent='Não foi possível confirmar as férias do PAF para esta data.';
  }
 }
@@ -15006,7 +15007,7 @@ function epMesclarResenhaFt(payload,auto){
 
     let EP_RESENHA_GESTOR_DISP = {pel:'',data:'',carregando:false,erro:'',ausentes:new Set()};
     function epChavePelResenhaFt(v){const t=normalizarTexto(v||'').replace(/[^A-Z0-9]+/g,' ').trim();if(/(^|\s)1(\s|$)|PRIMEIRO/.test(t))return '1º PEL';if(/(^|\s)2(\s|$)|SEGUNDO/.test(t))return '2º PEL';return '';}
-    function epChaveReGestorFt(v){return String(v||'').toUpperCase().replace(/[^0-9A-Z]/g,'');}
+    function epChaveReGestorFt(v){return String(v||'').split('-')[0].replace(/\D/g,'').slice(0,6);}
     function epPessoaPafReFt(s,efetivo){
       const direto=s?.re||s?.policial_re||s?.pm_re||s?.identidade?.re||s?.policial?.re;
       if(direto)return epChaveReGestorFt(direto);
