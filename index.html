@@ -12186,13 +12186,23 @@ function epMesclarResenhaFt(payload,auto){
         });
       }
       function renderAfastamentos(itens) {
+        const nomes={FERIAS:'Férias',FOLGAS:'Folga',CURSOS:'Curso',OUTROS:'Conval e outros afastamentos',LSV:'LSV'};
+        const ordem=['FERIAS','FOLGAS','CURSOS','OUTROS','LSV'];
         const gruposTipo=new Map();
-        itens.forEach(p=>{const tipo=String(p.afastamento||'Afastado').trim();if(!gruposTipo.has(tipo))gruposTipo.set(tipo,[]);gruposTipo.get(tipo).push(p);});
-        const ordemTipo=['Férias','EAP','Curso','Dispensa de Serviço','DS','Folga flagrante','Folga mensal','Folga compensatória','Folga','Convalescença','Licença paternidade','LSV','LTS','LP','Afastado'];
-        return `<div class="qe-afastamentos">${[...gruposTipo.entries()].sort((x,y)=>{
-          const ix=ordemTipo.indexOf(x[0]),iy=ordemTipo.indexOf(y[0]);
-          return (ix<0?999:ix)-(iy<0?999:iy)||x[0].localeCompare(y[0],'pt-BR');
-        }).map(([tipo,listaTipo])=>`<section class="qe-afastamento-tipo"><h3>${e(tipo)} · ${listaTipo.length}</h3><ul class="qe-lista">${listaTipo.map(p=>ficha(p)).join('')}</ul></section>`).join('')}</div>`;
+        itens.forEach(p=>{
+          const tipo=String(p.afastamento||'Afastado').trim();
+          const chave=normalizarTexto(tipo).replace(/[^A-Z0-9]/g,'');
+          const grupo=(chave==='LSV')?'LSV':
+            (chave.includes('FERIA')||chave==='F')?'FERIAS':
+            (chave.includes('FOLGA')||['FF','FM','FC','FOL'].includes(chave))?'FOLGAS':
+            (chave==='EAP'||chave.includes('CURSO'))?'CURSOS':'OUTROS';
+          if(!gruposTipo.has(grupo))gruposTipo.set(grupo,[]);
+          gruposTipo.get(grupo).push(p);
+        });
+        return `<div class="qe-afastamentos">${ordem.filter(k=>gruposTipo.has(k)).map(k=>{
+          const listaTipo=gruposTipo.get(k);
+          return `<section class="qe-afastamento-tipo"><h3>${e(nomes[k])} · ${listaTipo.length}</h3><ul class="qe-lista">${listaTipo.map(p=>ficha(p)).join('')}</ul></section>`;
+        }).join('')}</div>`;
       }
       function ficha(p,origem) {
         const montagem=origem!==undefined;
