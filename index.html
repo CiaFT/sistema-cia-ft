@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.4.4 — OCORRÊNCIAS E FOLGAS FLAGRANTES
+SISTEMA CIA FT — PORTAL GITHUB V1.4.5 — OCORRÊNCIAS E FOLGAS FLAGRANTES
 Arquivo: index.html
 ============================================================
 
-VERSÃO V1.4.4 — DESEMPENHO E PADRÃO VISUAL
+VERSÃO V1.4.5 — DESEMPENHO E PADRÃO VISUAL
 - Ranking com filtros anual, semestral, mensal e por pelotão.
 - Destaque discreto dos três primeiros colocados.
 - Consulta de FF aguardando decisão e aprovação/recusa exclusiva do Cmt Cia.
 - Histórico individual preserva datas de FF já gozadas, inclusive importadas.
 - Área de importação removida do formulário após a carga inicial.
-- Versão fixada em V1.4.4: alterar somente por determinação expressa do responsável.
+- Versão fixada em V1.4.5: alterar somente por determinação expressa do responsável.
 - Preserva a última versão encerrada do Controle de Frequência.
 - Preserva a implantação completa de Viaturas V1.2.6.
 - Corrige a leitura e a identificação funcional em Resenhas Enviadas.
@@ -52,7 +52,7 @@ Banco de dados: Google Sheets.
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="cia-ft-build" content="FT-V138-20261006-GRAVACAO-CONFIAVEL-R7">
-  <title>Portal Força Tática • V1.4.4</title>
+  <title>Portal Força Tática • V1.4.5</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
 
@@ -7183,7 +7183,61 @@ Banco de dados: Google Sheets.
     .ft-avisos-form input,.ft-avisos-form textarea,.ft-avisos-form select{width:100%;padding:10px 12px;border:1px solid #cbd5e1;border-radius:12px;background:#fff;color:#17202a;font:inherit}
     .ft-avisos-form :focus-visible{outline:2px solid #475569;outline-offset:2px}
     .ft-avisos-leitura,.ft-avisos-ciencias{margin:12px 0}.ft-avisos-ciencias li{margin:6px 0}
-  </style>
+  
+    /* Padronização visual geral: mantém os cards, uniformiza apenas a área dos ícones e títulos. */
+    #appScreen .menu-card .menu-icon,
+    #appScreen .menu-card .menu-icon.menu-icon-imagem,
+    #appScreen .menu-card .menu-icon.menu-icon-cop {
+      box-sizing: border-box !important;
+      width: 58px !important;
+      height: 58px !important;
+      min-width: 58px !important;
+      min-height: 58px !important;
+      margin: 0 0 9px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      flex: 0 0 58px !important;
+      font-size: 28px;
+      line-height: 1;
+    }
+    #appScreen .menu-card .menu-icon img {
+      width: 100% !important;
+      height: 100% !important;
+      max-width: 58px !important;
+      max-height: 58px !important;
+      object-fit: contain !important;
+      transform: none !important;
+    }
+    #appScreen .menu-card h3,
+    #appScreen .menu-card .ft-menu-nome { text-transform: uppercase; }
+    #appScreen .page-header h1 { text-transform: uppercase; }
+    .dejem-day-head {
+      display: grid !important;
+      grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
+      gap: 8px;
+      align-items: center;
+    }
+    .dejem-day-head .dejem-pel-servico {
+      justify-self: center;
+      text-align: center;
+      color: #fff !important;
+      font-size: 10px !important;
+      font-weight: 900 !important;
+      white-space: nowrap;
+      padding: 4px 8px;
+      border: 1px solid rgba(255,255,255,.24);
+      border-radius: 999px;
+      background: rgba(255,255,255,.10);
+    }
+    .dejem-day-head time { justify-self: end; font-size: 11px; font-weight: 850; color: #e2e8f0; }
+    @media(max-width:560px) {
+      .dejem-day-head { grid-template-columns: 1fr auto; row-gap: 5px; }
+      .dejem-day-head strong { grid-column: 1; grid-row: 1; }
+      .dejem-day-head time { grid-column: 2; grid-row: 1; }
+      .dejem-day-head .dejem-pel-servico { grid-column: 1 / -1; grid-row: 2; }
+    }
+</style>
 <style>
 #appScreen .top-actions #dsCaixaFt{position:relative;display:inline-grid;place-items:center;width:52px;min-width:52px;min-height:44px;padding:0}
 #dsCaixaFt img{display:block;width:42px;height:42px;max-width:none;object-fit:contain}
@@ -7362,7 +7416,7 @@ Banco de dados: Google Sheets.
         <div id="loginAlerta" class="alerta"></div>
 
         <div class="footer">
-          Portal Força Tática • V1.4.4
+          Portal Força Tática • V1.4.5
         </div>
       </main>
 
@@ -11601,8 +11655,18 @@ function epMesclarResenhaFt(payload,auto){
     }
 
 
+    function pelEmServicoDejemRocam(dataISO) {
+      const partes = String(dataISO || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (!partes) return '';
+      const data = Date.UTC(Number(partes[1]), Number(partes[2]) - 1, Number(partes[3]));
+      const referencia = Date.UTC(2026, 10, 16); // 16/11/2026: 2º Pel
+      const dias = Math.round((data - referencia) / 86400000);
+      return Math.abs(dias % 2) === 0 ? '2º Pel' : '1º Pel';
+    }
+
     function montarDiaDejemRocam(dia, dados) {
-      return '<section class="dejem-day"><div class="dejem-day-head"><strong>' + escapar(dia.diaSemana || '') + '</strong><span>' + escapar(dia.dataBR || '') + '</span></div><div class="dejem-slots">' +
+      const pelServico = pelEmServicoDejemRocam(dia.dataISO);
+      return '<section class="dejem-day"><div class="dejem-day-head"><strong>' + escapar(dia.diaSemana || '') + '</strong><span class="dejem-pel-servico">' + (pelServico ? 'Serviço ordinário: ' + escapar(pelServico) : '') + '</span><time>' + escapar(dia.dataBR || '') + '</time></div><div class="dejem-slots">' +
         (dados.horarios || []).map(function(horario) { return montarHorarioDejemRocam(dia, horario, dados); }).join('') + '</div></section>';
     }
 
@@ -12149,6 +12213,7 @@ function epMesclarResenhaFt(payload,auto){
         return r;
       };
       const e=escapar, a=escaparAttr;
+      const nomeExibicao=p=>String(p&&p.nome||'').replace(/SANTOS\s+MORAES/gi,'Santos Moraes');
       const grupos=[['1_PEL','1º Pelotão'],['2_PEL','2º Pelotão'],['ADM','Administração'],['AFAST','Afastamentos'],['CONFERIR','Lotação a conferir']];
       const postos=[['cap','Cap PM'],['ten','Ten PM'],['sub_sgt','Subten / Sgt PM'],['cb_sd','Cb / Sd PM']];
       let atual, aba='atual', grupo='1_PEL', lista=[], plano, pessoas=[], fotos={}, alterado=false, ocupado=false, escopoMontagem='TOTAL';
@@ -12172,8 +12237,8 @@ function epMesclarResenhaFt(payload,auto){
       const urlFoto=p=>APPFT_FOTOS_SUPABASE_POR_ID[String(p.id)]||fotos[chaveREFotoSupabase(p.re)]||
         (p.foto?resolverFotoConsulta(p.foto,'w240'):'');
       const mostraFoto=p=>urlFoto(p)?
-        `<img class="qe-foto" data-qe-foto="${a(p.id)}" src="${a(urlFoto(p))}" alt="Foto de ${a(p.nome||'policial')}" width="44" height="52" loading="lazy" decoding="async">`:
-        `<span class="qe-sem-foto" data-qe-foto="${a(p.id)}" aria-hidden="true">${e(String(p.nome||'?').slice(0,1))}</span>`;
+        `<img class="qe-foto" data-qe-foto="${a(p.id)}" src="${a(urlFoto(p))}" alt="Foto de ${a(nomeExibicao(p)||'policial')}" width="44" height="52" loading="lazy" decoding="async">`:
+        `<span class="qe-sem-foto" data-qe-foto="${a(p.id)}" aria-hidden="true">${e(String(nomeExibicao(p)||'?').slice(0,1))}</span>`;
       function configurarFallbackFotos() {
         box.querySelectorAll('img.qe-foto[data-qe-foto]').forEach(img=>{
           img.onerror=()=>{
@@ -12181,7 +12246,7 @@ function epMesclarResenhaFt(payload,auto){
             const legado=p?.foto?resolverFotoConsulta(p.foto,'w240'):'';
             if(!img.dataset.qeTentouLegada&&legado&&img.src!==legado){img.dataset.qeTentouLegada='1';img.src=legado;return;}
             const span=document.createElement('span');span.className='qe-sem-foto';span.setAttribute('aria-hidden','true');
-            span.textContent=String(p?.nome||'?').slice(0,1);img.replaceWith(span);
+            span.textContent=String(p?nomeExibicao(p):'?').slice(0,1);img.replaceWith(span);
           };
         });
       }
@@ -12213,7 +12278,7 @@ function epMesclarResenhaFt(payload,auto){
           ${plano.equipes.map((eq,i)=>i===origem?'':`<option value="${i}">${e(eq.nome||('Equipe '+(i+1)))}</option>`).join('')}
           </select></label>`:montagem&&origem!==-1 ? botao('retirar','RETIRAR',`data-id="${a(p.id)}"`):'';
         return `<li class="qe-ficha ${classeHierarquia(p)}" ${montagem&&!p.afastamento?'draggable="true"':''} data-qe-pm="${a(p.id)}"><div class="qe-pessoa">${mostraFoto(p)}
-          <div><strong>${e([p.posto,p.nome].filter(Boolean).join(' '))}</strong>
+          <div><strong>${e([p.posto,nomeExibicao(p)].filter(Boolean).join(' '))}</strong>
           ${funcao(p)?`<small>${e(funcao(p))}</small>`:''}
           ${p.afastamento?`<small class="qe-afastado">${e(p.afastamento)}</small>`:''}</div></div>${escolhas}</li>`;
       }
@@ -12368,13 +12433,13 @@ function epMesclarResenhaFt(payload,auto){
       if (!APP.usuario) return [];
       const painel = usuarioTemPermissaoCliente('PAINEL_ADMINISTRATIVO','visualizar');
       return [
+        [quadroEfetivoPerfilFt(), 'QUADRO_EFETIVO','QUADRO DE EFETIVO','Consulte o efetivo da Companhia e a disponibilidade registrada.'],
         [usuarioTemPermissaoCliente('ESCALAS_ADM','visualizar'), 'ESCALAS_ADM','ESCALAS ADM','Preencha ou consulte a escala administrativa semanal.'],
         [painel, 'CONTROLE_FREQUENCIA','CONTROLE DE FREQUÊNCIA','Lançamento, conferência e fechamento mensal.'],
         [painel, 'CONTROLE_FOLGAS','CONTROLE DE FOLGAS','Acompanhe dias trabalhados e saldos de folgas.'],
         [painel, 'ROTINAS_ADMINISTRATIVAS','ROTINAS ADMINISTRATIVAS','Acompanhe as tarefas e os prazos da administração.'],
-        [podeConsultarArmarioCliente(), 'CONSULTAS_P4','CONSULTAS P/4','Localize armários e materiais do efetivo.'],
         [podeAcessarCursosFt(), 'CURSOS_CIA_FT','CURSOS','Registre e acompanhe os cursos do efetivo.'],
-        [quadroEfetivoPerfilFt(), 'QUADRO_EFETIVO','QUADRO DE EFETIVO','Consulte o efetivo da Companhia e a disponibilidade registrada.'],
+        [podeConsultarArmarioCliente(), 'CONSULTAS_P4','CONSULTAS P/4','Localize armários e materiais do efetivo.'],
         [entPodeGerir(), 'ENTREVISTAS_FT','CANDIDATURAS À CIA FT','Consulte fichas e gerencie as entrevistas.']
       ].filter(([permitido]) => permitido).map(([,id,titulo,descricao]) => ({id,titulo,descricao}));
     }
@@ -19141,7 +19206,10 @@ function epMesclarResenhaFt(payload,auto){
 
 
     function escapar(valor) {
+      // Corrige somente a apresentação do nome cujo cadastro já está correto.
+      // A normalização é de exibição e não altera o dado salvo.
       return String(valor == null ? '' : valor)
+        .replace(/SANTOS\s+MORAES/gi, 'Santos Moraes')
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
