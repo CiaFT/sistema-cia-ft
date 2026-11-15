@@ -8660,26 +8660,32 @@ async function epPreviaResenhaFt(){
   if(gestorDisponibilidade){EP_RESENHA_GESTOR_DISP={pel:'',data:'',carregando:false,erro:'',ausentes:new Set()};epAplicarListaGestorResenhaFt();}
   return;
  }
- if(gestorDisponibilidade){EP_RESENHA_GESTOR_DISP={pel,data,carregando:true,erro:'',ausentes:new Set()};epAplicarListaGestorResenhaFt();}
+ if(!APP.resenhaEdicao){EP_RESENHA_GESTOR_DISP={pel,data,carregando:true,erro:'',ausentes:new Set()};epAplicarListaGestorResenhaFt();}
  folgas.textContent='Consultando folgas e dispensas…';
  ferias.textContent='Consultando férias do PAF…';
  try{
   const [r,cursos]=await Promise.all([epBuscarResenhaFt(pel,data),gestorDisponibilidade?cursosBuscarResenhaFt(pel,data):Promise.resolve(null)]);if(!atual())return;
-  if(gestorDisponibilidade){
+  if(!APP.resenhaEdicao){
    const efetivo=(APP.dadosResenha?.efetivoCadastro||APP.dadosResenha?.efetivoAtivo||[]);
    let ausentes=new Set();
-   (r.itens||[]).forEach(x=>{const re=epPessoaPafReFt(x,efetivo);if(re)ausentes.add(re);});
-   if(Array.isArray(r.ferias))r.ferias.forEach(x=>{const re=epPessoaPafReFt(x,efetivo);if(re)ausentes.add(re);});
-   else{
-    const paf=await epPafResenhaGestorFt(Number(String(data).slice(0,4)));if(!atual())return;
-    const afastados=epPafAusentesGestorFt(paf,pel,efetivo);afastados.forEach(re=>ausentes.add(re));
+   (r.itens||[]).concat(r.bloqueiosEquipe||[]).forEach(x=>{const re=epPessoaPafReFt(x,efetivo);if(re)ausentes.add(re);});
+   if(gestorDisponibilidade){
+    if(Array.isArray(r.ferias))r.ferias.forEach(x=>{const re=epPessoaPafReFt(x,efetivo);if(re)ausentes.add(re);});
+    else{
+     const paf=await epPafResenhaGestorFt(Number(String(data).slice(0,4)));if(!atual())return;
+     const afastados=epPafAusentesGestorFt(paf,pel,efetivo);afastados.forEach(re=>ausentes.add(re));
+    }
+    (cursos||[]).forEach(x=>{const re=epPessoaPafReFt(x,efetivo);if(re)ausentes.add(re);});
    }
-   (cursos||[]).forEach(x=>{const re=epPessoaPafReFt(x,efetivo);if(re)ausentes.add(re);});
    EP_RESENHA_GESTOR_DISP={pel,data,carregando:false,erro:'',ausentes};epAplicarListaGestorResenhaFt();
+  }
+  if(gestorDisponibilidade){
    const painelCursos=document.getElementById('cursosPreviaResenhaFt');if(painelCursos&&painelCursos.isConnected)painelCursos.innerHTML=cursos.length?'<ul>'+cursos.map(c=>'<li>'+escapar(c.nome)+' · Curso</li>').join('')+'</ul>':'Nenhum curso para este pelotão e data.';
   }
+  const linhasFolga=(r.itens||[]).map(x=>'<li>'+dsEscFt(x.nome)+' · '+dsEscFt(epTiposFt[x.tipo])+'</li>')
+   .concat((r.bloqueiosEquipe||[]).map(x=>'<li>'+dsEscFt(x.nome)+' · FF pendente — policial bloqueado para compor equipe até decisão do pedido</li>'));
   folgas.innerHTML=(r.semDS?'<p>DS automática indisponível. Confira e lance manualmente, se necessário.</p>':'')+
-   (r.itens.length?'<ul>'+r.itens.map(x=>'<li>'+dsEscFt(x.nome)+' · '+dsEscFt(epTiposFt[x.tipo])+'</li>').join('')+'</ul>':'<p>'+(r.semDS?'Nenhuma folga automática encontrada.':'Nenhuma folga ou dispensa automática encontrada.')+'</p>');
+   (linhasFolga.length?'<ul>'+linhasFolga.join('')+'</ul>':'<p>'+(r.semDS?'Nenhuma folga automática encontrada.':'Nenhuma folga ou dispensa automática encontrada.')+'</p>');
   if(r.ferias===null){
    ferias.textContent='O servidor não retornou a lista de férias. Confira se a Etapa 2 foi publicada no Apps Script.';
   }else if(r.ferias.length){
@@ -8690,7 +8696,8 @@ async function epPreviaResenhaFt(){
   }
  }catch(err){
   if(!atual())return;
-  if(gestorDisponibilidade){EP_RESENHA_GESTOR_DISP={pel,data,carregando:false,erro:'Afastamentos não conferidos',ausentes:new Set()};epAplicarListaGestorResenhaFt({erro:err.message||'falha na consulta'});const pc=document.getElementById('cursosPreviaResenhaFt');if(pc)pc.textContent='Não foi possível confirmar os cursos. A lista de equipes foi bloqueada.';}
+  if(!APP.resenhaEdicao){EP_RESENHA_GESTOR_DISP={pel,data,carregando:false,erro:'Afastamentos não conferidos',ausentes:new Set()};epAplicarListaGestorResenhaFt({erro:err.message||'falha na consulta'});}
+  if(gestorDisponibilidade){const pc=document.getElementById('cursosPreviaResenhaFt');if(pc)pc.textContent='Não foi possível confirmar os cursos. A lista de equipes foi bloqueada.';}
   folgas.textContent=err.message;
   ferias.textContent='Não foi possível confirmar as férias do PAF para esta data.';
  }
@@ -15047,7 +15054,7 @@ function epMesclarResenhaFt(payload,auto){
       else if(anterior)sel.value='';
     }
     function epAplicarListaGestorResenhaFt(opcoes){
-      const form=document.getElementById('formResenhaEscala');if(!form||!epGestorClienteFt()||APP.resenhaEdicao)return;
+      const form=document.getElementById('formResenhaEscala');if(!form||APP.resenhaEdicao)return;
       const st=EP_RESENHA_GESTOR_DISP,pel=st.pel,dados=APP.dadosResenha||{};
       const cadastro=(dados.efetivoCadastro||dados.efetivoAtivo||[]).filter(p=>!pel||epChavePelResenhaFt(p.pelotao)===pel);
       const equipes=Array.from(form.querySelectorAll('[data-tipo="FT"] .pm-select,[data-tipo="ROCAM"] .pm-select'));
