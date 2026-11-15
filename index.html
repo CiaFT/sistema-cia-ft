@@ -8677,7 +8677,8 @@ async function epPreviaResenhaFt(){
     if(Array.isArray(r.ferias))r.ferias.forEach(x=>{const re=epPessoaPafReFt(x,efetivo);if(re)ausentes.add(re);});
     else{
      const paf=await epPafResenhaGestorFt(Number(String(data).slice(0,4)));if(!atual())return;
-     const afastados=epPafAusentesGestorFt(paf,pel,efetivo);afastados.forEach(re=>ausentes.add(re));
+    const afastados=epPafAusentesGestorFt(paf,pel,efetivo);afastados.forEach(re=>ausentes.add(re));
+    r.ferias=Array.from(afastados).map(re=>{const pm=efetivo.find(p=>epChaveReGestorFt(p.re)===re);return {re,nome:pm?.rotulo||pm?.nomeCompleto||re};});
     }
     (cursos||[]).forEach(x=>{const re=epPessoaPafReFt(x,efetivo);if(re)ausentes.add(re);});
    }
@@ -8687,7 +8688,7 @@ async function epPreviaResenhaFt(){
    const painelCursos=document.getElementById('cursosPreviaResenhaFt');if(painelCursos&&painelCursos.isConnected)painelCursos.innerHTML=cursos.length?'<ul>'+cursos.map(c=>'<li>'+escapar(c.nome)+' · Curso</li>').join('')+'</ul>':'Nenhum curso para este pelotão e data.';
   }
   const linhasFolga=(r.itens||[]).map(x=>'<li>'+dsEscFt(x.nome)+' · '+dsEscFt(epTiposFt[x.tipo])+'</li>')
-   .concat((r.bloqueiosEquipe||[]).map(x=>'<li>'+dsEscFt(x.nome)+' · FF pendente — policial bloqueado para compor equipe até decisão do pedido</li>'));
+   .concat((r.bloqueiosEquipe||[]).map(x=>'<li>'+dsEscFt(x.nome)+' · '+dsEscFt(epTiposFt[x.tipo]||'Folga')+' pendente — policial bloqueado para compor equipe até decisão do pedido</li>'));
   folgas.innerHTML=(r.semDS?'<p>DS automática indisponível. Confira e lance manualmente, se necessário.</p>':'')+
    (linhasFolga.length?'<ul>'+linhasFolga.join('')+'</ul>':'<p>'+(r.semDS?'Nenhuma folga automática encontrada.':'Nenhuma folga ou dispensa automática encontrada.')+'</p>');
   if(r.ferias===null){
