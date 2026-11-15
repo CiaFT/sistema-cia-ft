@@ -8643,17 +8643,13 @@ async function epRenderAgendaFt(h,pel,data,adm){
 }
 function epChaveReFt(v){return String(v||'').replace(/\D/g,'').slice(0,6);}
 async function epBuscarResenhaFt(pel,data){
- // Usa a mesma lista de pedidos que alimenta "Pedidos do pelotão" no Espaço do Pel.
- // Evita divergência entre a aprovação visível ao Sgt e a consulta resumida da resenha.
- const [folgas,ds]=await Promise.allSettled([ocFtApi('espaco_pel_dados',{pel,data,semSaldo:'1'}),rpcPlanoFerias('ft_ds_resenha_v142',{p_pel:pel,p_data:data})]);
+ // Consulta a rota própria da resenha: ela retorna as ausências de todo o Pel.
+ // espaco_pel_dados é escopada por perfil/RE e pode ocultar a folga de um colega.
+ const [folgas,ds]=await Promise.allSettled([ocFtApi('espaco_pel_resenha',{pel,data}),rpcPlanoFerias('ft_ds_resenha_v142',{p_pel:pel,p_data:data})]);
  if(folgas.status!=='fulfilled')throw folgas.reason;
- if(!Array.isArray(folgas.value.pedidos))throw Error('O servidor não retornou a lista de pedidos do Pel. A equipe foi bloqueada para evitar empenho indevido.');
- const pedidos=folgas.value.pedidos.filter(x=>x.data===data);
- const itens=pedidos.filter(x=>x.estado==='APROVADA'||x.tipo==='FC'&&x.estado==='GOZADA')
-  .map(x=>({id:x.id,re:x.re,nome:x.nome,tipo:x.tipo,bopm:x.bopm||'',referencia:x.referencia||''}));
- const bloqueiosEquipe=pedidos.filter(x=>x.tipo==='FF'&&x.estado==='PENDENTE')
-  .map(x=>({re:x.re,nome:x.nome,tipo:x.tipo,estado:x.estado}));
- return {itens:[...(ds.status==='fulfilled'?ds.value:[]),...itens],bloqueiosEquipe,ferias:Array.isArray(folgas.value.ferias)?folgas.value.ferias:null,semDS:ds.status!=='fulfilled'};
+ if(!Array.isArray(folgas.value.itens))throw Error('O servidor não retornou as folgas e dispensas do Pel. A equipe foi bloqueada para evitar empenho indevido.');
+ const bloqueiosEquipe=Array.isArray(folgas.value.bloqueiosEquipe)?folgas.value.bloqueiosEquipe:[];
+ return {itens:[...(ds.status==='fulfilled'?ds.value:[]),...folgas.value.itens],bloqueiosEquipe,ferias:Array.isArray(folgas.value.ferias)?folgas.value.ferias:null,semDS:ds.status!=='fulfilled'};
 }
 async function epPreviaResenhaFt(){
  const gestorDisponibilidade=epGestorClienteFt()&&!APP.resenhaEdicao;
