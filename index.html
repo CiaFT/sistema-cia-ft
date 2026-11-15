@@ -8645,7 +8645,7 @@ function epChaveReFt(v){return String(v||'').replace(/\D/g,'').slice(0,6);}
 async function epBuscarResenhaFt(pel,data){
  const [folgas,ds]=await Promise.allSettled([ocFtApi('espaco_pel_resenha',{pel,data}),rpcPlanoFerias('ft_ds_resenha_v142',{p_pel:pel,p_data:data})]);
  if(folgas.status!=='fulfilled')throw folgas.reason;
- return {itens:[...(ds.status==='fulfilled'?ds.value:[]),...(folgas.value.itens||[])],ferias:Array.isArray(folgas.value.ferias)?folgas.value.ferias:null,semDS:ds.status!=='fulfilled'};
+ return {itens:[...(ds.status==='fulfilled'?ds.value:[]),...(folgas.value.itens||[])],bloqueiosEquipe:folgas.value.bloqueiosEquipe||[],ferias:Array.isArray(folgas.value.ferias)?folgas.value.ferias:null,semDS:ds.status!=='fulfilled'};
 }
 async function epPreviaResenhaFt(){
  const gestorDisponibilidade=epGestorClienteFt()&&!APP.resenhaEdicao;
