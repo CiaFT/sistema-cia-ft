@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.4.7 — OCORRÊNCIAS E FOLGAS FLAGRANTES
+SISTEMA CIA FT — PORTAL GITHUB V1.4.6 — OCORRÊNCIAS E FOLGAS FLAGRANTES
 Arquivo: index.html
 ============================================================
 
-VERSÃO V1.4.7 — DESEMPENHO E PADRÃO VISUAL
+VERSÃO V1.4.6 — DESEMPENHO E PADRÃO VISUAL
 - Ranking com filtros anual, semestral, mensal e por pelotão.
 - Destaque discreto dos três primeiros colocados.
 - Consulta de FF aguardando decisão e aprovação/recusa exclusiva do Cmt Cia.
 - Histórico individual preserva datas de FF já gozadas, inclusive importadas.
 - Área de importação removida do formulário após a carga inicial.
-- Versão fixada em V1.4.7: alterar somente por determinação expressa do responsável.
+- Versão fixada em V1.4.6: alterar somente por determinação expressa do responsável.
 - Preserva a última versão encerrada do Controle de Frequência.
 - Preserva a implantação completa de Viaturas V1.2.6.
 - Corrige a leitura e a identificação funcional em Resenhas Enviadas.
@@ -52,7 +52,7 @@ Banco de dados: Google Sheets.
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="cia-ft-build" content="FT-V138-20261006-GRAVACAO-CONFIAVEL-R7">
-  <title>Portal Força Tática • V1.4.7</title>
+  <title>Portal Força Tática • V1.4.6</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
 
@@ -7416,7 +7416,7 @@ Banco de dados: Google Sheets.
         <div id="loginAlerta" class="alerta"></div>
 
         <div class="footer">
-          Portal Força Tática • V1.4.7
+          Portal Força Tática • V1.4.6
         </div>
       </main>
 
@@ -8835,6 +8835,8 @@ function epMesclarResenhaFt(payload,auto){
       const moduloMenu = normalizarModuloCliente(menu.id);
       const imagensMenu = {
         VALORIZACAO_POLICIAL: { arquivo: './icone-valorizacao-policial.png', alt: '' },
+        VALORIZACAO_POLICIAL_MES: {arquivo:'./icone-policial-do-mes.png',alt:'Policial do Mês'},
+        VALORIZACAO_LMP_ELOGIOS: {arquivo:'./icone-lmp-elogios.png',alt:'LMP e Elogios'},
         FORMULARIOS_PMESP: {arquivo:"./icone-formularios-pmesp.png",alt:"Formulários PMESP"},
         DISPENSA_PMP118: {arquivo:"./icone-formularios-pmesp.png",alt:"Dispensa de Serviço"},
         ESPACO_PEL: { arquivo: './icone-espaco-pel.png', alt: 'Espaço do Pelotão' },
@@ -8911,12 +8913,38 @@ function epMesclarResenhaFt(payload,auto){
               </div>
             </div>
           </div>
-          <div class="modal-card">
-            <h2>Em implantação</h2>
-            <p>Os conteúdos desta área serão disponibilizados em breve.</p>
+          <div class="menu-grid rotinas-menu-grid">
+            ${[
+              {id:'VALORIZACAO_POLICIAL_MES',titulo:'POLICIAL DO MÊS',descricao:'Reconhecimento mensal dos policiais da Cia FT.'},
+              {id:'VALORIZACAO_LMP_ELOGIOS',titulo:'LMP E ELOGIOS',descricao:'Registro e consulta de LMP e elogios.'}
+            ].map(menu=>montarMenuCard(menu,true)).join('')}
           </div>
         </div>
       `;
+    }
+
+    function abrirPaginaValorizacaoFt(modulo) {
+      const paginas={
+        VALORIZACAO_POLICIAL_MES:{titulo:'Policial do Mês',icone:'./icone-policial-do-mes.png',alt:'Policial do Mês'},
+        VALORIZACAO_LMP_ELOGIOS:{titulo:'LMP e Elogios',icone:'./icone-lmp-elogios.png',alt:'LMP e Elogios'}
+      };
+      const pagina=paginas[normalizarModuloCliente(modulo)];
+      if(!pagina||!APP.usuario)return;
+      window.scrollTo(0,0);
+      document.getElementById('appConteudo').innerHTML=`
+        <div class="page-wrap">
+          <div class="page-header">
+            <div class="page-header-row">
+              <div><div class="page-kicker">VALORIZAÇÃO POLICIAL</div><h1>${escapar(pagina.titulo)}</h1><p>Área preparada para receber os parâmetros de funcionamento.</p></div>
+              <div class="page-actions"><button type="button" class="btn-page" onclick="abrirValorizacaoPolicial()">VOLTAR</button></div>
+            </div>
+          </div>
+          <div class="modal-card" style="text-align:center">
+            <div class="menu-icon menu-icon-imagem" style="margin:0 auto 12px"><img src="${pagina.icone}" alt="${escaparAttr(pagina.alt)}"></div>
+            <h2>${escapar(pagina.titulo)}</h2>
+            <p>Os critérios e recursos desta página serão definidos na próxima etapa.</p>
+          </div>
+        </div>`;
     }
 
 
@@ -8938,6 +8966,10 @@ function epMesclarResenhaFt(payload,auto){
       }
       if (modulo === 'VALORIZACAO_POLICIAL') {
         abrirValorizacaoPolicial();
+        return;
+      }
+      if (modulo === 'VALORIZACAO_POLICIAL_MES' || modulo === 'VALORIZACAO_LMP_ELOGIOS') {
+        abrirPaginaValorizacaoFt(modulo);
         return;
       }
       if(id==="FORMULARIOS_PMESP"){dsFormulariosFt();return;}
