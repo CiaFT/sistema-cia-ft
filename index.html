@@ -9281,7 +9281,7 @@ function epMesclarResenhaFt(payload,auto){
         '<label class="oc-ft-largo">QTH<input id="ocFtQth" maxlength="500" required placeholder="Endereço da ocorrência"></label>'+
         '<label>BOPM<input id="ocFtBopm" maxlength="60" required></label><label>BOPC<input id="ocFtBopc" maxlength="60"></label><label>DP<input id="ocFtDp" maxlength="100"></label>'+
         '<label class="oc-ft-largo">Natureza<input id="ocFtNatureza" maxlength="500" required></label>'+
-        '<label class="oc-ft-largo oc-ft-vtr">VTR<select id="ocFtVtr" required><option value="">Selecione a viatura</option>'+c.viaturas.filter(v=>normalizarTexto(v.situacao||'').indexOf('DESCARG')===-1).map(v=>'<option value="'+escaparAttr(v.prefixo)+'">'+escapar(v.prefixo)+'</option>').join('')+'</select></label></div>'+
+        '<label class="oc-ft-largo oc-ft-vtr">VTR<select id="ocFtVtr" required><option value="">Selecione a viatura</option>'+c.viaturas.map(v=>'<option value="'+escaparAttr(v.prefixo)+'">'+escapar(v.prefixo)+'</option>').join('')+'</select></label></div>'+
         '<div class="oc-ft-equipe-apoio"><section class="oc-ft-secao"><h2>Equipe</h2><div id="ocFtEquipe"></div><button type="button" class="btn-page" onclick="ocFtAdicionarEquipe()">ADICIONAR POLICIAL</button></section>'+
         '<section class="oc-ft-secao"><h2>Apoio</h2><div id="ocFtApoio"></div><button type="button" class="btn-page" onclick="ocFtAdicionarApoio()">ADICIONAR VIATURA DE APOIO</button></section></div>'+
         '<section class="oc-ft-secao"><h2>Indiciados</h2><div id="ocFtIndiciados"></div><button type="button" class="btn-page" onclick="ocFtAdicionarPessoa(\'indiciados\')">ADICIONAR INDICIADO</button></section>'+
@@ -14518,9 +14518,17 @@ function epMesclarResenhaFt(payload,auto){
     }
 
 
+    function viaturaDisponivelSelecaoFt(v) {
+      const situacao = normalizarTexto((v && v.situacao) || '');
+      const statusApp = normalizarTexto((v && v.statusApp) || '');
+      return !viaturaOpVeraoFt(situacao) &&
+        ['OPERANDO', 'RESERVA'].indexOf(situacao) !== -1 &&
+        (!statusApp || statusApp === 'ATIVA');
+    }
+
     function optionsViaturas(tipo, placeholder) {
       const dados = APP.dadosResenha || {};
-      const lista = (tipo === 'ROCAM' ? (dados.viaturasRocam || []) : (dados.viaturasTatico || [])).filter(v=>!viaturaOpVeraoFt(v.situacao));
+      const lista = (tipo === 'ROCAM' ? (dados.viaturasRocam || []) : (dados.viaturasTatico || [])).filter(viaturaDisponivelSelecaoFt);
       const rotuloInicial = placeholder || 'Selecione';
 
       return '<option value="">' + escapar(rotuloInicial) + '</option>' + lista.map(function(v) {
