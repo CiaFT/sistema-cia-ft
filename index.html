@@ -7286,15 +7286,23 @@ Banco de dados: Google Sheets.
     .quadro-ft .qe-grupos { display:none; }
     .quadro-ft .qe-grupo[data-grupo="AFAST"],.quadro-ft .qe-grupo[data-grupo="CONFERIR"] { grid-column:1 / -1; }
     .quadro-ft .qe-lista { display:grid; list-style:none; gap:6px; margin:8px 0 0; padding:0; }
-    .quadro-ft .qe-ficha { background:#f5f7fa; border:1px solid #dbe3ea; padding:6px; border-radius:8px; font-size:12px; overflow-wrap:anywhere; }
+    .quadro-ft .qe-ficha { background:radial-gradient(circle at top left,rgba(55,66,71,.07),transparent 55%),linear-gradient(180deg,#fff,#f8fafc); border:1px solid rgba(55,66,71,.14); padding:6px; border-radius:8px; font-size:12px; overflow-wrap:anywhere; }
+    .quadro-ft .qe-ficha.hierarquia-oficial { background:radial-gradient(circle at top left,rgba(184,134,11,.12),transparent 56%),linear-gradient(180deg,#fffdf7,#fff8e8); border-color:rgba(184,134,11,.46); }
+    .quadro-ft .qe-ficha.hierarquia-subten-sgt { background:radial-gradient(circle at top left,rgba(150,0,24,.10),transparent 56%),linear-gradient(180deg,#fffafa,#fff0f2); border-color:rgba(150,0,24,.46); }
+    .quadro-ft .qe-ficha.hierarquia-cb-sd { background:radial-gradient(circle at top left,rgba(0,51,160,.09),transparent 56%),linear-gradient(180deg,#fafcff,#edf3ff); border-color:rgba(0,51,160,.38); }
     .quadro-ft .qe-ficha[draggable="true"] { cursor:grab; }
     .quadro-ft .qe-pessoa { display:flex; align-items:center; gap:8px; }
     .quadro-ft .qe-pessoa small { display:block; margin-top:2px; }
-    .quadro-ft .qe-pessoa img,.quadro-ft .qe-sem-foto { display:grid; place-items:center; width:44px; height:52px; flex:none; border-radius:6px; object-fit:cover; background:#e3e9ee; }
+    .quadro-ft .qe-pessoa img,.quadro-ft .qe-sem-foto { display:grid; place-items:center; width:44px; height:52px; flex:none; border-radius:6px; object-fit:cover; background:#e3e9ee; border:2px solid #374247; }
+    .quadro-ft .qe-ficha.hierarquia-oficial .qe-foto,.quadro-ft .qe-ficha.hierarquia-oficial .qe-sem-foto { border-color:#b8860b; }
+    .quadro-ft .qe-ficha.hierarquia-subten-sgt .qe-foto,.quadro-ft .qe-ficha.hierarquia-subten-sgt .qe-sem-foto { border-color:#960018; }
+    .quadro-ft .qe-ficha.hierarquia-cb-sd .qe-foto,.quadro-ft .qe-ficha.hierarquia-cb-sd .qe-sem-foto { border-color:#0033a0; }
+    .quadro-ft .qe-sem-foto { color:#374247; font-weight:1000; }
     .quadro-ft .qe-mover { margin-top:5px; }
     .quadro-ft .qe-afastado,.quadro-ft .qe-erro { color:#8b2428; }
     .quadro-ft #qeMensagem:not(:empty) { margin:8px 0; font-size:13px; }
     .quadro-ft .qe-nome-equipe { margin-bottom:8px; }
+    .quadro-ft .qe-filtro-aviso { margin:6px 0 0; padding:6px 8px; border-radius:7px; background:#fff7e6; color:#70510a; font-size:11px; font-weight:700; }
     @media(max-width:760px) {
       .quadro-ft .qe-grupos { display:flex; }
       .quadro-ft .qe-efetivo-grid,.quadro-ft .qe-montagem { grid-template-columns:minmax(0,1fr); }
@@ -12143,7 +12151,7 @@ function epMesclarResenhaFt(payload,auto){
       const e=escapar, a=escaparAttr;
       const grupos=[['1_PEL','1º Pelotão'],['2_PEL','2º Pelotão'],['ADM','Administração'],['AFAST','Afastamentos'],['CONFERIR','Lotação a conferir']];
       const postos=[['cap','Cap PM'],['ten','Ten PM'],['sub_sgt','Subten / Sgt PM'],['cb_sd','Cb / Sd PM']];
-      let atual, aba='atual', grupo='1_PEL', lista=[], plano, pessoas=[], fotos={}, alterado=false, ocupado=false;
+      let atual, aba='atual', grupo='1_PEL', lista=[], plano, pessoas=[], fotos={}, alterado=false, ocupado=false, escopoMontagem='TOTAL';
       const info=(texto,erro=false)=>{msg.textContent=texto;msg.className=erro?'qe-erro':'';};
       function executar(fn) {
         if(ocupado) return;
@@ -12158,14 +12166,20 @@ function epMesclarResenhaFt(payload,auto){
       };
       const botao=(acao,nome,extras='')=>`<button type="button" class="btn-page" data-qe="${acao}" ${extras}>${nome}</button>`;
       const funcao=p=>({CMT:'Cmt Cia FT',ENC:'Enc. ADM',AUX:'Aux. ADM'})[p.funcao]||'';
-      const urlFoto=p=>APPFT_FOTOS_SUPABASE_POR_ID[String(p.id)]||fotos[chaveREFotoSupabase(p.re)]||'';
+      const classeHierarquia=p=>['CAP','TEN'].includes(String(p.categoria||'').toUpperCase())?'hierarquia-oficial':
+        String(p.categoria||'').toUpperCase()==='SUB_SGT'?'hierarquia-subten-sgt':
+        String(p.categoria||'').toUpperCase()==='CB_SD'?'hierarquia-cb-sd':'';
+      const urlFoto=p=>APPFT_FOTOS_SUPABASE_POR_ID[String(p.id)]||fotos[chaveREFotoSupabase(p.re)]||
+        (p.foto?resolverFotoConsulta(p.foto,'w240'):'');
       const mostraFoto=p=>urlFoto(p)?
-        `<img class="qe-foto" data-qe-foto="${a(p.id)}" src="${a(urlFoto(p))}" alt="" width="44" height="52" loading="lazy">`:
+        `<img class="qe-foto" data-qe-foto="${a(p.id)}" src="${a(urlFoto(p))}" alt="Foto de ${a(p.nome||'policial')}" width="44" height="52" loading="lazy" decoding="async">`:
         `<span class="qe-sem-foto" data-qe-foto="${a(p.id)}" aria-hidden="true">${e(String(p.nome||'?').slice(0,1))}</span>`;
       function configurarFallbackFotos() {
         box.querySelectorAll('img.qe-foto[data-qe-foto]').forEach(img=>{
           img.onerror=()=>{
             const p=[...atual.efetivo,...pessoas].find(x=>x.id===img.dataset.qeFoto);
+            const legado=p?.foto?resolverFotoConsulta(p.foto,'w240'):'';
+            if(!img.dataset.qeTentouLegada&&legado&&img.src!==legado){img.dataset.qeTentouLegada='1';img.src=legado;return;}
             const span=document.createElement('span');span.className='qe-sem-foto';span.setAttribute('aria-hidden','true');
             span.textContent=String(p?.nome||'?').slice(0,1);img.replaceWith(span);
           };
@@ -12187,7 +12201,7 @@ function epMesclarResenhaFt(payload,auto){
           ${origem!==-1?'<option value="-1">Disponíveis</option>':''}
           ${plano.equipes.map((eq,i)=>i===origem?'':`<option value="${i}">${e(eq.nome||('Equipe '+(i+1)))}</option>`).join('')}
           </select></label>`:montagem&&origem!==-1 ? botao('retirar','RETIRAR',`data-id="${a(p.id)}"`):'';
-        return `<li class="qe-ficha" ${montagem&&!p.afastamento?'draggable="true"':''} data-qe-pm="${a(p.id)}"><div class="qe-pessoa">${mostraFoto(p)}
+        return `<li class="qe-ficha ${classeHierarquia(p)}" ${montagem&&!p.afastamento?'draggable="true"':''} data-qe-pm="${a(p.id)}"><div class="qe-pessoa">${mostraFoto(p)}
           <div><strong>${e([p.posto,p.nome].filter(Boolean).join(' '))}</strong>
           ${funcao(p)?`<small>${e(funcao(p))}</small>`:''}
           ${p.afastamento?`<small class="qe-afastado">${e(p.afastamento)}</small>`:''}</div></div>${escolhas}</li>`;
@@ -12218,21 +12232,24 @@ function epMesclarResenhaFt(payload,auto){
           return;
         }
         const lotados=new Set(plano.equipes.flatMap(eq=>eq.membros));
-        const disponiveis=pessoas.filter(p=>!p.afastamento&&!lotados.has(p.id));
-        const afastados=pessoas.filter(p=>p.afastamento);
+        const gruposEscopo={'1_PEL':['1_PEL'],'2_PEL':['2_PEL'],OPERACIONAL:['1_PEL','2_PEL'],TOTAL:null};
+        const noEscopo=p=>!gruposEscopo[escopoMontagem]||gruposEscopo[escopoMontagem].includes(String(p.grupo||''));
+        const disponiveis=pessoas.filter(p=>noEscopo(p)&&!p.afastamento&&!lotados.has(p.id));
+        const afastados=pessoas.filter(p=>noEscopo(p)&&p.afastamento);
         box.innerHTML=`<section class="modal-card qe-secao"><h2>Montagem de equipes</h2><p>Rascunho. Arraste as fotos ou use “Mover para”. A montagem não altera lotações nem escalas oficiais.</p><p>A lista considera os afastamentos registrados nas fontes do Portal. Confirme a disponibilidade antes de usar o rascunho.</p>
           <div class="qe-controles"><label>Rascunhos salvos <select id="qeSalvos"><option value="">Selecione</option>
           ${lista.map(x=>`<option value="${a(x.id)}"${plano.id===x.id?' selected':''}>${e(x.dia.split('-').reverse().join('/')+' — '+x.titulo)}</option>`).join('')}
           </select></label>${botao('novo','NOVO RASCUNHO')}</div>
           <div class="qe-controles"><label>Nome da montagem<input id="qeTitulo" maxlength="100" value="${a(plano.titulo)}" placeholder="Ex.: Operação"></label>
           <label>Data de referência<input id="qeDia" type="date" min="${a(atual.hoje)}" value="${a(plano.dia)}"></label>
+          <label>Visualizar efetivo<select id="qeEscopo"><option value="1_PEL"${escopoMontagem==='1_PEL'?' selected':''}>1º Pel</option><option value="2_PEL"${escopoMontagem==='2_PEL'?' selected':''}>2º Pel</option><option value="OPERACIONAL"${escopoMontagem==='OPERACIONAL'?' selected':''}>Efetivo Operacional (1º + 2º Pel)</option><option value="TOTAL"${escopoMontagem==='TOTAL'?' selected':''}>Efetivo Total</option></select></label>
           ${botao('adicionar','ADICIONAR EQUIPE')}${botao('salvar','SALVAR RASCUNHO')}</div></section>
           <div class="qe-montagem">
           <section class="modal-card qe-secao" data-qe-destino="-1"><h2>Disponíveis <small>(${disponiveis.length})</small></h2>${disponiveis.length?`<ul class="qe-lista">${disponiveis.map(p=>ficha(p,-1)).join('')}</ul>`:'<p>Não há policiais disponíveis para mover.</p>'}</section>
           ${plano.equipes.map((eq,i)=>`<section class="modal-card qe-secao" data-qe-destino="${i}">
           <label class="qe-nome-equipe">Nome da equipe <input data-qe-equipe="${i}" maxlength="60" value="${a(eq.nome)}"></label>
           ${botao('remover','REMOVER EQUIPE',`data-indice="${i}"`)}
-          ${eq.membros.length?`<ul class="qe-lista">${eq.membros.map(id=>ficha(pessoas.find(p=>p.id===id)||{id,nome:'Policial fora do efetivo',afastamento:'Indisponível'},i)).join('')}</ul>`:'<p>Arraste uma foto para cá ou use “Mover para”.</p>'}</section>`).join('')}
+          ${(()=>{const visiveis=eq.membros.map(id=>pessoas.find(p=>p.id===id)).filter(p=>p&&noEscopo(p));const ocultos=eq.membros.length-visiveis.length;return `${visiveis.length?`<ul class="qe-lista">${visiveis.map(p=>ficha(p,i)).join('')}</ul>`:'<p>Arraste uma foto para cá ou use “Mover para”.</p>'}${ocultos?`<p class="qe-filtro-aviso">${ocultos} integrante(s) desta equipe oculto(s) pelo filtro.</p>`:''}`})()}</section>`).join('')}
           ${afastados.length?`<section class="modal-card qe-secao"><h2>Afastamentos <small>(${afastados.length})</small></h2>${renderAfastamentos(afastados)}</section>`:''}
           </div>`;
         configurarFallbackFotos();
@@ -12288,6 +12305,9 @@ function epMesclarResenhaFt(payload,auto){
           box.querySelectorAll('[data-qe-mover]').forEach(select=>{
             const option=select.querySelector('option[value="'+i+'"]'); if(option)option.textContent=nome;
           });
+        }
+        else if(el.id==='qeEscopo'){
+          escopoMontagem=el.value;render();
         }
         else if(el.id==='qeDia'){
           const dia=el.value;el.value=plano.dia;
