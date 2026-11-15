@@ -8836,7 +8836,7 @@ function epMesclarResenhaFt(payload,auto){
       const imagensMenu = {
         VALORIZACAO_POLICIAL: { arquivo: './icone-valorizacao-policial.png', alt: '' },
         VALORIZACAO_POLICIAL_MES: {arquivo:'./icone-policial-do-mes.png',alt:'Policial do Mês'},
-        VALORIZACAO_LMP_ELOGIOS: {arquivo:'./icone-lmp-elogios.png',alt:'LMP e Elogios'},
+        VALORIZACAO_LMP_ELOGIOS: {arquivo:'./icone-lmp-elogios.png',alt:'Solicitações e acompanhamentos'},
         FORMULARIOS_PMESP: {arquivo:"./icone-formularios-pmesp.png",alt:"Formulários PMESP"},
         DISPENSA_PMP118: {arquivo:"./icone-formularios-pmesp.png",alt:"Dispensa de Serviço"},
         ESPACO_PEL: { arquivo: './icone-espaco-pel.png', alt: 'Espaço do Pelotão' },
@@ -8915,8 +8915,8 @@ function epMesclarResenhaFt(payload,auto){
           </div>
           <div class="menu-grid rotinas-menu-grid">
             ${[
-              {id:'VALORIZACAO_POLICIAL_MES',titulo:'POLICIAL DO MÊS',descricao:'Reconhecimento mensal dos policiais da Cia FT.'},
-              {id:'VALORIZACAO_LMP_ELOGIOS',titulo:'LMP E ELOGIOS',descricao:'Registro e consulta de LMP e elogios.'}
+              {id:'VALORIZACAO_POLICIAL_MES',titulo:'POLICIAL DO MÊS E INDICAÇÕES',descricao:'Reconhecimento mensal dos policiais da Cia FT.'},
+              {id:'VALORIZACAO_LMP_ELOGIOS',titulo:'SOLICITAÇÕES E ACOMPANHAMENTOS',descricao:'Acompanhe solicitações e seus registros.'}
             ].map(menu=>montarMenuCard(menu,true)).join('')}
           </div>
         </div>
@@ -8925,8 +8925,8 @@ function epMesclarResenhaFt(payload,auto){
 
     function abrirPaginaValorizacaoFt(modulo) {
       const paginas={
-        VALORIZACAO_POLICIAL_MES:{titulo:'Policial do Mês',icone:'./icone-policial-do-mes.png',alt:'Policial do Mês'},
-        VALORIZACAO_LMP_ELOGIOS:{titulo:'LMP e Elogios',icone:'./icone-lmp-elogios.png',alt:'LMP e Elogios'}
+        VALORIZACAO_POLICIAL_MES:{titulo:'Policial do Mês e indicações',icone:'./icone-policial-do-mes.png',alt:'Policial do Mês'},
+        VALORIZACAO_LMP_ELOGIOS:{titulo:'Solicitações e acompanhamentos',icone:'./icone-lmp-elogios.png',alt:'Solicitações e acompanhamentos'}
       };
       const pagina=paginas[normalizarModuloCliente(modulo)];
       if(!pagina||!APP.usuario)return;
