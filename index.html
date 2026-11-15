@@ -7269,6 +7269,38 @@ Banco de dados: Google Sheets.
       #appScreen .home-meus-dados img { width:24px; height:24px; }
     }
   </style>
+  <style>
+    .quadro-ft .qe-secao { padding:14px; min-width:0; margin:0 0 12px; }
+    .quadro-ft .qe-secao h2 { font-size:16px; margin:0 0 8px; }
+    .quadro-ft .qe-secao p { margin:8px 0; font-size:13px; }
+    .quadro-ft .qe-controles { display:flex; flex-wrap:wrap; gap:8px; align-items:end; margin:10px 0; }
+    .quadro-ft .qe-controles label,.quadro-ft .qe-nome-equipe,.quadro-ft .qe-mover { display:grid; gap:4px; font-size:12px; font-weight:700; min-width:0; }
+    .quadro-ft select,.quadro-ft input { font:inherit; min-width:0; max-width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:8px; background:#fff; color:#17202a; }
+    .quadro-ft .btn-page[aria-pressed="true"] { background:#374247; color:#fff; }
+    .quadro-ft .qe-numeros { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:8px 0; }
+    .quadro-ft .qe-numeros div { background:#f3f6f8; padding:8px; border-radius:8px; }
+    .quadro-ft .qe-numeros strong { display:block; font-size:24px; }
+    .quadro-ft .qe-tabela { width:100%; margin:8px 0; border-collapse:collapse; font-size:12px; }
+    .quadro-ft .qe-tabela :is(th,td) { border-bottom:1px solid #dce3ea; padding:6px 4px; text-align:left; }
+    .quadro-ft .qe-efetivo-grid,.quadro-ft .qe-montagem { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; align-items:start; }
+    .quadro-ft .qe-grupos { display:none; }
+    .quadro-ft .qe-grupo[data-grupo="AFAST"],.quadro-ft .qe-grupo[data-grupo="CONFERIR"] { grid-column:1 / -1; }
+    .quadro-ft .qe-lista { display:grid; list-style:none; gap:6px; margin:8px 0 0; padding:0; }
+    .quadro-ft .qe-ficha { background:#f5f7fa; border:1px solid #dbe3ea; padding:6px; border-radius:8px; font-size:12px; overflow-wrap:anywhere; }
+    .quadro-ft .qe-ficha[draggable="true"] { cursor:grab; }
+    .quadro-ft .qe-pessoa { display:flex; align-items:center; gap:8px; }
+    .quadro-ft .qe-pessoa small { display:block; margin-top:2px; }
+    .quadro-ft .qe-pessoa img,.quadro-ft .qe-sem-foto { display:grid; place-items:center; width:44px; height:52px; flex:none; border-radius:6px; object-fit:cover; background:#e3e9ee; }
+    .quadro-ft .qe-mover { margin-top:5px; }
+    .quadro-ft .qe-afastado,.quadro-ft .qe-erro { color:#8b2428; }
+    .quadro-ft #qeMensagem:not(:empty) { margin:8px 0; font-size:13px; }
+    .quadro-ft .qe-nome-equipe { margin-bottom:8px; }
+    @media(max-width:760px) {
+      .quadro-ft .qe-grupos { display:flex; }
+      .quadro-ft .qe-efetivo-grid,.quadro-ft .qe-montagem { grid-template-columns:minmax(0,1fr); }
+      .quadro-ft .qe-grupo:not(.qe-grupo-ativo) { display:none; }
+    }
+  </style>
 </head>
 
 <body>
@@ -8707,6 +8739,7 @@ function epMesclarResenhaFt(payload,auto){
         ROTINAS_OPERACIONAIS: { arquivo: './icone-rotinas-operacionais.png?v=131-rotinas-r2', alt: 'Rotinas Operacionais' },
         ICC: { arquivo: './icone-icc.png?v=132-icc-r1', alt: 'ICC' },
         CURSOS_CIA_FT: { arquivo:'./icone-cursos.png', alt:'' },
+        QUADRO_EFETIVO: { arquivo:'./icone-quadro-efetivo.svg', alt:'Quadro de Efetivo' },
         EAP: { arquivo: './icone-eap.png?v=138-eap-r1', alt: 'EAP' },
         ENTREVISTAS_FT: { arquivo: './icone-candidaturas.png', alt: 'Candidaturas à Cia FT' },
         OCORRENCIAS: { arquivo: './icone-ocorrencias.png?v=138-ocorrencias-r1', alt: 'Ocorrências' },
@@ -8773,6 +8806,7 @@ function epMesclarResenhaFt(payload,auto){
     function abrirModulo(id) {
       const modulo = normalizarModuloCliente(id);
       if (modulo === 'CURSOS_CIA_FT') { abrirCursosFt(); return; }
+      if (modulo === 'QUADRO_EFETIVO') { abrirQuadroEfetivoFt(); return; }
       if (modulo === 'GESTAO_CIA_FT') { abrirGestaoCiaFt(); return; }
       if (['CONTROLE_FREQUENCIA','CONTROLE_FOLGAS','ROTINAS_ADMINISTRATIVAS','CONSULTAS_P4'].includes(modulo)) {
         if (!montarMenusGestaoCiaFt().some(menu => menu.id === modulo)) {
@@ -12060,6 +12094,199 @@ function epMesclarResenhaFt(payload,auto){
       void carregar();
     }
 
+    function quadroEfetivoPerfilFt() {
+      return /^(AUX_ADM(_FT)?|ENC_ADM(_FT)?|ENCARREGADO_ADM_FT|ENCARREGADO_ADMINISTRATIVO|CMT_CIA(_FT)?|COMANDANTE_CIA_FT|COMANDANTE_DE_CIA|GESTOR(_FT|_TEC_FT|_TECNICO_FT)?)$/.test(normalizarTexto(APP.usuario?.perfilAcesso||'').replace(/[\s-]+/g,'_'));
+    }
+
+    function abrirQuadroEfetivoFt() {
+      if (!quadroEfetivoPerfilFt()) return abrirAcessoNegado('Quadro de Efetivo');
+      window.scrollTo(0,0);
+      const app=document.getElementById('appConteudo'), sessao=APP.sessaoGeracao, usuario=APP.usuario;
+      app.innerHTML=`<div class="page-wrap quadro-ft">
+        <div class="page-header"><div class="page-header-row"><div><div class="page-kicker">Gestão da Cia FT</div><h1>Quadro de Efetivo</h1><p>Efetivo da Companhia e montagem de equipes.</p></div>
+        <div class="page-actions"><button class="btn-page" type="button" id="qeVoltar">VOLTAR</button></div></div></div>
+        <div class="qe-controles" id="qeAbas"></div><div id="qeMensagem" role="status" aria-live="polite"></div><div id="qeConteudo">Carregando efetivo...</div></div>`;
+      const root=app.querySelector('.quadro-ft'), box=root.querySelector('#qeConteudo'), msg=root.querySelector('#qeMensagem'), abas=root.querySelector('#qeAbas');
+      const ativo=()=>root.isConnected&&APP.usuario===usuario&&APP.sessaoGeracao===sessao;
+      const api=async(acao,dados={})=>{
+        const r=await rpcPlanoFerias('ft_quadro_efetivo_v1',{p_acao:acao,p_dados:dados});
+        if (!ativo()) throw new Error('A página ou a sessão foi alterada.');
+        return r;
+      };
+      const e=escapar, a=escaparAttr;
+      const grupos=[['1_PEL','1º Pelotão'],['2_PEL','2º Pelotão'],['ADM','Administração'],['AFAST','Afastamentos'],['CONFERIR','Lotação a conferir']];
+      const postos=[['cap','Cap PM'],['ten','Ten PM'],['sub_sgt','Subten / Sgt PM'],['cb_sd','Cb / Sd PM']];
+      let atual, aba='atual', grupo='1_PEL', lista=[], plano, pessoas=[], fotos={}, alterado=false, ocupado=false;
+      const info=(texto,erro=false)=>{msg.textContent=texto;msg.className=erro?'qe-erro':'';};
+      function executar(fn) {
+        if(ocupado) return;
+        ocupado=true;
+        const controls=[...root.querySelectorAll('input,select,button')].filter(el=>!el.disabled);
+        controls.forEach(el=>el.disabled=true);
+        Promise.resolve().then(fn).catch(err=>{if(ativo())info(err.message,true);})
+          .finally(()=>{ocupado=false;if(ativo())controls.forEach(el=>{if(el.isConnected)el.disabled=false;});});
+      }
+      root.querySelector('#qeVoltar').onclick=()=>{
+        if(!alterado||window.confirm('Sair sem salvar as alterações desta montagem?')) abrirGestaoCiaFt();
+      };
+      const botao=(acao,nome,extras='')=>`<button type="button" class="btn-page" data-qe="${acao}" ${extras}>${nome}</button>`;
+      const funcao=p=>({CMT:'Cmt Cia FT',ENC:'Enc. ADM',AUX:'Aux. ADM'})[p.funcao]||'';
+      const mostraFoto=p=>fotos[chaveREFotoSupabase(p.re)]?
+        `<img src="${a(fotos[chaveREFotoSupabase(p.re)])}" alt="" width="44" height="52" loading="lazy">`:
+        `<span class="qe-sem-foto" aria-hidden="true">${e(String(p.nome||'?').slice(0,1))}</span>`;
+      function ficha(p,origem) {
+        const montagem=origem!==undefined;
+        const escolhas=montagem && !p.afastamento ? `<label class="qe-mover">Mover para
+          <select data-qe-mover="${a(p.id)}"><option value="">Selecione</option>
+          ${origem!==-1?'<option value="-1">Disponíveis</option>':''}
+          ${plano.equipes.map((eq,i)=>i===origem?'':`<option value="${i}">${e(eq.nome||('Equipe '+(i+1)))}</option>`).join('')}
+          </select></label>`:montagem&&origem!==-1 ? botao('retirar','RETIRAR',`data-id="${a(p.id)}"`):'';
+        return `<li class="qe-ficha" ${montagem&&!p.afastamento?'draggable="true"':''} data-qe-pm="${a(p.id)}"><div class="qe-pessoa">${mostraFoto(p)}
+          <div><strong>${e([p.posto,p.nome].filter(Boolean).join(' '))}</strong>
+          ${funcao(p)?`<small>${e(funcao(p))}</small>`:''}
+          ${p.afastamento?`<small class="qe-afastado">${e(p.afastamento)}</small>`:''}</div></div>${escolhas}</li>`;
+      }
+      function render() {
+        abas.innerHTML=botao('aba-atual','EFETIVO ATUAL',`aria-pressed="${aba==='atual'}"`)+(atual.pode_montar?botao('aba-equipes','MONTAGEM DE EQUIPES',`aria-pressed="${aba==='equipes'}"`):'');
+        if(aba==='atual') {
+          const contagem=Object.fromEntries(postos.map(([k])=>[k,atual.efetivo.filter(p=>p.categoria.toLowerCase()===k).length]));
+          const outros=atual.efetivo.filter(p=>p.categoria==='OUTRO').length;
+          const saldo=(f,n)=>f<n?`0 <small>(+${n-f} excedente)</small>`:String(f-n);
+          const totalFix=postos.reduce((v,[k])=>v+Number(atual.fixado[k]),0);
+          const totais=postos.reduce((v,[k])=>v+Math.max(0,atual.fixado[k]-contagem[k]),0);
+          const by=Object.fromEntries(grupos.map(([k])=>[k,atual.efetivo.filter(p=>p.afastamento?k==='AFAST':p.grupo===k)]));
+          const visiveis=grupos.filter(([k])=>k!=='CONFERIR'||by[k].length);
+          if(!visiveis.some(([k])=>k===grupo))grupo='1_PEL';
+          box.innerHTML=`<section class="modal-card qe-secao"><h2>Resumo da Companhia</h2>
+            <div class="qe-numeros"><div><small>Fixado</small><strong>${totalFix}</strong></div><div><small>Existente</small><strong>${atual.efetivo.length}</strong></div><div><small>Claro total</small><strong>${Math.max(0,totalFix-atual.efetivo.length)}</strong></div></div>
+            ${atual.sincronizado?`<p>Planilha sincronizada em ${e(new Date(atual.sincronizado).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}))}.</p>`:''}
+            ${atual.cadastros_a_conferir?`<p class="qe-erro">${Number(atual.cadastros_a_conferir)} cadastro(s) da planilha sem vínculo ativo no Supabase. Confira antes de usar o total.</p>`:''}
+            <details><summary>Ver por posto e graduação</summary>
+            <table class="qe-tabela"><thead><tr><th scope="col">Posto / grad.</th><th scope="col">Fixado</th><th scope="col">Existente</th><th scope="col">Claro</th></tr></thead><tbody>
+            ${postos.map(([k,n])=>`<tr><th scope="row">${n}</th><td>${atual.fixado[k]}</td><td>${contagem[k]}</td><td>${saldo(atual.fixado[k],contagem[k])}</td></tr>`).join('')}
+            ${outros?`<tr><th scope="row">Outros / a conferir</th><td>—</td><td>${outros}</td><td>—</td></tr>`:''}</tbody></table>
+            ${totais!==Math.max(0,totalFix-atual.efetivo.length)?'<p>O claro total é a diferença entre Fixado e Existente; excedentes e graduações a conferir podem fazer o total diferir da soma dos claros por posto.</p>':''}
+            </details>${botao('atualizar','ATUALIZAR EFETIVO')}<p><strong>${atual.efetivo.length-by.AFAST.length}</strong> sem afastamento registrado · <strong>${by.AFAST.length}</strong> em afastamento.</p>
+            ${atual.pode_editar_fixado?'<details><summary>Editar efetivo fixado</summary><form id="qeFixado" class="qe-controles">'+postos.map(([k,n])=>`<label>${n}<input name="${k}" type="number" min="0" max="999" required value="${atual.fixado[k]}"></label>`).join('')+'<button class="btn-page" type="submit">SALVAR FIXADO</button></form></details>':''}</section>
+            <div class="qe-controles qe-grupos" aria-label="Grupos do efetivo">${visiveis.map(([k,n])=>botao('grupo',`${n} · ${by[k].length}`,`data-grupo="${k}" aria-pressed="${grupo===k}"`)).join('')}</div>
+            <div class="qe-efetivo-grid">${visiveis.map(([k,n])=>`<section class="modal-card qe-secao qe-grupo ${grupo===k?'qe-grupo-ativo':''}" data-grupo="${k}"><h2>${n} <small>(${by[k].length})</small></h2>
+            ${by[k].length?`<ul class="qe-lista">${(k==='ADM'?[...by[k]].sort((x,y)=>({CMT:0,ENC:1,AUX:2}[x.funcao]??3)-({CMT:0,ENC:1,AUX:2}[y.funcao]??3)):by[k]).map(p=>ficha(p)).join('')}</ul>`:'<p>Nenhum policial neste grupo.</p>'}</section>`).join('')}</div>`;
+          return;
+        }
+        const lotados=new Set(plano.equipes.flatMap(eq=>eq.membros));
+        const disponiveis=pessoas.filter(p=>!p.afastamento&&!lotados.has(p.id));
+        const afastados=pessoas.filter(p=>p.afastamento);
+        box.innerHTML=`<section class="modal-card qe-secao"><h2>Montagem de equipes</h2><p>Rascunho. Arraste as fotos ou use “Mover para”. A montagem não altera lotações nem escalas oficiais.</p><p>A lista considera os afastamentos registrados nas fontes do Portal. Confirme a disponibilidade antes de usar o rascunho.</p>
+          <div class="qe-controles"><label>Rascunhos salvos <select id="qeSalvos"><option value="">Selecione</option>
+          ${lista.map(x=>`<option value="${a(x.id)}"${plano.id===x.id?' selected':''}>${e(x.dia.split('-').reverse().join('/')+' — '+x.titulo)}</option>`).join('')}
+          </select></label>${botao('novo','NOVO RASCUNHO')}</div>
+          <div class="qe-controles"><label>Nome da montagem<input id="qeTitulo" maxlength="100" value="${a(plano.titulo)}" placeholder="Ex.: Operação"></label>
+          <label>Data de referência<input id="qeDia" type="date" min="${a(atual.hoje)}" value="${a(plano.dia)}"></label>
+          ${botao('adicionar','ADICIONAR EQUIPE')}${botao('salvar','SALVAR RASCUNHO')}</div></section>
+          <div class="qe-montagem">
+          <section class="modal-card qe-secao" data-qe-destino="-1"><h2>Disponíveis <small>(${disponiveis.length})</small></h2>${disponiveis.length?`<ul class="qe-lista">${disponiveis.map(p=>ficha(p,-1)).join('')}</ul>`:'<p>Não há policiais disponíveis para mover.</p>'}</section>
+          ${plano.equipes.map((eq,i)=>`<section class="modal-card qe-secao" data-qe-destino="${i}">
+          <label class="qe-nome-equipe">Nome da equipe <input data-qe-equipe="${i}" maxlength="60" value="${a(eq.nome)}"></label>
+          ${botao('remover','REMOVER EQUIPE',`data-indice="${i}"`)}
+          ${eq.membros.length?`<ul class="qe-lista">${eq.membros.map(id=>ficha(pessoas.find(p=>p.id===id)||{id,nome:'Policial fora do efetivo',afastamento:'Indisponível'},i)).join('')}</ul>`:'<p>Arraste uma foto para cá ou use “Mover para”.</p>'}</section>`).join('')}
+          ${afastados.length?`<section class="modal-card qe-secao"><h2>Afastamentos <small>(${afastados.length})</small></h2><ul class="qe-lista">${afastados.map(p=>ficha(p)).join('')}</ul></section>`:''}
+          </div>`;
+      }
+      function mover(id,destino) {
+        if(ocupado||!plano||!Number.isInteger(destino)||destino< -1||destino>=plano.equipes.length) return;
+        const p=pessoas.find(x=>x.id===id);
+        if(destino>=0&&(!p||p.afastamento)) return;
+        plano.equipes.forEach(eq=>eq.membros=eq.membros.filter(x=>x!==id));
+        if(destino>=0)plano.equipes[destino].membros.push(id);
+        alterado=true;render();
+        info(destino<0?'Policial retirado da equipe.':'Policial movido para '+plano.equipes[destino].nome+'.');
+        [...box.querySelectorAll('[data-qe-pm]')].find(el=>el.dataset.qePm===id&&Number(el.closest('[data-qe-destino]')?.dataset.qeDestino)===destino)?.querySelector('select')?.focus({preventScroll:true});
+      }
+      const novo=()=>({titulo:'',dia:atual.hoje,equipes:[{nome:'Equipe 1',membros:[]}]});
+      root.addEventListener('click',ev=>{
+        const b=ev.target.closest('[data-qe]');if(!b||ocupado||!atual)return;
+        const acao=b.dataset.qe; info('');
+        if(acao==='aba-atual'){aba='atual';render();}
+        else if(acao==='atualizar'){executar(async()=>{atual=await api('atual');render();info('Efetivo atualizado.');});}
+        else if(acao==='aba-equipes') {
+          if(plano){aba='equipes';render();return;}
+          executar(async()=>{lista=await api('listar_montagens');pessoas=atual.efetivo;plano=novo();aba='equipes';render();});
+        } else if(acao==='grupo'){grupo=b.dataset.grupo;render();root.querySelector(`[data-qe="grupo"][data-grupo="${grupo}"]`)?.focus({preventScroll:true});}
+        else if(acao==='novo'){
+          if(alterado&&!window.confirm('Descartar as alterações da montagem atual?'))return;
+          plano=novo();pessoas=atual.efetivo;alterado=false;render();
+        } else if(acao==='adicionar'){
+          if(plano.equipes.length>=20){info('Limite de 20 equipes.',true);return;}
+          let numero=1;while(plano.equipes.some(eq=>eq.nome==='Equipe '+numero))numero++;
+          plano.equipes.push({nome:'Equipe '+numero,membros:[]});alterado=true;render();
+        } else if(acao==='remover'){
+          if(plano.equipes.length===1){info('Mantenha pelo menos uma equipe.',true);return;}
+          if(plano.equipes[Number(b.dataset.indice)].membros.length&&!window.confirm('Remover a equipe e devolver seus integrantes à lista?'))return;
+          plano.equipes.splice(Number(b.dataset.indice),1);alterado=true;render();
+        } else if(acao==='retirar'){mover(b.dataset.id,-1);}
+        else if(acao==='salvar'){
+          if(!plano.titulo.trim()||plano.equipes.some(eq=>!eq.nome.trim())){info('Informe o nome da montagem e de todas as equipes.',true);return;}
+          executar(async()=>{const salvo=await api('salvar_montagem',plano);Object.assign(plano,salvo);alterado=false;
+            lista=[JSON.parse(JSON.stringify(plano)),...lista.filter(x=>x.id!==plano.id)];render();info('Rascunho salvo.');});
+        }
+      });
+      root.addEventListener('input',ev=>{
+        const el=ev.target;if(!plano)return;
+        if(el.id==='qeTitulo'){plano.titulo=el.value;alterado=true;}
+        if(el.hasAttribute('data-qe-equipe')){plano.equipes[Number(el.dataset.qeEquipe)].nome=el.value;alterado=true;}
+      });
+      root.addEventListener('change',ev=>{
+        const el=ev.target;if(!plano||ocupado)return;
+        if(el.hasAttribute('data-qe-mover')&&el.value!=='')mover(el.dataset.qeMover,Number(el.value));
+        else if(el.hasAttribute('data-qe-equipe')){
+          const i=Number(el.dataset.qeEquipe), nome=plano.equipes[i].nome||('Equipe '+(i+1));
+          box.querySelectorAll('[data-qe-mover]').forEach(select=>{
+            const option=select.querySelector('option[value="'+i+'"]'); if(option)option.textContent=nome;
+          });
+        }
+        else if(el.id==='qeDia'){
+          const dia=el.value;el.value=plano.dia;
+          executar(async()=>{const r=await api('disponibilidade',{dia});pessoas=r.efetivo;plano.dia=r.dia;alterado=true;render();info('Disponibilidade atualizada para a data selecionada.');});
+        } else if(el.id==='qeSalvos'){
+          const x=lista.find(y=>y.id===el.value);el.value=plano.id||'';
+          if(!x||(alterado&&!window.confirm('Descartar as alterações da montagem atual?')))return;
+          executar(async()=>{pessoas=x.dia>=atual.hoje?(await api('disponibilidade',{dia:x.dia})).efetivo:atual.efetivo;
+            plano=JSON.parse(JSON.stringify(x));alterado=false;render();
+            info(x.dia<atual.hoje?'Rascunho de data passada. Escolha uma nova data para consultar os afastamentos previstos e salvar.':'');});
+        }
+      });
+      root.addEventListener('submit',ev=>{
+        if(ev.target.id!=='qeFixado')return;ev.preventDefault();
+        const dados=Object.fromEntries(new FormData(ev.target));
+        executar(async()=>{await api('fixado',dados);atual=await api('atual');render();info('Efetivo fixado atualizado.');});
+      });
+      let arrastado='';
+      root.addEventListener('dragstart',ev=>{
+        const item=ev.target.closest('[draggable="true"][data-qe-pm]');
+        if(!item||ocupado){ev.preventDefault();return;}
+        arrastado=item.dataset.qePm;ev.dataTransfer.effectAllowed='move';ev.dataTransfer.setData('text/plain',arrastado);
+      });
+      root.addEventListener('dragover',ev=>{if(arrastado&&ev.target.closest('[data-qe-destino]'))ev.preventDefault();});
+      root.addEventListener('drop',ev=>{
+        const alvo=ev.target.closest('[data-qe-destino]');
+        if(!arrastado||!alvo)return;ev.preventDefault();mover(arrastado,Number(alvo.dataset.qeDestino));arrastado='';
+      });
+      root.addEventListener('dragend',()=>{arrastado='';});
+      executar(async()=>{
+        try { atual=await api('atual'); render(); }
+        catch(erro){box.innerHTML='<p>Não foi possível carregar o efetivo.</p><button class="btn-page" type="button" id="qeTentar">TENTAR NOVAMENTE</button>';box.querySelector('#qeTentar').onclick=abrirQuadroEfetivoFt;throw erro;}
+        void carregarFotosSupabaseAssinadas(false).then(f=>{
+          if(!ativo())return; fotos=f;
+          const membros=[...atual.efetivo,...pessoas];
+          const porId=new Map(membros.map(p=>[p.id,p]));
+          for(const li of box.querySelectorAll('[data-qe-pm]')){
+            const p=porId.get(li.dataset.qePm), lugar=li.querySelector('.qe-sem-foto');
+            if(p&&lugar&&fotos[chaveREFotoSupabase(p.re)])lugar.outerHTML=mostraFoto(p);
+          }
+        }).catch(()=>{});
+      });
+    }
+
     function montarMenusGestaoCiaFt() {
       if (!APP.usuario) return [];
       const painel = usuarioTemPermissaoCliente('PAINEL_ADMINISTRATIVO','visualizar');
@@ -12070,6 +12297,7 @@ function epMesclarResenhaFt(payload,auto){
         [painel, 'ROTINAS_ADMINISTRATIVAS','ROTINAS ADMINISTRATIVAS','Acompanhe as tarefas e os prazos da administração.'],
         [podeConsultarArmarioCliente(), 'CONSULTAS_P4','CONSULTAS P/4','Localize armários e materiais do efetivo.'],
         [podeAcessarCursosFt(), 'CURSOS_CIA_FT','CURSOS','Registre e acompanhe os cursos do efetivo.'],
+        [quadroEfetivoPerfilFt(), 'QUADRO_EFETIVO','QUADRO DE EFETIVO','Consulte o efetivo da Companhia e a disponibilidade registrada.'],
         [entPodeGerir(), 'ENTREVISTAS_FT','CANDIDATURAS À CIA FT','Consulte fichas e gerencie as entrevistas.']
       ].filter(([permitido]) => permitido).map(([,id,titulo,descricao]) => ({id,titulo,descricao}));
     }
