@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.4.5 — OCORRÊNCIAS E FOLGAS FLAGRANTES
+SISTEMA CIA FT — PORTAL GITHUB V1.4.6 — OCORRÊNCIAS E FOLGAS FLAGRANTES
 Arquivo: index.html
 ============================================================
 
-VERSÃO V1.4.5 — DESEMPENHO E PADRÃO VISUAL
+VERSÃO V1.4.6 — DESEMPENHO E PADRÃO VISUAL
 - Ranking com filtros anual, semestral, mensal e por pelotão.
 - Destaque discreto dos três primeiros colocados.
 - Consulta de FF aguardando decisão e aprovação/recusa exclusiva do Cmt Cia.
 - Histórico individual preserva datas de FF já gozadas, inclusive importadas.
 - Área de importação removida do formulário após a carga inicial.
-- Versão fixada em V1.4.5: alterar somente por determinação expressa do responsável.
+- Versão fixada em V1.4.6: alterar somente por determinação expressa do responsável.
 - Preserva a última versão encerrada do Controle de Frequência.
 - Preserva a implantação completa de Viaturas V1.2.6.
 - Corrige a leitura e a identificação funcional em Resenhas Enviadas.
@@ -52,7 +52,7 @@ Banco de dados: Google Sheets.
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="cia-ft-build" content="FT-V138-20261006-GRAVACAO-CONFIAVEL-R7">
-  <title>Portal Força Tática • V1.4.5</title>
+  <title>Portal Força Tática • V1.4.6</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
 
@@ -6925,10 +6925,10 @@ Banco de dados: Google Sheets.
     .icc-documento-body{display:grid;grid-template-columns:minmax(250px,.78fr) minmax(0,1.22fr);gap:16px;padding:16px}.icc-preview-col{display:grid;align-content:start;gap:9px}.icc-thumb-wrap{position:relative;display:grid;place-items:center;min-height:315px;overflow:hidden;border:1px solid #cbd5e1;border-radius:15px;background:#e2e8f0;padding:10px}.icc-thumb-wrap canvas{display:block;max-width:100%;max-height:430px;background:#fff;box-shadow:0 8px 24px rgba(15,23,42,.2)}.icc-thumb-loading{display:grid;place-items:center;min-height:260px;color:#475569;font-size:10px;font-weight:900;text-align:center}.icc-thumb-watermark{position:absolute;left:50%;top:50%;display:grid;gap:6px;transform:translate(-50%,-50%) rotate(-30deg);color:rgba(142,27,27,.18);font-weight:1000;text-align:center;pointer-events:none;white-space:nowrap}.icc-thumb-watermark strong{font-size:22px}.icc-thumb-watermark span{font-size:15px}
     .icc-doc-info{display:grid;align-content:start;gap:11px}.icc-doc-title{border-left:5px solid #8E1B1B;padding:4px 0 4px 12px}.icc-doc-title h2{margin:0 0 4px;font-size:20px}.icc-doc-title p{margin:0;color:#64748b;font-size:11px;line-height:1.45}.icc-meta-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.icc-meta-card{border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;padding:10px}.icc-meta-card small{display:block;color:#64748b;font-size:8px;font-weight:950;letter-spacing:.25px;text-transform:uppercase}.icc-meta-card strong{display:block;margin-top:4px;color:#17202a;font-size:11px;overflow-wrap:anywhere}.icc-prazo{border-radius:12px;background:#E8F5E9;color:#1B5E20;padding:10px 12px;font-size:10px;font-weight:900}.icc-prazo.fechado{background:#FDECEC;color:#8E1B1B}.icc-doc-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.icc-doc-actions .icc-btn{width:100%}
     .icc-vazio{border:1px dashed #cbd5e1;border-radius:16px;background:#f8fafc;color:#64748b;padding:24px;text-align:center;font-size:11px;line-height:1.5}.icc-vazio strong{display:block;margin-bottom:5px;color:#17202a;font-size:14px}
-    .icc-lista-toolbar{display:flex;align-items:end;justify-content:space-between;gap:12px;padding:13px 16px;border-bottom:1px solid #e2e8f0}.icc-lista-toolbar .icc-campo{min-width:180px}.icc-lista-resumo{display:flex;gap:7px;flex-wrap:wrap}.icc-badge{border-radius:999px;background:#eef2f6;color:#475569;padding:7px 10px;font-size:8.5px;font-weight:950}.icc-badge.ok{background:#E8F5E9;color:#1B5E20}.icc-form-oficial{margin:14px;overflow:hidden;border:2px solid #111;background:#fff;color:#000}.icc-form-linha{border-bottom:1px solid #111;padding:5px 8px;text-align:center;font-size:11px;font-weight:900}.icc-form-linha:last-child{border-bottom:0}.icc-form-titulo{font-size:13px}.icc-form-tema{overflow-wrap:anywhere}.icc-table-wrap{width:100%;overflow:auto}.icc-table{width:100%;min-width:760px;border-collapse:collapse;table-layout:fixed}.icc-table col:nth-child(1){width:17%}.icc-table col:nth-child(2){width:15%}.icc-table col:nth-child(3){width:41%}.icc-table col:nth-child(4){width:27%}.icc-table th,.icc-table td{border:1px solid #111;padding:6px 7px;text-align:center;vertical-align:middle}.icc-table th{background:#fff;color:#000;font-size:10px;font-weight:950}.icc-table td{height:43px;background:#fff;color:#000;font-size:9px;font-weight:750}.icc-table td:nth-child(3){overflow-wrap:anywhere}.icc-assinatura{display:grid;gap:3px;justify-items:center}.icc-assinatura strong{color:#1B5E20;font-size:7.5px}.icc-assinatura small{max-width:100%;color:#374151;font-size:6.7px;font-weight:900;overflow-wrap:anywhere}.icc-assinar-check{display:inline-flex;align-items:center;gap:7px;border:1px solid #1B5E20;border-radius:9px;background:#E8F5E9;color:#1B5E20;padding:7px 9px;font-size:8px;font-weight:950;cursor:pointer}.icc-assinar-check input{width:17px;height:17px;margin:0;accent-color:#1B5E20}.icc-anular{border:0;background:transparent;color:#991b1b;padding:3px;font:inherit;font-size:6.8px;font-weight:950;text-decoration:underline;cursor:pointer}.icc-pendente{color:#94a3b8;font-size:8px;font-weight:850}.icc-transferido{display:block;margin-top:3px;color:#9A3412;font-size:6.8px;font-weight:900}
+    .icc-lista-toolbar{display:flex;align-items:end;justify-content:space-between;gap:12px;padding:13px 16px;border-bottom:1px solid #e2e8f0}.icc-lista-toolbar .icc-campo{min-width:180px}.icc-lista-resumo{display:flex;gap:7px;flex-wrap:wrap}.icc-badge{border-radius:999px;background:#eef2f6;color:#475569;padding:7px 10px;font-size:8.5px;font-weight:950}.icc-badge.ok{background:#E8F5E9;color:#1B5E20}.icc-form-oficial{margin:14px;overflow:hidden;border:2px solid #111;background:#fff;color:#000}.icc-form-linha{border-bottom:1px solid #111;padding:5px 8px;text-align:center;font-size:11px;font-weight:900}.icc-form-linha:last-child{border-bottom:0}.icc-form-titulo{font-size:13px}.icc-form-tema{overflow-wrap:anywhere}.icc-table-wrap{width:100%;overflow:auto}.icc-table{width:100%;min-width:760px;border-collapse:collapse;table-layout:fixed}.icc-table col:nth-child(1){width:17%}.icc-table col:nth-child(2){width:15%}.icc-table col:nth-child(3){width:41%}.icc-table col:nth-child(4){width:27%}.icc-table th,.icc-table td{border:1px solid #111;padding:6px 7px;text-align:center;vertical-align:middle}.icc-table th{background:#fff;color:#000;font-size:10px;font-weight:950}.icc-table td{height:auto;min-height:43px;background:#fff;color:#000;font-size:9px;font-weight:750}.icc-table td:nth-child(-n+3){font-size:13px;line-height:1.35;font-weight:800;padding:9px 7px}.icc-table td:nth-child(3){overflow-wrap:anywhere}.icc-assinatura{display:grid;gap:3px;justify-items:center}.icc-assinatura strong{color:#1B5E20;font-size:7.5px}.icc-assinatura small{max-width:100%;color:#374151;font-size:6.7px;font-weight:900;overflow-wrap:anywhere}.icc-assinar-check{display:inline-flex;align-items:center;gap:7px;border:1px solid #1B5E20;border-radius:9px;background:#E8F5E9;color:#1B5E20;padding:7px 9px;font-size:8px;font-weight:950;cursor:pointer}.icc-assinar-check input{width:17px;height:17px;margin:0;accent-color:#1B5E20}.icc-anular{border:0;background:transparent;color:#991b1b;padding:3px;font:inherit;font-size:6.8px;font-weight:950;text-decoration:underline;cursor:pointer}.icc-pendente{color:#94a3b8;font-size:8px;font-weight:850}.icc-transferido{display:block;margin-top:3px;color:#9A3412;font-size:6.8px;font-weight:900}
     .icc-modal-overlay{position:fixed;inset:0;z-index:10080;display:grid;place-items:center;padding:16px;background:rgba(15,23,42,.72);backdrop-filter:blur(4px)}.icc-modal-dialog{width:min(520px,100%);overflow:hidden;border-radius:20px;background:#fff;box-shadow:0 28px 90px rgba(0,0,0,.34)}.icc-modal-head{background:#374247;color:#fff;padding:16px 18px}.icc-modal-head h2{margin:0 0 4px;font-size:17px}.icc-modal-head p{margin:0;color:#dbe1e7;font-size:10px}.icc-modal-body{display:grid;gap:11px;padding:17px}.icc-modal-body textarea{width:100%;min-height:110px;border:1px solid #cbd5e1;border-radius:12px;padding:10px;font:inherit;font-size:12px;resize:vertical}.icc-modal-actions{display:flex;justify-content:flex-end;gap:8px}
     @media(max-width:980px){.icc-meta-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.icc-meta-grid .icc-btn{width:100%}.icc-documento-body{grid-template-columns:1fr}.icc-thumb-wrap{min-height:260px}}
-    @media(max-width:620px){.icc-section-head,.icc-lista-toolbar{align-items:stretch;flex-direction:column}.icc-meta-grid{grid-template-columns:1fr}.icc-uploader-title{align-items:stretch;flex-direction:column}.icc-uploader-title .icc-btn{width:100%}.icc-uploader iframe{height:480px}.icc-documento-body{padding:11px}.icc-thumb-wrap{min-height:220px}.icc-meta-cards{grid-template-columns:1fr}.icc-doc-actions{grid-template-columns:1fr}.icc-form-oficial{margin:9px}.icc-table{min-width:690px}.icc-modal-actions{display:grid;grid-template-columns:1fr}.icc-modal-actions .icc-btn{width:100%}}
+    @media(max-width:620px){.icc-section-head,.icc-lista-toolbar{align-items:stretch;flex-direction:column}.icc-meta-grid{grid-template-columns:1fr}.icc-uploader-title{align-items:stretch;flex-direction:column}.icc-uploader-title .icc-btn{width:100%}.icc-uploader iframe{height:480px}.icc-documento-body{padding:11px}.icc-thumb-wrap{min-height:220px}.icc-meta-cards{grid-template-columns:1fr}.icc-doc-actions{grid-template-columns:1fr}.icc-form-oficial{margin:9px}.icc-table{min-width:690px}.icc-table td:nth-child(-n+3){font-size:12px;padding:8px 6px}.icc-modal-actions{display:grid;grid-template-columns:1fr}.icc-modal-actions .icc-btn{width:100%}}
 
     /* REVISTA DE ARMÁRIO — V1.3.2 */
     #appScreen .menu-card[data-modulo="REVISTA_ARMARIO"] .menu-icon-imagem img{transform:scale(1.06)}
@@ -7416,7 +7416,7 @@ Banco de dados: Google Sheets.
         <div id="loginAlerta" class="alerta"></div>
 
         <div class="footer">
-          Portal Força Tática • V1.4.5
+          Portal Força Tática • V1.4.6
         </div>
       </main>
 
@@ -7604,7 +7604,7 @@ async function dsAtualizarCaixaFt(forcar=false){
  const b=document.getElementById('dsCaixaFt'),g=APP.sessaoGeracao;
  if(!APP.usuario||!b||(!forcar&&dsSessaoFt===g&&Date.now()-dsMomentoFt<30000))return;
  dsSessaoFt=g; dsMomentoFt=Date.now(); const seq=++dsContagemFt;
- try{const r=await dsRpcFt('contador');if(seq===dsContagemFt&&APP.usuario&&g===APP.sessaoGeracao){b.querySelector('span').textContent=r.total?(r.total>99?'99+':r.total):'';b.setAttribute('aria-label',r.total?'Caixa de Entrada: '+r.total+' pendência(s)':'Caixa de Entrada');}}catch(_){}
+ try{const resultados=await Promise.allSettled([dsRpcFt('contador'),ocFtApi('espaco_pel_mensagens_contador',{})]);const base=resultados[0].status==='fulfilled'?Number(resultados[0].value.total)||0:0;const folgas=resultados[1].status==='fulfilled'?Number(resultados[1].value.total)||0:0;const total=base+folgas;if(seq===dsContagemFt&&APP.usuario&&g===APP.sessaoGeracao){b.querySelector('span').textContent=total?(total>99?'99+':total):'';b.setAttribute('aria-label',total?'Caixa de Entrada: '+total+' pendência(s)':'Caixa de Entrada');}}catch(_){}
 }
 function dsPaginaFt(titulo,descricao,voltar){
  window.scrollTo(0,0);
@@ -7690,7 +7690,7 @@ async function dsCaixaAbrirFt(aba=dsAbaCaixaFt){
  if(r.administrativo)abas.push(['pendencias','Pendências administrativas'],['impressao','Autorizadas para impressão'],['historico','Histórico']);
  if(r.analise&&!r.administrativo)abas.push(['analise','Para analisar']);
  if(r.gestor)abas.push(['excluidas','Excluídas']);
- h.innerHTML='<nav class="ds-caixa-abas" aria-label="Caixa de Entrada">'+abas.map(([k,v])=>'<button type="button" class="btn-page'+(k===aba?' btn-primary-soft':'')+'" data-aba="'+k+'" aria-pressed="'+(k===aba)+'">'+v+'</button>').join('')+'</nav>'+
+ h.innerHTML='<nav class="ds-caixa-abas" aria-label="Caixa de Entrada"><button type="button" class="btn-page" onclick="epCaixaSolicitacoesFt()">Liberações de folga</button>'+abas.map(([k,v])=>'<button type="button" class="btn-page'+(k===aba?' btn-primary-soft':'')+'" data-aba="'+k+'" aria-pressed="'+(k===aba)+'">'+v+'</button>').join('')+'</nav>'+
  (r.contagens?'<div class="ds-caixa-resumo"><span>Enc Adm: <strong>'+dsEscFt(r.contagens.enc)+'</strong></span><span>P/1: <strong>'+dsEscFt(r.contagens.p1)+'</strong></span><span>Autorizadas para impressão: <strong>'+dsEscFt(r.contagens.impressao)+'</strong></span></div>':'')+
  '<div class="ds-lista-ft">'+r.itens.map(x=>'<button type="button" class="btn-page ds-item-ft" data-id="'+dsEscFt(x.id)+'"><span><strong>'+dsEscFt([x.identidade.posto,x.identidade.re,x.identidade.guerra].filter(Boolean).join(' '))+'</strong> · '+dsEscFt(dsDataFt(x.inicio))+' · '+dsEscFt(x.dias)+' dia(s)'+(x.proprio?' · Meu pedido':'')+'</span><span>'+dsEscFt(dsEstadosFt[x.estado])+(x.acao_adm?' · Você pode atuar':'')+'</span></button>').join('')+(r.itens.length?'':'<p>Nenhuma solicitação nesta aba.</p>')+'</div><div class="page-actions ds-caixa-abas"><button class="btn-page" data-p="-50" '+(offset?'':'disabled')+'>ANTERIOR</button><button class="btn-page" data-p="50" '+(r.itens.length===50?'':'disabled')+'>PRÓXIMA</button><button class="btn-page" data-p="0">ATUALIZAR</button></div>';
  h.querySelectorAll('[data-aba]').forEach(b=>b.onclick=()=>{aba=b.dataset.aba;offset=0;carregar();});
@@ -7702,6 +7702,19 @@ async function dsCaixaAbrirFt(aba=dsAbaCaixaFt){
  h.textContent='Carregando…';
  await carregar();
 }
+async function epCaixaSolicitacoesFt(){
+ if(!APP.usuario)return;
+ const h=dsPaginaFt('Caixa de Entrada · Liberações de folga','Pedidos de abertura excepcional para solicitação de folga.','dsCaixaAbrirFt()');
+ h.innerHTML='<p>Carregando solicitações…</p>';
+ try{
+  const r=await ocFtApi('espaco_pel_mensagens',{});if(!h.isConnected)return;
+  const itens=(r.itens||[]).map(m=>'<article class="modal-card"><strong>'+(m.recebido?'Solicitação de '+dsEscFt(m.solicitante):'Meu pedido de liberação')+'</strong> · '+dsEscFt(dsDataFt(m.data))+' · '+dsEscFt(m.pel)+' · '+dsEscFt(m.tipo)+(m.recebido?'':' · Destinatário: '+dsEscFt(m.destinatario))+'<p>'+dsEscFt(m.motivo)+'</p><p>Status: <strong>'+dsEscFt(m.estado)+'</strong>'+(m.decisor?' · decidido por '+dsEscFt(m.decisor):'')+'</p>'+(m.recebido&&m.estado==='PENDENTE'?'<div class="ep-acoes"><button class="btn-page btn-primary-soft" data-responder="AUTORIZADA" data-id="'+dsEscFt(m.id)+'">AUTORIZAR ABERTURA</button><button class="btn-page" data-responder="RECUSADA" data-id="'+dsEscFt(m.id)+'">RECUSAR</button></div>':'')+'</article>').join('');
+  h.innerHTML='<div class="ds-caixa-abas"><button class="btn-page" type="button" onclick="dsCaixaAbrirFt()">VOLTAR ÀS DISPENSAS</button></div><div class="ds-lista-ft">'+(itens||'<p>Nenhuma solicitação de liberação.</p>')+'</div>';
+  h.querySelectorAll('[data-responder]').forEach(b=>b.onclick=()=>dsOperacaoFt(b,async atual=>{const decisao=b.dataset.responder;if(!await confirmarToastFt(decisao==='AUTORIZADA'?'AUTORIZAR PEDIDO DE ABERTURA':'RECUSAR PEDIDO','Confirma a decisão para esta solicitação?')||!atual())return;await ocFtApi('espaco_pel_responder_liberacao',{id:b.dataset.id,decisao});if(atual()){mostrarToastFt('Solicitação atualizada','A decisão foi registrada.','sucesso');epCaixaSolicitacoesFt();}}));
+  dsAtualizarCaixaFt(true);
+ }catch(e){if(h.isConnected)h.textContent=e.message||String(e);}
+}
+
 async function dsDetalharFt(id){
  const h=dsPaginaFt('Solicitação de dispensa','Dados, pareceres e histórico de tramitação.','dsCaixaAbrirFt()');
  h.textContent='Carregando…';
@@ -8552,7 +8565,7 @@ function epGrupoClienteFt(){const v=normalizarTexto(APP.usuario?.pelotao||'');re
 function epGestorClienteFt(){return ['GESTOR','GESTOR_FT','GESTOR_TEC_FT','GESTOR_TECNICO_FT'].includes(normalizarTexto(APP.usuario?.perfilAcesso||'').replace(/[\s-]+/g,'_'));}
 function epAvancaFt(d,n){return new Date(Date.parse(d+'T00:00:00Z')+86400000*n).toISOString().slice(0,10);}
 function epAbrirFt(){
- const grupo=epGrupoClienteFt(),pel=['1º PEL','2º PEL'].includes(grupo)?grupo:epGestorClienteFt()?'1º PEL':'';
+ const grupo=epGrupoClienteFt(),perfil=normalizarTexto(APP.usuario?.perfilAcesso||'').replace(/[\s-]+/g,'_'),encAdm=['ENC_ADM','ENC_ADM_FT','ENCARREGADO_ADM_FT','ENCARREGADO_ADMINISTRATIVO'].includes(perfil),pel=['1º PEL','2º PEL'].includes(grupo)?grupo:(epGestorClienteFt()||encAdm)?'1º PEL':'';
  if(!pel){abrirAcessoNegado('Espaço do Pel');return;}
  const h=dsPaginaFt('Espaço do Pel','Solicitações de folga e calendário do pelotão.','abrirHome()');
  epRenderAgendaFt(h,pel,'',false);
@@ -8565,10 +8578,11 @@ async function epRenderAgendaFt(h,pel,data,adm){
   const chamada=(acao,params)=>ocFtApi((adm?'fc_adm_':'espaco_pel_')+acao,params);
   const r=await chamada('dados',{pel,data,semSaldo:adm?'0':'1'});if(!h.isConnected||h.dataset.epReq!==req)return;
   const dias=r.dias.filter(d=>d.servico&&!d.operacao&&d.vagas>0);
+  const diasLiberados=dias.filter(d=>r.aberto||d.aberturaManual||d.liberado);
   const e=dsEscFt,fmt=dsDataFt;
-  h.innerHTML=`<div class="page-actions ep-acoes"><button data-sem="-7" class="btn-page">SEMANA ANTERIOR</button><button data-sem="7" class="btn-page">PRÓXIMA SEMANA</button>${r.gestor&&!adm?'<label>Pelotão <select id="epGrupoFt"><option>1º PEL</option><option>2º PEL</option></select></label>':''}</div>
+  h.innerHTML=`<div class="page-actions ep-acoes"><button data-sem="-7" class="btn-page">SEMANA ANTERIOR</button><button data-sem="7" class="btn-page">PRÓXIMA SEMANA</button>${r.podeAlternar&&!adm?'<label>Pelotão <select id="epGrupoFt"><option>1º PEL</option><option>2º PEL</option></select></label>':''}</div>
   <h2>${e(r.pel)} · ${e(fmt(r.semana))} a ${e(fmt(r.fim))}</h2><p>Pedidos até ${e(fmt(r.limite.slice(0,10)))} às 10h (Brasília).</p>
-  <div class="ep-dias">${r.dias.map(d=>`<div><strong>${e(fmt(d.data))}</strong><br>${d.operacao?'Operação — sem folgas':d.servico?e(d.confirmadas)+' de '+e(d.vagas)+' vaga(s) confirmada(s)':adm?'Data fechada':'Sem serviço'}${r.gerencia?'<br><button type="button" class="btn-page" data-config="'+e(d.data)+'">AJUSTAR</button>':''}</div>`).join('')}</div>
+  <div class="ep-dias">${r.dias.map(d=>`<div><strong>${e(fmt(d.data))}</strong><br>${d.operacao?'Operação — sem folgas':d.servico?e(d.confirmadas)+' de '+e(d.vagas)+' vaga(s) confirmada(s)':adm?'Data fechada':'Sem serviço'}${r.gerencia?'<br><button type="button" class="btn-page" data-config="'+e(d.data)+'">AJUSTAR</button>'+(!r.aberto?' <button type="button" class="btn-page" data-abertura="'+e(d.data)+'">'+(d.aberturaManual?'FECHAR PEDIDOS':'ABRIR PEDIDOS')+'</button>':''):''}</div>`).join('')}</div>
   ${r.proprio===r.pel?'<div id="epSaldoFt"></div>':''}
   <div id="epConfigFt"></div><h2>${r.gerencia?(adm?'Pedidos de FC da ADM':'Pedidos do pelotão'):'Meus pedidos'}</h2>
   <div class="ds-lista-ft">${r.pedidos.length?r.pedidos.map(p=>`<div class="modal-card"><strong>${e(p.nome)}</strong> · ${e(fmt(p.data))} · ${epTiposFt[p.tipo]} · ${e(p.estado)}${p.motivo?' · '+e(p.motivo):''}
@@ -8587,10 +8601,11 @@ async function epRenderAgendaFt(h,pel,data,adm){
     const tipos=adm?['FC']:['FM','FF','FC'];
     saldoBox.innerHTML=`${adm?'<p>Saldo total de FC: <strong>'+e(Number(saldo.FCTotal||0))+'</strong> dia(s). A baixa ocorre na aprovação.</p>':''}<p>Disponíveis para solicitar: <strong>${tipos.map(t=>e(Number(saldo[t]||0))+' '+t).join(' · ')}</strong></p>
     ${tipos.filter(t=>!saldo[t]).map(t=>'<p>Não possui '+epTiposFt[t]+' para fruição.</p>').join('')}
-    ${!r.aberto?'<p>Prazo de pedidos encerrado para esta semana.</p>':dias.length&&tipos.some(t=>saldo[t]>0)?`<form id="epPedirFt" class="ep-acoes"><label>Data <select name="data" required><option value="">Selecione</option>${dias.map(d=>'<option value="'+e(d.data)+'">'+e(fmt(d.data))+'</option>').join('')}</select></label><label>Tipo <select name="tipo" required>${tipos.filter(t=>saldo[t]>0).map(t=>'<option value="'+t+'">'+epTiposFt[t]+'</option>').join('')}</select></label><button class="btn-page btn-primary-soft">SOLICITAR FOLGA</button></form>`:''}`;
+    ${diasLiberados.length?(diasLiberados.length&&tipos.some(t=>saldo[t]>0)?`<form id="epPedirFt" class="ep-acoes"><label>Data <select name="data" required><option value="">Selecione</option>${diasLiberados.map(d=>'<option value="'+e(d.data)+'">'+e(fmt(d.data))+(d.liberado?' · liberação individual':d.aberturaManual?' · abertura pelo comando':'')+'</option>').join('')}</select></label><label>Tipo <select name="tipo" required>${tipos.filter(t=>saldo[t]>0).map(t=>'<option value="'+t+'">'+epTiposFt[t]+'</option>').join('')}</select></label><button class="btn-page btn-primary-soft">SOLICITAR FOLGA</button></form>`:''):(dias.length&&tipos.some(t=>saldo[t]>0)?`<p>Prazo encerrado. Peça a um Sgt do seu Pel, Enc Adm ou Gestor a liberação excepcional para uma data.</p><form id="epLiberarFt" class="ep-acoes"><label>Data <select name="data" required><option value="">Selecione</option>${dias.map(d=>'<option value="'+e(d.data)+'">'+e(fmt(d.data))+'</option>').join('')}</select></label><label>Tipo de folga <select name="tipo" required>${tipos.filter(t=>saldo[t]>0).map(t=>'<option value="'+t+'">'+epTiposFt[t]+'</option>').join('')}</select></label><label>Solicitar a <select name="destinatario" required><option value="">Carregando destinatários…</option></select></label><label>Motivação <input name="motivo" maxlength="300" required></label><button class="btn-page btn-primary-soft">SOLICITAR ABERTURA</button></form>`:'<p>Prazo encerrado e sem saldo disponível para solicitar folga.</p>')}`;
     const f=h.querySelector('#epPedirFt');if(f)f.onsubmit=ev=>{ev.preventDefault();dsOperacaoFt(f.querySelector('button'),async atual=>{
      await chamada('pedir',{pel:r.pel,...Object.fromEntries(new FormData(f))});if(atual()){mostrarToastFt('Pedido enviado',adm?'Aguarde a análise do Enc Adm ou do Gestor.':'Aguarde a análise do Sgt do Pel.','sucesso');recarregar();}
     });};
+    const lf=h.querySelector('#epLiberarFt');if(lf){const tipoSelect=lf.elements.tipo;const atualizarTipos=()=>{const d=r.dias.find(x=>x.data===lf.elements.data.value);const tipoUnico=d&&!r.aberto&&!d.aberturaManual&&d.liberado?d.liberadoTipo:'';const disponiveis=tipos.filter(t=>saldo[t]>0&&(!tipoUnico||t===tipoUnico));tipoSelect.innerHTML='<option value="">Selecione</option>'+disponiveis.map(t=>'<option value="'+t+'">'+epTiposFt[t]+'</option>').join('');};lf.elements.data.onchange=atualizarTipos;atualizarTipos();ocFtApi('espaco_pel_destinatarios',{pel:r.pel,data:r.semana}).then(x=>{if(!lf.isConnected)return;lf.elements.destinatario.innerHTML='<option value="">Selecione</option>'+x.itens.map(pm=>'<option value="'+e(pm.re)+'">'+e(pm.nome)+(pm.pel==='ADM'?' · ADM':'')+'</option>').join('');}).catch(err=>{if(lf.isConnected)lf.elements.destinatario.innerHTML='<option value="">'+e(err.message)+'</option>';});lf.onsubmit=ev=>{ev.preventDefault();dsOperacaoFt(lf.querySelector('button'),async atual=>{await ocFtApi('espaco_pel_pedir_liberacao',{pel:r.pel,...Object.fromEntries(new FormData(lf))});if(atual()){mostrarToastFt('Pedido enviado','O destinatário receberá a solicitação na Caixa de Entrada.','sucesso');epRenderAgendaFt(h,r.pel,r.semana,adm);}});};}
    };
    const consultarSaldo=async()=>{
     saldoBox.innerHTML='<p role="status">Conferindo saldo de folgas…</p>';
@@ -8613,6 +8628,7 @@ async function epRenderAgendaFt(h,pel,data,adm){
    if(atual()){if(retorno.baixaAutomatica)mostrarToastFt('FC aprovada','Um dia foi descontado automaticamente do saldo de FC.','sucesso');recarregar();}
 
   }));
+  h.querySelectorAll('[data-abertura]').forEach(b=>b.onclick=()=>dsOperacaoFt(b,async atual=>{const d=r.dias.find(x=>x.data===b.dataset.abertura),abrir=!d.aberturaManual;if(!await confirmarToastFt(abrir?'ABRIR PEDIDOS APÓS O PRAZO':'FECHAR PEDIDOS','A alteração vale para todos os pedidos deste Pel nesta data. As conferências de saldo e a aprovação continuam ativas.')||!atual())return;await chamada('liberar_data',{pel:r.pel,data:d.data,aberta:String(abrir)});if(atual()){mostrarToastFt(abrir?'Pedidos liberados':'Abertura encerrada',fmt(d.data),'sucesso');recarregar();}}));
   h.querySelectorAll('[data-config]').forEach(b=>b.onclick=()=>{
    const d=r.dias.find(x=>x.data===b.dataset.config),box=h.querySelector('#epConfigFt');
    box.innerHTML='<form class="ep-acoes"><strong>Ajuste · '+e(fmt(d.data))+'</strong><label><input type="checkbox" name="servico" '+(d.servico?'checked':'')+'> Serviço</label><label><input type="checkbox" name="operacao" '+(d.operacao?'checked':'')+'> Operação (zero vagas)</label><label>Vagas <input type="number" name="vagas" min="0" max="50" required value="'+e(d.vagas)+'"></label><button class="btn-page">SALVAR DIA</button></form>';
@@ -19209,6 +19225,7 @@ function epMesclarResenhaFt(payload,auto){
       // Corrige somente a apresentação do nome cujo cadastro já está correto.
       // A normalização é de exibição e não altera o dado salvo.
       return String(valor == null ? '' : valor)
+        .replace(/DOUGLAS\s+DOS\s+SANTOS\s+MORAES/gi, 'Douglas dos Santos Moraes')
         .replace(/SANTOS\s+MORAES/gi, 'Santos Moraes')
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
