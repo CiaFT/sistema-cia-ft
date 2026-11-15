@@ -8915,8 +8915,8 @@ function epMesclarResenhaFt(payload,auto){
           </div>
           <div class="menu-grid rotinas-menu-grid">
             ${[
-              {id:'VALORIZACAO_POLICIAL_MES',titulo:'POLICIAL DO MÊS E INDICAÇÕES',descricao:'Reconhecimento mensal dos policiais da Cia FT.'},
-              {id:'VALORIZACAO_LMP_ELOGIOS',titulo:'SOLICITAÇÕES E ACOMPANHAMENTOS',descricao:'Acompanhe solicitações e seus registros.'}
+              {id:'VALORIZACAO_POLICIAL_MES',titulo:'POLICIAL DO MÊS',descricao:'Policial do Mês e indicações.'},
+              {id:'VALORIZACAO_LMP_ELOGIOS',titulo:'LMP E ELOGIOS',descricao:'Solicitações e acompanhamentos.'}
             ].map(menu=>montarMenuCard(menu,true)).join('')}
           </div>
         </div>
@@ -8925,8 +8925,8 @@ function epMesclarResenhaFt(payload,auto){
 
     function abrirPaginaValorizacaoFt(modulo) {
       const paginas={
-        VALORIZACAO_POLICIAL_MES:{titulo:'Policial do Mês e indicações',icone:'./icone-policial-do-mes.png',alt:'Policial do Mês'},
-        VALORIZACAO_LMP_ELOGIOS:{titulo:'Solicitações e acompanhamentos',icone:'./icone-lmp-elogios.png',alt:'Solicitações e acompanhamentos'}
+        VALORIZACAO_POLICIAL_MES:{titulo:'Policial do Mês',icone:'./icone-policial-do-mes.png',alt:'Policial do Mês'},
+        VALORIZACAO_LMP_ELOGIOS:{titulo:'LMP e Elogios',icone:'./icone-lmp-elogios.png',alt:'LMP e Elogios'}
       };
       const pagina=paginas[normalizarModuloCliente(modulo)];
       if(!pagina||!APP.usuario)return;
