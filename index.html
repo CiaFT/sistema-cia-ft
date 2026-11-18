@@ -7385,6 +7385,32 @@ Banco de dados: Google Sheets.
     @media(max-width:900px) { .quadro-ft .qe-vagas-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
     @media(max-width:520px) { .quadro-ft .qe-vagas-grid { grid-template-columns:minmax(0,1fr); } }
   </style>
+  <style>
+    .quadro-ft .qe-matriz-layout { display:grid; grid-template-columns:minmax(260px, .8fr) minmax(0,1.2fr); gap:12px; align-items:start; }
+    .quadro-ft .qe-matriz-lista { max-height:65vh; overflow:auto; }
+    .quadro-ft .qe-matriz-item { display:flex; align-items:center; gap:9px; padding:7px; border:1px solid #d8e0e8; border-radius:9px; margin:5px 0; background:#fff; }
+    .quadro-ft .qe-matriz-item input { width:18px; height:18px; flex:none; }
+    .quadro-ft .qe-matriz-item img,.quadro-ft .qe-matriz-item .qe-sem-foto { width:38px; height:46px; flex:none; object-fit:cover; border:2px solid #374247; border-radius:5px; background:#e3e9ee; }
+    .quadro-ft .qe-matriz-item.hierarquia-oficial img { border-color:#b8860b; }
+    .quadro-ft .qe-matriz-item.hierarquia-subten-sgt img { border-color:#960018; }
+    .quadro-ft .qe-matriz-item.hierarquia-cb-sd img { border-color:#0033a0; }
+    .quadro-ft .qe-matriz-item small { display:block; color:#64748b; }
+    .quadro-ft .qe-matriz-preview { display:flex; flex-direction:column; align-items:center; gap:12px; }
+    .quadro-ft .qe-card-preview { width:54mm; height:67mm; flex:none; overflow:hidden; display:grid; grid-template-rows:49mm 18mm; box-shadow:0 4px 18px #17202a30; }
+    .quadro-ft .qe-card-photo { width:100%; height:49mm; border:2mm solid var(--qe-card-cor); border-bottom:0; overflow:hidden; background:#e6e9ed; }
+    .quadro-ft .qe-card-photo img { display:block; width:100%; height:100%; object-fit:cover; }
+    .quadro-ft .qe-card-sem-foto { width:100%; height:100%; display:grid; place-items:center; color:#475569; font-weight:700; }
+    .quadro-ft .qe-card-legenda { background:var(--qe-card-cor); color:var(--qe-card-texto); display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:1mm 2mm; font-family:Arial,sans-serif; font-weight:700; line-height:1.1; overflow:hidden; }
+    .quadro-ft .qe-card-legenda strong { display:block; width:100%; font-size:3.2mm; overflow-wrap:anywhere; }
+    .quadro-ft .qe-card-legenda small { display:block; margin-top:1mm; font-size:3.4mm; }
+    .quadro-ft .qe-card-preview.hierarquia-oficial { --qe-card-cor:#f2c230; --qe-card-texto:#111; }
+    .quadro-ft .qe-card-preview.hierarquia-subten-sgt { --qe-card-cor:#c90018; --qe-card-texto:#fff; }
+    .quadro-ft .qe-card-preview.hierarquia-cb-sd { --qe-card-cor:#0033a0; --qe-card-texto:#fff; }
+    .quadro-ft .qe-card-preview:not(.hierarquia-oficial):not(.hierarquia-subten-sgt):not(.hierarquia-cb-sd) { --qe-card-cor:#374247; --qe-card-texto:#fff; }
+    .quadro-ft .qe-matriz-ajustes { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+    .quadro-ft .qe-matriz-ajustes label { display:grid; gap:4px; font-size:12px; font-weight:700; }
+    @media(max-width:760px) { .quadro-ft .qe-matriz-layout { grid-template-columns:minmax(0,1fr); } .quadro-ft .qe-matriz-lista { max-height:42vh; } }
+  </style>
 </head>
 
 <body>
@@ -12345,9 +12371,13 @@ function epMesclarResenhaFt(payload,auto){
       };
       const e=escapar, a=escaparAttr;
       const nomeExibicao=p=>String(p&&p.nome||'').replace(/SANTOS\s+MORAES/gi,'Santos Moraes');
+      const canvasFonte=document.createElement('canvas'), contextoFonte=canvasFonte.getContext('2d');
+      const fonteCartao=texto=>{contextoFonte.font='700 12px Arial';const largura=contextoFonte.measureText(String(texto||'')).width;const px=Math.max(8,Math.min(12,largura?12*(174/largura):12));return (px*25.4/96).toFixed(2)+'mm';};
       const grupos=[['1_PEL','1º Pelotão'],['2_PEL','2º Pelotão'],['ADM','Administração'],['AFAST','Afastamentos'],['CONFERIR','Lotação a conferir']];
       const postos=[['cap','Cap PM'],['ten','Ten PM'],['sub_sgt','Subten / Sgt PM'],['cb_sd','Cb / Sd PM']];
       let atual, aba='atual', grupo='1_PEL', lista=[], plano, pessoas=[], fotos={}, alterado=false, ocupado=false, escopoMontagem='TOTAL';
+      const idsCartoes=new Set(), enquadramentos=Object.create(null);
+      let idFocoMatriz='';
       const info=(texto,erro=false)=>{msg.textContent=texto;msg.className=erro?'qe-erro':'';};
       function executar(fn) {
         if(ocupado) return;
@@ -12414,7 +12444,8 @@ function epMesclarResenhaFt(payload,auto){
           ${p.afastamento?`<small class="qe-afastado">${e(p.afastamento)}</small>`:''}</div></div>${escolhas}</li>`;
       }
       function render() {
-        abas.innerHTML=botao('aba-atual','EFETIVO ATUAL',`aria-pressed="${aba==='atual'}"`)+(atual.pode_montar?botao('aba-equipes','MONTAGEM DE EQUIPES',`aria-pressed="${aba==='equipes'}"`):'');
+        abas.innerHTML=botao('aba-atual','EFETIVO ATUAL',`aria-pressed="${aba==='atual'}"`)+(atual.pode_montar?botao('aba-equipes','MONTAGEM DE EQUIPES',`aria-pressed="${aba==='equipes'}"`):'')+botao('aba-matriz','MATRIZ DE FOTOS',`aria-pressed="${aba==='matriz'}"`);
+        if(aba==='matriz') { renderMatriz(); return; }
         if(aba==='atual') {
           const contagem=Object.fromEntries(postos.map(([k])=>[k,atual.efetivo.filter(p=>p.categoria.toLowerCase()===k).length]));
           const outros=atual.efetivo.filter(p=>p.categoria==='OUTRO').length;
@@ -12461,6 +12492,37 @@ function epMesclarResenhaFt(payload,auto){
           </div>`;
         configurarFallbackFotos();
       }
+      function renderMatriz() {
+        const efetivo=[...atual.efetivo];
+        const selecionados=efetivo.filter(p=>idsCartoes.has(String(p.id)));
+        const foco=selecionados.find(p=>String(p.id)===idFocoMatriz)||selecionados[0]||efetivo.find(p=>urlFoto(p))||null;
+        const fotoUrl=p=>urlFoto(p)||'';
+        const controle=foco?`<div class="qe-matriz-preview"><div class="qe-card-preview ${classeHierarquia(foco)}">
+          <div class="qe-card-photo">${fotoUrl(foco)?`<img src="${a(fotoUrl(foco))}" alt="Prévia da foto" style="object-position:50% ${Number(enquadramentos[foco.id]??50)}%">`:'<div class="qe-card-sem-foto">SEM FOTO</div>'}</div>
+          <div class="qe-card-legenda"><strong style="font-size:${fonteCartao([foco.posto,nomeExibicao(foco)].filter(Boolean).join(' ').toLocaleUpperCase('pt-BR'))}">${e([foco.posto,nomeExibicao(foco)].filter(Boolean).join(' ').toLocaleUpperCase('pt-BR'))}</strong><small>RE ${e(foco.re||'')}</small></div>
+        </div><div class="qe-matriz-ajustes"><label>Enquadramento vertical <input id="qeCrop" type="range" min="0" max="100" value="${Number(enquadramentos[foco.id]??50)}" ${fotoUrl(foco)?'':'disabled'}></label><span>${e([foco.posto,nomeExibicao(foco)].filter(Boolean).join(' '))}</span></div></div>`:'<p>Selecione um policial com foto para pré-visualizar.</p>';
+        box.innerHTML=`<section class="modal-card qe-secao"><h2>Matriz de Fotos</h2><p>Selecione os policiais e confira o enquadramento antes de imprimir. Cada card mede 54 × 67 mm, com faixa inferior fixa de 18 mm.</p>
+          <div class="qe-controles"><label>Localizar policial<input id="qeBuscaMatriz" type="search" placeholder="Nome, posto ou RE"></label>${botao('selecionar-com-foto','SELECIONAR COM FOTO')}${botao('limpar-selecao','LIMPAR SELEÇÃO')}<span><strong>${selecionados.length}</strong> selecionado(s)</span></div>
+          <div class="qe-matriz-layout"><div class="qe-matriz-lista" id="qeMatrizLista">${efetivo.map(p=>{const foto=fotoUrl(p);return `<div class="qe-matriz-item ${classeHierarquia(p)}" data-busca="${a([p.posto,p.nome,p.re].join(' ').toLocaleLowerCase('pt-BR'))}">
+            <input type="checkbox" data-matriz-id="${a(p.id)}" ${idsCartoes.has(String(p.id))?'checked':''} ${foto?'':'disabled'} aria-label="Selecionar ${a([p.posto,p.nome].filter(Boolean).join(' '))}">
+            ${foto?`<img src="${a(foto)}" alt="" loading="lazy">`:'<span class="qe-sem-foto">—</span>'}<span><strong>${e([p.posto,nomeExibicao(p)].filter(Boolean).join(' '))}</strong><small>RE ${e(p.re||'')}${foto?'':' · sem foto cadastrada'}</small></span>${foto?`<button type="button" class="btn-page" data-matriz-foco="${a(p.id)}">AJUSTAR</button>`:''}</div>`;}).join('')}</div>${controle}</div>
+          <p>Impressão A4 retrato: até 12 cards por folha (3 × 4), centralizados e em tamanho físico. Na janela de impressão, escolha “Salvar como PDF” e escala 100% / tamanho real.</p>
+          ${botao('imprimir-matriz','GERAR PDF / IMPRIMIR',selecionados.length?'':'disabled')}</section>`;
+        configurarFallbackFotos();
+      }
+      function imprimirMatriz() {
+        const selecionados=[...atual.efetivo].filter(p=>idsCartoes.has(String(p.id))&&urlFoto(p));
+        if(!selecionados.length){info('Selecione ao menos um policial com foto cadastrada.',true);return;}
+        const janela=window.open('','_blank');
+        if(!janela){info('O navegador bloqueou a janela de impressão. Permita pop-ups para este site e tente novamente.',true);return;}
+        const cor=p=>String(p.categoria||'').toUpperCase()==='CAP'||String(p.categoria||'').toUpperCase()==='TEN'?['#f2c230','#111']:
+          String(p.categoria||'').toUpperCase()==='SUB_SGT'?['#c90018','#fff']:String(p.categoria||'').toUpperCase()==='CB_SD'?['#0033a0','#fff']:['#374247','#fff'];
+        const cards=selecionados.map(p=>{const [bg,fg]=cor(p), crop=Number(enquadramentos[p.id]??50), titulo=[p.posto,nomeExibicao(p)].filter(Boolean).join(' ').toLocaleUpperCase('pt-BR');
+          return `<article class="card" style="--cor:${bg};--texto:${fg}"><div class="foto"><img src="${a(urlFoto(p))}" alt="" style="object-position:50% ${crop}%"></div><div class="legenda"><strong style="font-size:${fonteCartao(titulo)}">${e(titulo)}</strong><small>RE ${e(p.re||'')}</small></div></article>`;}).join('');
+        janela.document.open();janela.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Matriz de Fotos — App FT</title><style>
+          @page{size:A4 portrait;margin:10mm}*{box-sizing:border-box}html,body{margin:0;padding:0;font-family:Arial,sans-serif}.folha{width:100%;min-height:277mm;display:grid;grid-template-columns:repeat(3,54mm);grid-auto-rows:67mm;gap:1mm;align-content:center;justify-content:center;break-after:page;page-break-after:always}.folha:last-child{break-after:auto;page-break-after:auto}.card{width:54mm;height:67mm;overflow:hidden;display:grid;grid-template-rows:49mm 18mm;break-inside:avoid;page-break-inside:avoid}.foto{width:54mm;height:49mm;border:2mm solid var(--cor);border-bottom:0;overflow:hidden;background:#e6e9ed}.foto img{display:block;width:100%;height:100%;object-fit:cover}.legenda{height:18mm;background:var(--cor);color:var(--texto);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:1mm 2mm;font-weight:700;line-height:1.08;overflow:hidden}.legenda strong{width:100%;font-size:3.2mm;overflow-wrap:anywhere}.legenda small{margin-top:1mm;font-size:3.4mm}@media screen{body{background:#eef1f4;padding:15px}.folha{width:190mm;min-height:277mm;margin:0 auto 15px;background:#fff;box-shadow:0 2px 14px #0002}}@media print{.folha{width:100%;min-height:277mm}}
+          </style></head><body>${Array.from({length:Math.ceil(cards.length/12)},(_,i)=>`<main class="folha">${selecionados.slice(i*12,(i+1)*12).map(p=>{const [bg,fg]=cor(p),crop=Number(enquadramentos[p.id]??50),titulo=[p.posto,nomeExibicao(p)].filter(Boolean).join(' ').toLocaleUpperCase('pt-BR'), fonte=fonteCartao(titulo);return `<article class="card" style="--cor:${bg};--texto:${fg}"><div class="foto"><img src="${a(urlFoto(p))}" alt="" style="object-position:50% ${crop}%"></div><div class="legenda"><strong style="font-size:${fonte}">${e(titulo)}</strong><small>RE ${e(p.re||'')}</small></div></article>`;}).join('')}</main>`).join('')}<script>window.onload=()=>{const imgs=[...document.images];Promise.all(imgs.map(i=>i.decode?i.decode().catch(()=>{}):Promise.resolve())).then(()=>setTimeout(()=>window.print(),250));};</`+`script></body></html>`);janela.document.close();
+      }
       function mover(id,destino) {
         if(ocupado||!plano||!Number.isInteger(destino)||destino< -1||destino>=plano.equipes.length) return;
         const p=pessoas.find(x=>x.id===id);
@@ -12473,9 +12535,11 @@ function epMesclarResenhaFt(payload,auto){
       }
       const novo=()=>({titulo:'',dia:atual.hoje,equipes:[{nome:'Equipe 1',membros:[]}]});
       root.addEventListener('click',ev=>{
-        const b=ev.target.closest('[data-qe]');if(!b||ocupado||!atual)return;
+        const b=ev.target.closest('[data-qe],[data-matriz-foco]');if(!b||ocupado||!atual)return;
         const acao=b.dataset.qe; info('');
+        if(b.hasAttribute('data-matriz-foco')){idFocoMatriz=b.dataset.matrizFoco;renderMatriz();return;}
         if(acao==='aba-atual'){aba='atual';render();}
+        else if(acao==='aba-matriz'){aba='matriz';render();}
         else if(acao==='atualizar'){executar(async()=>{atual=await api('atual');render();info('Efetivo atualizado.');});}
         else if(acao==='aba-equipes') {
           if(plano){aba='equipes';render();return;}
@@ -12493,6 +12557,9 @@ function epMesclarResenhaFt(payload,auto){
           if(plano.equipes[Number(b.dataset.indice)].membros.length&&!window.confirm('Remover a equipe e devolver seus integrantes à lista?'))return;
           plano.equipes.splice(Number(b.dataset.indice),1);alterado=true;render();
         } else if(acao==='retirar'){mover(b.dataset.id,-1);}
+        else if(acao==='selecionar-com-foto'){atual.efetivo.forEach(p=>{if(urlFoto(p))idsCartoes.add(String(p.id));});idFocoMatriz=atual.efetivo.find(p=>urlFoto(p))?.id||'';render();}
+        else if(acao==='limpar-selecao'){idsCartoes.clear();idFocoMatriz='';render();}
+        else if(acao==='imprimir-matriz'){imprimirMatriz();}
         else if(acao==='salvar'){
           if(!plano.titulo.trim()||plano.equipes.some(eq=>!eq.nome.trim())){info('Informe o nome da montagem e de todas as equipes.',true);return;}
           executar(async()=>{const salvo=await api('salvar_montagem',plano);Object.assign(plano,salvo);alterado=false;
@@ -12500,12 +12567,29 @@ function epMesclarResenhaFt(payload,auto){
         }
       });
       root.addEventListener('input',ev=>{
-        const el=ev.target;if(!plano)return;
+        const el=ev.target;
+        if(el.id==='qeBuscaMatriz'){
+          const termo=normalizarTexto(el.value);
+          box.querySelectorAll('.qe-matriz-item').forEach(item=>{item.hidden=!!termo&&!normalizarTexto(item.dataset.busca).includes(termo);});
+          return;
+        }
+        if(el.id==='qeCrop'&&aba==='matriz'){
+          const p=atual.efetivo.find(x=>String(x.id)===idFocoMatriz&&urlFoto(x))||atual.efetivo.find(x=>idsCartoes.has(String(x.id))&&urlFoto(x))||atual.efetivo.find(x=>urlFoto(x));
+          if(p){enquadramentos[p.id]=Number(el.value);const imagem=box.querySelector('.qe-card-photo img');if(imagem)imagem.style.objectPosition='50% '+el.value+'%';}
+          return;
+        }
+        if(!plano)return;
         if(el.id==='qeTitulo'){plano.titulo=el.value;alterado=true;}
         if(el.hasAttribute('data-qe-equipe')){plano.equipes[Number(el.dataset.qeEquipe)].nome=el.value;alterado=true;}
       });
       root.addEventListener('change',ev=>{
-        const el=ev.target;if(!plano||ocupado)return;
+        const el=ev.target;if(ocupado)return;
+        if(el.hasAttribute('data-matriz-id')){
+          if(el.checked){idsCartoes.add(String(el.dataset.matrizId));if(!idFocoMatriz)idFocoMatriz=String(el.dataset.matrizId);}
+          else {idsCartoes.delete(String(el.dataset.matrizId));if(idFocoMatriz===String(el.dataset.matrizId))idFocoMatriz='';}
+          renderMatriz();return;
+        }
+        if(!plano)return;
         if(el.hasAttribute('data-qe-mover')&&el.value!=='')mover(el.dataset.qeMover,Number(el.value));
         else if(el.hasAttribute('data-qe-equipe')){
           const i=Number(el.dataset.qeEquipe), nome=plano.equipes[i].nome||('Equipe '+(i+1));
@@ -12549,6 +12633,7 @@ function epMesclarResenhaFt(payload,auto){
         catch(erro){box.innerHTML='<p>Não foi possível carregar o efetivo.</p><button class="btn-page" type="button" id="qeTentar">TENTAR NOVAMENTE</button>';box.querySelector('#qeTentar').onclick=abrirQuadroEfetivoFt;throw erro;}
         void carregarFotosSupabaseAssinadas(true).then(f=>{
           if(!ativo())return; fotos=f;
+          if(aba==='matriz'){renderMatriz();return;}
           const membros=[...atual.efetivo,...pessoas];
           const porId=new Map(membros.map(p=>[p.id,p]));
           for(const li of box.querySelectorAll('[data-qe-pm]')){
