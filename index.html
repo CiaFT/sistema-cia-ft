@@ -10446,6 +10446,90 @@ function epMesclarResenhaFt(payload,auto){
         '" onclick="pafAbrirExcecaoFt_(this)">AUTORIZAR EXCEÇÃO</button>';
     }
 
+    function pafBotaoConversaoFt_(s,periodos,encerrado,podeExcecao){
+      const id=String(s.solicitacao_id || ''), p=periodos[0];
+      if(!podeExcecao || !encerrado || s.status!=='VALIDADA' || s.modalidade!=='30_DIAS' ||
+        periodos.length!==1 || !p || p.status!=='VALIDO' || p.sobrestamento ||
+        !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id)) return '';
+      const inicio=p.inicio_real || p.inicio_vigente || p.inicio;
+      if(!inicio || (window.APPFT_FERIAS_DADOS?.hoje_sp && inicio<=window.APPFT_FERIAS_DADOS.hoje_sp)) return '';
+      return '<button type="button" class="btn-page paf-excecao-acao" data-pedido="'+id+
+        '" onclick="pafAbrirConversaoFt_(this)">CONVERTER 30 PARA 15 + 15</button>';
+    }
+
+    async function pafExecutarConversaoFt_(pedido,inicio1,inicio2,justificativa,senhaPortal,re){
+      const cfg=configPlanoFerias();
+      const url=String(cfg.url || APPFT_FERIAS_SUPABASE_URL).replace(/\/$/,'');
+      const apikey=cfg.anonKey || window.APPFT_SUPABASE_ANON_KEY || APPFT_FERIAS_SUPABASE_ANON_KEY;
+      const senhaAuth=await senhaSupabasePonteFerias(re,senhaPortal);
+      const login=await fetch(url+'/auth/v1/token?grant_type=password',{
+        method:'POST',headers:{apikey,'Content-Type':'application/json'},cache:'no-store',credentials:'omit',
+        body:JSON.stringify({email:'re-'+re+'@appft.invalid',password:senhaAuth})
+      });
+      const sessao=await login.json().catch(()=>null);
+      if(login.status===429) throw new Error('Muitas tentativas de autenticação. Aguarde antes de tentar novamente.');
+      if(!login.ok || !sessao?.access_token) throw new Error('O Supabase não confirmou a senha. Confira e tente novamente.');
+      const resposta=await fetch(url+'/rest/v1/rpc/ft_paf_converter_30_para_2x15_v1',{
+        method:'POST',headers:{apikey,Authorization:'Bearer '+sessao.access_token,'Content-Type':'application/json',Accept:'application/json'},
+        cache:'no-store',credentials:'omit',body:JSON.stringify({p_solicitacao:pedido,p_inicio_1:inicio1,p_inicio_2:inicio2,p_justificativa:justificativa})
+      });
+      const corpo=await resposta.json().catch(()=>null);
+      if(!resposta.ok || corpo?.modalidade!=='2X15_DIAS') throw new Error(corpo?.message || 'O Supabase não confirmou a conversão. Reabra o PAF para conferir.');
+      return corpo;
+    }
+
+    function pafAbrirConversaoFt_(botao){
+      const dados=window.APPFT_FERIAS_DADOS;
+      const s=dados?.solicitacoes_visiveis?.find(item=>item.solicitacao_id===botao.dataset.pedido);
+      const p=s?.periodos?.[0];
+      if(!s || !p || dados.pode_excecao_paf!==true || document.getElementById('pafConversaoFt')) return;
+      const atual=p.inicio_real || p.inicio_vigente || p.inicio;
+      if(p.sobrestamento || (dados.hoje_sp && atual<=dados.hoje_sp)){
+        mostrarToastFt('Conversão indisponível','O período já começou ou possui sobrestamento.','erro');return;
+      }
+      const usuario=APP.usuario || {}, cred=APP.credenciais || {};
+      const re=String(usuario.re || usuario.login || cred.login || '').replace(/\D/g,'').slice(0,6);
+      if(re.length!==6){mostrarToastFt('Sessão do portal indisponível','Entre novamente para autorizar.','erro');return;}
+      const dialog=document.createElement('dialog');
+      dialog.id='pafConversaoFt'; dialog.className='oc-ft-dialogo paf-excecao-dialogo';
+      dialog.setAttribute('aria-labelledby','pafConversaoTituloFt');
+      const esc=escaparFerias, ano=String(dados.ciclo?.ano_fruição || '').slice(0,4);
+      const minimo=dataFimFerias(dados.hoje_sp || '',2);
+      dialog.innerHTML='<h2 id="pafConversaoTituloFt">Converter férias para 15 + 15 dias</h2><p><strong>'+
+        esc([s.graduacao,s.nome].filter(Boolean).join(' '))+'</strong> · início atual: '+esc(dataFeriasBR(atual))+'</p>'+ 
+        '<p>Os 30 dias serão divididos em dois períodos de 15 dias. A alteração exige justificativa e confirmação da sua senha. Períodos iniciados ou sobrestados não podem ser convertidos.</p>'+ 
+        '<form class="paf-excecao-form">'+
+        '<label class="ferias-field"><span>Início do 1º período (15 dias)</span><input type="date" name="inicio1" min="'+escaparAttr(minimo)+'" max="'+escaparAttr(ano+'-12-31')+'" value="'+escaparAttr(atual)+'" required></label>'+ 
+        '<label class="ferias-field"><span>Início do 2º período (15 dias)</span><input type="date" name="inicio2" min="'+escaparAttr(minimo)+'" max="'+escaparAttr(ano+'-12-31')+'" required></label>'+ 
+        '<label class="ferias-field"><span>Justificativa da alteração</span><textarea rows="3" name="justificativa" required minlength="10" maxlength="1000" autofocus></textarea></label>'+ 
+        '<label class="ferias-field"><span>Confirme sua senha atual do portal</span><input name="senha" type="password" autocomplete="current-password" required></label>'+ 
+        '<p role="alert" data-erro></p><div class="ferias-actions"><button type="button" class="btn-page" data-cancelar>Cancelar</button>'+ 
+        '<button type="submit" class="ferias-primary">Confirmar conversão</button></div></form>';
+      const form=dialog.querySelector('form'), confirmar=form.querySelector('[type="submit"]'), cancelar=form.querySelector('[data-cancelar]');
+      const erro=form.querySelector('[data-erro]'), campoSenha=form.elements.namedItem('senha');
+      dialog.addEventListener('close',()=>{campoSenha.value='';dialog.remove();},{once:true});
+      dialog.addEventListener('cancel',evento=>{if(confirmar.disabled)evento.preventDefault();});
+      cancelar.addEventListener('click',()=>dialog.close());
+      form.addEventListener('submit',async evento=>{
+        evento.preventDefault();
+        if(confirmar.disabled || !form.reportValidity()) return;
+        if(!botao.isConnected || window.APPFT_FERIAS_DADOS!==dados){dialog.close();return;}
+        const inicio1=form.elements.namedItem('inicio1').value, inicio2=form.elements.namedItem('inicio2').value;
+        const motivo=form.elements.namedItem('justificativa').value.trim();
+        if(motivo.length<10){erro.textContent='Informe pelo menos 10 caracteres na justificativa.';return;}
+        const ms1=Date.parse(inicio1+'T00:00:00Z'),ms2=Date.parse(inicio2+'T00:00:00Z');
+        if(!Number.isFinite(ms1)||!Number.isFinite(ms2)||ms1>=ms2||ms2<ms1+15*86400000){erro.textContent='O 2º período deve começar após o término dos primeiros 15 dias.';return;}
+        let senha=campoSenha.value; campoSenha.value=''; confirmar.disabled=cancelar.disabled=true; erro.textContent='';
+        try{await pafExecutarConversaoFt_(s.solicitacao_id,inicio1,inicio2,motivo,senha,re);}
+        catch(e){erro.textContent=e.message || 'Não foi possível converter a modalidade.';return;}
+        finally{senha='';confirmar.disabled=cancelar.disabled=false;}
+        dialog.close(); APP.apiCache={}; APP.dadosConsultaEfetivo=null;
+        mostrarToastFt('PAF convertido','A solicitação foi atualizada para dois períodos de 15 dias.','ok');
+        if(botao.isConnected && window.APPFT_FERIAS_DADOS===dados) await carregarPlanoAnualFerias(dados.ciclo?.ano_fruição);
+      });
+      document.body.appendChild(dialog); dialog.showModal();
+    }
+
     async function pafExecutarExcecaoFt_(pedido,inicios,justificativa,senhaPortal,re){
       const cfg=configPlanoFerias();
       const url=String(cfg.url || APPFT_FERIAS_SUPABASE_URL).replace(/\/$/,'');
@@ -10699,7 +10783,7 @@ function epMesclarResenhaFt(payload,auto){
             '<td><strong class="paf-situacao" data-tom="'+(p.status==='AJUSTE_NECESSARIO'?'ajuste':p.status==='VALIDO'?'ok':'')+'">'+escaparFerias(String(p.status||'—').replaceAll('_',' '))+'</strong><br><small>Solicitação: '+escaparFerias(String(s.status||'—').replaceAll('_',' '))+'</small>'+
             (p.motivo?'<br><small>'+escaparFerias(p.motivo)+'</small>':'')+'</td>'+
             (encerrado?'<td>'+(ajuste?pafInputAjusteFt(p):pafCampoFruicaoFt(p,'INICIO_REAL',dados.hoje_sp))+'</td><td>'+pafCampoFruicaoFt(p,'SOBRESTAMENTO',dados.hoje_sp)+'</td>'+
-              (i===0?'<td class="paf-acao" rowspan="'+periodos.length+'">'+((pafBotaoValidarFt(s,periodos,encerrado)+pafBotaoExcecaoFt_(s,periodos,encerrado,dados.pode_excecao_paf===true))||'—')+'</td>':''):'')+'</tr>';
+              (i===0?'<td class="paf-acao" rowspan="'+periodos.length+'">'+((pafBotaoValidarFt(s,periodos,encerrado)+pafBotaoExcecaoFt_(s,periodos,encerrado,dados.pode_excecao_paf===true)+pafBotaoConversaoFt_(s,periodos,encerrado,dados.pode_excecao_paf===true))||'—')+'</td>':''):'')+'</tr>';
         });
       }).join('');
 
