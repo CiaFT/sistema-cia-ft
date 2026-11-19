@@ -5959,6 +5959,9 @@ Banco de dados: Google Sheets.
     .folgas-audit-controls label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:800;color:#374247}
     .folgas-audit-controls select{width:100%;min-height:44px;border:1px solid #cbd5e1;border-radius:12px;background:#fff;padding:8px 12px;font:inherit;color:#17202a}
     .folgas-audit-result{margin-top:14px}
+    .folgas-audit-legend{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0}
+    .folgas-audit-legend div{display:grid;gap:3px;padding:9px 11px;border:1px solid #d9e0e5;border-radius:10px;background:#fff;font-size:11px;line-height:1.4}
+    .folgas-audit-legend strong{color:#374247;font-size:10px}.folgas-audit-legend span{color:#475569}
     .folgas-audit-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:12px 0}
     .folgas-audit-card{border:1px solid #d9e0e5;border-radius:14px;background:#fff;padding:12px}
     .folgas-audit-card small{display:block;color:#64748b;font-weight:800;font-size:10px;text-transform:uppercase}
@@ -5971,7 +5974,7 @@ Banco de dados: Google Sheets.
     .folgas-audit-table .audit-error{background:#fff1f2;color:#991b1b;font-weight:800}
     .folgas-audit-status{display:inline-block;padding:5px 9px;border-radius:999px;background:#e2e8f0;font-size:11px;font-weight:900}
     .folgas-audit-status.ok{background:#dcfce7;color:#166534}.folgas-audit-status.warn{background:#fef3c7;color:#92400e}.folgas-audit-status.err{background:#fee2e2;color:#991b1b}
-    @media(max-width:760px){.folgas-audit-controls{grid-template-columns:1fr}.folgas-audit-controls button{width:100%}.folgas-audit-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.folgas-audit-card strong{font-size:15px}}
+    @media(max-width:760px){.folgas-audit-legend{grid-template-columns:1fr}.folgas-audit-controls{grid-template-columns:1fr}.folgas-audit-controls button{width:100%}.folgas-audit-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.folgas-audit-card strong{font-size:15px}}
     .folga-table .folga-dia-inativo{background:#eef2f6!important}
     .folga-table .folga-dia-inativo .freq-select-wrap{border-color:#d1d5db;background:#e5e7eb}
     .folga-table .folga-dia-inativo .freq-select-display::before{display:none!important}
@@ -7356,9 +7359,15 @@ Banco de dados: Google Sheets.
     .quadro-ft .qe-tabela { width:100%; margin:8px 0; border-collapse:collapse; font-size:12px; }
     .quadro-ft .qe-tabela :is(th,td) { border-bottom:1px solid #dce3ea; padding:6px 4px; text-align:left; }
     .quadro-ft .qe-efetivo-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; align-items:start; }
-    .quadro-ft .qe-montagem { display:grid; grid-template-columns:minmax(220px,.9fr) minmax(300px,1.2fr) minmax(220px,.9fr); gap:10px; align-items:start; }
+    .quadro-ft .qe-montagem { display:grid; grid-template-columns:minmax(220px,.9fr) minmax(300px,1.2fr) minmax(220px,.9fr); gap:10px; align-items:stretch; }
+    .quadro-ft .qe-montagem-coluna { max-height:68vh; min-height:320px; overflow:auto; overscroll-behavior:contain; scrollbar-gutter:stable; padding:0 4px 4px 0; }
+    .quadro-ft .qe-montagem-coluna > .qe-secao { margin:0; }
+    .quadro-ft .qe-montagem-coluna > .qe-secao > h2,.quadro-ft .qe-equipes-titulo { position:sticky; top:0; z-index:2; background:#fff; padding:4px 0 8px; }
     .quadro-ft .qe-equipes-coluna { display:grid; grid-template-columns:minmax(0,1fr); gap:10px; align-content:start; min-width:0; }
     .quadro-ft .qe-equipes-coluna > .qe-secao { margin:0; }
+    .quadro-ft .qe-equipes-titulo { margin:0; padding:8px 10px; border-radius:10px; color:#374247; font-size:13px; }
+    .quadro-ft .qe-equipe-titulo { margin:0 0 7px; color:#374247; font-size:13px; }
+    .quadro-ft .qe-montagem-hint { margin:8px 0 0; padding:8px 10px; border:1px solid #d9e0e5; border-radius:10px; background:#f8fafc; color:#475569; font-size:12px; line-height:1.45; }
     .quadro-ft .qe-grupos { display:none; }
     .quadro-ft .qe-grupo[data-grupo="AFAST"],.quadro-ft .qe-grupo[data-grupo="CONFERIR"] { grid-column:1 / -1; }
     .quadro-ft .qe-lista { display:grid; list-style:none; gap:6px; margin:8px 0 0; padding:0; }
@@ -7379,9 +7388,14 @@ Banco de dados: Google Sheets.
     .quadro-ft #qeMensagem:not(:empty) { margin:8px 0; font-size:13px; }
     .quadro-ft .qe-nome-equipe { margin-bottom:8px; }
     .quadro-ft .qe-filtro-aviso { margin:6px 0 0; padding:6px 8px; border-radius:7px; background:#fff7e6; color:#70510a; font-size:11px; font-weight:700; }
+    @media(max-width:980px) {
+      .quadro-ft .qe-montagem { grid-template-columns:minmax(0,1fr); }
+      .quadro-ft .qe-montagem-coluna,.quadro-ft .qe-equipes-coluna { max-height:none; min-height:0; overflow:visible; padding:0; }
+    }
     @media(max-width:760px) {
       .quadro-ft .qe-grupos { display:flex; }
       .quadro-ft .qe-efetivo-grid,.quadro-ft .qe-montagem { grid-template-columns:minmax(0,1fr); }
+      .quadro-ft .qe-montagem-coluna,.quadro-ft .qe-equipes-coluna { max-height:none; min-height:0; overflow:visible; padding:0; }
       .quadro-ft .qe-grupo:not(.qe-grupo-ativo) { display:none; }
     }
   </style>
@@ -12499,7 +12513,7 @@ function epMesclarResenhaFt(payload,auto){
         const noEscopo=p=>!gruposEscopo[escopoMontagem]||gruposEscopo[escopoMontagem].includes(String(p.grupo||''));
         const disponiveis=pessoas.filter(p=>noEscopo(p)&&!p.afastamento&&!lotados.has(p.id));
         const afastados=pessoas.filter(p=>noEscopo(p)&&p.afastamento);
-        box.innerHTML=`<section class="modal-card qe-secao"><h2>Montagem de equipes</h2><p>Rascunho. Arraste as fotos ou use “Mover para”. A montagem não altera lotações nem escalas oficiais.</p><p>A lista considera os afastamentos registrados nas fontes do Portal. Confirme a disponibilidade antes de usar o rascunho.</p>
+        box.innerHTML=`<section class="modal-card qe-secao"><h2>Montagem de equipes</h2><p>Rascunho. A montagem não altera lotações nem escalas oficiais. Arraste uma foto para uma equipe ou escolha o destino em “Mover para”.</p><p>A lista considera os afastamentos registrados nas fontes do Portal. Confirme a disponibilidade antes de usar o rascunho.</p><p class="qe-montagem-hint">No computador, role cada coluna separadamente: disponíveis à esquerda, equipes no centro e afastamentos à direita. Em telas estreitas, as colunas ficam empilhadas e a rolagem é da página.</p>
           <div class="qe-controles"><label>Rascunhos salvos <select id="qeSalvos"><option value="">Selecione</option>
           ${lista.map(x=>`<option value="${a(x.id)}"${plano.id===x.id?' selected':''}>${e(x.dia.split('-').reverse().join('/')+' — '+x.titulo)}</option>`).join('')}
           </select></label>${botao('novo','NOVO RASCUNHO')}</div>
@@ -12508,12 +12522,12 @@ function epMesclarResenhaFt(payload,auto){
           <label>Visualizar efetivo<select id="qeEscopo"><option value="1_PEL"${escopoMontagem==='1_PEL'?' selected':''}>1º Pel</option><option value="2_PEL"${escopoMontagem==='2_PEL'?' selected':''}>2º Pel</option><option value="OPERACIONAL"${escopoMontagem==='OPERACIONAL'?' selected':''}>Efetivo Operacional (1º + 2º Pel)</option><option value="TOTAL"${escopoMontagem==='TOTAL'?' selected':''}>Efetivo Total</option></select></label>
           ${botao('adicionar','ADICIONAR EQUIPE')}${botao('salvar','SALVAR RASCUNHO')}</div></section>
           <div class="qe-montagem">
-          <section class="modal-card qe-secao" data-qe-destino="-1"><h2>Disponíveis <small>(${disponiveis.length})</small></h2>${disponiveis.length?`<ul class="qe-lista">${disponiveis.map(p=>ficha(p,-1)).join('')}</ul>`:'<p>Não há policiais disponíveis para mover.</p>'}</section>
-          <div class="qe-equipes-coluna" aria-label="Equipes">${plano.equipes.map((eq,i)=>`<section class="modal-card qe-secao" data-qe-destino="${i}">
-          <label class="qe-nome-equipe">Nome da equipe <input data-qe-equipe="${i}" maxlength="60" value="${a(eq.nome)}"></label>
+          <div class="qe-montagem-coluna"><section class="modal-card qe-secao" data-qe-destino="-1"><h2>Disponíveis <small>(${disponiveis.length})</small></h2>${disponiveis.length?`<ul class="qe-lista">${disponiveis.map(p=>ficha(p,-1)).join('')}</ul>`:'<p>Não há policiais disponíveis para mover.</p>'}</section></div>
+          <div class="qe-montagem-coluna qe-equipes-coluna" aria-label="Equipes"><h3 class="qe-equipes-titulo">EQUIPES DA MONTAGEM <small>(${plano.equipes.length})</small></h3>${plano.equipes.map((eq,i)=>`<section class="modal-card qe-secao" data-qe-destino="${i}">
+          <h4 class="qe-equipe-titulo">EQUIPE ${i+1}</h4><label class="qe-nome-equipe">Nome da equipe <input data-qe-equipe="${i}" maxlength="60" value="${a(eq.nome)}"></label>
           ${botao('remover','REMOVER EQUIPE',`data-indice="${i}"`)}
           ${(()=>{const visiveis=eq.membros.map(id=>pessoas.find(p=>p.id===id)).filter(p=>p&&noEscopo(p));const ocultos=eq.membros.length-visiveis.length;return `${visiveis.length?`<ul class="qe-lista">${visiveis.map(p=>ficha(p,i)).join('')}</ul>`:'<p>Arraste uma foto para cá ou use “Mover para”.</p>'}${ocultos?`<p class="qe-filtro-aviso">${ocultos} integrante(s) desta equipe oculto(s) pelo filtro.</p>`:''}`})()}</section>`).join('')}</div>
-          <section class="modal-card qe-secao"><h2>Afastamentos <small>(${afastados.length})</small></h2>${afastados.length?renderAfastamentos(afastados):'<p>Nenhum policial afastado neste escopo.</p>'}</section>
+          <div class="qe-montagem-coluna"><section class="modal-card qe-secao"><h2>Afastamentos <small>(${afastados.length})</small></h2>${afastados.length?renderAfastamentos(afastados):'<p>Nenhum policial afastado neste escopo.</p>'}</section></div>
           </div>`;
         configurarFallbackFotos();
       }
@@ -13533,7 +13547,8 @@ function epMesclarResenhaFt(payload,auto){
         <div class="freq-note">Os lançamentos são salvos individualmente. FOLGAS mostra o saldo disponível e DIAS TRAB. mostra o progresso atual do ciclo, de 0 a 13.</div>
         <section class="folgas-audit-panel" id="auditoriaFolgas">
           <h2 style="margin:0;color:#17202a;font-size:16px">AUDITORIA INDIVIDUAL DE FOLGAS</h2>
-          <p class="freq-note">Gera uma trilha do saldo inicial, EO, FM geradas e FM fruídas. O relatório é somente de leitura e pode ser impresso ou salvo como PDF.</p>
+          <p class="freq-note">A auditoria reconstrói o saldo sem alterar lançamentos. Veja separadamente os dias de Escala Ordinária (EO), as folgas mensais geradas e as fruídas.</p>
+          <div class="folgas-audit-legend"><div><strong>1. DIAS EO</strong><span>Cada EO soma 1 ao ciclo. No 14º dia, o ciclo volta a zero.</span></div><div><strong>2. FM GERADA</strong><span>Completar 14 EO acrescenta 1 FM ao saldo.</span></div><div><strong>3. FM FRUÍDA</strong><span>Um lançamento FM consome 1 crédito disponível.</span></div></div>
           <div class="folgas-audit-controls">
             <label for="auditoriaFolgasRe">Policial
               <select id="auditoriaFolgasRe"><option value="">Selecione o policial</option>
@@ -13596,6 +13611,28 @@ function epMesclarResenhaFt(payload,auto){
       });
     }
 
+    function textoCicloAuditoriaFolgas(ev) {
+      if (ev.estadoCalculo !== 'CALCULADO') return 'Não calculado';
+      const antes = Number(ev.diasAntes || 0), depois = Number(ev.diasDepois || 0);
+      if (Number(ev.contagemEO || 0) > 0) {
+        return ev.fmGerada ? 'EO +1 · 14º dia · ciclo completo (13 → 0)' : 'EO +1 · ciclo ' + antes + ' → ' + depois + ' / 14';
+      }
+      if (ev.zerouCiclo) return 'Zerou o ciclo · ' + antes + ' → 0 / 14';
+      return 'Sem contagem EO · mantém ' + depois + ' / 14';
+    }
+
+    function textoMovimentoFMAuditoria(ev) {
+      if (ev.estadoCalculo !== 'CALCULADO') return 'Não calculado';
+      if (Number(ev.fmGerada || 0) > 0) return 'GEROU +' + Number(ev.fmGerada) + ' FM';
+      if (String(ev.codigo || '').toUpperCase() === 'FM') return 'FRUIU −1 FM';
+      return 'Sem alteração';
+    }
+
+    function textoSaldoFMAuditoria(ev) {
+      if (ev.estadoCalculo !== 'CALCULADO') return 'Não calculado';
+      return Number(ev.saldoAntes || 0) + ' → ' + Number(ev.saldoDepois || 0) + ' FM';
+    }
+
     function renderizarAuditoriaControleFolgasFt(a) {
       const box = document.getElementById('auditoriaFolgasResultado');
       if (!box || !a) return;
@@ -13606,22 +13643,22 @@ function epMesclarResenhaFt(payload,auto){
       const periodos = (a.periodosIniciais || []).map(x => escapar(x.periodo || x.origem || 'Crédito inicial')).join(' · ') || 'Sem períodos detalhados no campo de observação inicial.';
       const alertas = (a.alertas || []).length ? '<div class="folgas-audit-alert"><strong>Itens para conferência</strong><ul>' + a.alertas.map(x => '<li>'+escapar(x)+'</li>').join('') + '</ul></div>' : '<div class="folgas-audit-alert" style="border-color:#86efac;border-left-color:#16a34a;background:#f0fdf4;color:#166534">Nenhuma divergência foi detectada nos lançamentos disponíveis.</div>';
       const linhas = (a.eventos || []).map(ev => {
-        const ciclo = ev.estadoCalculo === 'CALCULADO' ? (ev.contagemEO ? ev.diasAntes+' → '+ev.diasDepois+(ev.fmGerada ? ' · completou 14 EO' : '') : (ev.zerouCiclo ? ev.diasAntes+' → 0 · ciclo zerado' : ev.diasAntes+' → '+ev.diasDepois)) : '—';
-        const fm = ev.estadoCalculo === 'CALCULADO' ? (ev.fmGerada ? '+'+ev.fmGerada : (ev.codigo==='FM' ? '−1' : '—')) : '—';
-        const saldo = ev.estadoCalculo === 'CALCULADO' ? ev.saldoAntes+' → '+ev.saldoDepois : '—';
+        const ciclo = textoCicloAuditoriaFolgas(ev);
+        const fm = textoMovimentoFMAuditoria(ev);
+        const saldo = textoSaldoFMAuditoria(ev);
         const detalhes = [ev.creditoConsumido, ev.observacao, ev.divergencias && ev.divergencias.join(' ')].filter(Boolean).map(escapar).join('<br>') || '—';
         const cls = ev.estadoCalculo==='ERRO' || (ev.divergencias||[]).length ? ' class="audit-error"' : '';
         return '<tr'+cls+'><td>'+dataBr(ev.dataISO)+'</td><td><strong>'+escapar(ev.codigo)+'</strong><br><small>'+escapar(ev.origem||'')+'</small></td><td>'+ciclo+'</td><td>'+fm+'</td><td>'+saldo+'</td><td>'+detalhes+'</td><td>'+escapar(ev.responsavel||'—')+'</td></tr>';
       }).join('');
       box.innerHTML = '<div class="folgas-audit-head"><div><strong>'+escapar([p.postoGrad,p.nomeGuerra||p.nome].filter(Boolean).join(' ')+' · RE '+p.re)+'</strong><br><small>'+escapar(p.pelotao||'')+' · Relatório gerado em '+escapar(a.geradoEm||'')+'</small></div><div><span class="folgas-audit-status '+statusClass+'">'+escapar(s.statusCalculo||'')+'</span> <button type="button" class="btn-page" onclick="imprimirAuditoriaControleFolgasFt()">IMPRIMIR / SALVAR PDF</button></div></div>'+
         '<div class="folgas-audit-cards">'+
-        '<div class="folgas-audit-card"><small>Saldo inicial</small><strong>'+num(s.saldoInicialFM)+' FM</strong></div>'+
-        '<div class="folgas-audit-card"><small>FM geradas após implantação</small><strong>'+num(s.fmGeradas)+'</strong></div>'+
-        '<div class="folgas-audit-card"><small>FM fruídas após implantação</small><strong>'+num(s.fmFruidas)+'</strong></div>'+
-        '<div class="folgas-audit-card"><small>Saldo reconstruído</small><strong>'+num(s.saldoFMRecalculado)+' FM</strong></div></div>'+alertas+
+        '<div class="folgas-audit-card"><small>FM na implantação</small><strong>'+num(s.saldoInicialFM)+' FM</strong></div>'+
+        '<div class="folgas-audit-card"><small>FM novas geradas</small><strong>'+num(s.fmGeradas)+'</strong></div>'+
+        '<div class="folgas-audit-card"><small>FM fruídas (usadas)</small><strong>'+num(s.fmFruidas)+'</strong></div>'+
+        '<div class="folgas-audit-card"><small>Saldo atual reconstruído</small><strong>'+num(s.saldoFMRecalculado)+' FM</strong></div></div>'+alertas+
         '<div class="folgas-audit-alert"><strong>Posição inicial consolidada em '+dataBr(b.dataISO)+':</strong> '+num(b.saldoFM)+' FM e '+num(b.diasEO)+'/14 EO. <strong>Créditos descritos:</strong> '+periodos+'<br><small>Os lançamentos anteriores a '+dataBr(a.inicioDetalhadoISO)+' aparecem somente como posição inicial, pois o sistema não possui o diário completo daquele período.</small></div>'+
-        '<p class="freq-note">Saldo persistido no resumo: '+num(s.saldoFMPersistido)+' FM e '+num(s.diasEOPersistidos)+'/14 EO. Serviços EO contados em detalhe desde a implantação: '+num(s.servicosEOContadosDesdeImplantacao)+'.</p>'+
-        '<div class="folgas-audit-scroll"><table class="folgas-audit-table"><thead><tr><th>Data</th><th>Lançamento / origem</th><th>Progresso EO</th><th>FM</th><th>Saldo FM</th><th>Crédito / observação / alerta</th><th>Registrado por</th></tr></thead><tbody>'+(linhas||'<tr><td colspan="7">Nenhum lançamento ativo posterior à implantação.</td></tr>')+'</tbody></table></div>';
+        '<div class="folgas-audit-legend"><div><strong>LEITURA DA TABELA</strong><span>EO +1 aumenta os dias do ciclo; ao completar 14, soma 1 FM e reinicia em 0.</span></div><div><strong>FRUIU −1 FM</strong><span>O crédito da folga mensal foi descontado do saldo disponível.</span></div><div><strong>SEM ALTERAÇÃO</strong><span>O código não contou EO nem gerou ou consumiu FM nessa linha.</span></div></div><p class="freq-note">Resumo atual gravado: '+num(s.saldoFMPersistido)+' FM disponíveis e '+num(s.diasEOPersistidos)+'/14 EO no ciclo atual. Total de lançamentos EO no histórico detalhado desde a implantação: '+num(s.servicosEOContadosDesdeImplantacao)+'. Esse total acumulado pode ser maior que o ciclo atual, que reinicia ao completar 14 EO.</p>'+
+        '<div class="folgas-audit-scroll"><table class="folgas-audit-table"><thead><tr><th>Data</th><th>Lançamento / origem</th><th>Dias EO no ciclo</th><th>Movimento de FM</th><th>Saldo de FM</th><th>Crédito / observação / alerta</th><th>Registrado por</th></tr></thead><tbody>'+(linhas||'<tr><td colspan="7">Nenhum lançamento ativo posterior à implantação.</td></tr>')+'</tbody></table></div>';
     }
 
     function imprimirAuditoriaControleFolgasFt() {
@@ -13630,13 +13667,13 @@ function epMesclarResenhaFt(payload,auto){
       const p=a.policial||{},s=a.resumo||{},b=a.baseInicial||{};
       const esc=x=>escapar(x==null?'':String(x));
       const dataBr=v=>{const x=String(v||'').slice(0,10).split('-');return x.length===3?x[2]+'/'+x[1]+'/'+x[0]:(v||'—');};
-      const rows=(a.eventos||[]).map(ev=>'<tr><td>'+dataBr(ev.dataISO)+'</td><td><b>'+esc(ev.codigo)+'</b><br>'+esc(ev.origem||'')+'</td><td>'+(ev.estadoCalculo==='CALCULADO'?(ev.contagemEO?ev.diasAntes+' → '+ev.diasDepois+(ev.fmGerada?' · completou 14 EO':''):(ev.zerouCiclo?ev.diasAntes+' → 0 · ciclo zerado':ev.diasAntes+' → '+ev.diasDepois)):'—')+'</td><td>'+(ev.estadoCalculo==='CALCULADO'?(ev.fmGerada?'+'+ev.fmGerada:(ev.codigo==='FM'?'−1':'—')):'—')+'</td><td>'+(ev.estadoCalculo==='CALCULADO'?ev.saldoAntes+' → '+ev.saldoDepois:'—')+'</td><td>'+[ev.creditoConsumido,ev.observacao,(ev.divergencias||[]).join(' ')].filter(Boolean).map(esc).join('<br>')+'</td><td>'+esc(ev.responsavel||'—')+'</td></tr>').join('');
+      const rows=(a.eventos||[]).map(ev=>'<tr><td>'+dataBr(ev.dataISO)+'</td><td><b>'+esc(ev.codigo)+'</b><br>'+esc(ev.origem||'')+'</td><td>'+esc(textoCicloAuditoriaFolgas(ev))+'</td><td>'+esc(textoMovimentoFMAuditoria(ev))+'</td><td>'+esc(textoSaldoFMAuditoria(ev))+'</td><td>'+[ev.creditoConsumido,ev.observacao,(ev.divergencias||[]).join(' ')].filter(Boolean).map(esc).join('<br>')+'</td><td>'+esc(ev.responsavel||'—')+'</td></tr>').join('');
       const alertas=(a.alertas||[]).length?'<ul>'+a.alertas.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>':'<p>Nenhuma divergência detectada nos lançamentos disponíveis.</p>';
       const win=window.open('','_blank');
       if(!win){informar('O navegador bloqueou a janela de impressão. Permita pop-ups para este site e tente novamente.',true);return;}
       win.opener=null;
       win.document.open();
-      win.document.write('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Auditoria de Folgas - RE '+esc(p.re)+'</title><style>@page{size:A4 portrait;margin:12mm}*{box-sizing:border-box}body{font:10pt Arial,sans-serif;color:#17202a;margin:0}h1{font-size:17pt;margin:0 0 4mm}h2{font-size:12pt;margin:5mm 0 2mm}.meta{color:#475569;font-size:9pt;margin-bottom:5mm}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:3mm;margin:4mm 0}.card{border:1px solid #cbd5e1;border-radius:3mm;padding:3mm}.card small{display:block;color:#475569;font-weight:bold}.card strong{display:block;margin-top:2mm;font-size:13pt}.alert{border:1px solid #d6a23a;background:#fffaf0;padding:3mm;margin:3mm 0;font-size:9pt}.ok{border-color:#86efac;background:#f0fdf4}table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:8pt}th,td{border:1px solid #cbd5e1;padding:2mm;vertical-align:top;overflow-wrap:anywhere}th{background:#374247;color:#fff;text-align:left}tr{break-inside:avoid;page-break-inside:avoid}th:nth-child(1){width:10%}th:nth-child(2){width:15%}th:nth-child(3){width:14%}th:nth-child(4){width:7%}th:nth-child(5){width:12%}th:nth-child(6){width:27%}th:nth-child(7){width:15%}.actions{margin:4mm 0}.actions button{padding:8px 12px;font-weight:bold}@media print{.actions{display:none}}</style></head><body><h1>Auditoria individual de folgas</h1><div class="meta"><b>'+esc([p.postoGrad,p.nomeGuerra||p.nome].filter(Boolean).join(' ')+' · RE '+p.re)+'</b> · '+esc(p.pelotao||'')+'<br>Gerado em '+esc(a.geradoEm||'')+' · Status: '+esc(s.statusCalculo||'')+'</div><div class="actions"><button onclick="window.print()">Imprimir / Salvar PDF</button></div><div class="cards"><div class="card"><small>Saldo inicial</small><strong>'+esc(s.saldoInicialFM)+' FM</strong></div><div class="card"><small>FM geradas após implantação</small><strong>'+esc(s.fmGeradas)+'</strong></div><div class="card"><small>FM fruídas após implantação</small><strong>'+esc(s.fmFruidas)+'</strong></div><div class="card"><small>Saldo reconstruído</small><strong>'+esc(s.saldoFMRecalculado)+' FM</strong></div></div><div class="alert"><b>Posição inicial consolidada em '+dataBr(b.dataISO)+':</b> '+esc(b.saldoFM)+' FM e '+esc(b.diasEO)+'/14 EO.<br><b>Origem:</b> '+esc(b.origem||'')+'<br><b>Observação:</b> '+esc(b.observacao||'—')+'<br>O diário detalhado começa em '+dataBr(a.inicioDetalhadoISO)+'. Períodos anteriores não podem ser reconstruídos dia a dia.</div><div class="alert '+((a.alertas||[]).length?'':'ok')+'"><b>Conferências</b>'+alertas+'</div><p><b>Saldo reconstruído:</b> '+esc(s.saldoFMRecalculado)+' FM · '+esc(s.diasEOAtuais)+'/14 EO. <b>Saldo persistido:</b> '+esc(s.saldoFMPersistido)+' FM · '+esc(s.diasEOPersistidos)+'/14 EO. Serviços EO detalhados desde a implantação: '+esc(s.servicosEOContadosDesdeImplantacao)+'.</p><table><thead><tr><th>Data</th><th>Lançamento / origem</th><th>Progresso EO</th><th>FM</th><th>Saldo FM</th><th>Crédito / observação / alerta</th><th>Registrado por</th></tr></thead><tbody>'+rows+'</tbody></table><p style="margin-top:5mm;color:#64748b;font-size:8pt">Relatório informativo, reconstruído a partir da posição inicial e dos lançamentos ativos do Controle de Folgas. Não altera o cadastro nem o saldo.</p></body></html>');
+      win.document.write('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Auditoria de Folgas - RE '+esc(p.re)+'</title><style>@page{size:A4 portrait;margin:12mm}*{box-sizing:border-box}body{font:10pt Arial,sans-serif;color:#17202a;margin:0}h1{font-size:17pt;margin:0 0 4mm}h2{font-size:12pt;margin:5mm 0 2mm}.meta{color:#475569;font-size:9pt;margin-bottom:5mm}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:3mm;margin:4mm 0}.card{border:1px solid #cbd5e1;border-radius:3mm;padding:3mm}.card small{display:block;color:#475569;font-weight:bold}.card strong{display:block;margin-top:2mm;font-size:13pt}.alert{border:1px solid #d6a23a;background:#fffaf0;padding:3mm;margin:3mm 0;font-size:9pt}.ok{border-color:#86efac;background:#f0fdf4}table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:8pt}th,td{border:1px solid #cbd5e1;padding:2mm;vertical-align:top;overflow-wrap:anywhere}th{background:#374247;color:#fff;text-align:left}tr{break-inside:avoid;page-break-inside:avoid}th:nth-child(1){width:10%}th:nth-child(2){width:15%}th:nth-child(3){width:17%}th:nth-child(4){width:13%}th:nth-child(5){width:12%}th:nth-child(6){width:27%}th:nth-child(7){width:15%}.actions{margin:4mm 0}.actions button{padding:8px 12px;font-weight:bold}@media print{.actions{display:none}}</style></head><body><h1>Auditoria individual de folgas</h1><div class="meta"><b>'+esc([p.postoGrad,p.nomeGuerra||p.nome].filter(Boolean).join(' ')+' · RE '+p.re)+'</b> · '+esc(p.pelotao||'')+'<br>Gerado em '+esc(a.geradoEm||'')+' · Status: '+esc(s.statusCalculo||'')+'</div><div class="actions"><button onclick="window.print()">Imprimir / Salvar PDF</button></div><div class="cards"><div class="card"><small>FM na implantação</small><strong>'+esc(s.saldoInicialFM)+' FM</strong></div><div class="card"><small>FM novas geradas</small><strong>'+esc(s.fmGeradas)+'</strong></div><div class="card"><small>FM fruídas (usadas)</small><strong>'+esc(s.fmFruidas)+'</strong></div><div class="card"><small>Saldo atual reconstruído</small><strong>'+esc(s.saldoFMRecalculado)+' FM</strong></div></div><div class="alert"><b>Como ler a tabela:</b> EO +1 soma um dia no ciclo; no 14º EO, gera +1 FM e reinicia o ciclo em zero. FRUIU −1 FM indica crédito consumido. “Sem alteração” significa que o lançamento não contou EO nem mudou o saldo de FM.</div><div class="alert"><b>Posição inicial consolidada em '+dataBr(b.dataISO)+':</b> '+esc(b.saldoFM)+' FM e '+esc(b.diasEO)+'/14 EO.<br><b>Origem:</b> '+esc(b.origem||'')+'<br><b>Observação:</b> '+esc(b.observacao||'—')+'<br>O diário detalhado começa em '+dataBr(a.inicioDetalhadoISO)+'. Períodos anteriores não podem ser reconstruídos dia a dia.</div><div class="alert '+((a.alertas||[]).length?'':'ok')+'"><b>Conferências</b>'+alertas+'</div><p><b>Saldo reconstruído:</b> '+esc(s.saldoFMRecalculado)+' FM · ciclo atual '+esc(s.diasEOAtuais)+'/14 EO. <b>Resumo gravado:</b> '+esc(s.saldoFMPersistido)+' FM · ciclo atual '+esc(s.diasEOPersistidos)+'/14 EO. Total de lançamentos EO no histórico detalhado: '+esc(s.servicosEOContadosDesdeImplantacao)+'. Esse total acumulado pode ser maior que o ciclo atual, que reinicia ao completar 14 EO.</p><table><thead><tr><th>Data</th><th>Lançamento / origem</th><th>Dias EO no ciclo</th><th>Movimento de FM</th><th>Saldo de FM</th><th>Crédito / observação / alerta</th><th>Registrado por</th></tr></thead><tbody>'+rows+'</tbody></table><p style="margin-top:5mm;color:#64748b;font-size:8pt">Relatório informativo, reconstruído a partir da posição inicial e dos lançamentos ativos do Controle de Folgas. Não altera o cadastro nem o saldo.</p></body></html>');
       win.document.close();
       setTimeout(function(){try{win.focus();win.print();}catch(_){}},350);
     }
