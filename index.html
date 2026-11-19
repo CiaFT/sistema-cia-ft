@@ -14863,8 +14863,12 @@ function epMesclarResenhaFt(payload,auto){
           const registro=lista.find(x=>String(x.cabecalho.id)===plano.id) || lista[0];
           if(registro){
             const edicao=resenhaEdicaoDoRegistroFt_(registro);
-            if(edicao){await montarEdicaoOverlayResenhaFt_(overlay,edicao,dia.data,plano.pel);return;}
-            corpo.innerHTML=renderizarResenhaEnviadaCard({...registro,cabecalho:{...registro.cabecalho,podeEditar:false,podeExcluir:false}},0,false);
+            APP.resenhasEnviadasPorId=APP.resenhasEnviadasPorId||{};
+            const idRegistro=String(registro.cabecalho?.id||plano.id||'');
+            if(idRegistro)APP.resenhasEnviadasPorId[idRegistro]=registro;
+            // No calendário, abrir primeiro a cópia enviada para conferência.
+            // Edição continua disponível pelo botão explícito do cartão.
+            corpo.innerHTML=renderizarResenhaEnviadaCard({...registro,cabecalho:{...registro.cabecalho,podeEditar:!!edicao,podeExcluir:false}},0,false);
             return;
           }
           if(plano.id){
@@ -18874,6 +18878,7 @@ function epMesclarResenhaFt(payload,auto){
             </div>
             <div class="resenha-view-header-actions">
               <span class="resenha-view-badge">${escapar(cabecalho.status || cabecalho.STATUS || 'ENVIADA')}</span>
+              <button type="button" class="btn-page resenha-view-print-action" onclick="imprimirResenhaEnviadaPdf(this)">GERAR PDF / IMPRIMIR</button>
               ${podeEditar ? `<button type="button" class="resenha-view-delete" style="border-color:#006b75;color:#006b75" onclick="editarResenhaEnviadaPainel('${escaparAttr(cabecalho.id || '')}')">EDITAR E REENVIAR</button>` : ''}
               ${podeExcluir ? `<button type="button" class="resenha-view-delete" onclick="excluirResenhaEnviadaPainel('${escaparAttr(cabecalho.id || '')}', this)">EXCLUIR DO PAINEL</button>` : ''}
             </div>
@@ -18893,6 +18898,26 @@ function epMesclarResenhaFt(payload,auto){
           </div>
         </div>
       `;
+    }
+
+
+    function imprimirResenhaEnviadaPdf(botao) {
+      const card=botao && botao.closest('.resenha-view-card');
+      if(!card){mostrarToastFt('PDF indisponível','Não localizei a resenha aberta para impressão.','erro');return;}
+      const janela=window.open('','_blank');
+      if(!janela){mostrarToastFt('Impressão bloqueada','Permita a abertura da janela de impressão para gerar o PDF.','erro');return;}
+      const copia=card.cloneNode(true);
+      copia.querySelectorAll('button,.adm-analise-card').forEach(el=>el.remove());
+      const titulo=copia.querySelector('.resenha-view-card-header h3')?.textContent?.trim()||'Resenha de escala';
+      const emitido=new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short'}).format(new Date());
+      const estilos=Array.from(document.head.querySelectorAll('style,link[rel="stylesheet"]')).map(el=>el.outerHTML).join('\n');
+      janela.document.open();
+      janela.document.write('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+escapar(titulo)+'</title>'+estilos+
+        '<style>@page{size:A4 portrait;margin:12mm}*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}html,body{margin:0!important;padding:0!important;background:#fff!important;min-height:0!important}body{font:10pt Arial,sans-serif!important;color:#17202a!important}.resenha-view-card{width:100%!important;margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;overflow:visible!important;background:#fff!important}.resenha-view-card-header{padding:0 0 4mm!important;background:#fff!important}.resenha-view-header-actions{display:none!important}.resenha-view-body{padding:4mm 0 0!important}.resenha-view-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:2mm!important}.resenha-view-item,.resenha-view-row,.resenha-operacional-bloco,.resenha-operacional-card{box-shadow:none!important;break-inside:avoid!important;page-break-inside:avoid!important}.resenha-operacional-bloco{margin-top:3mm!important;border-radius:2mm!important}.resenha-operacional-corpo{gap:2mm!important;padding:2mm!important;background:#fff!important}.resenha-operacional-linha{grid-template-columns:42mm minmax(0,1fr)!important;gap:3mm!important;font-size:9pt!important}.resenha-operacional-linha strong,.resenha-operacional-linha span{font-size:9pt!important}.resenha-view-section-title{break-after:avoid-page}.resenha-print-meta{margin:0 0 3mm;padding-bottom:2mm;border-bottom:1px solid #cbd5e1;color:#475569;font:8pt Arial,sans-serif}.resenha-view-card-header h3{font-size:15pt!important}</style></head><body><div class="resenha-print-meta">Cópia para conferência · Emitida em '+escapar(emitido)+'</div>'+copia.outerHTML+'</body></html>');
+      janela.document.close();
+      janela.onafterprint=()=>janela.close();
+      janela.focus();
+      janela.setTimeout(()=>{try{janela.print();}catch(e){mostrarToastFt('Falha na impressão',e.message||String(e),'erro');}},500);
     }
 
 
