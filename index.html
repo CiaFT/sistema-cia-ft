@@ -7661,12 +7661,12 @@ const dsEscFt=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>
 const dsDataFt=v=>String(v||'').replace(/^(\d{4})-(\d\d)-(\d\d)$/,'$3/$2/$1');
 const dsRpcFt=(acao,dados)=>rpcPlanoFerias('pmp118_ft',{p_acao:acao,p_dados:dados||{}});
 let dsContagemFt=0,dsMomentoFt=0,dsSessaoFt;
-setInterval(()=>{if(!document.hidden&&APP.usuario)void dsAtualizarCaixaFt();},30000);
+setInterval(()=>{if(!document.hidden&&APP.usuario)void dsAtualizarCaixaFt();},60000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&APP.usuario)void dsAtualizarCaixaFt();});
 async function dsAtualizarCaixaFt(forcar=false){
  const b=document.getElementById('dsCaixaFt'),g=APP.sessaoGeracao;
- if(!APP.usuario||!b||(!forcar&&dsSessaoFt===g&&Date.now()-dsMomentoFt<30000))return;
- dsSessaoFt=g; dsMomentoFt=Date.now(); const seq=++dsContagemFt;
+ if(!APP.usuario||!b||(!forcar&&dsSessaoFt===g&&Date.now()-dsMomentoFt<60000))return;
+  dsSessaoFt=g; dsMomentoFt=Date.now(); const seq=++dsContagemFt;
  try{const resultados=await Promise.allSettled([dsRpcFt('contador'),ocFtApi('espaco_pel_mensagens_contador',{})]);const base=resultados[0].status==='fulfilled'?Number(resultados[0].value.total)||0:0;const folgas=resultados[1].status==='fulfilled'?Number(resultados[1].value.total)||0:0;const total=base+folgas;if(seq===dsContagemFt&&APP.usuario&&g===APP.sessaoGeracao){b.querySelector('span').textContent=total?(total>99?'99+':total):'';b.setAttribute('aria-label',total?'Caixa de Entrada: '+total+' pendência(s)':'Caixa de Entrada');}}catch(_){}
 }
 function dsPaginaFt(titulo,descricao,voltar){
@@ -7862,7 +7862,6 @@ async function dsDetalharFt(id){
 }
 
     function abrirHome() {
-      void dsAtualizarCaixaFt();
       window.scrollTo(0, 0);
       const u = APP.usuario;
 
@@ -7892,13 +7891,16 @@ async function dsDetalharFt(id){
           </div>
         </div>
       `;
-      aplicarFotosSupabaseNosCards();
-      avisosVerificarInicioFt();
+      // Primeiro pinta a página; as consultas auxiliares começam depois que
+      // o navegador teve oportunidade de exibir o menu e o card do usuário.
+      setTimeout(function(){ if(APP.usuario===u) aplicarFotosSupabaseNosCards(); }, 250);
+      setTimeout(function(){ if(APP.usuario===u) avisosVerificarInicioFt(); }, 500);
+      setTimeout(function(){ if(APP.usuario===u) void dsAtualizarCaixaFt(); }, 750);
       const status=document.querySelector('.pm-profile-card .pm-main-info .status');
       if(status&&normalizarTexto(u.status)==='APTO'){
-        ocFtApi('ocorrencias_paf_status').then(function(r){
+        setTimeout(function(){ if(APP.usuario!==u)return; ocFtApi('ocorrencias_paf_status').then(function(r){
           if(status.isConnected&&APP.usuario===u&&r.ferias)status.textContent='FÉRIAS';
-        }).catch(function(){});
+        }).catch(function(){}); }, 1000);
       }
     }
 
