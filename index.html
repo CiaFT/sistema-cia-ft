@@ -16,7 +16,7 @@ VERSÃO V1.4.6 — DESEMPENHO E PADRÃO VISUAL
 - Preserva a implantação completa de Viaturas V1.2.6.
 - Corrige a leitura e a identificação funcional em Resenhas Enviadas.
 - Inclui Rotinas Administrativas mensais, semanais e diárias.
-- Inclui Controle de Folgas com ciclo de 14 EO e saldos individuais.
+- Inclui Controle de Folgas com ciclo de 14 EO, saldos individuais e auditoria individual imprimível.
 - Inclui upload e consulta privada das Escalas Cia FT em PDF.
 - Inclui Folgas Pendentes conforme o escopo de visualização do usuário.
 - Corrige a autorização do upload e permite enviar várias escalas no mesmo lote.
@@ -5953,6 +5953,25 @@ Banco de dados: Google Sheets.
     .folga-rule-note{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0 16px}
     .folga-rule-note div{border:1px solid rgba(55,66,71,.14);border-radius:14px;background:#fff;padding:10px 12px;color:#475569;font-size:11px;line-height:1.45}
     .folga-rule-note strong{display:block;margin-bottom:2px;color:#17202a;font-size:11px}
+
+    .folgas-audit-panel{margin:16px 0;padding:16px;border:1px solid rgba(55,66,71,.16);border-radius:18px;background:#f8fafc}
+    .folgas-audit-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end;max-width:760px}
+    .folgas-audit-controls label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:800;color:#374247}
+    .folgas-audit-controls select{width:100%;min-height:44px;border:1px solid #cbd5e1;border-radius:12px;background:#fff;padding:8px 12px;font:inherit;color:#17202a}
+    .folgas-audit-result{margin-top:14px}
+    .folgas-audit-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:12px 0}
+    .folgas-audit-card{border:1px solid #d9e0e5;border-radius:14px;background:#fff;padding:12px}
+    .folgas-audit-card small{display:block;color:#64748b;font-weight:800;font-size:10px;text-transform:uppercase}
+    .folgas-audit-card strong{display:block;margin-top:5px;color:#17202a;font-size:17px}
+    .folgas-audit-alert{padding:10px 12px;margin:8px 0;border:1px solid #f0c36d;border-left:4px solid #d97706;border-radius:10px;background:#fffaf0;color:#7c2d12;font-size:12px;line-height:1.45}
+    .folgas-audit-scroll{overflow:auto;border:1px solid #d9e0e5;border-radius:14px;background:#fff;margin:12px 0}
+    .folgas-audit-table{width:100%;min-width:900px;border-collapse:collapse;font-size:11px}
+    .folgas-audit-table th,.folgas-audit-table td{border-bottom:1px solid #e2e8f0;padding:8px 9px;text-align:left;vertical-align:top}
+    .folgas-audit-table th{position:sticky;top:0;background:#374247;color:#fff;z-index:1}
+    .folgas-audit-table .audit-error{background:#fff1f2;color:#991b1b;font-weight:800}
+    .folgas-audit-status{display:inline-block;padding:5px 9px;border-radius:999px;background:#e2e8f0;font-size:11px;font-weight:900}
+    .folgas-audit-status.ok{background:#dcfce7;color:#166534}.folgas-audit-status.warn{background:#fef3c7;color:#92400e}.folgas-audit-status.err{background:#fee2e2;color:#991b1b}
+    @media(max-width:760px){.folgas-audit-controls{grid-template-columns:1fr}.folgas-audit-controls button{width:100%}.folgas-audit-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.folgas-audit-card strong{font-size:15px}}
     .folga-table .folga-dia-inativo{background:#eef2f6!important}
     .folga-table .folga-dia-inativo .freq-select-wrap{border-color:#d1d5db;background:#e5e7eb}
     .folga-table .folga-dia-inativo .freq-select-display::before{display:none!important}
@@ -7385,33 +7404,6 @@ Banco de dados: Google Sheets.
     @media(max-width:900px) { .quadro-ft .qe-vagas-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
     @media(max-width:520px) { .quadro-ft .qe-vagas-grid { grid-template-columns:minmax(0,1fr); } }
   </style>
-  <style>
-    .quadro-ft .qe-matriz-layout { display:grid; grid-template-columns:minmax(260px, .8fr) minmax(0,1.2fr); gap:12px; align-items:start; }
-    .quadro-ft .qe-matriz-lista { max-height:65vh; overflow:auto; }
-    .quadro-ft .qe-matriz-item { display:flex; align-items:center; gap:9px; padding:7px; border:1px solid #d8e0e8; border-radius:9px; margin:5px 0; background:#fff; }
-    .quadro-ft .qe-matriz-item input { width:18px; height:18px; flex:none; }
-    .quadro-ft .qe-matriz-item img,.quadro-ft .qe-matriz-item .qe-sem-foto { width:38px; height:46px; flex:none; object-fit:cover; border:2px solid #374247; border-radius:5px; background:#e3e9ee; }
-    .quadro-ft .qe-matriz-item.hierarquia-oficial img { border-color:#b8860b; }
-    .quadro-ft .qe-matriz-item.hierarquia-subten-sgt img { border-color:#960018; }
-    .quadro-ft .qe-matriz-item.hierarquia-cb-sd img { border-color:#0033a0; }
-    .quadro-ft .qe-matriz-item small { display:block; color:#64748b; }
-    .quadro-ft .qe-matriz-preview { display:flex; width:54mm; max-width:100%; flex-direction:column; align-items:center; gap:12px; }
-    .quadro-ft .qe-card-preview { width:54mm; height:67mm; flex:none; overflow:hidden; display:grid; grid-template-rows:49mm 18mm; box-shadow:0 4px 18px #17202a30; }
-    .quadro-ft .qe-card-photo { width:100%; height:49mm; border:2mm solid var(--qe-card-cor); border-bottom:0; overflow:hidden; background:#e6e9ed; }
-    .quadro-ft .qe-card-photo img { display:block; width:100%; height:100%; object-fit:cover; }
-    .quadro-ft .qe-card-sem-foto { width:100%; height:100%; display:grid; place-items:center; color:#475569; font-weight:700; }
-    .quadro-ft .qe-card-legenda { background:var(--qe-card-cor); color:var(--qe-card-texto); display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:1mm 2mm; font-family:Arial,sans-serif; font-weight:700; line-height:1.1; overflow:hidden; text-transform:uppercase !important; }
-    .quadro-ft .qe-card-legenda strong { display:block; width:100%; font-size:3.2mm; overflow-wrap:anywhere; }
-    .quadro-ft .qe-card-legenda small { display:block; margin-top:1mm; font-size:3.4mm; }
-    .quadro-ft .qe-card-preview.hierarquia-oficial { --qe-card-cor:#f2c230; --qe-card-texto:#111; }
-    .quadro-ft .qe-card-preview.hierarquia-subten-sgt { --qe-card-cor:#c90018; --qe-card-texto:#fff; }
-    .quadro-ft .qe-card-preview.hierarquia-cb-sd { --qe-card-cor:#0033a0; --qe-card-texto:#fff; }
-    .quadro-ft .qe-card-preview:not(.hierarquia-oficial):not(.hierarquia-subten-sgt):not(.hierarquia-cb-sd) { --qe-card-cor:#374247; --qe-card-texto:#fff; }
-    .quadro-ft .qe-matriz-ajustes { display:grid; width:54mm; max-width:100%; grid-template-columns:minmax(0,1fr); gap:9px; justify-items:center; align-items:center; text-align:center; }
-    .quadro-ft .qe-matriz-ajustes label { display:grid; width:100%; justify-items:center; gap:4px; font-size:12px; font-weight:700; text-align:center; }
-    .quadro-ft .qe-matriz-ajustes input[type="range"] { width:min(240px,100%); }
-    @media(max-width:760px) { .quadro-ft .qe-matriz-layout { grid-template-columns:minmax(0,1fr); } .quadro-ft .qe-matriz-lista { max-height:42vh; } }
-  </style>
 </head>
 
 <body>
@@ -8695,12 +8687,7 @@ async function epPreviaResenhaFt(){
  folgas.textContent='Consultando folgas e dispensas…';
  ferias.textContent='Consultando férias do PAF…';
  try{
-  const r=await epBuscarResenhaFt(pel,data);if(!atual())return;
-  const linhasFolga=(r.itens||[]).map(x=>'<li>'+dsEscFt(x.nome)+' · '+dsEscFt(epTiposFt[x.tipo])+'</li>')
-   .concat((r.bloqueiosEquipe||[]).map(x=>'<li>'+dsEscFt(x.nome)+' · '+dsEscFt(epTiposFt[x.tipo]||'Folga')+' pendente — policial bloqueado para compor equipe até decisão do pedido</li>'));
-  folgas.innerHTML=(r.semDS?'<p>DS automática indisponível. Confira e lance manualmente, se necessário.</p>':'')+
-   (linhasFolga.length?'<ul>'+linhasFolga.join('')+'</ul>':'<p>'+(r.semDS?'Nenhuma folga automática encontrada.':'Nenhuma folga ou dispensa automática encontrada.')+'</p>');
-  const cursos=gestorDisponibilidade?await cursosBuscarResenhaFt(pel,data):null;if(!atual())return;
+  const [r,cursos]=await Promise.all([epBuscarResenhaFt(pel,data),gestorDisponibilidade?cursosBuscarResenhaFt(pel,data):Promise.resolve(null)]);if(!atual())return;
   if(!APP.resenhaEdicao){
    const efetivo=(APP.dadosResenha?.efetivoCadastro||APP.dadosResenha?.efetivoAtivo||[]);
    let ausentes=new Set();
@@ -8719,6 +8706,10 @@ async function epPreviaResenhaFt(){
   if(gestorDisponibilidade){
    const painelCursos=document.getElementById('cursosPreviaResenhaFt');if(painelCursos&&painelCursos.isConnected)painelCursos.innerHTML=cursos.length?'<ul>'+cursos.map(c=>'<li>'+escapar(c.nome)+' · Curso</li>').join('')+'</ul>':'Nenhum curso para este pelotão e data.';
   }
+  const linhasFolga=(r.itens||[]).map(x=>'<li>'+dsEscFt(x.nome)+' · '+dsEscFt(epTiposFt[x.tipo])+'</li>')
+   .concat((r.bloqueiosEquipe||[]).map(x=>'<li>'+dsEscFt(x.nome)+' · '+dsEscFt(epTiposFt[x.tipo]||'Folga')+' pendente — policial bloqueado para compor equipe até decisão do pedido</li>'));
+  folgas.innerHTML=(r.semDS?'<p>DS automática indisponível. Confira e lance manualmente, se necessário.</p>':'')+
+   (linhasFolga.length?'<ul>'+linhasFolga.join('')+'</ul>':'<p>'+(r.semDS?'Nenhuma folga automática encontrada.':'Nenhuma folga ou dispensa automática encontrada.')+'</p>');
   if(r.ferias===null){
    ferias.textContent='O servidor não retornou a lista de férias. Confira se a Etapa 2 foi publicada no Apps Script.';
   }else if(r.ferias.length){
@@ -8731,7 +8722,7 @@ async function epPreviaResenhaFt(){
   if(!atual())return;
   if(!APP.resenhaEdicao){EP_RESENHA_GESTOR_DISP={pel,data,carregando:false,erro:'Afastamentos não conferidos',ausentes:new Set()};epAplicarListaGestorResenhaFt({erro:err.message||'falha na consulta'});}
   if(gestorDisponibilidade){const pc=document.getElementById('cursosPreviaResenhaFt');if(pc)pc.textContent='Não foi possível confirmar os cursos. A lista de equipes foi bloqueada.';}
-  if(folgas.textContent==='Consultando folgas e dispensas…')folgas.textContent=err.message;
+  folgas.textContent=err.message;
   ferias.textContent='Não foi possível confirmar as férias do PAF para esta data.';
  }
 }
@@ -10446,90 +10437,6 @@ function epMesclarResenhaFt(payload,auto){
         '" onclick="pafAbrirExcecaoFt_(this)">AUTORIZAR EXCEÇÃO</button>';
     }
 
-    function pafBotaoConversaoFt_(s,periodos,encerrado,podeExcecao){
-      const id=String(s.solicitacao_id || ''), p=periodos[0];
-      if(!podeExcecao || !encerrado || s.status!=='VALIDADA' || s.modalidade!=='30_DIAS' ||
-        periodos.length!==1 || !p || p.status!=='VALIDO' || p.sobrestamento ||
-        !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id)) return '';
-      const inicio=p.inicio_real || p.inicio_vigente || p.inicio;
-      if(!inicio || (window.APPFT_FERIAS_DADOS?.hoje_sp && inicio<=window.APPFT_FERIAS_DADOS.hoje_sp)) return '';
-      return '<button type="button" class="btn-page paf-excecao-acao" data-pedido="'+id+
-        '" onclick="pafAbrirConversaoFt_(this)">CONVERTER 30 PARA 15 + 15</button>';
-    }
-
-    async function pafExecutarConversaoFt_(pedido,inicio1,inicio2,justificativa,senhaPortal,re){
-      const cfg=configPlanoFerias();
-      const url=String(cfg.url || APPFT_FERIAS_SUPABASE_URL).replace(/\/$/,'');
-      const apikey=cfg.anonKey || window.APPFT_SUPABASE_ANON_KEY || APPFT_FERIAS_SUPABASE_ANON_KEY;
-      const senhaAuth=await senhaSupabasePonteFerias(re,senhaPortal);
-      const login=await fetch(url+'/auth/v1/token?grant_type=password',{
-        method:'POST',headers:{apikey,'Content-Type':'application/json'},cache:'no-store',credentials:'omit',
-        body:JSON.stringify({email:'re-'+re+'@appft.invalid',password:senhaAuth})
-      });
-      const sessao=await login.json().catch(()=>null);
-      if(login.status===429) throw new Error('Muitas tentativas de autenticação. Aguarde antes de tentar novamente.');
-      if(!login.ok || !sessao?.access_token) throw new Error('O Supabase não confirmou a senha. Confira e tente novamente.');
-      const resposta=await fetch(url+'/rest/v1/rpc/ft_paf_converter_30_para_2x15_v1',{
-        method:'POST',headers:{apikey,Authorization:'Bearer '+sessao.access_token,'Content-Type':'application/json',Accept:'application/json'},
-        cache:'no-store',credentials:'omit',body:JSON.stringify({p_solicitacao:pedido,p_inicio_1:inicio1,p_inicio_2:inicio2,p_justificativa:justificativa})
-      });
-      const corpo=await resposta.json().catch(()=>null);
-      if(!resposta.ok || corpo?.modalidade!=='2X15_DIAS') throw new Error(corpo?.message || 'O Supabase não confirmou a conversão. Reabra o PAF para conferir.');
-      return corpo;
-    }
-
-    function pafAbrirConversaoFt_(botao){
-      const dados=window.APPFT_FERIAS_DADOS;
-      const s=dados?.solicitacoes_visiveis?.find(item=>item.solicitacao_id===botao.dataset.pedido);
-      const p=s?.periodos?.[0];
-      if(!s || !p || dados.pode_excecao_paf!==true || document.getElementById('pafConversaoFt')) return;
-      const atual=p.inicio_real || p.inicio_vigente || p.inicio;
-      if(p.sobrestamento || (dados.hoje_sp && atual<=dados.hoje_sp)){
-        mostrarToastFt('Conversão indisponível','O período já começou ou possui sobrestamento.','erro');return;
-      }
-      const usuario=APP.usuario || {}, cred=APP.credenciais || {};
-      const re=String(usuario.re || usuario.login || cred.login || '').replace(/\D/g,'').slice(0,6);
-      if(re.length!==6){mostrarToastFt('Sessão do portal indisponível','Entre novamente para autorizar.','erro');return;}
-      const dialog=document.createElement('dialog');
-      dialog.id='pafConversaoFt'; dialog.className='oc-ft-dialogo paf-excecao-dialogo';
-      dialog.setAttribute('aria-labelledby','pafConversaoTituloFt');
-      const esc=escaparFerias, ano=String(dados.ciclo?.ano_fruição || '').slice(0,4);
-      const minimo=dataFimFerias(dados.hoje_sp || '',2);
-      dialog.innerHTML='<h2 id="pafConversaoTituloFt">Converter férias para 15 + 15 dias</h2><p><strong>'+
-        esc([s.graduacao,s.nome].filter(Boolean).join(' '))+'</strong> · início atual: '+esc(dataFeriasBR(atual))+'</p>'+ 
-        '<p>Os 30 dias serão divididos em dois períodos de 15 dias. A alteração exige justificativa e confirmação da sua senha. Períodos iniciados ou sobrestados não podem ser convertidos.</p>'+ 
-        '<form class="paf-excecao-form">'+
-        '<label class="ferias-field"><span>Início do 1º período (15 dias)</span><input type="date" name="inicio1" min="'+escaparAttr(minimo)+'" max="'+escaparAttr(ano+'-12-31')+'" value="'+escaparAttr(atual)+'" required></label>'+ 
-        '<label class="ferias-field"><span>Início do 2º período (15 dias)</span><input type="date" name="inicio2" min="'+escaparAttr(minimo)+'" max="'+escaparAttr(ano+'-12-31')+'" required></label>'+ 
-        '<label class="ferias-field"><span>Justificativa da alteração</span><textarea rows="3" name="justificativa" required minlength="10" maxlength="1000" autofocus></textarea></label>'+ 
-        '<label class="ferias-field"><span>Confirme sua senha atual do portal</span><input name="senha" type="password" autocomplete="current-password" required></label>'+ 
-        '<p role="alert" data-erro></p><div class="ferias-actions"><button type="button" class="btn-page" data-cancelar>Cancelar</button>'+ 
-        '<button type="submit" class="ferias-primary">Confirmar conversão</button></div></form>';
-      const form=dialog.querySelector('form'), confirmar=form.querySelector('[type="submit"]'), cancelar=form.querySelector('[data-cancelar]');
-      const erro=form.querySelector('[data-erro]'), campoSenha=form.elements.namedItem('senha');
-      dialog.addEventListener('close',()=>{campoSenha.value='';dialog.remove();},{once:true});
-      dialog.addEventListener('cancel',evento=>{if(confirmar.disabled)evento.preventDefault();});
-      cancelar.addEventListener('click',()=>dialog.close());
-      form.addEventListener('submit',async evento=>{
-        evento.preventDefault();
-        if(confirmar.disabled || !form.reportValidity()) return;
-        if(!botao.isConnected || window.APPFT_FERIAS_DADOS!==dados){dialog.close();return;}
-        const inicio1=form.elements.namedItem('inicio1').value, inicio2=form.elements.namedItem('inicio2').value;
-        const motivo=form.elements.namedItem('justificativa').value.trim();
-        if(motivo.length<10){erro.textContent='Informe pelo menos 10 caracteres na justificativa.';return;}
-        const ms1=Date.parse(inicio1+'T00:00:00Z'),ms2=Date.parse(inicio2+'T00:00:00Z');
-        if(!Number.isFinite(ms1)||!Number.isFinite(ms2)||ms1>=ms2||ms2<ms1+15*86400000){erro.textContent='O 2º período deve começar após o término dos primeiros 15 dias.';return;}
-        let senha=campoSenha.value; campoSenha.value=''; confirmar.disabled=cancelar.disabled=true; erro.textContent='';
-        try{await pafExecutarConversaoFt_(s.solicitacao_id,inicio1,inicio2,motivo,senha,re);}
-        catch(e){erro.textContent=e.message || 'Não foi possível converter a modalidade.';return;}
-        finally{senha='';confirmar.disabled=cancelar.disabled=false;}
-        dialog.close(); APP.apiCache={}; APP.dadosConsultaEfetivo=null;
-        mostrarToastFt('PAF convertido','A solicitação foi atualizada para dois períodos de 15 dias.','ok');
-        if(botao.isConnected && window.APPFT_FERIAS_DADOS===dados) await carregarPlanoAnualFerias(dados.ciclo?.ano_fruição);
-      });
-      document.body.appendChild(dialog); dialog.showModal();
-    }
-
     async function pafExecutarExcecaoFt_(pedido,inicios,justificativa,senhaPortal,re){
       const cfg=configPlanoFerias();
       const url=String(cfg.url || APPFT_FERIAS_SUPABASE_URL).replace(/\/$/,'');
@@ -10783,7 +10690,7 @@ function epMesclarResenhaFt(payload,auto){
             '<td><strong class="paf-situacao" data-tom="'+(p.status==='AJUSTE_NECESSARIO'?'ajuste':p.status==='VALIDO'?'ok':'')+'">'+escaparFerias(String(p.status||'—').replaceAll('_',' '))+'</strong><br><small>Solicitação: '+escaparFerias(String(s.status||'—').replaceAll('_',' '))+'</small>'+
             (p.motivo?'<br><small>'+escaparFerias(p.motivo)+'</small>':'')+'</td>'+
             (encerrado?'<td>'+(ajuste?pafInputAjusteFt(p):pafCampoFruicaoFt(p,'INICIO_REAL',dados.hoje_sp))+'</td><td>'+pafCampoFruicaoFt(p,'SOBRESTAMENTO',dados.hoje_sp)+'</td>'+
-              (i===0?'<td class="paf-acao" rowspan="'+periodos.length+'">'+((pafBotaoValidarFt(s,periodos,encerrado)+pafBotaoExcecaoFt_(s,periodos,encerrado,dados.pode_excecao_paf===true)+pafBotaoConversaoFt_(s,periodos,encerrado,dados.pode_excecao_paf===true))||'—')+'</td>':''):'')+'</tr>';
+              (i===0?'<td class="paf-acao" rowspan="'+periodos.length+'">'+((pafBotaoValidarFt(s,periodos,encerrado)+pafBotaoExcecaoFt_(s,periodos,encerrado,dados.pode_excecao_paf===true))||'—')+'</td>':''):'')+'</tr>';
         });
       }).join('');
 
@@ -12455,16 +12362,10 @@ function epMesclarResenhaFt(payload,auto){
         return r;
       };
       const e=escapar, a=escaparAttr;
-      const escaparMatriz=valor=>String(valor==null?'':valor).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
       const nomeExibicao=p=>String(p&&p.nome||'').replace(/SANTOS\s+MORAES/gi,'Santos Moraes');
-      const canvasFonte=document.createElement('canvas'), contextoFonte=canvasFonte.getContext('2d');
-      contextoFonte.font='700 12px Arial';
-      const linhasCartao=texto=>{const palavras=String(texto||'').toLocaleUpperCase('pt-BR').split(/\s+/).filter(Boolean),linhas=[];let atual='';palavras.forEach(palavra=>{const teste=atual?atual+' '+palavra:palavra;if(atual&&contextoFonte.measureText(teste).width>174){linhas.push(atual);atual=palavra;}else atual=teste;});if(atual)linhas.push(atual);if(linhas.length>2)linhas.splice(1,linhas.length-1,linhas.slice(1).join(' '));return linhas;};
       const grupos=[['1_PEL','1º Pelotão'],['2_PEL','2º Pelotão'],['ADM','Administração'],['AFAST','Afastamentos'],['CONFERIR','Lotação a conferir']];
       const postos=[['cap','Cap PM'],['ten','Ten PM'],['sub_sgt','Subten / Sgt PM'],['cb_sd','Cb / Sd PM']];
       let atual, aba='atual', grupo='1_PEL', lista=[], plano, pessoas=[], fotos={}, alterado=false, ocupado=false, escopoMontagem='TOTAL';
-      const idsCartoes=new Set(), enquadramentos=Object.create(null), zoomFotos=Object.create(null);
-      let idFocoMatriz='';
       const info=(texto,erro=false)=>{msg.textContent=texto;msg.className=erro?'qe-erro':'';};
       function executar(fn) {
         if(ocupado) return;
@@ -12531,8 +12432,7 @@ function epMesclarResenhaFt(payload,auto){
           ${p.afastamento?`<small class="qe-afastado">${e(p.afastamento)}</small>`:''}</div></div>${escolhas}</li>`;
       }
       function render() {
-        abas.innerHTML=botao('aba-atual','EFETIVO ATUAL',`aria-pressed="${aba==='atual'}"`)+(atual.pode_montar?botao('aba-equipes','MONTAGEM DE EQUIPES',`aria-pressed="${aba==='equipes'}"`):'')+botao('aba-matriz','MATRIZ DE FOTOS',`aria-pressed="${aba==='matriz'}"`);
-        if(aba==='matriz') { renderMatriz(); return; }
+        abas.innerHTML=botao('aba-atual','EFETIVO ATUAL',`aria-pressed="${aba==='atual'}"`)+(atual.pode_montar?botao('aba-equipes','MONTAGEM DE EQUIPES',`aria-pressed="${aba==='equipes'}"`):'');
         if(aba==='atual') {
           const contagem=Object.fromEntries(postos.map(([k])=>[k,atual.efetivo.filter(p=>p.categoria.toLowerCase()===k).length]));
           const outros=atual.efetivo.filter(p=>p.categoria==='OUTRO').length;
@@ -12579,55 +12479,6 @@ function epMesclarResenhaFt(payload,auto){
           </div>`;
         configurarFallbackFotos();
       }
-      function markupPreviaMatriz(foco) {
-        if(!foco)return '<p>Selecione um policial com foto para pré-visualizar.</p>';
-        const foto=urlFoto(foco)||'', vertical=Number(enquadramentos[foco.id]??50), zoom=Number(zoomFotos[foco.id]??1);
-        const titulo=[foco.posto,nomeExibicao(foco)].filter(Boolean).join(' ').toUpperCase();
-        const imagem=foto?'<img src="'+a(foto)+'" alt="Prévia da foto" style="object-position:50% '+vertical+'%;transform:scale('+zoom+');transform-origin:50% '+vertical+'%">':'<div class="qe-card-sem-foto">SEM FOTO</div>';
-        return '<div class="qe-matriz-preview"><div class="qe-card-preview '+classeHierarquia(foco)+'"><div class="qe-card-photo">'+imagem+'</div><div class="qe-card-legenda"><strong>'+escaparMatriz(titulo)+'</strong><small>RE '+e(foco.re||'')+'</small></div></div><div class="qe-matriz-ajustes"><label>Enquadramento vertical<input id="qeCrop" type="range" min="0" max="100" value="'+vertical+'" '+(foto?'':'disabled')+'></label><label>Zoom<input id="qeZoom" type="range" min="1" max="2.5" step="0.05" value="'+zoom+'" '+(foto?'':'disabled')+'></label></div></div>';
-      }
-      function focoAtualMatriz(){return atual.efetivo.find(p=>String(p.id)===idFocoMatriz)||atual.efetivo.find(p=>idsCartoes.has(String(p.id)))||atual.efetivo.find(p=>urlFoto(p))||null;}
-      function renderPreviaMatriz(){const host=box.querySelector('#qeMatrizPreview');if(host)host.innerHTML=markupPreviaMatriz(focoAtualMatriz());}
-      function atualizarSelecaoMatriz(){const n=atual.efetivo.filter(p=>idsCartoes.has(String(p.id))&&urlFoto(p)).length;const total=box.querySelector('#qeMatrizSelecionados');const imprimir=box.querySelector('#qeBotaoImprimir');if(total)total.textContent=String(n);if(imprimir)imprimir.disabled=n===0;}
-      function selecionarTodosMatriz(selecionar){
-        if(selecionar){atual.efetivo.forEach(p=>{if(urlFoto(p))idsCartoes.add(String(p.id));});if(!idFocoMatriz)idFocoMatriz=atual.efetivo.find(p=>urlFoto(p))?.id||'';}
-        else idsCartoes.clear();
-        box.querySelectorAll('[data-matriz-id]').forEach(chk=>{chk.checked=selecionar&&idsCartoes.has(String(chk.dataset.matrizId));});
-        atualizarSelecaoMatriz();renderPreviaMatriz();
-      }
-      function renderMatriz() {
-        const efetivo=[...atual.efetivo];
-        const selecionados=efetivo.filter(p=>idsCartoes.has(String(p.id)));
-        const foco=selecionados.find(p=>String(p.id)===idFocoMatriz)||selecionados[0]||efetivo.find(p=>urlFoto(p))||null;
-        const fotoUrl=p=>urlFoto(p)||'';
-        const controle=markupPreviaMatriz(foco);
-        box.innerHTML=`<section class="modal-card qe-secao"><h2>Matriz de Fotos</h2><p>Selecione os policiais e confira o enquadramento antes de imprimir. Cada card mede 54 × 67 mm, com faixa inferior fixa de 18 mm.</p>
-          <div class="qe-controles"><label>Localizar policial<input id="qeBuscaMatriz" type="search" placeholder="Nome, posto ou RE"></label>${botao('selecionar-com-foto','SELECIONAR COM FOTO')}${botao('limpar-selecao','LIMPAR SELEÇÃO')}<span><strong id="qeMatrizSelecionados">${selecionados.length}</strong> selecionado(s)</span></div>
-          <div class="qe-matriz-layout"><div class="qe-matriz-lista" id="qeMatrizLista">${efetivo.map(p=>{const foto=fotoUrl(p);return `<div class="qe-matriz-item ${classeHierarquia(p)}" data-busca="${a([p.posto,p.nome,p.re].join(' ').toLocaleLowerCase('pt-BR'))}">
-            <input type="checkbox" data-matriz-id="${a(p.id)}" ${idsCartoes.has(String(p.id))?'checked':''} ${foto?'':'disabled'} aria-label="Selecionar ${a([p.posto,p.nome].filter(Boolean).join(' '))}">
-            ${foto?`<img src="${a(foto)}" alt="" loading="lazy">`:'<span class="qe-sem-foto">—</span>'}<span><strong>${escaparMatriz([p.posto,nomeExibicao(p)].filter(Boolean).join(' ').toUpperCase())}</strong><small>RE ${e(p.re||'')}${foto?'':' · sem foto cadastrada'}</small></span>${foto?`<button type="button" class="btn-page" data-matriz-foco="${a(p.id)}">AJUSTAR</button>`:''}</div>`;}).join('')}</div><div id="qeMatrizPreview">${controle}</div></div>
-          <p>Impressão A4 retrato: até 12 cards por folha (3 × 4), centralizados e em tamanho físico. Na janela de impressão, escolha “Salvar como PDF” e escala 100% / tamanho real.</p>
-          ${botao('imprimir-matriz','GERAR PDF / IMPRIMIR',selecionados.length?'id="qeBotaoImprimir"':'disabled id="qeBotaoImprimir"')}</section>`;
-        configurarFallbackFotos();
-      }
-      function imprimirMatriz() {
-        const selecionados=[...atual.efetivo].filter(p=>idsCartoes.has(String(p.id))&&urlFoto(p));
-        if(!selecionados.length){info('Selecione ao menos um policial com foto cadastrada.',true);return;}
-        const janela=window.open('','_blank');
-        if(!janela){info('O navegador bloqueou a janela de impressão. Permita pop-ups para este site e tente novamente.',true);return;}
-        const cor=p=>String(p.categoria||'').toUpperCase()==='CAP'||String(p.categoria||'').toUpperCase()==='TEN'?['#f2c230','#111']:
-          String(p.categoria||'').toUpperCase()==='SUB_SGT'?['#c90018','#fff']:String(p.categoria||'').toUpperCase()==='CB_SD'?['#0033a0','#fff']:['#374247','#fff'];
-        const cards=selecionados.length;
-        const faixaSvg=(titulo,re,bg,fg)=>{
-          titulo=String(titulo||'').toLocaleUpperCase('pt-BR');
-          const linhas=linhasCartao(titulo), ys=linhas.length===1?[8.3]:[6.5,10.1];
-          const texto=linhas.map((linha,i)=>{const comprimir=contextoFonte.measureText(linha).width>174;return `<text x="27" y="${ys[i]}" text-anchor="middle" font-family="Arial,sans-serif" font-size="3.2" font-weight="700" fill="${fg}"${comprimir?' textLength="50" lengthAdjust="spacingAndGlyphs"':''}>${escaparMatriz(linha)}</text>`;}).join('');
-          return `<svg class="faixa" xmlns="http://www.w3.org/2000/svg" width="54mm" height="18mm" viewBox="0 0 54 18" aria-hidden="true"><rect width="54" height="18" fill="${bg}"/>${texto}<text x="27" y="15.2" text-anchor="middle" font-family="Arial,sans-serif" font-size="3.2" font-weight="700" fill="${fg}">RE ${e(re||'')}</text></svg>`;
-        };
-        janela.document.open();janela.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Matriz de Fotos — App FT</title><style>
-          @page{size:A4 portrait;margin:10mm}*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}html,body{margin:0;padding:0;font-family:Arial,sans-serif}.folha{width:100%;height:277mm;display:grid;grid-template-columns:repeat(3,54mm);grid-auto-rows:67mm;gap:1mm;align-content:start;justify-content:center;break-after:page;page-break-after:always}.folha:last-child{break-after:auto;page-break-after:auto}.card{width:54mm;height:67mm;overflow:hidden;display:grid;grid-template-rows:49mm 18mm;break-inside:avoid;page-break-inside:avoid}.foto{position:relative;width:54mm;height:49mm;border:2mm solid #374247;border-bottom:0;overflow:hidden;background:#e6e9ed}.foto img{display:block;width:100%;height:100%;object-fit:cover}.faixa{display:block;width:54mm;height:18mm;overflow:visible}@media screen{body{background:#eef1f4;padding:15px}.folha{width:190mm;height:277mm;margin:0 auto 15px;background:#fff;box-shadow:0 2px 14px #0002}}@media print{body{padding:0}.folha{width:100%;height:277mm}}
-          </style></head><body>${Array.from({length:Math.ceil(cards/12)},(_,i)=>`<main class="folha">${selecionados.slice(i*12,(i+1)*12).map(p=>{const [bg,fg]=cor(p),crop=Number(enquadramentos[p.id]??50),zoom=Number(zoomFotos[p.id]??1),titulo=[p.posto,nomeExibicao(p)].filter(Boolean).join(' ').toLocaleUpperCase('pt-BR');return `<article class="card"><div class="foto" style="border-color:${bg}"><img src="${a(urlFoto(p))}" alt="" style="object-position:50% ${crop}%;transform:scale(${zoom});transform-origin:50% ${crop}%"></div>${faixaSvg(titulo,p.re,bg,fg)}</article>`;}).join('')}</main>`).join('')}<script>window.onload=()=>{const imgs=[...document.images];Promise.all(imgs.map(i=>i.decode?i.decode().catch(()=>{}):Promise.resolve())).then(()=>setTimeout(()=>window.print(),250));};</`+`script></body></html>`);janela.document.close();
-      }
       function mover(id,destino) {
         if(ocupado||!plano||!Number.isInteger(destino)||destino< -1||destino>=plano.equipes.length) return;
         const p=pessoas.find(x=>x.id===id);
@@ -12640,11 +12491,9 @@ function epMesclarResenhaFt(payload,auto){
       }
       const novo=()=>({titulo:'',dia:atual.hoje,equipes:[{nome:'Equipe 1',membros:[]}]});
       root.addEventListener('click',ev=>{
-        const b=ev.target.closest('[data-qe],[data-matriz-foco]');if(!b||ocupado||!atual)return;
+        const b=ev.target.closest('[data-qe]');if(!b||ocupado||!atual)return;
         const acao=b.dataset.qe; info('');
-        if(b.hasAttribute('data-matriz-foco')){idFocoMatriz=b.dataset.matrizFoco;renderPreviaMatriz();return;}
         if(acao==='aba-atual'){aba='atual';render();}
-        else if(acao==='aba-matriz'){aba='matriz';render();}
         else if(acao==='atualizar'){executar(async()=>{atual=await api('atual');render();info('Efetivo atualizado.');});}
         else if(acao==='aba-equipes') {
           if(plano){aba='equipes';render();return;}
@@ -12662,9 +12511,6 @@ function epMesclarResenhaFt(payload,auto){
           if(plano.equipes[Number(b.dataset.indice)].membros.length&&!window.confirm('Remover a equipe e devolver seus integrantes à lista?'))return;
           plano.equipes.splice(Number(b.dataset.indice),1);alterado=true;render();
         } else if(acao==='retirar'){mover(b.dataset.id,-1);}
-        else if(acao==='selecionar-com-foto'){selecionarTodosMatriz(true);}
-        else if(acao==='limpar-selecao'){selecionarTodosMatriz(false);}
-        else if(acao==='imprimir-matriz'){imprimirMatriz();}
         else if(acao==='salvar'){
           if(!plano.titulo.trim()||plano.equipes.some(eq=>!eq.nome.trim())){info('Informe o nome da montagem e de todas as equipes.',true);return;}
           executar(async()=>{const salvo=await api('salvar_montagem',plano);Object.assign(plano,salvo);alterado=false;
@@ -12672,29 +12518,12 @@ function epMesclarResenhaFt(payload,auto){
         }
       });
       root.addEventListener('input',ev=>{
-        const el=ev.target;
-        if(el.id==='qeBuscaMatriz'){
-          const termo=normalizarTexto(el.value);
-          box.querySelectorAll('.qe-matriz-item').forEach(item=>{item.hidden=!!termo&&!normalizarTexto(item.dataset.busca).includes(termo);});
-          return;
-        }
-        if((el.id==='qeCrop'||el.id==='qeZoom')&&aba==='matriz'){
-          const p=atual.efetivo.find(x=>String(x.id)===idFocoMatriz&&urlFoto(x))||atual.efetivo.find(x=>idsCartoes.has(String(x.id))&&urlFoto(x))||atual.efetivo.find(x=>urlFoto(x));
-          if(p){const imagem=box.querySelector('.qe-card-photo img');if(el.id==='qeCrop'){enquadramentos[p.id]=Number(el.value);if(imagem){imagem.style.objectPosition='50% '+el.value+'%';imagem.style.transformOrigin='50% '+el.value+'%';}}else{zoomFotos[p.id]=Number(el.value);if(imagem)imagem.style.transform='scale('+el.value+')';}}
-          return;
-        }
-        if(!plano)return;
+        const el=ev.target;if(!plano)return;
         if(el.id==='qeTitulo'){plano.titulo=el.value;alterado=true;}
         if(el.hasAttribute('data-qe-equipe')){plano.equipes[Number(el.dataset.qeEquipe)].nome=el.value;alterado=true;}
       });
       root.addEventListener('change',ev=>{
-        const el=ev.target;if(ocupado)return;
-        if(el.hasAttribute('data-matriz-id')){
-          if(el.checked){idsCartoes.add(String(el.dataset.matrizId));if(!idFocoMatriz)idFocoMatriz=String(el.dataset.matrizId);}
-          else {idsCartoes.delete(String(el.dataset.matrizId));if(idFocoMatriz===String(el.dataset.matrizId))idFocoMatriz='';}
-          atualizarSelecaoMatriz();renderPreviaMatriz();return;
-        }
-        if(!plano)return;
+        const el=ev.target;if(!plano||ocupado)return;
         if(el.hasAttribute('data-qe-mover')&&el.value!=='')mover(el.dataset.qeMover,Number(el.value));
         else if(el.hasAttribute('data-qe-equipe')){
           const i=Number(el.dataset.qeEquipe), nome=plano.equipes[i].nome||('Equipe '+(i+1));
@@ -12738,7 +12567,6 @@ function epMesclarResenhaFt(payload,auto){
         catch(erro){box.innerHTML='<p>Não foi possível carregar o efetivo.</p><button class="btn-page" type="button" id="qeTentar">TENTAR NOVAMENTE</button>';box.querySelector('#qeTentar').onclick=abrirQuadroEfetivoFt;throw erro;}
         void carregarFotosSupabaseAssinadas(true).then(f=>{
           if(!ativo())return; fotos=f;
-          if(aba==='matriz'){renderMatriz();return;}
           const membros=[...atual.efetivo,...pessoas];
           const porId=new Map(membros.map(p=>[p.id,p]));
           for(const li of box.querySelectorAll('[data-qe-pm]')){
@@ -13593,6 +13421,19 @@ function epMesclarResenhaFt(payload,auto){
           <div><strong>ZERAM O CICLO</strong>DS, CM, LTS, LSV, CEP e OUT zeram os dias, sem eliminar folgas adquiridas.</div>
         </div>
         <div class="freq-note">Os lançamentos são salvos individualmente. FOLGAS mostra o saldo disponível e DIAS TRAB. mostra o progresso atual do ciclo, de 0 a 13.</div>
+        <section class="folgas-audit-panel" id="auditoriaFolgas">
+          <h2 style="margin:0;color:#17202a;font-size:16px">AUDITORIA INDIVIDUAL DE FOLGAS</h2>
+          <p class="freq-note">Gera uma trilha do saldo inicial, EO, FM geradas e FM fruídas. O relatório é somente de leitura e pode ser impresso ou salvo como PDF.</p>
+          <div class="folgas-audit-controls">
+            <label for="auditoriaFolgasRe">Policial
+              <select id="auditoriaFolgasRe"><option value="">Selecione o policial</option>
+                ${(d.efetivo || []).map(function(pm) { return '<option value="' + escaparAttr(pm.re) + '">' + escapar([pm.postoGrad, pm.nomeGuerra || pm.nomeCompleto].filter(Boolean).join(' ') + ' — RE ' + pm.re) + '</option>'; }).join('')}
+              </select>
+            </label>
+            <button type="button" class="btn-page" id="auditoriaFolgasGerar" onclick="gerarAuditoriaControleFolgasFt()">GERAR AUDITORIA</button>
+          </div>
+          <div id="auditoriaFolgasResultado" class="folgas-audit-result" aria-live="polite"></div>
+        </section>
         ${d.capacidades && d.capacidades.podeTransferirSaldo ? `
           <section class="freq-legend" id="transferenciaFolgas">
             <h3 style="margin:0;color:#17202a;font-size:12px;font-weight:900">TRANSFERIR SALDO DA UNIDADE ANTERIOR</h3>
@@ -13621,6 +13462,74 @@ function epMesclarResenhaFt(payload,auto){
       }
     }
 
+
+    function gerarAuditoriaControleFolgasFt() {
+      const seletor = document.getElementById('auditoriaFolgasRe');
+      const botao = document.getElementById('auditoriaFolgasGerar');
+      const resultado = document.getElementById('auditoriaFolgasResultado');
+      const re = seletor ? seletor.value : '';
+      if (!re) { informar('Selecione o policial para gerar a auditoria.', true); return; }
+      if (!resultado || !botao) return;
+      botao.disabled = true;
+      botao.textContent = 'GERANDO…';
+      resultado.innerHTML = '<p class="resenha-loading">Reconstruindo o saldo e conferindo os lançamentos…</p>';
+      chamarApi('auditar_controle_folgas', {
+        login: APP.credenciais.login, senha: APP.credenciais.senha, re: re
+      }, { semCache: true }).then(function(resp) {
+        if (!resp || !resp.ok || !resp.dados || !resp.dados.auditoria) throw new Error(resp && resp.erro || 'A API não retornou a auditoria.');
+        APP.auditoriaControleFolgasFt = resp.dados.auditoria;
+        renderizarAuditoriaControleFolgasFt(resp.dados.auditoria);
+      }).catch(function(err) {
+        resultado.innerHTML = '<div class="adm-alerta">' + escapar(err.message || String(err)) + '</div>';
+      }).finally(function() {
+        if (botao.isConnected) { botao.disabled = false; botao.textContent = 'GERAR AUDITORIA'; }
+      });
+    }
+
+    function renderizarAuditoriaControleFolgasFt(a) {
+      const box = document.getElementById('auditoriaFolgasResultado');
+      if (!box || !a) return;
+      const p = a.policial || {}, s = a.resumo || {}, b = a.baseInicial || {};
+      const statusClass = s.statusCalculo === 'CONFERIDO' ? 'ok' : (s.statusCalculo === 'REVISAR DIVERGÊNCIAS' ? 'warn' : 'err');
+      const num = v => v == null ? '—' : String(v);
+      const dataBr = v => { const x=String(v||'').slice(0,10).split('-'); return x.length===3 ? x[2]+'/'+x[1]+'/'+x[0] : (v||'—'); };
+      const periodos = (a.periodosIniciais || []).map(x => escapar(x.periodo || x.origem || 'Crédito inicial')).join(' · ') || 'Sem períodos detalhados no campo de observação inicial.';
+      const alertas = (a.alertas || []).length ? '<div class="folgas-audit-alert"><strong>Itens para conferência</strong><ul>' + a.alertas.map(x => '<li>'+escapar(x)+'</li>').join('') + '</ul></div>' : '<div class="folgas-audit-alert" style="border-color:#86efac;border-left-color:#16a34a;background:#f0fdf4;color:#166534">Nenhuma divergência foi detectada nos lançamentos disponíveis.</div>';
+      const linhas = (a.eventos || []).map(ev => {
+        const ciclo = ev.estadoCalculo === 'CALCULADO' ? (ev.contagemEO ? ev.diasAntes+' → '+ev.diasDepois+(ev.fmGerada ? ' · completou 14 EO' : '') : (ev.zerouCiclo ? ev.diasAntes+' → 0 · ciclo zerado' : ev.diasAntes+' → '+ev.diasDepois)) : '—';
+        const fm = ev.estadoCalculo === 'CALCULADO' ? (ev.fmGerada ? '+'+ev.fmGerada : (ev.codigo==='FM' ? '−1' : '—')) : '—';
+        const saldo = ev.estadoCalculo === 'CALCULADO' ? ev.saldoAntes+' → '+ev.saldoDepois : '—';
+        const detalhes = [ev.creditoConsumido, ev.observacao, ev.divergencias && ev.divergencias.join(' ')].filter(Boolean).map(escapar).join('<br>') || '—';
+        const cls = ev.estadoCalculo==='ERRO' || (ev.divergencias||[]).length ? ' class="audit-error"' : '';
+        return '<tr'+cls+'><td>'+dataBr(ev.dataISO)+'</td><td><strong>'+escapar(ev.codigo)+'</strong><br><small>'+escapar(ev.origem||'')+'</small></td><td>'+ciclo+'</td><td>'+fm+'</td><td>'+saldo+'</td><td>'+detalhes+'</td><td>'+escapar(ev.responsavel||'—')+'</td></tr>';
+      }).join('');
+      box.innerHTML = '<div class="folgas-audit-head"><div><strong>'+escapar([p.postoGrad,p.nomeGuerra||p.nome].filter(Boolean).join(' ')+' · RE '+p.re)+'</strong><br><small>'+escapar(p.pelotao||'')+' · Relatório gerado em '+escapar(a.geradoEm||'')+'</small></div><div><span class="folgas-audit-status '+statusClass+'">'+escapar(s.statusCalculo||'')+'</span> <button type="button" class="btn-page" onclick="imprimirAuditoriaControleFolgasFt()">IMPRIMIR / SALVAR PDF</button></div></div>'+
+        '<div class="folgas-audit-cards">'+
+        '<div class="folgas-audit-card"><small>Saldo inicial</small><strong>'+num(s.saldoInicialFM)+' FM</strong></div>'+
+        '<div class="folgas-audit-card"><small>FM geradas após implantação</small><strong>'+num(s.fmGeradas)+'</strong></div>'+
+        '<div class="folgas-audit-card"><small>FM fruídas após implantação</small><strong>'+num(s.fmFruidas)+'</strong></div>'+
+        '<div class="folgas-audit-card"><small>Saldo reconstruído</small><strong>'+num(s.saldoFMRecalculado)+' FM</strong></div></div>'+alertas+
+        '<div class="folgas-audit-alert"><strong>Posição inicial consolidada em '+dataBr(b.dataISO)+':</strong> '+num(b.saldoFM)+' FM e '+num(b.diasEO)+'/14 EO. <strong>Créditos descritos:</strong> '+periodos+'<br><small>Os lançamentos anteriores a '+dataBr(a.inicioDetalhadoISO)+' aparecem somente como posição inicial, pois o sistema não possui o diário completo daquele período.</small></div>'+
+        '<p class="freq-note">Saldo persistido no resumo: '+num(s.saldoFMPersistido)+' FM e '+num(s.diasEOPersistidos)+'/14 EO. Serviços EO contados em detalhe desde a implantação: '+num(s.servicosEOContadosDesdeImplantacao)+'.</p>'+
+        '<div class="folgas-audit-scroll"><table class="folgas-audit-table"><thead><tr><th>Data</th><th>Lançamento / origem</th><th>Progresso EO</th><th>FM</th><th>Saldo FM</th><th>Crédito / observação / alerta</th><th>Registrado por</th></tr></thead><tbody>'+(linhas||'<tr><td colspan="7">Nenhum lançamento ativo posterior à implantação.</td></tr>')+'</tbody></table></div>';
+    }
+
+    function imprimirAuditoriaControleFolgasFt() {
+      const a = APP.auditoriaControleFolgasFt;
+      if (!a) { informar('Gere a auditoria antes de imprimir.', true); return; }
+      const p=a.policial||{},s=a.resumo||{},b=a.baseInicial||{};
+      const esc=x=>escapar(x==null?'':String(x));
+      const dataBr=v=>{const x=String(v||'').slice(0,10).split('-');return x.length===3?x[2]+'/'+x[1]+'/'+x[0]:(v||'—');};
+      const rows=(a.eventos||[]).map(ev=>'<tr><td>'+dataBr(ev.dataISO)+'</td><td><b>'+esc(ev.codigo)+'</b><br>'+esc(ev.origem||'')+'</td><td>'+(ev.estadoCalculo==='CALCULADO'?(ev.contagemEO?ev.diasAntes+' → '+ev.diasDepois+(ev.fmGerada?' · completou 14 EO':''):(ev.zerouCiclo?ev.diasAntes+' → 0 · ciclo zerado':ev.diasAntes+' → '+ev.diasDepois)):'—')+'</td><td>'+(ev.estadoCalculo==='CALCULADO'?(ev.fmGerada?'+'+ev.fmGerada:(ev.codigo==='FM'?'−1':'—')):'—')+'</td><td>'+(ev.estadoCalculo==='CALCULADO'?ev.saldoAntes+' → '+ev.saldoDepois:'—')+'</td><td>'+[ev.creditoConsumido,ev.observacao,(ev.divergencias||[]).join(' ')].filter(Boolean).map(esc).join('<br>')+'</td><td>'+esc(ev.responsavel||'—')+'</td></tr>').join('');
+      const alertas=(a.alertas||[]).length?'<ul>'+a.alertas.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>':'<p>Nenhuma divergência detectada nos lançamentos disponíveis.</p>';
+      const win=window.open('','_blank');
+      if(!win){informar('O navegador bloqueou a janela de impressão. Permita pop-ups para este site e tente novamente.',true);return;}
+      win.opener=null;
+      win.document.open();
+      win.document.write('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Auditoria de Folgas - RE '+esc(p.re)+'</title><style>@page{size:A4 portrait;margin:12mm}*{box-sizing:border-box}body{font:10pt Arial,sans-serif;color:#17202a;margin:0}h1{font-size:17pt;margin:0 0 4mm}h2{font-size:12pt;margin:5mm 0 2mm}.meta{color:#475569;font-size:9pt;margin-bottom:5mm}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:3mm;margin:4mm 0}.card{border:1px solid #cbd5e1;border-radius:3mm;padding:3mm}.card small{display:block;color:#475569;font-weight:bold}.card strong{display:block;margin-top:2mm;font-size:13pt}.alert{border:1px solid #d6a23a;background:#fffaf0;padding:3mm;margin:3mm 0;font-size:9pt}.ok{border-color:#86efac;background:#f0fdf4}table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:8pt}th,td{border:1px solid #cbd5e1;padding:2mm;vertical-align:top;overflow-wrap:anywhere}th{background:#374247;color:#fff;text-align:left}tr{break-inside:avoid;page-break-inside:avoid}th:nth-child(1){width:10%}th:nth-child(2){width:15%}th:nth-child(3){width:14%}th:nth-child(4){width:7%}th:nth-child(5){width:12%}th:nth-child(6){width:27%}th:nth-child(7){width:15%}.actions{margin:4mm 0}.actions button{padding:8px 12px;font-weight:bold}@media print{.actions{display:none}}</style></head><body><h1>Auditoria individual de folgas</h1><div class="meta"><b>'+esc([p.postoGrad,p.nomeGuerra||p.nome].filter(Boolean).join(' ')+' · RE '+p.re)+'</b> · '+esc(p.pelotao||'')+'<br>Gerado em '+esc(a.geradoEm||'')+' · Status: '+esc(s.statusCalculo||'')+'</div><div class="actions"><button onclick="window.print()">Imprimir / Salvar PDF</button></div><div class="cards"><div class="card"><small>Saldo inicial</small><strong>'+esc(s.saldoInicialFM)+' FM</strong></div><div class="card"><small>FM geradas após implantação</small><strong>'+esc(s.fmGeradas)+'</strong></div><div class="card"><small>FM fruídas após implantação</small><strong>'+esc(s.fmFruidas)+'</strong></div><div class="card"><small>Saldo reconstruído</small><strong>'+esc(s.saldoFMRecalculado)+' FM</strong></div></div><div class="alert"><b>Posição inicial consolidada em '+dataBr(b.dataISO)+':</b> '+esc(b.saldoFM)+' FM e '+esc(b.diasEO)+'/14 EO.<br><b>Origem:</b> '+esc(b.origem||'')+'<br><b>Observação:</b> '+esc(b.observacao||'—')+'<br>O diário detalhado começa em '+dataBr(a.inicioDetalhadoISO)+'. Períodos anteriores não podem ser reconstruídos dia a dia.</div><div class="alert '+((a.alertas||[]).length?'':'ok')+'"><b>Conferências</b>'+alertas+'</div><p><b>Saldo reconstruído:</b> '+esc(s.saldoFMRecalculado)+' FM · '+esc(s.diasEOAtuais)+'/14 EO. <b>Saldo persistido:</b> '+esc(s.saldoFMPersistido)+' FM · '+esc(s.diasEOPersistidos)+'/14 EO. Serviços EO detalhados desde a implantação: '+esc(s.servicosEOContadosDesdeImplantacao)+'.</p><table><thead><tr><th>Data</th><th>Lançamento / origem</th><th>Progresso EO</th><th>FM</th><th>Saldo FM</th><th>Crédito / observação / alerta</th><th>Registrado por</th></tr></thead><tbody>'+rows+'</tbody></table><p style="margin-top:5mm;color:#64748b;font-size:8pt">Relatório informativo, reconstruído a partir da posição inicial e dos lançamentos ativos do Controle de Folgas. Não altera o cadastro nem o saldo.</p></body></html>');
+      win.document.close();
+      setTimeout(function(){try{win.focus();win.print();}catch(_){}},350);
+    }
 
     function atualizarTransferenciaFolgas() {
       const d = APP.dadosControleFolgas || {};
@@ -15197,7 +15106,7 @@ function epMesclarResenhaFt(payload,auto){
 
     let EP_RESENHA_GESTOR_DISP = {pel:'',data:'',carregando:false,erro:'',ausentes:new Set()};
     function epChavePelResenhaFt(v){const t=normalizarTexto(v||'').replace(/[^A-Z0-9]+/g,' ').trim();if(/(^|\s)1(\s|$)|PRIMEIRO/.test(t))return '1º PEL';if(/(^|\s)2(\s|$)|SEGUNDO/.test(t))return '2º PEL';return '';}
-    function epChaveReGestorFt(v){return String(v||'').split('-')[0].replace(/\D/g,'').slice(0,6);}
+    function epChaveReGestorFt(v){return String(v||'').toUpperCase().replace(/[^0-9A-Z]/g,'');}
     function epPessoaPafReFt(s,efetivo){
       const direto=s?.re||s?.policial_re||s?.pm_re||s?.identidade?.re||s?.policial?.re;
       if(direto)return epChaveReGestorFt(direto);
