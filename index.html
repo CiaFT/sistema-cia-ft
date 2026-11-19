@@ -9674,6 +9674,7 @@ function epMesclarResenhaFt(payload,auto){
       box.innerHTML=(d.compatibilidade?'<p class="oc-ft-nota oc-ft-compat-aviso">Consulta em modo de compatibilidade. Atualize a implantação do Apps Script com a nova versão de OcorrenciasFT.gs para habilitar todos os dados e as pendências da Cia.</p>':'')+'<h3>'+escapar(titulo)+'</h3><p class="oc-ft-nota">'+(document.getElementById('ocFtFFPeriodo').value==='TODOS'?'Todo o histórico.':'Período selecionado no ranking.')+' '+(d.modo==='CIA'?'Cada ocorrência aparece uma vez. A decisão vale para toda a equipe.':'Somente FF aprovadas estão disponíveis para gozo. As datas se referem às ocorrências.')+'</p><div class="oc-ft-indicadores">'+cards+'</div><button class="btn-page" onclick="ocFtFiltrarFF(\'TODAS\')">TODAS ('+d.ocorrencias.length+')</button> <button class="btn-page" onclick="ocFtRecarregarPainelFF()">ATUALIZAR</button><p class="oc-ft-nota">Exibindo: '+escapar(OC_FT_PAINEL_FILTRO==='TODAS'?'Todas as situações':labels[OC_FT_PAINEL_FILTRO])+'</p><div class="oc-ft-tabela"><table class="oc-ft-consulta-individual"><thead><tr><th>Data da ocorrência</th><th>Natureza</th><th>BOPM</th><th>Situação da FF</th><th>Data de fruição</th><th>Ações</th></tr></thead><tbody>'+lista.map(o=>{
         let botoes='<button class="btn-page" data-oc-id="'+escaparAttr(o.id)+'" onclick="ocFtDetalhe(this.dataset.ocId)">CONSULTAR</button>';
         if(d.capacidades.validarFF&&o.status==='VALIDADA'&&o.ffDecisao==='PENDENTE')botoes+='<button class="btn-primary-soft" data-oc-id="'+escaparAttr(o.id)+'" onclick="ocFtDecidirRanking(this.dataset.ocId,\'APROVAR\')">APROVAR FF</button><button class="btn-page" data-oc-id="'+escaparAttr(o.id)+'" onclick="ocFtDecidirRanking(this.dataset.ocId,\'RECUSAR\')">RECUSAR FF</button>';
+        if(d.capacidades.reverterFF&&o.status==='VALIDADA'&&o.ffDecisao==='RECUSADA'&&o.podeReverterFF)botoes+='<button class="btn-primary-soft" data-oc-id="'+escaparAttr(o.id)+'" onclick="ocFtReverterRecusaFF(this.dataset.ocId)">REVERTER RECUSA E CONCEDER FF</button>';
         const equipe=d.modo==='CIA'?'<details><summary>Equipe ('+(o.equipe||[]).length+')</summary>'+(o.equipe||[]).map(p=>'<div>'+escapar([p.posto,p.re,p.nome].filter(Boolean).join(' '))+(p.fruidaEm?' — Fruída em '+iccDataBR(p.fruidaEm):'')+'</div>').join('')+'</details>':'';
         const decisao=o.decisao?'<small class="oc-ft-decisao">'+escapar(o.decisao.acao)+'<br>'+escapar(o.decisao.nome||'')+' — '+escapar(iccHoraBR(o.decisao.dataHora))+'</small>':'';
         return '<tr><td>'+iccDataBR(o.data)+'</td><td>'+escapar(o.natureza)+equipe+'</td><td>'+escapar(o.bopm)+'</td><td class="oc-ft-sit-'+(cores[o.situacao]||'neutra')+'">'+escapar(labels[o.situacao]||o.situacao)+decisao+'</td><td>'+(o.fruidaEm?iccDataBR(o.fruidaEm):'—')+'</td><td><div class="oc-ft-acoes">'+botoes+'</div></td></tr>';
@@ -9691,12 +9692,11 @@ function epMesclarResenhaFt(payload,auto){
         await ocFtRecarregarPainelFF();
       }catch(e){mostrarToastFt('Decisão não registrada',e.message,'erro');}finally{OC_FT_DECIDINDO=false;}
     }
-    function ocFtRegistrosConsulta(ocorrencias){
+    function ocFtRegistrosConsulta(ocorrencias,incluirRecusadas){
       const pendentes=[],validadas=[];
       (ocorrencias||[]).forEach(o=>{
-        if(o.ffDecisao==='RECUSADA')return;
         if(o.status==='PENDENTE')pendentes.push(o);
-        if(o.status==='VALIDADA'&&(o.ffDecisao==='PENDENTE'||o.ffDecisao==='APROVADA'||o.ffAprovada===true))validadas.push(o);
+        if(o.status==='VALIDADA'&&(o.ffDecisao==='PENDENTE'||o.ffDecisao==='APROVADA'||o.ffAprovada===true||(incluirRecusadas&&o.ffDecisao==='RECUSADA')))validadas.push(o);
       });
       return {pendentes,validadas};
     }
@@ -9712,7 +9712,7 @@ function epMesclarResenhaFt(payload,auto){
         const d=await ocFtApi('ocorrencias_listar',{re});
         if(!atual())return;
         const creditos=Object.fromEntries((d.creditosFF||[]).map(c=>[c.id,c]));
-        const {pendentes,validadas}=ocFtRegistrosConsulta(d.ocorrencias),cap=d.capacidades||{};
+        const cap=d.capacidades||{}, {pendentes,validadas}=ocFtRegistrosConsulta(d.ocorrencias,!!cap.reverterFF);
         const lista=pendentes.concat(validadas);
         const n=pendentes.length;
         const resumo=n?'<p class="oc-ft-resumo-validacao"><strong>'+n+' '+(n===1?'ocorrência aguarda':'ocorrências aguardam')+' validação.</strong> Confira os registros destacados no topo.</p>':'<p class="oc-ft-nota">Nenhuma ocorrência aguarda validação.</p>';
@@ -9721,13 +9721,15 @@ function epMesclarResenhaFt(payload,auto){
         box.innerHTML=resumo+nota+'<div class="oc-ft-tabela"><table class="oc-ft-consulta-individual"><thead><tr><th>Data</th><th>Natureza</th><th>BOPM</th><th>Ocorrência</th><th>FF — decisão do Cmt Cia</th><th>Ações</th></tr></thead><tbody>'+lista.map(o=>{
           const pendente=o.status==='PENDENTE',c=creditos[o.id];
           const aprovada=o.ffDecisao==='APROVADA'||o.ffAprovada===true;
-          const ff=pendente?'Após a validação':c?.gozadaEm?'Fruída em '+iccDataBR(c.gozadaEm):aprovada?'Aprovada':'Aguardando Cmt Cia';
-          const classeFF=pendente?'':c?.gozadaEm?'oc-ft-ff-fruida':aprovada?'oc-ft-sit-disponivel':'oc-ft-ff-aguardando';
+          const recusada=o.ffDecisao==='RECUSADA';
+          const ff=pendente?'Após a validação':c?.gozadaEm?'Fruída em '+iccDataBR(c.gozadaEm):recusada?'Recusada pelo Cmt Cia':aprovada?'Aprovada':'Aguardando Cmt Cia';
+          const classeFF=pendente?'':c?.gozadaEm?'oc-ft-ff-fruida':recusada?'oc-ft-sit-recusada':aprovada?'oc-ft-sit-disponivel':'oc-ft-ff-aguardando';
           const id=escaparAttr(o.id);
           const botao=(texto,classe,acao,tipo,decisao)=>'<button type="button" class="'+classe+'" data-oc-id="'+id+'"'+(tipo?' data-oc-tipo="'+tipo+'" data-oc-decisao="'+decisao+'"':'')+' data-oc-acao="'+acao+'">'+texto+'</button>';
           let botoes=botao('CONSULTAR','btn-page','detalhe');
           if(cap.validar&&pendente)botoes+=botao('VALIDAR OCORRÊNCIA','btn-primary-soft','decidir','OCORRENCIA','APROVAR')+botao('RECUSAR','btn-page','decidir','OCORRENCIA','RECUSAR');
           if(cap.validarFF&&!pendente&&o.ffDecisao==='PENDENTE')botoes+=botao('CONCEDER FF','btn-primary-soft','decidir','FF','APROVAR')+botao('RECUSAR FF','btn-page','decidir','FF','RECUSAR');
+          if(cap.reverterFF&&!pendente&&recusada&&o.podeReverterFF)botoes+='<button type="button" class="btn-primary-soft" onclick="ocFtReverterRecusaFF(\''+id+'\')">REVERTER RECUSA E CONCEDER FF</button>';
           const situacao=pendente?'<span class="oc-ft-pendente-etiqueta">Aguardando validação</span>':'Validada';
           return '<tr'+(pendente?' class="oc-ft-linha-pendente"':'')+'><td>'+iccDataBR(o.data)+'</td><td>'+escapar(o.natureza)+'</td><td>'+escapar(o.bopm)+'</td><td>'+situacao+'</td><td class="'+classeFF+'">'+escapar(ff)+'</td><td><div class="oc-ft-acoes">'+botoes+'</div></td></tr>';
         }).join('')+'</tbody></table></div>';
@@ -9855,6 +9857,20 @@ function epMesclarResenhaFt(payload,auto){
           }else falha(e.message);
         }finally{habilitados.forEach(el=>el.disabled=false);retificar.disabled=fechar.disabled=false;}
       };
+    }
+    async function ocFtReverterRecusaFF(id){
+      if(!OC_FT_CATALOGOS?.capacidades?.reverterFF){mostrarToastFt('Ação restrita','Somente o Gestor pode reverter a recusa de uma FF.','erro');return;}
+      const motivo=await pedirMotivoToastFt('JUSTIFICAR REVERSÃO','Informe a justificativa para conceder a FF conforme decisão do Cmt Cia FT:');
+      if(motivo===null)return;
+      if(motivo.trim().length<5){mostrarToastFt('Justificativa obrigatória','Escreva ao menos cinco caracteres.','erro');return;}
+      const ok=await confirmarToastFt('REVERTER RECUSA DA FF','A FF será concedida a todos os integrantes da equipe. Confirme que o Cmt Cia FT autorizou a reversão.',{confirmar:'CONCEDER FF',cancelar:'VOLTAR'});
+      if(!ok)return;
+      try{
+        const r=await ocFtApi('ocorrencias_reverter_recusa_ff',{id,motivo:motivo.trim(),autorizacaoCmt:'SIM'});
+        mostrarToastFt('FF concedida',r.mensagem||'A recusa foi revertida e a FF concedida.','sucesso');
+        if(OC_FT_PAINEL_MODO==='CIA'&&document.getElementById('ocFtPainelFF'))await ocFtCarregarPainelFF('CIA','',false);
+        else await ocFtCarregarConsulta();
+      }catch(e){mostrarToastFt('Reversão não registrada',e.message||String(e),'erro');}
     }
     async function ocFtDecidir(id,tipo,decisao){
       let motivo='';if(decisao==='RECUSAR'){motivo=await pedirMotivoToastFt('INFORMAR MOTIVO','Motivo da recusa:');if(motivo===null)return;}
