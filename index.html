@@ -9512,7 +9512,7 @@ function epMesclarResenhaFt(payload,auto){
       const i=d.indicadores||{};
       return Object.keys(i).length?'<h3>Dados para Índices Criminais</h3><div class="oc-ft-grid">'+[['regiao','Região / bairro'],...OC_FT_INDICES_METRICAS].map(([k,t])=>{
         const v=i[k];
-        return '<div><strong>'+t+'</strong><p>'+escapar(v==null?'Não informado':k==='flagrante'?(v===1?'Sim':'Não'):k==='drogasGramas'?new Intl.NumberFormat('pt-BR',{maximumFractionDigits:3}).format(v)+' g':v)+'</p></div>';
+        return '<div><strong>'+t+'</strong><p>'+escapar(v==null?'Não informado':k==='flagrante'?(v===1?'Sim':'Não'):k==='drogasGramas'?new Intl.NumberFormat('pt-BR',{maximumFractionDigits:3}).format(v/1000)+' g':v)+'</p></div>';
       }).join('')+'</div>':'';
     }
     const OC_FT_INDICES_AVISO_ATE=Date.parse('2027-01-01T00:01:00-03:00');
@@ -9585,8 +9585,8 @@ function epMesclarResenhaFt(payload,auto){
               return '<div><dt>'+rotulo+'</dt><dd>'+fmt.format(grupo.capturas)+'<small>'+pessoas+'</small></dd></div>';
             }
             if(k==='flagrante'){
-              const semDP=Math.max(0,grupo.total-i.informadas);
               const elegiveis=Math.max(0,grupo.total-(grupo.capturas||0));
+              const semDP=Math.max(0,elegiveis-i.informadas);
               const valor=i.valor>0||semDP===0?fmt.format(i.valor):'—';
               const nota=semDP?'<small>'+fmt.format(semDP)+' de '+fmt.format(elegiveis)+' sem informação sobre apresentação no DP</small>':'';
               return '<div><dt>'+rotulo+'</dt><dd>'+valor+nota+'</dd></div>';
