@@ -7377,6 +7377,10 @@ Banco de dados: Google Sheets.
     .quadro-ft .qe-equipes-titulo { margin:0; padding:8px 10px; border-radius:10px; color:#374247; font-size:13px; }
     .quadro-ft .qe-equipe-titulo { margin:0 0 7px; color:#374247; font-size:13px; }
     .quadro-ft .qe-montagem-hint { margin:8px 0 0; padding:8px 10px; border:1px solid #d9e0e5; border-radius:10px; background:#f8fafc; color:#475569; font-size:12px; line-height:1.45; }
+    .quadro-ft .qe-montagem-campos { display:grid; grid-template-columns:repeat(3,minmax(180px,1fr)); gap:10px; align-items:end; margin:12px 0 8px; }
+    .quadro-ft .qe-montagem-campos label { display:grid; gap:4px; min-width:0; font-size:12px; font-weight:700; }
+    .quadro-ft .qe-montagem-acoes { display:flex; flex-wrap:nowrap; gap:8px; align-items:stretch; overflow-x:auto; padding:2px 1px 6px; margin:0 0 12px; }
+    .quadro-ft .qe-montagem-acoes .btn-page { flex:1 0 150px; min-height:42px; margin:0; white-space:nowrap; }
     .quadro-ft .qe-grupos { display:none; }
     .quadro-ft .qe-grupo[data-grupo="AFAST"],.quadro-ft .qe-grupo[data-grupo="CONFERIR"] { grid-column:1 / -1; }
     .quadro-ft .qe-lista { display:grid; list-style:none; gap:6px; margin:8px 0 0; padding:0; }
@@ -7393,7 +7397,13 @@ Banco de dados: Google Sheets.
     .quadro-ft .qe-visual-equipe h3 { margin:0 0 10px; padding-bottom:8px; border-bottom:2px solid #374247; }
     .quadro-ft .qe-visual-lista { display:grid; gap:8px; }
     .quadro-ft .qe-visual-pm { display:flex; align-items:center; gap:9px; min-width:0; padding:7px; border:1px solid #dce3ea; border-radius:9px; background:#f8fafc; }
+    .quadro-ft .qe-visual-pm.hierarquia-oficial { background:radial-gradient(circle at top left,rgba(184,134,11,.12),transparent 56%),linear-gradient(180deg,#fffdf7,#fff8e8); border-color:rgba(184,134,11,.46); }
+    .quadro-ft .qe-visual-pm.hierarquia-subten-sgt { background:radial-gradient(circle at top left,rgba(150,0,24,.10),transparent 56%),linear-gradient(180deg,#fffafa,#fff0f2); border-color:rgba(150,0,24,.46); }
+    .quadro-ft .qe-visual-pm.hierarquia-cb-sd { background:radial-gradient(circle at top left,rgba(0,51,160,.09),transparent 56%),linear-gradient(180deg,#fafcff,#edf3ff); border-color:rgba(0,51,160,.38); }
     .quadro-ft .qe-visual-pm img,.quadro-ft .qe-visual-pm .qe-sem-foto { flex:0 0 46px; width:46px; height:54px; object-fit:cover; border-radius:6px; }
+    .quadro-ft .qe-visual-pm.hierarquia-oficial img,.quadro-ft .qe-visual-pm.hierarquia-oficial .qe-sem-foto { border:2px solid #b8860b; }
+    .quadro-ft .qe-visual-pm.hierarquia-subten-sgt img,.quadro-ft .qe-visual-pm.hierarquia-subten-sgt .qe-sem-foto { border:2px solid #960018; }
+    .quadro-ft .qe-visual-pm.hierarquia-cb-sd img,.quadro-ft .qe-visual-pm.hierarquia-cb-sd .qe-sem-foto { border:2px solid #0033a0; }
     .quadro-ft .qe-visual-pm > span:last-child { min-width:0; }
     .quadro-ft .qe-visual-pm strong,.quadro-ft .qe-visual-pm small { display:block; overflow-wrap:anywhere; }
     .quadro-ft .qe-visual-pm small { color:#526170; margin-top:2px; }
@@ -7416,6 +7426,8 @@ Banco de dados: Google Sheets.
     }
     @media(max-width:760px) {
       .quadro-ft .qe-grupos { display:flex; }
+      .quadro-ft .qe-montagem-campos { grid-template-columns:1fr; }
+      .quadro-ft .qe-montagem-acoes .btn-page { flex:0 0 170px; }
       .quadro-ft .qe-visual-overlay { padding:6px; }
       .quadro-ft .qe-visual-modal { width:100%; max-height:96vh; padding:12px; }
       .quadro-ft .qe-visual-equipes { grid-template-columns:1fr; }
@@ -12560,10 +12572,10 @@ function epMesclarResenhaFt(payload,auto){
           <div class="qe-controles"><label>Rascunhos salvos <select id="qeSalvos"><option value="">Selecione</option>
           ${lista.map(x=>`<option value="${a(x.id)}"${plano.id===x.id?' selected':''}>${e(x.dia.split('-').reverse().join('/')+' — '+x.titulo)}</option>`).join('')}
           </select></label>${botao('novo','NOVO RASCUNHO')}</div>
-          <div class="qe-controles"><label>Nome da montagem<input id="qeTitulo" maxlength="100" value="${a(plano.titulo)}" placeholder="Ex.: Operação"></label>
+          <div class="qe-montagem-campos"><label>Nome da montagem<input id="qeTitulo" maxlength="100" value="${a(plano.titulo)}" placeholder="Ex.: Operação"></label>
           <label>Data de referência<input id="qeDia" type="date" min="${a(atual.hoje)}" value="${a(plano.dia)}"></label>
-          <label>Visualizar efetivo<select id="qeEscopo"><option value="1_PEL"${escopoMontagem==='1_PEL'?' selected':''}>1º Pel</option><option value="2_PEL"${escopoMontagem==='2_PEL'?' selected':''}>2º Pel</option><option value="OPERACIONAL"${escopoMontagem==='OPERACIONAL'?' selected':''}>Efetivo Operacional (1º + 2º Pel)</option><option value="TOTAL"${escopoMontagem==='TOTAL'?' selected':''}>Efetivo Total</option></select></label>
-          ${botao('adicionar','ADICIONAR EQUIPE')}${botao('salvar','SALVAR RASCUNHO')}${botao('visualizar-equipes','VISUALIZAR EQUIPES')}${botao('imprimir-equipes','IMPRIMIR EQUIPES / PDF',plano.id&&!alterado?'':'disabled title="Salve o rascunho para habilitar a impressão."')}${plano.id?botao('excluir-rascunho','EXCLUIR RASCUNHO',!alterado?'':'disabled title="Salve ou descarte as alterações antes de excluir."'):''}</div>${plano.id&&alterado?'<p>Salve as alterações do rascunho antes de gerar o PDF ou excluir.</p>':''}</section>
+          <label>Visualizar efetivo<select id="qeEscopo"><option value="1_PEL"${escopoMontagem==='1_PEL'?' selected':''}>1º Pel</option><option value="2_PEL"${escopoMontagem==='2_PEL'?' selected':''}>2º Pel</option><option value="OPERACIONAL"${escopoMontagem==='OPERACIONAL'?' selected':''}>Efetivo Operacional (1º + 2º Pel)</option><option value="TOTAL"${escopoMontagem==='TOTAL'?' selected':''}>Efetivo Total</option></select></label></div>
+          <div class="qe-montagem-acoes">${botao('adicionar','ADICIONAR EQUIPE')}${botao('salvar','SALVAR RASCUNHO')}${botao('visualizar-equipes','VISUALIZAR EQUIPES')}${botao('imprimir-equipes','IMPRIMIR EQUIPES / PDF',plano.id&&!alterado?'':'disabled title="Salve o rascunho para habilitar a impressão."')}${plano.id?botao('excluir-rascunho','EXCLUIR RASCUNHO',!alterado?'':'disabled title="Salve ou descarte as alterações antes de excluir."'):''}</div>${plano.id&&alterado?'<p>Salve as alterações do rascunho antes de gerar o PDF ou excluir.</p>':''}</section>
           <div class="qe-montagem">
           <div class="qe-montagem-coluna"><section class="modal-card qe-secao" data-qe-destino="-1"><h2>Disponíveis <small>(${disponiveis.length})</small></h2>${disponiveis.length?`<ul class="qe-lista">${disponiveis.map(p=>ficha(p,-1)).join('')}</ul>`:'<p>Não há policiais disponíveis para mover.</p>'}</section></div>
           <div class="qe-montagem-coluna qe-equipes-coluna" aria-label="Equipes"><h3 class="qe-equipes-titulo">EQUIPES DA MONTAGEM <small>(${plano.equipes.length})</small></h3>${plano.equipes.map((eq,i)=>`<section class="modal-card qe-secao" data-qe-destino="${i}">
@@ -12650,7 +12662,7 @@ function epMesclarResenhaFt(payload,auto){
         if(!equipes.length){info('Adicione policiais às equipes para visualizar a montagem.',true);return;}
         const equipesHtml=equipes.map(eq=>'<section class="qe-visual-equipe"><h3>'+escaparMatriz(eq.nome)+'</h3><div class="qe-visual-lista">'+eq.membros.map(p=>{
           const foto=urlFoto(p),nome=nomeExibicao(p)||p.nomeCompleto||'',rotulo=[p.postoGrad,nome].filter(Boolean).join(' ');
-          return '<article class="qe-visual-pm">'+(foto?'<img class="qe-visual-foto" data-qe-visual-pm="'+a(p.id)+'" src="'+a(foto)+'" alt="Foto de '+a(rotulo)+'" loading="lazy">':'<span class="qe-sem-foto" aria-hidden="true">'+escaparMatriz(String(nome||'?').slice(0,1))+'</span>')+'<span><strong>'+escaparMatriz(rotulo)+'</strong><small>RE '+escaparMatriz(p.re||'')+'</small></span></article>';
+          return '<article class="qe-visual-pm '+classeHierarquia(p)+'">'+(foto?'<img class="qe-visual-foto" data-qe-visual-pm="'+a(p.id)+'" src="'+a(foto)+'" alt="Foto de '+a(rotulo)+'" loading="lazy">':'<span class="qe-sem-foto" aria-hidden="true">'+escaparMatriz(String(nome||'?').slice(0,1))+'</span>')+'<span><strong>'+escaparMatriz(rotulo)+'</strong><small>RE '+escaparMatriz(p.re||'')+'</small></span></article>';
         }).join('')+'</div></section>').join('');
         box.insertAdjacentHTML('beforeend','<div class="qe-visual-overlay" role="presentation"><section class="qe-visual-modal" role="dialog" aria-modal="true" aria-label="Visualização das equipes"><header class="qe-visual-topo"><div><h2>'+escaparMatriz(plano.titulo||'Equipes montadas')+'</h2><small>Data de referência: '+escaparMatriz(String(plano.dia||'').split('-').reverse().join('/'))+'</small></div><button type="button" class="btn-page" data-qe="fechar-visualizacao">FECHAR</button></header><div class="qe-visual-equipes">'+equipesHtml+'</div></section></div>');
         box.querySelectorAll('img.qe-visual-foto').forEach(img=>{img.onerror=()=>{const p=pessoas.find(x=>String(x.id)===img.dataset.qeVisualPm);const span=document.createElement('span');span.className='qe-sem-foto';span.setAttribute('aria-hidden','true');span.textContent=String(p?nomeExibicao(p):'?').slice(0,1);img.replaceWith(span);};});
