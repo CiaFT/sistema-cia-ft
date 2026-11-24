@@ -7384,6 +7384,19 @@ Banco de dados: Google Sheets.
     .quadro-ft .qe-ficha.hierarquia-oficial { background:radial-gradient(circle at top left,rgba(184,134,11,.12),transparent 56%),linear-gradient(180deg,#fffdf7,#fff8e8); border-color:rgba(184,134,11,.46); }
     .quadro-ft .qe-ficha.hierarquia-subten-sgt { background:radial-gradient(circle at top left,rgba(150,0,24,.10),transparent 56%),linear-gradient(180deg,#fffafa,#fff0f2); border-color:rgba(150,0,24,.46); }
     .quadro-ft .qe-ficha.hierarquia-cb-sd { background:radial-gradient(circle at top left,rgba(0,51,160,.09),transparent 56%),linear-gradient(180deg,#fafcff,#edf3ff); border-color:rgba(0,51,160,.38); }
+    .quadro-ft .qe-visual-overlay { position:fixed; inset:0; z-index:10050; display:grid; place-items:center; padding:18px; background:rgba(15,23,42,.62); }
+    .quadro-ft .qe-visual-modal { width:min(1180px,96vw); max-height:92vh; overflow:auto; padding:18px; border-radius:16px; background:#eef1f4; box-shadow:0 18px 60px #0005; }
+    .quadro-ft .qe-visual-topo { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:14px; }
+    .quadro-ft .qe-visual-topo h2 { margin:0; }
+    .quadro-ft .qe-visual-equipes { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr)); gap:12px; align-items:start; }
+    .quadro-ft .qe-visual-equipe { min-width:0; padding:12px; border:1px solid #d5dce1; border-radius:12px; background:#fff; }
+    .quadro-ft .qe-visual-equipe h3 { margin:0 0 10px; padding-bottom:8px; border-bottom:2px solid #374247; }
+    .quadro-ft .qe-visual-lista { display:grid; gap:8px; }
+    .quadro-ft .qe-visual-pm { display:flex; align-items:center; gap:9px; min-width:0; padding:7px; border:1px solid #dce3ea; border-radius:9px; background:#f8fafc; }
+    .quadro-ft .qe-visual-pm img,.quadro-ft .qe-visual-pm .qe-sem-foto { flex:0 0 46px; width:46px; height:54px; object-fit:cover; border-radius:6px; }
+    .quadro-ft .qe-visual-pm > span:last-child { min-width:0; }
+    .quadro-ft .qe-visual-pm strong,.quadro-ft .qe-visual-pm small { display:block; overflow-wrap:anywhere; }
+    .quadro-ft .qe-visual-pm small { color:#526170; margin-top:2px; }
     .quadro-ft .qe-ficha[draggable="true"] { cursor:grab; }
     .quadro-ft .qe-pessoa { display:flex; align-items:center; gap:8px; }
     .quadro-ft .qe-pessoa small { display:block; margin-top:2px; }
@@ -7403,6 +7416,9 @@ Banco de dados: Google Sheets.
     }
     @media(max-width:760px) {
       .quadro-ft .qe-grupos { display:flex; }
+      .quadro-ft .qe-visual-overlay { padding:6px; }
+      .quadro-ft .qe-visual-modal { width:100%; max-height:96vh; padding:12px; }
+      .quadro-ft .qe-visual-equipes { grid-template-columns:1fr; }
       .quadro-ft .qe-efetivo-grid,.quadro-ft .qe-montagem { grid-template-columns:minmax(0,1fr); }
       .quadro-ft .qe-montagem-coluna,.quadro-ft .qe-equipes-coluna { max-height:none; min-height:0; overflow:visible; padding:0; }
       .quadro-ft .qe-grupo:not(.qe-grupo-ativo) { display:none; }
@@ -12547,7 +12563,7 @@ function epMesclarResenhaFt(payload,auto){
           <div class="qe-controles"><label>Nome da montagem<input id="qeTitulo" maxlength="100" value="${a(plano.titulo)}" placeholder="Ex.: Operação"></label>
           <label>Data de referência<input id="qeDia" type="date" min="${a(atual.hoje)}" value="${a(plano.dia)}"></label>
           <label>Visualizar efetivo<select id="qeEscopo"><option value="1_PEL"${escopoMontagem==='1_PEL'?' selected':''}>1º Pel</option><option value="2_PEL"${escopoMontagem==='2_PEL'?' selected':''}>2º Pel</option><option value="OPERACIONAL"${escopoMontagem==='OPERACIONAL'?' selected':''}>Efetivo Operacional (1º + 2º Pel)</option><option value="TOTAL"${escopoMontagem==='TOTAL'?' selected':''}>Efetivo Total</option></select></label>
-          ${botao('adicionar','ADICIONAR EQUIPE')}${botao('salvar','SALVAR RASCUNHO')}${botao('imprimir-equipes','IMPRIMIR EQUIPES / PDF',plano.id&&!alterado?'':'disabled title="Salve o rascunho para habilitar a impressão."')}</div>${plano.id&&alterado?'<p>Salve as alterações do rascunho antes de gerar o PDF.</p>':''}</section>
+          ${botao('adicionar','ADICIONAR EQUIPE')}${botao('salvar','SALVAR RASCUNHO')}${botao('visualizar-equipes','VISUALIZAR EQUIPES')}${botao('imprimir-equipes','IMPRIMIR EQUIPES / PDF',plano.id&&!alterado?'':'disabled title="Salve o rascunho para habilitar a impressão."')}${plano.id?botao('excluir-rascunho','EXCLUIR RASCUNHO',!alterado?'':'disabled title="Salve ou descarte as alterações antes de excluir."'):''}</div>${plano.id&&alterado?'<p>Salve as alterações do rascunho antes de gerar o PDF ou excluir.</p>':''}</section>
           <div class="qe-montagem">
           <div class="qe-montagem-coluna"><section class="modal-card qe-secao" data-qe-destino="-1"><h2>Disponíveis <small>(${disponiveis.length})</small></h2>${disponiveis.length?`<ul class="qe-lista">${disponiveis.map(p=>ficha(p,-1)).join('')}</ul>`:'<p>Não há policiais disponíveis para mover.</p>'}</section></div>
           <div class="qe-montagem-coluna qe-equipes-coluna" aria-label="Equipes"><h3 class="qe-equipes-titulo">EQUIPES DA MONTAGEM <small>(${plano.equipes.length})</small></h3>${plano.equipes.map((eq,i)=>`<section class="modal-card qe-secao" data-qe-destino="${i}">
@@ -12625,6 +12641,20 @@ function epMesclarResenhaFt(payload,auto){
         const htmlEquipes=equipes.map((eq,i)=>'<section class="equipe"><h2>'+escaparMatriz(eq.nome||('Equipe '+(i+1)))+'</h2><table><thead><tr><th>GRADUAÇÃO</th><th>RE</th><th>NOME</th></tr></thead><tbody>'+eq.membros.map(p=>'<tr><td>'+escaparMatriz(p.postoGrad||'')+'</td><td>'+escaparMatriz(p.re||'')+'</td><td>'+escaparMatriz(nomeExibicao(p)||p.nomeCompleto||'')+'</td></tr>').join('')+'</tbody></table></section>').join('');
         janela.document.open();janela.document.write('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Montagem de Equipes — '+escaparMatriz(plano.titulo||'')+'</title><style>@page{size:A4 portrait;margin:8mm}*{box-sizing:border-box}html,body{margin:0;padding:0;color:#17202a;font-family:Arial,sans-serif}.folha{width:194mm;min-height:281mm;padding:0}.cabecalho{height:24mm;border-bottom:1px solid #9aa7af;margin-bottom:2mm}.cabecalho h1{font-size:15pt;margin:0 0 2mm}.cabecalho p{font-size:8pt;margin:0;color:#475569}.equipe{break-inside:avoid;page-break-inside:avoid;margin:0 0 1.5mm}.equipe h2{font-size:'+Math.max(8,fonte+1)+'pt;line-height:5mm;margin:0;padding:0.5mm 1mm;background:#e8edf0;border-left:1.2mm solid #374247}.equipe table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:'+fonte+'pt}.equipe th,.equipe td{height:'+alturaLinha+'mm;line-height:'+alturaLinha+'mm;padding:0 1.5mm;border-bottom:.2mm solid #d5dce1;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.equipe th{height:4mm;line-height:4mm;background:#374247;color:#fff;font-size:'+Math.max(6,fonte-1)+'pt}.equipe th:nth-child(1),.equipe td:nth-child(1){width:34%}.equipe th:nth-child(2),.equipe td:nth-child(2){width:19%}.equipe th:nth-child(3),.equipe td:nth-child(3){width:47%}@media screen{body{background:#eef1f4;padding:12px}.folha{margin:0 auto;background:white;box-shadow:0 2px 14px #0002}}@media print{.folha{margin:0}}</style></head><body><main class="folha"><header class="cabecalho"><h1>'+escaparMatriz(plano.titulo||'Montagem de Equipes')+'</h1><p>Data de referência: '+escaparMatriz(data||'—')+' · '+total+' policial(is)</p></header>'+htmlEquipes+'</main><script>window.onload=()=>setTimeout(()=>window.print(),200);</'+'script></body></html>');janela.document.close();
       }
+      function visualizarMontagemEquipes(){
+        box.querySelector('.qe-visual-overlay')?.remove();
+        const equipes=plano.equipes.map((eq,i)=>({nome:String(eq.nome||('Equipe '+(i+1))).trim(),membros:(eq.membros||[])
+          .map(id=>pessoas.find(p=>String(p.id)===String(id))).filter(Boolean)
+          .map(p=>Object.assign({},p,{postoGrad:p.postoGrad||p.posto||p.posto_graduacao||''}))
+          .sort(ordenarConsultaEfetivoHierarquiaReal)})).filter(eq=>eq.membros.length);
+        if(!equipes.length){info('Adicione policiais às equipes para visualizar a montagem.',true);return;}
+        const equipesHtml=equipes.map(eq=>'<section class="qe-visual-equipe"><h3>'+escaparMatriz(eq.nome)+'</h3><div class="qe-visual-lista">'+eq.membros.map(p=>{
+          const foto=urlFoto(p),nome=nomeExibicao(p)||p.nomeCompleto||'',rotulo=[p.postoGrad,nome].filter(Boolean).join(' ');
+          return '<article class="qe-visual-pm">'+(foto?'<img class="qe-visual-foto" data-qe-visual-pm="'+a(p.id)+'" src="'+a(foto)+'" alt="Foto de '+a(rotulo)+'" loading="lazy">':'<span class="qe-sem-foto" aria-hidden="true">'+escaparMatriz(String(nome||'?').slice(0,1))+'</span>')+'<span><strong>'+escaparMatriz(rotulo)+'</strong><small>RE '+escaparMatriz(p.re||'')+'</small></span></article>';
+        }).join('')+'</div></section>').join('');
+        box.insertAdjacentHTML('beforeend','<div class="qe-visual-overlay" role="presentation"><section class="qe-visual-modal" role="dialog" aria-modal="true" aria-label="Visualização das equipes"><header class="qe-visual-topo"><div><h2>'+escaparMatriz(plano.titulo||'Equipes montadas')+'</h2><small>Data de referência: '+escaparMatriz(String(plano.dia||'').split('-').reverse().join('/'))+'</small></div><button type="button" class="btn-page" data-qe="fechar-visualizacao">FECHAR</button></header><div class="qe-visual-equipes">'+equipesHtml+'</div></section></div>');
+        box.querySelectorAll('img.qe-visual-foto').forEach(img=>{img.onerror=()=>{const p=pessoas.find(x=>String(x.id)===img.dataset.qeVisualPm);const span=document.createElement('span');span.className='qe-sem-foto';span.setAttribute('aria-hidden','true');span.textContent=String(p?nomeExibicao(p):'?').slice(0,1);img.replaceWith(span);};});
+      }
       function mover(id,destino) {
         if(ocupado||!plano||!Number.isInteger(destino)||destino< -1||destino>=plano.equipes.length) return;
         const p=pessoas.find(x=>x.id===id);
@@ -12640,6 +12670,7 @@ function epMesclarResenhaFt(payload,auto){
         const b=ev.target.closest('[data-qe],[data-matriz-foco]');if(!b||ocupado||!atual)return;
         const acao=b.dataset.qe; info('');
         if(b.hasAttribute('data-matriz-foco')){idFocoMatriz=b.dataset.matrizFoco;renderPreviaMatriz();return;}
+        if(acao==='fechar-visualizacao'){box.querySelector('.qe-visual-overlay')?.remove();return;}
         if(acao==='aba-atual'){aba='atual';render();}
         else if(acao==='aba-matriz'){aba='matriz';render();}
         else if(acao==='atualizar'){executar(async()=>{atual=await api('atual');render();info('Efetivo atualizado.');});}
@@ -12663,6 +12694,15 @@ function epMesclarResenhaFt(payload,auto){
         else if(acao==='limpar-selecao'){selecionarTodosMatriz(false);}
         else if(acao==='imprimir-matriz'){imprimirMatriz();}
         else if(acao==='imprimir-equipes'){imprimirMontagemEquipes();}
+        else if(acao==='visualizar-equipes'){visualizarMontagemEquipes();}
+        else if(acao==='excluir-rascunho'){
+          if(!plano?.id||alterado)return;
+          if(!window.confirm('Excluir permanentemente o rascunho “'+(plano.titulo||'Montagem')+'”? Esta ação não pode ser desfeita.'))return;
+          executar(async()=>{
+            await rpcPlanoFerias('ft_quadro_excluir_montagem_v1',{p_id:plano.id,p_revisao:Number(plano.revisao)});
+            lista=lista.filter(x=>String(x.id)!==String(plano.id));plano=novo();pessoas=atual.efetivo;alterado=false;render();info('Rascunho excluído.');
+          });
+        }
         else if(acao==='salvar'){
           if(!plano.titulo.trim()||plano.equipes.some(eq=>!eq.nome.trim())){info('Informe o nome da montagem e de todas as equipes.',true);return;}
           executar(async()=>{const salvo=await api('salvar_montagem',plano);Object.assign(plano,salvo);alterado=false;
