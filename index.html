@@ -7035,7 +7035,7 @@ Banco de dados: Google Sheets.
     .eap-detalhes-grid h3{margin:0 0 10px;font-size:13px}.eap-detalhes-grid p{margin:7px 0;font-size:12px;overflow-wrap:anywhere}
     @media(max-width:700px){.eap-detalhes-grid{grid-template-columns:1fr}}
     .eap-modal-backdrop{position:fixed;inset:0;z-index:10020;background:rgba(15,23,42,.58);display:flex;align-items:center;justify-content:center;padding:14px}.eap-modal{width:min(920px,100%);max-height:92vh;overflow:auto;background:linear-gradient(180deg,#fff,#f8fafc);border:1px solid rgba(55,66,71,.18);border-radius:18px;padding:20px;color:#17202a;box-shadow:0 20px 70px rgba(15,23,42,.25)}.eap-modal h2{margin:0 0 6px;color:#374247}
-    .eap-form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}.eap-form-grid .span2{grid-column:span 2}.eap-form-grid .span3{grid-column:1/-1}.eap-modal-actions{display:flex;justify-content:flex-end;gap:9px;flex-wrap:wrap}.eap-solicitacao{border:1px solid rgba(55,66,71,.14);border-radius:14px;padding:13px;margin:9px 0;background:linear-gradient(180deg,#fff,#f8fafc);color:#17202a}.eap-nota{color:#64748b;font-size:11px}.eap-reprovado{color:#991b1b;background:#fff1f2;border:1px solid rgba(185,28,28,.18);padding:10px 12px;border-radius:10px;margin:10px 0}@media(max-width:700px){.eap-form-grid{grid-template-columns:1fr}.eap-form-grid .span2,.eap-form-grid .span3{grid-column:auto}.eap-modal{padding:14px}.eap-barra,.eap-filtros{align-items:stretch}.eap-barra>* , .eap-filtros>*{width:100%}}
+    .eap-form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0}.eap-form-grid .span2{grid-column:span 2}.eap-form-grid .span3{grid-column:1/-1}.eap-modal-actions{display:flex;justify-content:flex-end;gap:9px;flex-wrap:wrap}.eap-solicitacao{border:1px solid rgba(55,66,71,.14);border-radius:14px;padding:13px;margin:9px 0;background:linear-gradient(180deg,#fff,#f8fafc);color:#17202a}.eap-nota{color:#64748b;font-size:11px}.eap-reprovado{color:#991b1b;background:#fff1f2;border:1px solid rgba(185,28,28,.18);padding:10px 12px;border-radius:10px;margin:10px 0}.afastamento-periodo-grid{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1.25fr) repeat(2,minmax(0,.8fr));gap:12px;align-items:end;min-width:0}.afastamento-periodo-grid select,.afastamento-periodo-grid input{min-width:0!important}.afastamento-periodo-grid label{min-width:0}@media(max-width:700px){.eap-form-grid{grid-template-columns:1fr}.eap-form-grid .span2,.eap-form-grid .span3{grid-column:auto}.afastamento-periodo-grid{grid-template-columns:1fr}.eap-modal{padding:14px}.eap-barra,.eap-filtros{align-items:stretch}.eap-barra>* , .eap-filtros>*{width:100%}}
 
     /* ICC: status e ações ocupam linhas independentes dentro da célula. */
     #appScreen .icc-assinatura-coluna{display:grid;gap:8px;min-width:0;justify-items:center;padding:4px 0}
@@ -12503,15 +12503,17 @@ function epMesclarResenhaFt(payload,auto){
         editor.innerHTML=`<h2>${registro.id?'Editar afastamento':'Novo afastamento'}</h2>
           <form class="eap-form-grid">
             <label class="span3">Policial<select name="policial_id" required><option value="">Selecione</option>${opcoes.join('')}</select></label>
-            <label class="span2">Tipo de afastamento<select name="tipo" required>
-              <option value="">Selecione</option>
-              <option value="LP" ${registro.tipo==='LP'?'selected':''}>LP — Licença Prêmio</option>
-              <option value="LTS" ${registro.tipo==='LTS'?'selected':''}>LTS — Licença para Tratamento de Saúde</option>
-              <option value="CONVAL" ${registro.tipo==='CONVAL'?'selected':''}>Conval — Convalescença</option>
-              <option value="OUTROS" ${registro.tipo==='OUTROS'?'selected':''}>Outros Afastamentos</option>
-            </select></label>
-            <label>Data de início<input name="inicio" required type="date" value="${escaparAttr(registro.inicio||'')}"></label>
-            <label>Data de término<input name="termino" required type="date" value="${escaparAttr(registro.termino||'')}"></label>
+            <div class="afastamento-periodo-grid">
+              <label>Tipo de afastamento<select name="tipo" required>
+                <option value="">Selecione</option>
+                <option value="LP" ${registro.tipo==='LP'?'selected':''}>LP — Licença Prêmio</option>
+                <option value="LTS" ${registro.tipo==='LTS'?'selected':''}>LTS — Licença para Tratamento de Saúde</option>
+                <option value="CONVAL" ${registro.tipo==='CONVAL'?'selected':''}>Conval — Convalescença</option>
+                <option value="OUTROS" ${registro.tipo==='OUTROS'?'selected':''}>Outros Afastamentos</option>
+              </select></label>
+              <label>Data de início<input name="inicio" required type="date" value="${escaparAttr(registro.inicio||'')}"></label>
+              <label>Data de término<input name="termino" required type="date" value="${escaparAttr(registro.termino||'')}"></label>
+            </div>
             <label class="span3">Observações administrativas<textarea name="observacoes" maxlength="1000" rows="3">${escapar(registro.observacoes||'')}</textarea></label>
             <div class="span3 eap-modal-actions">
               ${registro.id?'<button type="button" class="btn-page" data-voltar>VOLTAR AO CADASTRO</button>':''}
