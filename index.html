@@ -18,6 +18,7 @@ VERSÃO V1.4.6 — DESEMPENHO E PADRÃO VISUAL
 - Inclui Rotinas Administrativas mensais, semanais e diárias.
 - Inclui Controle de Folgas com ciclo de 14 EO, saldos individuais e auditoria individual imprimível.
 - Inclui upload e consulta privada das Escalas Cia FT em PDF.
+- Inclui Gestão de Afastamentos SQL e integração por data com Quadro e Resenha.
 - Inclui Folgas Pendentes conforme o escopo de visualização do usuário.
 - Corrige a autorização do upload e permite enviar várias escalas no mesmo lote.
 - Usa sessão temporária validada no servidor para eliminar autenticações repetidas.
@@ -7377,10 +7378,6 @@ Banco de dados: Google Sheets.
     .quadro-ft .qe-equipes-titulo { margin:0; padding:8px 10px; border-radius:10px; color:#374247; font-size:13px; }
     .quadro-ft .qe-equipe-titulo { margin:0 0 7px; color:#374247; font-size:13px; }
     .quadro-ft .qe-montagem-hint { margin:8px 0 0; padding:8px 10px; border:1px solid #d9e0e5; border-radius:10px; background:#f8fafc; color:#475569; font-size:12px; line-height:1.45; }
-    .quadro-ft .qe-montagem-campos { display:grid; grid-template-columns:repeat(3,minmax(180px,1fr)); gap:10px; align-items:end; margin:12px 0 8px; }
-    .quadro-ft .qe-montagem-campos label { display:grid; gap:4px; min-width:0; font-size:12px; font-weight:700; }
-    .quadro-ft .qe-montagem-acoes { display:flex; flex-wrap:nowrap; gap:8px; align-items:stretch; overflow-x:auto; padding:2px 1px 6px; margin:0 0 12px; }
-    .quadro-ft .qe-montagem-acoes .btn-page { flex:1 0 150px; min-height:42px; margin:0; white-space:nowrap; }
     .quadro-ft .qe-grupos { display:none; }
     .quadro-ft .qe-grupo[data-grupo="AFAST"],.quadro-ft .qe-grupo[data-grupo="CONFERIR"] { grid-column:1 / -1; }
     .quadro-ft .qe-lista { display:grid; list-style:none; gap:6px; margin:8px 0 0; padding:0; }
@@ -7397,13 +7394,7 @@ Banco de dados: Google Sheets.
     .quadro-ft .qe-visual-equipe h3 { margin:0 0 10px; padding-bottom:8px; border-bottom:2px solid #374247; }
     .quadro-ft .qe-visual-lista { display:grid; gap:8px; }
     .quadro-ft .qe-visual-pm { display:flex; align-items:center; gap:9px; min-width:0; padding:7px; border:1px solid #dce3ea; border-radius:9px; background:#f8fafc; }
-    .quadro-ft .qe-visual-pm.hierarquia-oficial { background:radial-gradient(circle at top left,rgba(184,134,11,.12),transparent 56%),linear-gradient(180deg,#fffdf7,#fff8e8); border-color:rgba(184,134,11,.46); }
-    .quadro-ft .qe-visual-pm.hierarquia-subten-sgt { background:radial-gradient(circle at top left,rgba(150,0,24,.10),transparent 56%),linear-gradient(180deg,#fffafa,#fff0f2); border-color:rgba(150,0,24,.46); }
-    .quadro-ft .qe-visual-pm.hierarquia-cb-sd { background:radial-gradient(circle at top left,rgba(0,51,160,.09),transparent 56%),linear-gradient(180deg,#fafcff,#edf3ff); border-color:rgba(0,51,160,.38); }
     .quadro-ft .qe-visual-pm img,.quadro-ft .qe-visual-pm .qe-sem-foto { flex:0 0 46px; width:46px; height:54px; object-fit:cover; border-radius:6px; }
-    .quadro-ft .qe-visual-pm.hierarquia-oficial img,.quadro-ft .qe-visual-pm.hierarquia-oficial .qe-sem-foto { border:2px solid #b8860b; }
-    .quadro-ft .qe-visual-pm.hierarquia-subten-sgt img,.quadro-ft .qe-visual-pm.hierarquia-subten-sgt .qe-sem-foto { border:2px solid #960018; }
-    .quadro-ft .qe-visual-pm.hierarquia-cb-sd img,.quadro-ft .qe-visual-pm.hierarquia-cb-sd .qe-sem-foto { border:2px solid #0033a0; }
     .quadro-ft .qe-visual-pm > span:last-child { min-width:0; }
     .quadro-ft .qe-visual-pm strong,.quadro-ft .qe-visual-pm small { display:block; overflow-wrap:anywhere; }
     .quadro-ft .qe-visual-pm small { color:#526170; margin-top:2px; }
@@ -7426,8 +7417,6 @@ Banco de dados: Google Sheets.
     }
     @media(max-width:760px) {
       .quadro-ft .qe-grupos { display:flex; }
-      .quadro-ft .qe-montagem-campos { grid-template-columns:1fr; }
-      .quadro-ft .qe-montagem-acoes .btn-page { flex:0 0 170px; }
       .quadro-ft .qe-visual-overlay { padding:6px; }
       .quadro-ft .qe-visual-modal { width:100%; max-height:96vh; padding:12px; }
       .quadro-ft .qe-visual-equipes { grid-template-columns:1fr; }
@@ -8605,7 +8594,7 @@ async function dsDetalharFt(id){
       finally{botao.disabled=false;}
     }
 
-const epTiposFt={FM:'Folga Mensal',FF:'Folga Flagrante',FC:'Folga Compensatória',DS:'Dispensa Serviço'};
+const epTiposFt={FM:'Folga Mensal',FF:'Folga Flagrante',FC:'Folga Compensatória',DS:'Dispensa Serviço',LP:'Licença Prêmio',LTS:'Licença para Tratamento de Saúde',CONVAL:'Convalescença',OUTROS:'Outros Afastamentos'};
 function fcPodeGerirClienteFt(){
  return epGestorClienteFt()||['ENC_ADM','ENC_ADM_FT','ENCARREGADO_ADM_FT','ENCARREGADO_ADMINISTRATIVO'].includes(normalizarTexto(APP.usuario?.perfilAcesso||'').replace(/[\s-]+/g,'_'));
 }
@@ -8747,30 +8736,35 @@ function epChaveReFt(v){return String(v||'').replace(/\D/g,'').slice(0,6);}
 async function epBuscarResenhaFt(pel,data){
  // Consulta a rota própria da resenha: ela retorna as ausências de todo o Pel.
  // espaco_pel_dados é escopada por perfil/RE e pode ocultar a folga de um colega.
- const [folgas,ds]=await Promise.allSettled([ocFtApi('espaco_pel_resenha',{pel,data}),rpcPlanoFerias('ft_ds_resenha_v142',{p_pel:pel,p_data:data})]);
+ const [folgas,ds,afastamentos]=await Promise.allSettled([ocFtApi('espaco_pel_resenha',{pel,data}),rpcPlanoFerias('ft_ds_resenha_v142',{p_pel:pel,p_data:data}),rpcPlanoFerias('ft_afastamentos_resenha_v1',{p_pel:pel,p_data:data})]);
  if(folgas.status!=='fulfilled')throw folgas.reason;
+ if(afastamentos.status!=='fulfilled')throw afastamentos.reason;
  if(!Array.isArray(folgas.value.itens))throw Error('O servidor não retornou as folgas e dispensas do Pel. A equipe foi bloqueada para evitar empenho indevido.');
+ if(!Array.isArray(afastamentos.value))throw Error('O servidor não retornou os afastamentos cadastrados. A resenha foi bloqueada para evitar empenho indevido.');
  const bloqueiosEquipe=Array.isArray(folgas.value.bloqueiosEquipe)?folgas.value.bloqueiosEquipe:[];
- return {itens:[...(ds.status==='fulfilled'?ds.value:[]),...folgas.value.itens],bloqueiosEquipe,ferias:Array.isArray(folgas.value.ferias)?folgas.value.ferias:null,semDS:ds.status!=='fulfilled'};
+ return {itens:[...(ds.status==='fulfilled'?ds.value:[]),...folgas.value.itens],afastamentos:afastamentos.value,bloqueiosEquipe,ferias:Array.isArray(folgas.value.ferias)?folgas.value.ferias:null,semDS:ds.status!=='fulfilled'};
 }
 async function epPreviaResenhaFt(){
  const gestorDisponibilidade=epGestorClienteFt()&&!APP.resenhaEdicao;
  if(!gestorDisponibilidade)void cursosPreviaResenhaFt();
- const folgas=document.getElementById('epPreviaResenha'),ferias=document.getElementById('epPreviaFerias'),pel=document.getElementById('resenhaPelotao')?.value,data=document.getElementById('resenhaDataEscala')?.value;
- if(!folgas||!ferias)return;
+ const folgas=document.getElementById('epPreviaResenha'),ferias=document.getElementById('epPreviaFerias'),afastamentosBox=document.getElementById('afastamentosPeriodoPreviaFt'),pel=document.getElementById('resenhaPelotao')?.value,data=document.getElementById('resenhaDataEscala')?.value;
+ if(!folgas||!ferias||!afastamentosBox)return;
  const req=String((Number(folgas.dataset.req)||0)+1);folgas.dataset.req=req;
  const atual=()=>folgas.isConnected&&ferias.isConnected&&folgas.dataset.req===req;
  if(!pel||!data){
   folgas.textContent='Escolha o pelotão e a data para ver as folgas e dispensas automáticas.';
   ferias.textContent='Escolha o pelotão e a data para consultar as férias do PAF.';
+  afastamentosBox.textContent='Escolha o pelotão e a data para consultar LP, LTS, Conval e outros afastamentos.';
   if(gestorDisponibilidade){EP_RESENHA_GESTOR_DISP={pel:'',data:'',carregando:false,erro:'',ausentes:new Set()};epAplicarListaGestorResenhaFt();}
   return;
  }
  if(!APP.resenhaEdicao){EP_RESENHA_GESTOR_DISP={pel,data,carregando:true,erro:'',ausentes:new Set()};epAplicarListaGestorResenhaFt();}
  folgas.textContent='Consultando folgas e dispensas…';
  ferias.textContent='Consultando férias do PAF…';
+ afastamentosBox.textContent='Consultando afastamentos registrados…';
  try{
   const r=await epBuscarResenhaFt(pel,data);if(!atual())return;
+  afastamentosBox.innerHTML=r.afastamentos.length?'<ul>'+r.afastamentos.map(x=>'<li>'+dsEscFt(x.nome)+' · '+dsEscFt(x.rotulo)+'</li>').join('')+'</ul>':'Nenhum afastamento registrado para este pelotão e data.';
   const linhasFolga=(r.itens||[]).map(x=>'<li>'+dsEscFt(x.nome)+' · '+dsEscFt(epTiposFt[x.tipo])+'</li>')
    .concat((r.bloqueiosEquipe||[]).map(x=>'<li>'+dsEscFt(x.nome)+' · '+dsEscFt(epTiposFt[x.tipo]||'Folga')+' pendente — policial bloqueado para compor equipe até decisão do pedido</li>'));
   folgas.innerHTML=(r.semDS?'<p>DS automática indisponível. Confira e lance manualmente, se necessário.</p>':'')+
@@ -8780,6 +8774,7 @@ async function epPreviaResenhaFt(){
    const efetivo=(APP.dadosResenha?.efetivoCadastro||APP.dadosResenha?.efetivoAtivo||[]);
    let ausentes=new Set();
    (r.itens||[]).concat(r.bloqueiosEquipe||[]).forEach(x=>{const re=epPessoaPafReFt(x,efetivo);if(re)ausentes.add(re);});
+   (r.afastamentos||[]).forEach(x=>{const re=epPessoaPafReFt(x,efetivo);if(re)ausentes.add(re);});
    if(gestorDisponibilidade){
     if(Array.isArray(r.ferias))r.ferias.forEach(x=>{const re=epPessoaPafReFt(x,efetivo);if(re)ausentes.add(re);});
     else{
@@ -8807,6 +8802,7 @@ async function epPreviaResenhaFt(){
   if(!APP.resenhaEdicao){EP_RESENHA_GESTOR_DISP={pel,data,carregando:false,erro:'Afastamentos não conferidos',ausentes:new Set()};epAplicarListaGestorResenhaFt({erro:err.message||'falha na consulta'});}
   if(gestorDisponibilidade){const pc=document.getElementById('cursosPreviaResenhaFt');if(pc)pc.textContent='Não foi possível confirmar os cursos. A lista de equipes foi bloqueada.';}
   if(folgas.textContent==='Consultando folgas e dispensas…')folgas.textContent=err.message;
+  if(afastamentosBox.textContent==='Consultando afastamentos registrados…')afastamentosBox.textContent='Não foi possível confirmar os afastamentos cadastrados. A resenha não deve ser enviada.';
   ferias.textContent='Não foi possível confirmar as férias do PAF para esta data.';
  }
 }
@@ -8836,6 +8832,39 @@ function cursosMesclarResenhaFt(payload,cursos){
    {tipo:'AFASTAMENTO',grupo:String(n),campo:'Tipo de afastamento',valor:'Curso',valorTecnico:'Curso',origemCursoAuto:true});
   existentes.add(re);
  }
+}
+function afastamentosMesclarResenhaFt(payload,afastamentos){
+ const itens=payload.itens,grupos=new Map();
+ for(const i of itens){
+  if(i.tipo!=='AFASTAMENTO')continue;
+  const k=String(i.grupo),g=grupos.get(k)||{};
+  g[normalizarTexto(i.campo)]=i;grupos.set(k,g);
+ }
+ const existentes=new Map();
+ for(const g of grupos.values()){
+  const re=epChaveReFt(g.POLICIAL?.valorTecnico||g.POLICIAL?.valor);
+  if(re&&g['TIPO DE AFASTAMENTO'])existentes.set(re,g['TIPO DE AFASTAMENTO']);
+ }
+ let n=Math.max(0,...Array.from(grupos.keys()).map(Number).filter(Number.isFinite));
+ for(const a of afastamentos||[]){
+  const re=epChaveReFt(a.re),rotulo=String(a.rotulo||''),codigo=String(a.tipo||'');
+  if(!re||!rotulo)continue;
+  if(itens.some(i=>['FT','ROCAM'].includes(i.tipo)&&epChaveReFt(i.valorTecnico)===re))
+   throw Error(a.nome+' consta em equipe e também está em '+rotulo+' na data. Retire-o da equipe antes de enviar.');
+  if(existentes.has(re)){
+   const t=existentes.get(re),atualCodigo=normalizarTexto(t.valorTecnico||''),atualRotulo=normalizarTexto(t.valor||'');
+   if(atualCodigo!==normalizarTexto(codigo)&&atualRotulo!==normalizarTexto(rotulo))
+    throw Error(a.nome+' já possui outro afastamento lançado nesta resenha. Confira antes de enviar.');
+   continue;
+  }
+  n++;
+  itens.push(
+   {tipo:'AFASTAMENTO',grupo:String(n),campo:'Policial',valor:a.nome,valorTecnico:a.re,origemAfastamentoAuto:true},
+   {tipo:'AFASTAMENTO',grupo:String(n),campo:'Tipo de afastamento',valor:rotulo,valorTecnico:codigo,origemAfastamentoAuto:true}
+  );
+  existentes.set(re,{valor:rotulo,valorTecnico:codigo});
+ }
+ return payload;
 }
 async function cursosPreviaResenhaFt(){
  const painel=document.getElementById('cursosPreviaResenhaFt');
@@ -8973,6 +9002,7 @@ function epMesclarResenhaFt(payload,auto){
         ROTINAS_OPERACIONAIS: { arquivo: './icone-rotinas-operacionais.png?v=131-rotinas-r2', alt: 'Rotinas Operacionais' },
         ICC: { arquivo: './icone-icc.png?v=132-icc-r1', alt: 'ICC' },
         CURSOS_CIA_FT: { arquivo:'./icone-cursos.png', alt:'' },
+        AFASTAMENTOS_CIA_FT: { arquivo:'./icone-afastamentos-ft.png?v=146-afastamentos-r1', alt:'Afastamentos' },
         QUADRO_EFETIVO: { arquivo:'./icone-quadro-efetivo.svg', alt:'Quadro de Efetivo' },
         EAP: { arquivo: './icone-eap.png?v=138-eap-r1', alt: 'EAP' },
         ENTREVISTAS_FT: { arquivo: './icone-candidaturas.png', alt: 'Candidaturas à Cia FT' },
@@ -9067,6 +9097,7 @@ function epMesclarResenhaFt(payload,auto){
     function abrirModulo(id) {
       const modulo = normalizarModuloCliente(id);
       if (modulo === 'CURSOS_CIA_FT') { abrirCursosFt(); return; }
+      if (modulo === 'AFASTAMENTOS_CIA_FT') { abrirAfastamentosFt(); return; }
       if (modulo === 'QUADRO_EFETIVO') { abrirQuadroEfetivoFt(); return; }
       if (modulo === 'GESTAO_CIA_FT') { abrirGestaoCiaFt(); return; }
       if (['CONTROLE_FREQUENCIA','CONTROLE_FOLGAS','ROTINAS_ADMINISTRATIVAS','CONSULTAS_P4'].includes(modulo)) {
@@ -9512,7 +9543,7 @@ function epMesclarResenhaFt(payload,auto){
       const i=d.indicadores||{};
       return Object.keys(i).length?'<h3>Dados para Índices Criminais</h3><div class="oc-ft-grid">'+[['regiao','Região / bairro'],...OC_FT_INDICES_METRICAS].map(([k,t])=>{
         const v=i[k];
-        return '<div><strong>'+t+'</strong><p>'+escapar(v==null?'Não informado':k==='flagrante'?(v===1?'Sim':'Não'):k==='drogasGramas'?new Intl.NumberFormat('pt-BR',{maximumFractionDigits:3}).format(v/1000)+' g':v)+'</p></div>';
+        return '<div><strong>'+t+'</strong><p>'+escapar(v==null?'Não informado':k==='flagrante'?(v===1?'Sim':'Não'):k==='drogasGramas'?new Intl.NumberFormat('pt-BR',{maximumFractionDigits:3}).format(v)+' g':v)+'</p></div>';
       }).join('')+'</div>':'';
     }
     const OC_FT_INDICES_AVISO_ATE=Date.parse('2027-01-01T00:01:00-03:00');
@@ -9585,8 +9616,8 @@ function epMesclarResenhaFt(payload,auto){
               return '<div><dt>'+rotulo+'</dt><dd>'+fmt.format(grupo.capturas)+'<small>'+pessoas+'</small></dd></div>';
             }
             if(k==='flagrante'){
+              const semDP=Math.max(0,grupo.total-i.informadas);
               const elegiveis=Math.max(0,grupo.total-(grupo.capturas||0));
-              const semDP=Math.max(0,elegiveis-i.informadas);
               const valor=i.valor>0||semDP===0?fmt.format(i.valor):'—';
               const nota=semDP?'<small>'+fmt.format(semDP)+' de '+fmt.format(elegiveis)+' sem informação sobre apresentação no DP</small>':'';
               return '<div><dt>'+rotulo+'</dt><dd>'+valor+nota+'</dd></div>';
@@ -12442,6 +12473,104 @@ function epMesclarResenhaFt(payload,auto){
       void carregar();
     }
 
+    function podeAcessarAfastamentosFt() {
+      const perfil=normalizarTexto(APP.usuario?.perfilAcesso||'').replace(/[\s-]+/g,'_');
+      return /^(?:GESTOR(?:_FT|_TEC(?:_FT)?|_TECNICO(?:_FT)?)?|ADM_GERAL|ADMINISTRADOR_GERAL|ACESSO_TOTAL|ENC_ADM(?:_FT)?|ENCARREGADO_ADM_FT|ENCARREGADO_ADMINISTRATIVO|AUX_ADM(?:_FT)?|AUXILIAR_ADM_FT|AUXILIAR_ADMINISTRATIVO|CMT_CIA(?:_FT)?|COMANDANTE_CIA(?:_FT)?|COMANDANTE_DE_CIA)$/.test(perfil);
+    }
+
+    function abrirAfastamentosFt() {
+      if(!podeAcessarAfastamentosFt()) return abrirAcessoNegado('Afastamentos');
+      window.scrollTo(0,0);
+      const app=document.getElementById('appConteudo');
+      app.innerHTML=`<div class="page-wrap">
+        <div class="page-header"><div class="page-header-row"><div>
+          <div class="page-kicker">Gestão da Cia FT</div><h1>Afastamentos</h1>
+          <p>LP, LTS, Conval, etc</p>
+        </div><div class="page-actions"><button type="button" class="btn-page" onclick="abrirGestaoCiaFt()">VOLTAR</button></div></div></div>
+        <div class="modal-card"><p id="afastamentosMsgFt" role="status" aria-live="polite"></p>
+          <div id="afastamentosEditorFt"></div><div id="afastamentosListaFt"></div>
+        </div></div>`;
+      const painel=document.getElementById('afastamentosMsgFt');
+      const editor=document.getElementById('afastamentosEditorFt');
+      const lista=document.getElementById('afastamentosListaFt');
+      const atual=()=>painel&&painel.isConnected;
+      const dataBR=d=>String(d||'').split('-').reverse().join('/');
+      let dados=null;
+
+      function montarEditor(registro={}) {
+        const efetivo=dados?.efetivo||[];
+        const opcoes=efetivo.map(p=>'<option value="'+escaparAttr(p.id)+'" '+(p.id===registro.policial_id?'selected':'')+'>'+escapar([p.posto,p.re,p.nome].filter(Boolean).join(' · '))+'</option>');
+        editor.innerHTML=`<h2>${registro.id?'Editar afastamento':'Novo afastamento'}</h2>
+          <form class="eap-form-grid">
+            <label class="span3">Policial<select name="policial_id" required><option value="">Selecione</option>${opcoes.join('')}</select></label>
+            <label class="span2">Tipo de afastamento<select name="tipo" required>
+              <option value="">Selecione</option>
+              <option value="LP" ${registro.tipo==='LP'?'selected':''}>LP — Licença Prêmio</option>
+              <option value="LTS" ${registro.tipo==='LTS'?'selected':''}>LTS — Licença para Tratamento de Saúde</option>
+              <option value="CONVAL" ${registro.tipo==='CONVAL'?'selected':''}>Conval — Convalescença</option>
+              <option value="OUTROS" ${registro.tipo==='OUTROS'?'selected':''}>Outros Afastamentos</option>
+            </select></label>
+            <label>Data de início<input name="inicio" required type="date" value="${escaparAttr(registro.inicio||'')}"></label>
+            <label>Data de término<input name="termino" required type="date" value="${escaparAttr(registro.termino||'')}"></label>
+            <label class="span3">Observações administrativas<textarea name="observacoes" maxlength="1000" rows="3">${escapar(registro.observacoes||'')}</textarea></label>
+            <div class="span3 eap-modal-actions">
+              ${registro.id?'<button type="button" class="btn-page" data-voltar>VOLTAR AO CADASTRO</button>':''}
+              <button type="submit" class="btn-primary-soft">SALVAR AFASTAMENTO</button>
+            </div>
+          </form>`;
+        editor.querySelector('[data-voltar]')?.addEventListener('click',()=>montarEditor());
+        const form=editor.querySelector('form');
+        form.addEventListener('submit',async ev=>{
+          ev.preventDefault();
+          const campos=Object.fromEntries(new FormData(form));
+          if(campos.termino<campos.inicio){painel.textContent='A data de término não pode anteceder a data de início.';return;}
+          const btn=form.querySelector('[type=submit]');btn.disabled=true; painel.textContent='Salvando afastamento…';
+          try{
+            await rpcPlanoFerias('ft_afastamentos_gestao_v1',{p_acao:'salvar',p_dados:{...campos,id:registro.id,revisao:registro.revisao}});
+            if(atual())await carregar('Afastamento salvo. O Quadro considera o período por data.');
+          }catch(err){if(atual())painel.textContent=err.message||String(err);}
+          finally{btn.disabled=false;}
+        });
+      }
+
+      function montarLista() {
+        const registros=dados?.afastamentos||[];
+        lista.innerHTML='<h2>Afastamentos registrados</h2>';
+        if(!registros.length){lista.insertAdjacentHTML('beforeend','<p>Nenhum afastamento registrado.</p>');return;}
+        lista.insertAdjacentHTML('beforeend','<div class="eap-tabela-wrap"><table class="eap-tabela"><thead><tr><th>POLICIAL</th><th>TIPO</th><th>PERÍODO</th><th>SITUAÇÃO</th><th>OBSERVAÇÕES</th><th>AÇÕES</th></tr></thead><tbody>'+registros.map((x,i)=>
+          '<tr><td><strong>'+escapar([x.posto,x.re,x.nome].filter(Boolean).join(' · '))+'</strong></td><td>'+escapar(x.rotulo)+'</td><td>'+escapar(dataBR(x.inicio)+' a '+dataBR(x.termino))+'</td><td>'+escapar(x.situacao)+'</td><td>'+escapar(x.observacoes||'—')+'</td><td>'+(x.cancelado?'—':'<button type="button" class="btn-page" data-editar="'+i+'">EDITAR</button> <button type="button" class="btn-page" data-cancelar="'+i+'">CANCELAR</button>')+'</td></tr>'
+        ).join('')+'</tbody></table></div>');
+        lista.querySelectorAll('[data-editar]').forEach(btn=>btn.addEventListener('click',()=>{
+          montarEditor(registros[Number(btn.dataset.editar)]);editor.scrollIntoView({block:'start'});editor.querySelector('select')?.focus();
+        }));
+        lista.querySelectorAll('[data-cancelar]').forEach(btn=>btn.addEventListener('click',async()=>{
+          const x=registros[Number(btn.dataset.cancelar)];
+          if(!await confirmarToastFt('CANCELAR AFASTAMENTO','O período deixará de ser considerado. O histórico será preservado.')||!atual())return;
+          btn.disabled=true;
+          try{
+            await rpcPlanoFerias('ft_afastamentos_gestao_v1',{p_acao:'cancelar',p_dados:{id:x.id,revisao:x.revisao}});
+            if(atual())await carregar('Afastamento cancelado.');
+          }catch(err){if(atual())painel.textContent=err.message||String(err);}
+          finally{btn.disabled=false;}
+        }));
+      }
+
+      async function carregar(msg='') {
+        painel.textContent='Carregando afastamentos…';
+        try{
+          dados=await rpcPlanoFerias('ft_afastamentos_gestao_v1',{p_acao:'listar',p_dados:{}});
+          if(!atual())return;
+          montarEditor();montarLista();painel.textContent=msg;
+        }catch(err){
+          if(!atual())return;
+          editor.replaceChildren();lista.replaceChildren();
+          painel.textContent=err.message==='SUPABASE_PASSWORD_REQUIRED'?'Não foi possível autenticar no Supabase. Confira a sessão do Portal.':(err.message||'Não foi possível carregar os afastamentos.');
+          const b=document.createElement('button');b.type='button';b.className='btn-page';b.textContent='TENTAR NOVAMENTE';b.addEventListener('click',()=>carregar());lista.appendChild(b);
+        }
+      }
+      void carregar();
+    }
+
     function quadroEfetivoPerfilFt() {
       return /^(AUX_ADM(_FT)?|ENC_ADM(_FT)?|ENCARREGADO_ADM_FT|ENCARREGADO_ADMINISTRATIVO|CMT_CIA(_FT)?|COMANDANTE_CIA_FT|COMANDANTE_DE_CIA|GESTOR(_FT|_TEC_FT|_TECNICO_FT)?)$/.test(normalizarTexto(APP.usuario?.perfilAcesso||'').replace(/[\s-]+/g,'_'));
     }
@@ -12572,10 +12701,10 @@ function epMesclarResenhaFt(payload,auto){
           <div class="qe-controles"><label>Rascunhos salvos <select id="qeSalvos"><option value="">Selecione</option>
           ${lista.map(x=>`<option value="${a(x.id)}"${plano.id===x.id?' selected':''}>${e(x.dia.split('-').reverse().join('/')+' — '+x.titulo)}</option>`).join('')}
           </select></label>${botao('novo','NOVO RASCUNHO')}</div>
-          <div class="qe-montagem-campos"><label>Nome da montagem<input id="qeTitulo" maxlength="100" value="${a(plano.titulo)}" placeholder="Ex.: Operação"></label>
+          <div class="qe-controles"><label>Nome da montagem<input id="qeTitulo" maxlength="100" value="${a(plano.titulo)}" placeholder="Ex.: Operação"></label>
           <label>Data de referência<input id="qeDia" type="date" min="${a(atual.hoje)}" value="${a(plano.dia)}"></label>
-          <label>Visualizar efetivo<select id="qeEscopo"><option value="1_PEL"${escopoMontagem==='1_PEL'?' selected':''}>1º Pel</option><option value="2_PEL"${escopoMontagem==='2_PEL'?' selected':''}>2º Pel</option><option value="OPERACIONAL"${escopoMontagem==='OPERACIONAL'?' selected':''}>Efetivo Operacional (1º + 2º Pel)</option><option value="TOTAL"${escopoMontagem==='TOTAL'?' selected':''}>Efetivo Total</option></select></label></div>
-          <div class="qe-montagem-acoes">${botao('adicionar','ADICIONAR EQUIPE')}${botao('salvar','SALVAR RASCUNHO')}${botao('visualizar-equipes','VISUALIZAR EQUIPES')}${botao('imprimir-equipes','IMPRIMIR EQUIPES / PDF',plano.id&&!alterado?'':'disabled title="Salve o rascunho para habilitar a impressão."')}${plano.id?botao('excluir-rascunho','EXCLUIR RASCUNHO',!alterado?'':'disabled title="Salve ou descarte as alterações antes de excluir."'):''}</div>${plano.id&&alterado?'<p>Salve as alterações do rascunho antes de gerar o PDF ou excluir.</p>':''}</section>
+          <label>Visualizar efetivo<select id="qeEscopo"><option value="1_PEL"${escopoMontagem==='1_PEL'?' selected':''}>1º Pel</option><option value="2_PEL"${escopoMontagem==='2_PEL'?' selected':''}>2º Pel</option><option value="OPERACIONAL"${escopoMontagem==='OPERACIONAL'?' selected':''}>Efetivo Operacional (1º + 2º Pel)</option><option value="TOTAL"${escopoMontagem==='TOTAL'?' selected':''}>Efetivo Total</option></select></label>
+          ${botao('adicionar','ADICIONAR EQUIPE')}${botao('salvar','SALVAR RASCUNHO')}${botao('visualizar-equipes','VISUALIZAR EQUIPES')}${botao('imprimir-equipes','IMPRIMIR EQUIPES / PDF',plano.id&&!alterado?'':'disabled title="Salve o rascunho para habilitar a impressão."')}${plano.id?botao('excluir-rascunho','EXCLUIR RASCUNHO',!alterado?'':'disabled title="Salve ou descarte as alterações antes de excluir."'):''}</div>${plano.id&&alterado?'<p>Salve as alterações do rascunho antes de gerar o PDF ou excluir.</p>':''}</section>
           <div class="qe-montagem">
           <div class="qe-montagem-coluna"><section class="modal-card qe-secao" data-qe-destino="-1"><h2>Disponíveis <small>(${disponiveis.length})</small></h2>${disponiveis.length?`<ul class="qe-lista">${disponiveis.map(p=>ficha(p,-1)).join('')}</ul>`:'<p>Não há policiais disponíveis para mover.</p>'}</section></div>
           <div class="qe-montagem-coluna qe-equipes-coluna" aria-label="Equipes"><h3 class="qe-equipes-titulo">EQUIPES DA MONTAGEM <small>(${plano.equipes.length})</small></h3>${plano.equipes.map((eq,i)=>`<section class="modal-card qe-secao" data-qe-destino="${i}">
@@ -12662,7 +12791,7 @@ function epMesclarResenhaFt(payload,auto){
         if(!equipes.length){info('Adicione policiais às equipes para visualizar a montagem.',true);return;}
         const equipesHtml=equipes.map(eq=>'<section class="qe-visual-equipe"><h3>'+escaparMatriz(eq.nome)+'</h3><div class="qe-visual-lista">'+eq.membros.map(p=>{
           const foto=urlFoto(p),nome=nomeExibicao(p)||p.nomeCompleto||'',rotulo=[p.postoGrad,nome].filter(Boolean).join(' ');
-          return '<article class="qe-visual-pm '+classeHierarquia(p)+'">'+(foto?'<img class="qe-visual-foto" data-qe-visual-pm="'+a(p.id)+'" src="'+a(foto)+'" alt="Foto de '+a(rotulo)+'" loading="lazy">':'<span class="qe-sem-foto" aria-hidden="true">'+escaparMatriz(String(nome||'?').slice(0,1))+'</span>')+'<span><strong>'+escaparMatriz(rotulo)+'</strong><small>RE '+escaparMatriz(p.re||'')+'</small></span></article>';
+          return '<article class="qe-visual-pm">'+(foto?'<img class="qe-visual-foto" data-qe-visual-pm="'+a(p.id)+'" src="'+a(foto)+'" alt="Foto de '+a(rotulo)+'" loading="lazy">':'<span class="qe-sem-foto" aria-hidden="true">'+escaparMatriz(String(nome||'?').slice(0,1))+'</span>')+'<span><strong>'+escaparMatriz(rotulo)+'</strong><small>RE '+escaparMatriz(p.re||'')+'</small></span></article>';
         }).join('')+'</div></section>').join('');
         box.insertAdjacentHTML('beforeend','<div class="qe-visual-overlay" role="presentation"><section class="qe-visual-modal" role="dialog" aria-modal="true" aria-label="Visualização das equipes"><header class="qe-visual-topo"><div><h2>'+escaparMatriz(plano.titulo||'Equipes montadas')+'</h2><small>Data de referência: '+escaparMatriz(String(plano.dia||'').split('-').reverse().join('/'))+'</small></div><button type="button" class="btn-page" data-qe="fechar-visualizacao">FECHAR</button></header><div class="qe-visual-equipes">'+equipesHtml+'</div></section></div>');
         box.querySelectorAll('img.qe-visual-foto').forEach(img=>{img.onerror=()=>{const p=pessoas.find(x=>String(x.id)===img.dataset.qeVisualPm);const span=document.createElement('span');span.className='qe-sem-foto';span.setAttribute('aria-hidden','true');span.textContent=String(p?nomeExibicao(p):'?').slice(0,1);img.replaceWith(span);};});
@@ -12810,6 +12939,7 @@ function epMesclarResenhaFt(payload,auto){
         [painel, 'CONTROLE_FOLGAS','CONTROLE DE FOLGAS','Acompanhe dias trabalhados e saldos de folgas.'],
         [painel, 'ROTINAS_ADMINISTRATIVAS','ROTINAS ADMINISTRATIVAS','Acompanhe as tarefas e os prazos da administração.'],
         [podeAcessarCursosFt(), 'CURSOS_CIA_FT','CURSOS','Registre e acompanhe os cursos do efetivo.'],
+        [podeAcessarAfastamentosFt(), 'AFASTAMENTOS_CIA_FT','AFASTAMENTOS','LP, LTS, Conval, etc'],
         [podeConsultarArmarioCliente(), 'CONSULTAS_P4','CONSULTAS P/4','Localize armários e materiais do efetivo.'],
         [entPodeGerir(), 'ENTREVISTAS_FT','CANDIDATURAS À CIA FT','Consulte fichas e gerencie as entrevistas.']
       ].filter(([permitido]) => permitido).map(([,id,titulo,descricao]) => ({id,titulo,descricao}));
@@ -15171,6 +15301,7 @@ function epMesclarResenhaFt(payload,auto){
 
                 <div class="resenha-alerta"><strong>Férias do PAF — inclusão automática</strong><div id="epPreviaFerias" aria-live="polite"></div></div>
                 <div class="resenha-alerta"><strong>Cursos — inclusão automática</strong><div id="cursosPreviaResenhaFt" aria-live="polite"></div></div>
+                <div class="resenha-alerta"><strong>LP, LTS, Conval e outros — inclusão automática</strong><div id="afastamentosPeriodoPreviaFt" aria-live="polite"></div></div>
 
                 <div id="afastamentosWrap" class="resenha-equipes-wrap">
                   ${registroAfastamentoBox(1)}
@@ -15867,6 +15998,7 @@ function epMesclarResenhaFt(payload,auto){
         if(!form.isConnected||payload.pelotao!==document.getElementById('resenhaPelotao').value||payload.dataEscala!==document.getElementById('resenhaDataEscala').value)return null;
         epMesclarResenhaFt(payload,integracao.itens);
         cursosMesclarResenhaFt(payload,consultaCursos.itens||[]);
+        afastamentosMesclarResenhaFt(payload,integracao.afastamentos||[]);
         return chamarApi(edicaoAtual ? 'editar_resenha_escala' : 'enviar_resenha_escala', {
           login: APP.credenciais.login,
           senha: APP.credenciais.senha,
