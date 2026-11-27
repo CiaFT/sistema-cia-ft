@@ -17311,11 +17311,30 @@ function epMesclarResenhaFt(payload,auto){
           login: APP.credenciais.login,
           senha: APP.credenciais.senha
         }, { semCache: true })
-        .then(function(resp) {
+        .then(async function(resp) {
           if (!resp || !resp.ok) {
             throw new Error(resp && resp.erro ? resp.erro : 'Falha ao carregar Consulta do Efetivo.');
           }
-          APP.dadosConsultaEfetivo = resp.dados || {};
+          const dados = resp.dados || {};
+          dados.afastamentosConsultaOk = false;
+          try {
+            const atuais = await rpcPlanoFerias('ft_afastamentos_status_atual_v1', {});
+            const mapa = new Map((Array.isArray(atuais) ? atuais : []).map(function(x) {
+              return [normalizarLoginConsultaCliente(x.re), x];
+            }).filter(function(item) { return item[0]; }));
+            (dados.efetivo || []).forEach(function(pm) {
+              const afastamento = mapa.get(normalizarLoginConsultaCliente(pm.re));
+              if (!afastamento) return;
+              pm.statusOperacionalAtual = afastamento.tipo;
+              pm.rotuloAfastamentoAtual = afastamento.rotulo || afastamento.tipo;
+            });
+            dados.afastamentosConsultaOk = true;
+          } catch (erroStatus) {
+            // A consulta cadastral permanece acessível, mas não apresenta APTO como
+            // confirmação de disponibilidade quando a fonte SQL não respondeu.
+            dados.afastamentosConsultaErro = String(erroStatus && erroStatus.message || erroStatus || '');
+          }
+          APP.dadosConsultaEfetivo = dados;
           return APP.dadosConsultaEfetivo;
         });
     }
@@ -17359,6 +17378,7 @@ function epMesclarResenhaFt(payload,auto){
             <p>Busca por RE, nome de guerra, nome completo, pelotão, modalidade, função ou status.</p>
           </div>
           <div class="consulta-card-body">
+            ${dados.afastamentosConsultaOk === false ? '<div class="consulta-resumo" role="status"><strong>Atenção:</strong> não foi possível confirmar os afastamentos ativos no SQL. O status cadastral exibido pode não refletir LP, LTS, Conval ou outro afastamento vigente.</div>' : ''}
             <div class="consulta-filtros">
               <div class="consulta-field">
                 <label>Buscar</label>
@@ -17414,7 +17434,7 @@ function epMesclarResenhaFt(payload,auto){
       const modalidade = normalizarTexto(document.getElementById('consultaModalidade')?.value || '');
 
       const filtrados = lista.filter(function(pm) {
-        const texto = normalizarTexto([pm.re, pm.postoGrad, pm.nomeGuerra, pm.nomeCompleto, pm.pelotao, pm.modalidade, pm.funcao, pm.status].join(' '));
+        const texto = normalizarTexto([pm.re, pm.postoGrad, pm.nomeGuerra, pm.nomeCompleto, pm.pelotao, pm.modalidade, pm.funcao, pm.statusOperacionalAtual, pm.status].join(' '));
         if (termo && !texto.includes(termo)) return false;
         if (pel && normalizarTexto(pm.pelotao) !== pel) return false;
         if (modalidade && normalizarTexto(pm.modalidade) !== modalidade) return false;
@@ -17637,7 +17657,7 @@ function epMesclarResenhaFt(payload,auto){
                   ${escapar(nome || pm.nomeCompleto || '-')}
                 </button>
               </h3>
-              <span class="consulta-status">${escapar(pm.statusOperacionalPaf || pm.status || '-')}</span>
+              <span class="consulta-status" ${pm.rotuloAfastamentoAtual ? `title="${escaparAttr(pm.rotuloAfastamentoAtual)}"` : ''}>${escapar(pm.statusOperacionalAtual || pm.statusOperacionalPaf || pm.status || '-')}</span>
             </div>
             <div class="consulta-detalhes">
               ${consultaDetail('RE', pm.re)}
@@ -18017,7 +18037,7 @@ function epMesclarResenhaFt(payload,auto){
       return `
         <div class="consulta-modal-grid">
           ${consultaDetail('RE', pm.re)}
-          ${consultaDetail('Status', pm.statusOperacionalPaf || pm.status)}
+          ${consultaDetail('Status', pm.statusOperacionalAtual ? pm.statusOperacionalAtual + ' — ' + (pm.rotuloAfastamentoAtual || 'Afastamento vigente') : pm.statusOperacionalPaf || pm.status)}
           ${consultaDetail('Nome completo', pm.nomeCompleto)}
           ${consultaDetail('Nome de guerra', pm.nomeGuerra)}
           ${consultaDetail('Pelotão', pm.pelotao)}
