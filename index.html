@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <!--
 ============================================================
-SISTEMA CIA FT — PORTAL GITHUB V1.4.6 — OCORRÊNCIAS E FOLGAS FLAGRANTES
+SISTEMA CIA FT — PORTAL GITHUB V1.4.7 — OCORRÊNCIAS E FOLGAS FLAGRANTES
 Arquivo: index.html
 ============================================================
 
-VERSÃO V1.4.6 — DESEMPENHO E PADRÃO VISUAL
+VERSÃO V1.4.7 — DESEMPENHO E PADRÃO VISUAL
 - Ranking com filtros anual, semestral, mensal e por pelotão.
 - Destaque discreto dos três primeiros colocados.
 - Consulta de FF aguardando decisão e aprovação/recusa exclusiva do Cmt Cia.
 - Histórico individual preserva datas de FF já gozadas, inclusive importadas.
 - Área de importação removida do formulário após a carga inicial.
-- Versão fixada em V1.4.6: alterar somente por determinação expressa do responsável.
+- Versão fixada em V1.4.7: alterar somente por determinação expressa do responsável.
 - Preserva a última versão encerrada do Controle de Frequência.
 - Preserva a implantação completa de Viaturas V1.2.6.
 - Corrige a leitura e a identificação funcional em Resenhas Enviadas.
@@ -53,7 +53,7 @@ Banco de dados: Google Sheets.
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="cia-ft-build" content="FT-V138-20261006-GRAVACAO-CONFIAVEL-R7">
-  <title>Portal Força Tática • V1.4.6</title>
+  <title>Portal Força Tática • V1.4.7</title>
   <link rel="preconnect" href="https://script.google.com">
   <link rel="dns-prefetch" href="https://script.googleusercontent.com">
 
@@ -7505,7 +7505,7 @@ Banco de dados: Google Sheets.
         <div id="loginAlerta" class="alerta"></div>
 
         <div class="footer">
-          Portal Força Tática • V1.4.6
+          Portal Força Tática • V1.4.7
         </div>
       </main>
 
@@ -8168,6 +8168,32 @@ async function dsDetalharFt(id){
     }
 
 
+    function ftFeriasDataISO147(valor){
+      const t=String(valor??'').trim();
+      const br=t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      const iso=br?br[3]+'-'+br[2].padStart(2,'0')+'-'+br[1].padStart(2,'0'):(/^\d{4}-\d{2}-\d{2}$/.test(t)?t:'');
+      const ms=Date.parse(iso+'T00:00:00Z');
+      return Number.isFinite(ms)&&new Date(ms).toISOString().slice(0,10)===iso?iso:'';
+    }
+    function ftFeriasCadastroAtiva147(pm,dataISO){
+      if(!pm||!/^2026-\d{2}-\d{2}$/.test(String(dataISO||'')))return false;
+      const dia=Date.parse(dataISO+'T00:00:00Z')/86400000;
+      return [[pm.ferias30,30],[pm.ferias15a,15],[pm.ferias15b,15]].some(([v,n])=>{
+        const ini=ftFeriasDataISO147(v);if(!ini||ini.slice(0,4)!=='2026')return false;
+        const d=Date.parse(ini+'T00:00:00Z')/86400000;return dia>=d&&dia<d+n;
+      });
+    }
+    function ftMesclarFeriasLegadasResenha147(lista,pel,dataISO){
+      if(!Array.isArray(lista)||!/^2026-/.test(String(dataISO||'')))return lista||[];
+      const dados=APP.dadosResenha||{},base=dados.efetivoCadastro||dados.efetivoAtivo||[];
+      const alvo=epChavePelResenhaFt(pel),ja=new Set(lista.map(x=>epChaveReGestorFt(x.re)));
+      base.forEach(pm=>{
+        const re=epChaveReGestorFt(pm.re);if(!re||ja.has(re)||epChavePelResenhaFt(pm.pelotao)!==alvo||!ftFeriasCadastroAtiva147(pm,dataISO))return;
+        lista.push({re:pm.re,nome:pm.rotulo||[pm.postoGrad,pm.nomeGuerra].filter(Boolean).join(' '),tipo:'FERIAS',rotulo:'Férias'});ja.add(re);
+      });
+      return lista;
+    }
+
     function diaFeriasCardFt_(valor){
       const texto=String(valor ?? '').trim();
       const br=texto.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
@@ -8742,7 +8768,8 @@ async function epBuscarResenhaFt(pel,data){
  if(!Array.isArray(folgas.value.itens))throw Error('O servidor não retornou as folgas e dispensas do Pel. A equipe foi bloqueada para evitar empenho indevido.');
  if(!Array.isArray(afastamentos.value))throw Error('O servidor não retornou os afastamentos cadastrados. A resenha foi bloqueada para evitar empenho indevido.');
  const bloqueiosEquipe=Array.isArray(folgas.value.bloqueiosEquipe)?folgas.value.bloqueiosEquipe:[];
- return {itens:[...(ds.status==='fulfilled'?ds.value:[]),...folgas.value.itens],afastamentos:afastamentos.value,bloqueiosEquipe,ferias:Array.isArray(folgas.value.ferias)?folgas.value.ferias:null,semDS:ds.status!=='fulfilled'};
+ const ausencias=ftMesclarFeriasLegadasResenha147(Array.isArray(afastamentos.value)?afastamentos.value:[],pel,data);
+ return {itens:[...(ds.status==='fulfilled'?ds.value:[]),...folgas.value.itens],afastamentos:ausencias,bloqueiosEquipe,ferias:Array.isArray(folgas.value.ferias)?folgas.value.ferias:null,semDS:ds.status!=='fulfilled'};
 }
 async function epPreviaResenhaFt(){
  const gestorDisponibilidade=epGestorClienteFt()&&!APP.resenhaEdicao;
@@ -16558,7 +16585,11 @@ function epMesclarResenhaFt(payload,auto){
           }
 
           APP.dadosEscalasAdm = resp.dados || {};
-          return APP.dadosEscalasAdm;
+          const dias=(APP.dadosEscalasAdm.semanaAdm||{}).dias||[];
+          const inicio=dias[0]?.dataISO,fim=dias[dias.length-1]?.dataISO;
+          if(!inicio||!fim)return APP.dadosEscalasAdm;
+          return rpcPlanoFerias('ft_afastamentos_escala_adm_v147',{p_inicio:inicio,p_fim:fim})
+            .then(lista=>{APP.dadosEscalasAdm.afastamentosAutomaticos=Array.isArray(lista)?lista:[];return APP.dadosEscalasAdm;});
         });
     }
 
@@ -16750,17 +16781,31 @@ function epMesclarResenhaFt(payload,auto){
     }
 
 
+    function admAfastamentoAutomaticoFt147(dia){
+      if(!dia||!dia.dataISO)return '';
+      const dados=APP.dadosEscalasAdm||{},legado=dados.feriasLegadas||APP.usuario||{};
+      if(ftFeriasCadastroAtiva147(legado,dia.dataISO))return 'FÉRIAS';
+      const registro=(dados.afastamentosAutomaticos||[]).find(x=>String(x.data||'').slice(0,10)===dia.dataISO);
+      if(!registro)return '';
+      const tipo=admTipoFt(registro.tipo||'');
+      if(tipo==='FERIAS')return 'FÉRIAS';
+      if(['LP','LTS','CONVAL','CURSO','EAP','DS','DISPENSA','DISPENSA DE SERVICO','OUTROS'].includes(tipo))return tipo;
+      return String(registro.rotulo||registro.tipo||'AFASTAMENTO');
+    }
     function preencherFormularioEscalasAdm(item, dias, podeEditar) {
-      if (!item || !Array.isArray(dias)) return;
+      if (!Array.isArray(dias)) return;
 
       dias.forEach(function(dia) {
-        const valor = String(item[dia.chave] || '').trim();
+        const afastamentoAuto=admAfastamentoAutomaticoFt147(dia);
+        const feriasAuto=!!afastamentoAuto;
+        const valor = feriasAuto?afastamentoAuto:String(item&&item[dia.chave] || '').trim();
         const partes = interpretarValorEscalaAdm(valor);
         const tipoEl = document.getElementById('adm_' + dia.chave + '_tipo');
         const horarioEl = document.getElementById('adm_' + dia.chave + '_horario');
         const detalheEl = document.getElementById('adm_' + dia.chave + '_detalhe');
 
         admPreencherTipoFt(tipoEl,partes.tipo);
+        if(tipoEl)tipoEl.disabled=!!feriasAuto||!podeEditar;
         atualizarDiaEscalaAdm(dia.chave);
         if (horarioEl) horarioEl.value = partes.horario || '';
         if (detalheEl) detalheEl.value = partes.detalhe || '';
@@ -17322,11 +17367,15 @@ function epMesclarResenhaFt(payload,auto){
             const mapa = new Map((Array.isArray(atuais) ? atuais : []).map(function(x) {
               return [normalizarLoginConsultaCliente(x.re), x];
             }).filter(function(item) { return item[0]; }));
+            const hojeISO=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
             (dados.efetivo || []).forEach(function(pm) {
               const afastamento = mapa.get(normalizarLoginConsultaCliente(pm.re));
-              if (!afastamento) return;
-              pm.statusOperacionalAtual = afastamento.tipo;
-              pm.rotuloAfastamentoAtual = afastamento.rotulo || afastamento.tipo;
+              if (afastamento) {
+                pm.statusOperacionalAtual = afastamento.tipo;
+                pm.rotuloAfastamentoAtual = afastamento.rotulo || afastamento.tipo;
+              } else if(ftFeriasCadastroAtiva147(pm,hojeISO)) {
+                pm.statusOperacionalAtual='Férias';pm.rotuloAfastamentoAtual='Férias (Cadastro Geral — período vigente)';
+              }
             });
             dados.afastamentosConsultaOk = true;
           } catch (erroStatus) {
