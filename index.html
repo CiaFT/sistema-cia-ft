@@ -8178,8 +8178,11 @@ async function dsDetalharFt(id){
     function ftFeriasCadastroAtiva147(pm,dataISO){
       if(!pm||!/^2026-\d{2}-\d{2}$/.test(String(dataISO||'')))return false;
       const dia=Date.parse(dataISO+'T00:00:00Z')/86400000;
-      return [[pm.ferias30,30],[pm.ferias15a,15],[pm.ferias15b,15]].some(([v,n])=>{
+      const cortes=Array.isArray(pm.feriasSobrestamentos2026)?pm.feriasSobrestamentos2026:[];
+      return [['ferias30',pm.ferias30,30],['ferias15a',pm.ferias15a,15],['ferias15b',pm.ferias15b,15]].some(([campo,v,n])=>{
         const ini=ftFeriasDataISO147(v);if(!ini||ini.slice(0,4)!=='2026')return false;
+        const corte=cortes.find(x=>x.campo===campo);
+        if(corte)return dataISO>=corte.inicio&&dataISO<=corte.fim;
         const d=Date.parse(ini+'T00:00:00Z')/86400000;return dia>=d&&dia<d+n;
       });
     }
