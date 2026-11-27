@@ -5,7 +5,7 @@ SISTEMA CIA FT — PORTAL GITHUB V1.4.7 — OCORRÊNCIAS E FOLGAS FLAGRANTES
 Arquivo: index.html
 ============================================================
 
-VERSÃO V1.4.7 — DESEMPENHO E PADRÃO VISUAL
+VERSÃO V1.4.7 — SINCRONIZAÇÃO DE FÉRIAS E AFASTAMENTOS (R1)
 - Ranking com filtros anual, semestral, mensal e por pelotão.
 - Destaque discreto dos três primeiros colocados.
 - Consulta de FF aguardando decisão e aprovação/recusa exclusiva do Cmt Cia.
@@ -17375,6 +17375,8 @@ function epMesclarResenhaFt(payload,auto){
                 pm.rotuloAfastamentoAtual = afastamento.rotulo || afastamento.tipo;
               } else if(ftFeriasCadastroAtiva147(pm,hojeISO)) {
                 pm.statusOperacionalAtual='Férias';pm.rotuloAfastamentoAtual='Férias (Cadastro Geral — período vigente)';
+              } else if(/^FERIAS?$/.test(normalizarTexto(pm.status||'').replace(/[^A-Z]/g,''))&&[pm.ferias30,pm.ferias15a,pm.ferias15b].some(Boolean)) {
+                pm.statusOperacionalAtual='APTO';pm.rotuloAfastamentoAtual='Férias do Cadastro encerradas';
               }
             });
             dados.afastamentosConsultaOk = true;
